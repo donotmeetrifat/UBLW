@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@layer components {
+    @keyframes marqueeScroll {
+        0% {
+            transform: translateX(0%);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+}
+
+@layer base {
+    button {
+        cursor: pointer;
+    }
+}
+
+/* Hide scrollbars cleanly across browsers */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Accessibility: Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .animate-\[marqueeScroll_10s_linear_infinite\],
+    .animate-\[marqueeScroll_35s_linear_infinite\],
+    .animate-\[marqueeScroll_40s_linear_infinite\] {
+        animation: none !important;
+    }
+}
