@@ -12,6 +12,13 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata = {
     title: "UK Brand Lover - Premium Imported UK Beauty, Skincare, Haircare & Baby Care",
     description: "Shop 100% authentic UK imported beauty, skincare, haircare, cosmetics, and body care products at UK Brand Lover in Bangladesh. Guaranteed original quality, best deals, and fast delivery.",
+    icons: {
+        icon: [
+            { url: "/favicon.ico", sizes: "any" },
+            { url: "/icon.png", type: "image/png" },
+        ],
+        apple: "/apple-icon.png",
+    },
 };
 
 export default function RootLayout({ children }) {
