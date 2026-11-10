@@ -53,14 +53,14 @@ const FloatingConcierge = () => {
 
                         <div className="space-y-2">
                             <a
-                                href="https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20I%20would%20like%20to%20order%20an%20authentic%20UK%20product"
+                                href="https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20I%20have%20an%20inquiry%20about%20UK%20beauty%20products"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
                             >
                                 <span className="flex items-center gap-2">
                                     <WhatsAppIcon size={16} color="#047857" />
-                                    <span>Instant WhatsApp Order</span>
+                                    <span>Direct Product Inquiry</span>
                                 </span>
                                 <span className="text-[10px] text-[#6C306E]">Chat ➔</span>
                             </a>
@@ -112,7 +112,7 @@ const FloatingConcierge = () => {
                     <WhatsAppIcon size={20} color="#FFFFFF" />
                 </div>
                 <span className="text-xs font-bold tracking-wide">
-                    {isOpen ? 'Close Concierge' : 'Chat & Order'}
+                    {isOpen ? 'Close Concierge' : 'Beauty Concierge'}
                 </span>
                 <span className="relative flex h-2 w-2 ml-0.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-80"></span>

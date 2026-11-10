@@ -8,7 +8,6 @@ import {
     PlusIcon,
     TagIcon,
     TrashIcon,
-    WhatsAppIcon,
     CheckIcon,
     ShieldCheckIcon,
     TruckIcon,
@@ -162,7 +161,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
         { id: 'cod', label: 'Cash on Delivery', sub: 'Pay cash upon product inspection (Nationwide)', icon: CashDeliveryIcon },
         { id: 'bkash', label: 'bKash Send Money', sub: '01959-524393 (Personal / Merchant)', icon: MobileBankingIcon },
         { id: 'nagad', label: 'Nagad Wallet', sub: '01959-524393 (Personal Account)', icon: MobileBankingIcon },
-        { id: 'card', label: 'Direct WhatsApp Order', sub: 'Instant confirmation with beauty consultant', icon: WhatsAppIcon },
+        { id: 'card', label: 'Debit / Credit Card', sub: 'Visa, Mastercard & online banking', icon: CardPaymentIcon },
     ];
 
     return (
@@ -244,11 +243,11 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                     </motion.div>
                 )}
 
-                {/* WhatsApp Quick Order notice */}
+                {/* Card Payment Notice */}
                 {paymentMethod === 'card' && (
-                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800">
+                    <div className="mt-3 p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-xs text-[#503E50]">
                         <p className="text-[11px] font-medium leading-relaxed">
-                            Placing this order will notify our official WhatsApp line (<b>+880 1959-524393</b>) to arrange quick verification and priority packing.
+                            Card payment & online banking support. Our beauty concierge will provide direct SSL secure checkout links upon order confirmation.
                         </p>
                     </div>
                 )}

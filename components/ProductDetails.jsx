@@ -8,10 +8,7 @@ import {
     ShieldCheckIcon, 
     StarIcon, 
     TagIcon, 
-    TruckIcon, 
-    WhatsAppIcon,
-    ArrowRightIcon,
-    SparklesIcon 
+    TruckIcon 
 } from "@/components/icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -48,10 +45,6 @@ const ProductDetails = ({ product }) => {
         }
         router.push('/cart');
     };
-
-    const whatsappOrderUrl = `https://wa.me/8801959524393?text=${encodeURIComponent(
-        `Hello UK Brand Lover! I would like to order: ${product.name} (Price: ${currency}${product.price}). Please confirm stock and delivery.`
-    )}`;
 
     const ratingList = product?.rating || [];
     const ratingCount = ratingList.length;
@@ -182,25 +175,12 @@ const ProductDetails = ({ product }) => {
                     {product.description}
                 </p>
 
-                {/* Action Buttons Row - Distinct Luxury Color, Animation & Effects */}
+                {/* Action Buttons Row */}
                 <div className="flex flex-wrap items-center gap-3.5 my-6">
                     {product.inStock === false ? (
-                        <>
-                            <span className="px-6 py-3.5 bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
-                                Currently Out of Stock
-                            </span>
-                            <motion.a
-                                href={`https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20please%20notify%20me%20when%20${encodeURIComponent(product.name)}%20is%20back%20in%20stock!`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                whileHover={{ scale: 1.03, y: -1 }}
-                                whileTap={{ scale: 0.97 }}
-                                className="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-700 hover:from-emerald-500 hover:to-teal-800 border border-emerald-300/40 rounded-full shadow-[0_6px_20px_rgba(5,150,105,0.35)] transition-all cursor-pointer"
-                            >
-                                <WhatsAppIcon size={16} color="#FFFFFF" className="phone-icon-wiggle transition-transform duration-300" />
-                                <span>Pre-Order via WhatsApp</span>
-                            </motion.a>
-                        </>
+                        <span className="px-6 py-3.5 bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
+                            Currently Out of Stock
+                        </span>
                     ) : (
                         <>
                             {cart[productId] && (
@@ -243,40 +223,16 @@ const ProductDetails = ({ product }) => {
                                 )}
                             </motion.button>
 
-                            {/* 2. BUY NOW: Radiant Champagne Gold & Liquid Amber Metallic with Specular Reflection */}
+                            {/* 2. BUY NOW: Restored to original clean outline aesthetic */}
                             <motion.button 
                                 whileHover={{ scale: 1.025, y: -1 }}
                                 whileTap={{ scale: 0.97 }}
                                 type="button"
                                 onClick={buyNowHandler} 
-                                className="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-8 sm:px-9 py-3.5 text-xs font-extrabold text-[#2B0E2B] bg-gradient-to-r from-[#F3CF7A] via-[#FDE6A8] to-[#D8A74E] hover:from-[#FDE6A8] hover:to-[#CF9C40] border border-[#FFF0BD] rounded-full transition-all duration-300 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_8px_24px_-4px_rgba(216,181,109,0.55)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_14px_34px_-2px_rgba(216,181,109,0.85)] cursor-pointer shimmer-active"
+                                className="inline-flex items-center justify-center px-8 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-all duration-200 shadow-2xs active:scale-95 cursor-pointer"
                             >
-                                <span className="tracking-wider uppercase">Buy Now</span>
-                                <ArrowRightIcon 
-                                    size={14} 
-                                    color="#2B0E2B" 
-                                    className="group-hover:translate-x-1 transition-transform duration-300" 
-                                />
+                                Buy Now
                             </motion.button>
-
-                            {/* 3. ORDER VIA WHATSAPP: Luxury Emerald Oasis with Active Ringing Phone Icon */}
-                            <motion.a
-                                href={whatsappOrderUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                whileHover={{ scale: 1.025, y: -1 }}
-                                whileTap={{ scale: 0.97 }}
-                                className="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 text-xs font-bold text-white bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] hover:from-[#059669] hover:to-[#065F46] border border-emerald-300/40 rounded-full transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(5,150,105,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_32px_-2px_rgba(5,150,105,0.7)] cursor-pointer shimmer-active"
-                            >
-                                <div className="phone-icon-wiggle transition-transform duration-300">
-                                    <WhatsAppIcon size={16} color="#FFFFFF" />
-                                </div>
-                                <span className="tracking-wide">Order via WhatsApp</span>
-                                <span className="relative flex h-2 w-2 ml-0.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-100"></span>
-                                </span>
-                            </motion.a>
                         </>
                     )}
                 </div>
