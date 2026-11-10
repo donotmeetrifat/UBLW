@@ -1,88 +1,155 @@
+'use client'
+
 import Link from "next/link";
 import Image from "next/image";
 import { assets } from "@/assets/assets";
-import { Facebook, Instagram, Mail, MapPin, Phone, MessageCircle } from "lucide-react";
+import { 
+    FacebookIcon, 
+    InstagramIcon, 
+    WhatsAppIcon, 
+    PhoneIcon, 
+    MailIcon, 
+    MapPinIcon, 
+    ShieldCheckIcon,
+    RoyalCrownIcon
+} from "@/components/icons";
+import { motion } from "framer-motion";
 
 const Footer = () => {
     const linkSections = [
         {
-            title: "CATEGORIES",
+            title: "BEAUTY CATEGORIES",
             links: [
-                { text: "Skincare", path: '/shop?category=Skincare' },
-                { text: "Makeup", path: '/shop?category=Makeup' },
-                { text: "Haircare", path: '/shop?category=Haircare' },
-                { text: "Fragrance", path: '/shop?category=Fragrance' },
-                { text: "Body Care", path: '/shop?category=Body Care' },
+                { text: "Skincare Essentials", path: '/shop?category=Skincare' },
+                { text: "Cult Cosmetics", path: '/shop?category=Makeup' },
+                { text: "Hair Repair & Care", path: '/shop?category=Haircare' },
+                { text: "Luxury Fragrances", path: '/shop?category=Fragrance' },
+                { text: "Body & Wellness", path: '/shop?category=Body Care' },
             ]
         },
         {
-            title: "QUICK LINKS",
+            title: "CUSTOMER CARE",
             links: [
                 { text: "Home", path: '/' },
-                { text: "Shop All", path: '/shop' },
-                { text: "Contact Us", path: '/contact' },
-                { text: "Privacy Policy", path: '/' },
+                { text: "All UK Collections", path: '/shop' },
+                { text: "Contact & Advisory", path: '/contact' },
+                { text: "Track My Order", path: '/orders' },
+                { text: "100% Authenticity Guarantee", path: '/#why-us' },
             ]
         },
         {
-            title: "CONTACT US",
+            title: "DIRECT CONTACT",
             links: [
-                { text: "+880 1959-524393", path: 'tel:+8801959524393', icon: Phone },
-                { text: "support@ukbrandlover.com", path: 'mailto:support@ukbrandlover.com', icon: Mail },
-                { text: "Mirpur, Dhaka, Bangladesh", path: '#', icon: MapPin }
+                { text: "+880 1959-524393", path: 'tel:+8801959524393', icon: PhoneIcon },
+                { text: "support@ukbrandlover.com", path: 'mailto:support@ukbrandlover.com', icon: MailIcon },
+                { text: "Mirpur, Dhaka, Bangladesh", path: '/contact', icon: MapPinIcon }
             ]
         }
     ];
 
     const socialLinks = [
-        { icon: Facebook, link: "https://www.facebook.com/tuhinatopa", label: "Facebook" },
-        { icon: Instagram, link: "https://instagram.com/tuhinajahantopa", label: "Instagram" },
-        { icon: MessageCircle, link: "https://wa.me/8801959524393", label: "WhatsApp" },
-    ]
+        { icon: FacebookIcon, link: "https://www.facebook.com/tuhinatopa", label: "Facebook" },
+        { icon: InstagramIcon, link: "https://instagram.com/tuhinajahantopa", label: "Instagram" },
+        { icon: WhatsAppIcon, link: "https://wa.me/8801959524393", label: "WhatsApp" },
+    ];
 
     return (
-        <footer className="bg-white border-t border-[#EFE0EF]">
+        <footer className="bg-gradient-to-b from-white via-[#FCF9FC] to-[#FAF5FA] border-t border-[#EFE0EF]">
+            {/* Top Trust Bar */}
+            <div className="border-b border-[#EFE0EF]/70 py-6 bg-[#FAF6FA]/60">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-3">
+                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
+                                <RoyalCrownIcon size={18} color="#6C306E" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">Direct UK Import</h4>
+                                <p className="text-[11px] text-slate-500 font-normal">Authentic products from trusted UK retailers</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-center sm:justify-start gap-3">
+                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
+                                <ShieldCheckIcon size={18} color="#6C306E" accentColor="#D8B56D" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">100% Original Guarantee</h4>
+                                <p className="text-[11px] text-slate-500 font-normal">Full authenticity verification on every item</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-center sm:justify-start gap-3">
+                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
+                                <WhatsAppIcon size={18} color="#6C306E" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">Instant Consultation</h4>
+                                <p className="text-[11px] text-slate-500 font-normal">Expert beauty & skincare advice on WhatsApp</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row items-start justify-between gap-12 py-16 sm:py-20 border-b border-[#EFE0EF]/80 text-slate-600">
+                    {/* Brand Column */}
                     <div className="max-w-md">
                         <Link href="/" className="inline-block group mb-3">
-                            <Image 
-                                src={assets.webLogo} 
-                                alt="UK Brand Lover Logo" 
-                                className="h-12 sm:h-14 w-auto object-contain transition-transform group-hover:scale-102" 
-                            />
+                            <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                                <Image 
+                                    src={assets.webLogo} 
+                                    alt="UK Brand Lover Logo" 
+                                    className="h-12 sm:h-14 w-auto object-contain" 
+                                />
+                            </motion.div>
                         </Link>
-                        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500 font-normal">
-                            Your trusted destination in Bangladesh for 100% authentic UK imported beauty, skincare, cosmetics, haircare, and personal care essentials.
+                        <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-500 font-normal">
+                            Your premier destination in Bangladesh for authentic UK imported beauty, dermatological skincare, cult makeup, haircare, and personal care essentials.
                         </p>
+                        
+                        {/* Social Buttons with Smooth Hover */}
                         <div className="flex items-center gap-3 mt-6">
                             {socialLinks.map((item, i) => (
-                                <a
+                                <motion.a
                                     key={i}
                                     href={item.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     aria-label={item.label}
-                                    className="flex items-center justify-center w-9 h-9 bg-[#FAF6FA] border border-[#EFE0EF] hover:bg-[#6C306E] hover:text-white text-[#6C306E] hover:scale-105 transition-all rounded-full shadow-2xs"
+                                    whileHover={{ scale: 1.1, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex items-center justify-center size-9.5 bg-white border border-[#EFE0EF] hover:bg-[#6C306E] hover:border-[#6C306E] hover:text-white text-[#6C306E] rounded-full shadow-2xs transition-colors"
                                 >
                                     <item.icon size={16} />
-                                </a>
+                                </motion.a>
                             ))}
                         </div>
                     </div>
 
+                    {/* Nav Links */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 w-full lg:w-auto text-xs sm:text-sm">
                         {linkSections.map((section, index) => (
                             <div key={index}>
-                                <h3 className="font-extrabold text-[#241224] text-xs uppercase tracking-wider mb-4">{section.title}</h3>
+                                <h3 className="font-extrabold text-[#241224] text-[11px] uppercase tracking-widest mb-4">
+                                    {section.title}
+                                </h3>
                                 <ul className="space-y-3">
                                     {section.links.map((link, i) => (
                                         <li key={i} className="flex items-center gap-2">
-                                            {link.icon && <link.icon size={14} className="text-[#6C306E] shrink-0" />}
+                                            {link.icon && (
+                                                <link.icon size={14} color="#6C306E" className="shrink-0" />
+                                            )}
                                             {link.path.startsWith('http') || link.path.startsWith('tel:') || link.path.startsWith('mailto:') ? (
-                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm">{link.text}</a>
+                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block">
+                                                    {link.text}
+                                                </a>
                                             ) : (
-                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm">{link.text}</Link>
+                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block">
+                                                    {link.text}
+                                                </Link>
                                             )}
                                         </li>
                                     ))}
@@ -92,9 +159,13 @@ const Footer = () => {
                     </div>
                 </div>
 
+                {/* Subfooter */}
                 <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-                    <p>Copyright 2025 © UK Brand Lover. All Rights Reserved.</p>
-                    <p className="font-medium text-[#6C306E]">100% Authentic UK Imported Beauty in Bangladesh</p>
+                    <p>Copyright 2026 © UK Brand Lover. All Rights Reserved.</p>
+                    <p className="font-medium text-[#6C306E] flex items-center gap-1.5">
+                        <RoyalCrownIcon size={14} color="#6C306E" />
+                        100% Authentic UK Imported Beauty in Bangladesh
+                    </p>
                 </div>
             </div>
         </footer>

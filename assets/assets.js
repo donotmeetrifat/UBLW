@@ -18,7 +18,6 @@ import product_img11 from "./product_img11.png"
 import product_img12 from "./product_img12.png"
 import webLogo from "./Web Logo.png"
 import logo1 from "./Logo 1.png"
-import { ShieldCheck, Sparkles, LockKeyhole } from "lucide-react";
 import hero_card_img1 from "./hero_card_img1.png"
 import hero_card_img2 from "./hero_card_img2.png"
 import hero_card_img3 from "./hero_card_img3.png"
@@ -284,9 +283,9 @@ export const productDummyData = baseProductDummyData.map((product, index) => ({
 }))
 
 export const ourSpecsData = [
-    { title: "100% Original UK Imported", description: "Authentic beauty and lifestyle products sourced from trusted UK suppliers.", icon: ShieldCheck, accent: '#6C306E' },
-    { title: "Premium Quality Picks", description: "Carefully selected products chosen for quality, beauty, lifestyle, and everyday use.", icon: Sparkles, accent: '#6C306E' },
-    { title: "Secure & Trusted Support", description: "Safe payment options, responsive support, and a smooth shopping experience.", icon: LockKeyhole, accent: '#6C306E' }
+    { title: "100% Original UK Imported", description: "Authentic beauty and lifestyle products sourced from trusted UK suppliers.", accent: '#6C306E' },
+    { title: "Premium Quality Picks", description: "Carefully selected products chosen for quality, beauty, lifestyle, and everyday use.", accent: '#6C306E' },
+    { title: "Secure & Trusted Support", description: "Safe payment options, responsive support, and a smooth shopping experience.", accent: '#6C306E' }
 ]
 
 export const addressDummyData = {

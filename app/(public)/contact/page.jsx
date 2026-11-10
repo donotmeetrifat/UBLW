@@ -2,41 +2,50 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Phone, MessageCircle, Facebook, Instagram, MapPin, Send, Mail } from 'lucide-react'
+import { 
+    FacebookIcon, 
+    InstagramIcon, 
+    MapPinIcon, 
+    WhatsAppIcon,
+    ArrowRightIcon,
+    SparklesIcon,
+    CheckIcon
+} from '@/components/icons'
+import { motion } from 'framer-motion'
 
 const contactLinks = [
     {
-        title: 'Phone & WhatsApp',
-        description: 'Available for order inquiries and instant support.',
+        title: 'Direct WhatsApp Chat',
+        description: 'Instant order verification, product shade matching, and support.',
         buttonText: 'Chat on WhatsApp',
         href: 'https://wa.me/8801959524393',
-        icon: MessageCircle,
+        icon: WhatsAppIcon,
         ariaLabel: 'Chat with UK Brand Lover on WhatsApp',
     },
     {
-        title: 'Facebook',
-        description: 'Message us for updates, offers, and customer support.',
-        buttonText: 'Follow on Facebook',
+        title: 'Official Facebook Page',
+        description: 'Message us for daily drops, community posts, and offers.',
+        buttonText: 'Visit Facebook',
         href: 'https://www.facebook.com/tuhinatopa',
-        icon: Facebook,
+        icon: FacebookIcon,
         ariaLabel: 'Message UK Brand Lover on Facebook',
     },
     {
-        title: 'Instagram',
-        description: 'Follow our beauty edits, skincare picks, and launches.',
+        title: 'Instagram Beauty Feed',
+        description: 'Follow our authentic UK beauty hauls and product swatches.',
         buttonText: 'Follow on Instagram',
         href: 'https://instagram.com/tuhinajahantopa',
-        icon: Instagram,
+        icon: InstagramIcon,
         ariaLabel: 'Follow UK Brand Lover on Instagram',
     },
 ]
 
 const businessDetails = [
-    ['Business Name', 'UK Brand Lover'],
-    ['Location', 'Mirpur, Dhaka, Bangladesh'],
-    ['Contact Phone', '+880 1959-524393'],
-    ['Support Email', 'support@ukbrandlover.com'],
-    ['Response Time', 'Usually replies within a few hours'],
+    ['Brand Name', 'UK Brand Lover'],
+    ['Showroom & Fulfillment', 'Mirpur, Dhaka, Bangladesh'],
+    ['Direct Hotline', '+880 1959-524393'],
+    ['Customer Support', 'support@ukbrandlover.com'],
+    ['Consultation Hours', '10:00 AM – 10:00 PM (Everyday)'],
 ]
 
 export default function ContactPage() {
@@ -44,96 +53,139 @@ export default function ContactPage() {
 
     const handleSubmit = (event) => {
         event.preventDefault()
-        setFormStatus("Thank you! Your message has been sent to UK Brand Lover support.")
+        setFormStatus("Thank you! Your message has been sent to UK Brand Lover support team.")
         event.currentTarget.reset()
     }
 
     return (
         <main className="bg-white min-h-[70vh]">
-            <section className="mx-6">
+            <section className="mx-4 sm:mx-6">
                 <div className="max-w-7xl mx-auto py-12 sm:py-16">
-                    <div className="text-center max-w-3xl mx-auto">
-                        <h1 className="text-3xl sm:text-5xl font-bold text-[#241224]">Get in Touch</h1>
-                        <p className="mt-3 text-sm sm:text-base text-slate-600">
-                            Have questions about our authentic UK imported beauty products or need assistance with your order? We are here to help.
+                    {/* Header */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="text-center max-w-3xl mx-auto"
+                    >
+                        <div className="flex items-center justify-center gap-1.5 mb-2">
+                            <SparklesIcon size={13} color="#D8B56D" />
+                            <span className="text-[10px] font-bold text-[#6C306E] tracking-widest uppercase">
+                                WE ARE HERE TO HELP
+                            </span>
+                        </div>
+                        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#241224] tracking-tight">
+                            Get in Touch with Us
+                        </h1>
+                        <p className="mt-3 text-xs sm:text-base text-slate-600 font-normal max-w-xl mx-auto">
+                            Need guidance choosing the right UK skincare regimen or tracking your shipment in Bangladesh? Our beauty advisory team is ready to assist.
                         </p>
-                    </div>
+                    </motion.div>
 
+                    {/* Contact Channels Grid */}
                     <div className="mt-12 grid max-w-5xl mx-auto gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {contactLinks.map((item) => (
-                            <a
+                        {contactLinks.map((item, idx) => (
+                            <motion.a
                                 key={item.title}
                                 href={item.href}
                                 target={item.href.startsWith('http') ? '_blank' : undefined}
                                 rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                                 aria-label={item.ariaLabel}
-                                className="group rounded-3xl border border-[#EFE0EF] bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:border-[#6C306E]/40"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.45, delay: idx * 0.1 }}
+                                whileHover={{ y: -6 }}
+                                className="group rounded-3xl border border-[#EFE0EF] bg-white p-7 shadow-2xs hover:shadow-[0_10px_30px_rgba(58,12,56,0.06)] hover:border-[#6C306E]/40 transition-all"
                             >
-                                <div className="flex size-12 items-center justify-center rounded-2xl bg-[#FAF6FA] text-[#6C306E] group-hover:bg-[#6C306E] group-hover:text-white transition">
-                                    <item.icon size={22} />
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF] group-hover:bg-[#6C306E] group-hover:text-white transition duration-300 shadow-2xs">
+                                    <item.icon size={20} color="currentColor" />
                                 </div>
-                                <h2 className="mt-4 text-lg font-bold text-[#241224]">{item.title}</h2>
-                                <p className="mt-2 min-h-[48px] text-xs leading-relaxed text-slate-600">{item.description}</p>
-                                <span className="mt-4 inline-flex rounded-full bg-[#6C306E] text-white text-xs font-semibold px-5 py-2.5 shadow-xs group-hover:bg-[#3A0C38] transition">
-                                    {item.buttonText}
+                                <h2 className="mt-5 text-base sm:text-lg font-bold text-[#241224]">{item.title}</h2>
+                                <p className="mt-2 min-h-[44px] text-xs leading-relaxed text-slate-500 font-normal">{item.description}</p>
+                                <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#6C306E] text-white text-xs font-bold px-5 py-2.5 shadow-2xs group-hover:bg-[#3A0C38] transition">
+                                    <span>{item.buttonText}</span>
+                                    <ArrowRightIcon size={12} color="#FFFFFF" />
                                 </span>
-                            </a>
+                            </motion.a>
                         ))}
                     </div>
 
+                    {/* Contact Form & Business Details */}
                     <div className="mt-14 grid max-w-5xl mx-auto gap-8 lg:grid-cols-[1.25fr_0.75fr]">
-                        <section className="rounded-3xl border border-[#EFE0EF] bg-white p-6 sm:p-8 shadow-xs" aria-labelledby="contact-form-title">
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#D8B56D]">Direct Support</p>
+                        <motion.section 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="rounded-3xl border border-[#EFE0EF] bg-white p-6 sm:p-9 shadow-[0_4px_24px_rgba(58,12,56,0.03)]" 
+                            aria-labelledby="contact-form-title"
+                        >
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B56D]">DIRECT INQUIRY</p>
                             <h2 id="contact-form-title" className="mt-1 text-2xl font-bold text-[#241224]">Send Us a Message</h2>
                             <p className="mt-1 text-xs text-slate-500">
-                                Fill out the form below and our beauty advisory team will get back to you promptly.
+                                Submit your inquiry and our team will get back to you within a few hours.
                             </p>
 
-                            <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
+                            <form onSubmit={handleSubmit} className="mt-6 grid gap-4 text-xs">
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    <label className="text-xs font-semibold text-[#241224]">
-                                        Your Name <span className="text-red-500">*</span>
-                                        <input required name="name" type="text" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E]" placeholder="Enter full name" />
+                                    <label className="font-bold text-[#241224]">
+                                        Your Full Name <span className="text-red-500">*</span>
+                                        <input required name="name" type="text" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E] focus:bg-white transition" placeholder="Enter recipient name" />
                                     </label>
-                                    <label className="text-xs font-semibold text-[#241224]">
+                                    <label className="font-bold text-[#241224]">
                                         Email Address <span className="text-red-500">*</span>
-                                        <input required name="email" type="email" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E]" placeholder="you@example.com" />
+                                        <input required name="email" type="email" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E] focus:bg-white transition" placeholder="you@example.com" />
                                     </label>
                                 </div>
-                                <label className="text-xs font-semibold text-[#241224]">
+                                <label className="font-bold text-[#241224]">
                                     Subject
-                                    <input required name="subject" type="text" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E]" placeholder="Order inquiry, shade selection, product restock..." />
+                                    <input required name="subject" type="text" className="mt-1.5 w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E] focus:bg-white transition" placeholder="Product authenticity check, shade advisory, order status..." />
                                 </label>
-                                <label className="text-xs font-semibold text-[#241224]">
+                                <label className="font-bold text-[#241224]">
                                     Message <span className="text-red-500">*</span>
-                                    <textarea required name="message" rows={5} className="mt-1.5 w-full resize-none rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E]" placeholder="Write your message here..." />
+                                    <textarea required name="message" rows={5} className="mt-1.5 w-full resize-none rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs outline-none focus:border-[#6C306E] focus:bg-white transition" placeholder="Write your message here..." />
                                 </label>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center pt-2">
-                                    <button type="submit" className="bg-[#6C306E] hover:bg-[#3A0C38] text-white inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-xs font-bold transition shadow-xs active:scale-95">
-                                        Send Message <Send size={14} />
-                                    </button>
-                                    {formStatus && <p className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full" role="status">{formStatus}</p>}
+                                    <motion.button 
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        type="submit" 
+                                        className="bg-[#6C306E] hover:bg-[#3A0C38] text-white inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-xs font-bold transition shadow-sm cursor-pointer"
+                                    >
+                                        <span>Submit Message</span>
+                                        <ArrowRightIcon size={14} color="#FFFFFF" />
+                                    </motion.button>
+                                    {formStatus && (
+                                        <p className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-full flex items-center gap-1.5" role="status">
+                                            <CheckIcon size={13} color="#059669" />
+                                            {formStatus}
+                                        </p>
+                                    )}
                                 </div>
                             </form>
-                        </section>
+                        </motion.section>
 
                         <aside className="rounded-3xl border border-[#EFE0EF] bg-[#FAF6FA] p-6 sm:p-8 flex flex-col justify-between" aria-label="Business contact details">
                             <div>
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]">
-                                    <MapPin size={22} />
+                                    <MapPinIcon size={20} color="#6C306E" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-bold text-[#241224]">UK Brand Lover Info</h2>
-                                <div className="mt-5 space-y-4">
+                                <h2 className="mt-4 text-xl font-bold text-[#241224]">UK Brand Lover HQ</h2>
+                                <div className="mt-5 space-y-4 text-xs">
                                     {businessDetails.map(([label, value]) => (
                                         <div key={label} className="border-b border-[#EFE0EF] pb-3 last:border-b-0 last:pb-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#D8B56D]">{label}</p>
-                                            <p className="mt-0.5 text-xs font-semibold text-[#241224]">{value}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B56D]">{label}</p>
+                                            <p className="mt-0.5 font-bold text-[#241224]">{value}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <Link href="/shop" className="mt-6 inline-flex justify-center items-center rounded-full border border-[#EFE0EF] bg-white text-[#6C306E] hover:bg-[#6C306E] hover:text-white px-6 py-3 text-xs font-bold transition shadow-2xs">
-                                Browse UK Beauty Shop
+                            <Link 
+                                href="/shop" 
+                                className="mt-8 inline-flex justify-center items-center gap-2 rounded-full border border-[#EFE0EF] bg-white text-[#6C306E] hover:bg-[#6C306E] hover:text-white px-6 py-3.5 text-xs font-bold transition shadow-2xs"
+                            >
+                                <span>Browse Catalog</span>
+                                <ArrowRightIcon size={14} color="currentColor" />
                             </Link>
                         </aside>
                     </div>

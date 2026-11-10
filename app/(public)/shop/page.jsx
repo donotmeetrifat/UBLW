@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from "react"
 import ProductCard from "@/components/ProductCard"
 import ShopFilterPanel, { filterOptions } from "@/components/ShopFilterPanel"
-import { Filter, MoveLeftIcon, SlidersHorizontal, X } from "lucide-react"
+import { ArrowLeftIcon, CloseIcon, FilterIcon, SparklesIcon } from "@/components/icons"
+import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
 
@@ -123,35 +124,47 @@ function ShopContent() {
 
     return (
         <div className="min-h-[70vh] px-4 sm:px-8 max-w-7xl mx-auto">
-            <div className="pt-8 pb-24">
-                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="pt-6 sm:pt-10 pb-24">
+                {/* Header */}
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#EFE0EF] pb-6">
                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <SparklesIcon size={12} color="#D8B56D" />
+                            <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-widest">
+                                100% ORIGINAL UK INVENTORY
+                            </span>
+                        </div>
                         <button
                             type="button"
                             onClick={() => router.push('/shop')}
-                            className="text-2xl font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:text-[#6C306E] transition"
+                            className="text-2xl sm:text-3xl font-extrabold text-[#241224] flex items-center gap-2.5 cursor-pointer hover:text-[#6C306E] transition-colors"
                         >
-                            {search && <MoveLeftIcon size={20} />}
-                            All <span className="text-[#6C306E]">Beauty Products</span>
+                            {search && <ArrowLeftIcon size={20} color="#6C306E" />}
+                            All <span className="text-[#6C306E]">Beauty Collections</span>
                         </button>
                         <p className="mt-1 text-xs sm:text-sm text-slate-500 font-medium">
-                            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+                            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} curated
                             {search && <span className="font-semibold text-slate-700"> for "{search}"</span>}
                         </p>
                     </div>
 
+                    {/* Mobile Filter Button */}
                     <div className="flex items-center gap-3 lg:hidden">
-                        <button
+                        <motion.button
                             type="button"
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.96 }}
                             onClick={() => setIsMobileFilterOpen(true)}
-                            className="bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold transition"
+                            className="bg-white border border-[#6C306E]/40 text-[#6C306E] flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition shadow-2xs cursor-pointer"
                         >
-                            <Filter size={14} /> Filter Products
-                        </button>
+                            <FilterIcon size={14} color="#6C306E" />
+                            Filter & Sort
+                        </motion.button>
                     </div>
                 </div>
 
-                <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+                <div className="grid gap-8 lg:grid-cols-[270px_1fr]">
+                    {/* Desktop Filter Panel */}
                     <div className="hidden lg:block">
                         <ShopFilterPanel
                             filters={filters}
@@ -164,49 +177,70 @@ function ShopContent() {
                         />
                     </div>
 
+                    {/* Products Grid */}
                     <section aria-label="Product results">
-                        <div className="mb-6 flex flex-wrap items-center gap-2.5">
+                        {/* Active Filter Chips */}
+                        <div className="mb-6 flex flex-wrap items-center gap-2">
                             {activeChips.map((chip) => (
-                                <button
+                                <motion.button
                                     key={`${chip.key}-${chip.value}`}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
                                     type="button"
                                     onClick={() => removeFilter(chip.key, chip.value)}
-                                    className="flex items-center gap-1.5 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] px-3.5 py-1 text-xs font-semibold text-[#6C306E] hover:bg-[#EFE0EF] transition"
+                                    className="flex items-center gap-1.5 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] px-3.5 py-1 text-xs font-bold text-[#6C306E] hover:bg-[#EFE0EF] transition cursor-pointer"
                                 >
-                                    {chip.value}
-                                    <X size={12} />
-                                </button>
+                                    <span>{chip.value}</span>
+                                    <CloseIcon size={12} color="#6C306E" />
+                                </motion.button>
                             ))}
 
                             {sortBy !== 'default' && (
                                 <button
                                     type="button"
                                     onClick={() => setSortBy('default')}
-                                    className="flex items-center gap-1.5 rounded-full bg-[#FAF6FA] px-3.5 py-1 text-xs font-semibold text-[#6C306E] border border-[#EFE0EF]"
+                                    className="flex items-center gap-1.5 rounded-full bg-[#FAF6FA] px-3.5 py-1 text-xs font-bold text-[#6C306E] border border-[#EFE0EF] cursor-pointer"
                                 >
-                                    {filterOptions.sortOptions.find((option) => option.value === sortBy)?.label}
-                                    <X size={12} />
+                                    <span>{filterOptions.sortOptions.find((option) => option.value === sortBy)?.label}</span>
+                                    <CloseIcon size={12} color="#6C306E" />
                                 </button>
                             )}
 
                             {hasActiveFilters && (
-                                <button type="button" onClick={clearFilters} className="text-xs font-bold text-[#6C306E] hover:underline ml-2">
+                                <button 
+                                    type="button" 
+                                    onClick={clearFilters} 
+                                    className="text-xs font-bold text-[#6C306E] hover:underline ml-2 cursor-pointer"
+                                >
                                     Clear all filters
                                 </button>
                             )}
                         </div>
 
                         {filteredProducts.length ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-5 sm:gap-6">
-                                {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
-                            </div>
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4 }}
+                                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6"
+                            >
+                                {filteredProducts.map((product) => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </motion.div>
                         ) : (
-                            <div className="bg-[#FAF6FA] border border-[#EFE0EF] flex min-h-80 flex-col items-center justify-center rounded-3xl px-6 text-center">
-                                <SlidersHorizontal className="text-[#6C306E]" size={36} />
-                                <h2 className="mt-4 text-xl font-bold text-slate-800">No products found</h2>
-                                <p className="mt-1 text-xs text-slate-500">Try selecting a different category or adjusting your search</p>
-                                <button type="button" onClick={clearFilters} className="bg-[#6C306E] hover:bg-[#3A0C38] text-white mt-5 rounded-full px-6 py-2.5 text-xs font-semibold transition">
-                                    Clear Filters
+                            <div className="py-24 text-center rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] max-w-lg mx-auto">
+                                <SparklesIcon size={24} color="#D8B56D" className="mx-auto mb-3" />
+                                <h3 className="text-lg font-bold text-[#241224]">No UK products match your search</h3>
+                                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                                    Try clearing your price filters or searching with different keywords.
+                                </p>
+                                <button
+                                    onClick={clearFilters}
+                                    className="mt-5 px-6 py-2.5 rounded-full bg-[#6C306E] text-white text-xs font-bold shadow-xs hover:bg-[#3A0C38] transition cursor-pointer"
+                                >
+                                    Reset Filters
                                 </button>
                             </div>
                         )}
@@ -214,35 +248,47 @@ function ShopContent() {
                 </div>
             </div>
 
-            {isMobileFilterOpen && (
-                <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Product filters">
-                    <button
-                        type="button"
-                        aria-label="Close filter overlay"
-                        className="absolute inset-0 bg-[#241224]/40 backdrop-blur-xs"
-                        onClick={() => setIsMobileFilterOpen(false)}
-                    />
-                    <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white p-5 shadow-2xl">
-                        <ShopFilterPanel
-                            filters={filters}
-                            sortBy={sortBy}
-                            onToggle={toggleFilter}
-                            onPriceChange={updatePriceFilter}
-                            onClear={clearFilters}
-                            onSortChange={setSortBy}
-                            onClose={() => setIsMobileFilterOpen(false)}
-                            showCloseButton
+            {/* Mobile Filter Drawer with Framer Motion slide-in */}
+            <AnimatePresence>
+                {isMobileFilterOpen && (
+                    <div className="fixed inset-0 z-50 lg:hidden">
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileFilterOpen(false)}
+                            className="absolute inset-0 bg-[#241224]/50 backdrop-blur-xs"
                         />
+                        {/* Drawer */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                            className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white p-6 shadow-2xl overflow-y-auto"
+                        >
+                            <ShopFilterPanel
+                                filters={filters}
+                                sortBy={sortBy}
+                                onToggle={toggleFilter}
+                                onPriceChange={updatePriceFilter}
+                                onClear={clearFilters}
+                                onSortChange={setSortBy}
+                                onClose={() => setIsMobileFilterOpen(false)}
+                                showCloseButton={true}
+                            />
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </div>
     )
 }
 
 export default function Shop() {
     return (
-        <Suspense fallback={<div className="p-10 text-center text-slate-500 text-sm">Loading UK Brand Lover Shop...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#6C306E] font-medium text-sm">Loading beauty catalog...</div>}>
             <ShopContent />
         </Suspense>
     )

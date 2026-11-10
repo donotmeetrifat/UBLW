@@ -8,21 +8,22 @@ import banner5 from '../assets/banner/5.jpg'
 import banner6 from '../assets/banner/6.jpg'
 import banner7 from '../assets/banner/7.jpg'
 import banner8 from '../assets/banner/8.jpg'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
-const AUTOPLAY_DELAY = 4500
+const AUTOPLAY_DELAY = 5000
 
 const slides = [
-    { image: banner1, imageAlt: 'UK Brand Lover skincare banner 1' },
-    { image: banner2, imageAlt: 'UK Brand Lover skincare banner 2' },
-    { image: banner3, imageAlt: 'UK Brand Lover skincare banner 3' },
-    { image: banner4, imageAlt: 'UK Brand Lover skincare banner 4' },
-    { image: banner5, imageAlt: 'UK Brand Lover skincare banner 5' },
-    { image: banner6, imageAlt: 'UK Brand Lover skincare banner 6' },
-    { image: banner7, imageAlt: 'UK Brand Lover skincare banner 7' },
-    { image: banner8, imageAlt: 'UK Brand Lover skincare banner 8' }
+    { image: banner1, imageAlt: 'UK Brand Lover curated skincare banner 1' },
+    { image: banner2, imageAlt: 'UK Brand Lover luxury skincare banner 2' },
+    { image: banner3, imageAlt: 'UK Brand Lover premium beauty banner 3' },
+    { image: banner4, imageAlt: 'UK Brand Lover authentic cosmetics banner 4' },
+    { image: banner5, imageAlt: 'UK Brand Lover direct UK imports banner 5' },
+    { image: banner6, imageAlt: 'UK Brand Lover hair repair treatment banner 6' },
+    { image: banner7, imageAlt: 'UK Brand Lover luxury fragrance banner 7' },
+    { image: banner8, imageAlt: 'UK Brand Lover beauty deals banner 8' }
 ]
 
 const HeroBannerSlider = () => {
@@ -56,7 +57,7 @@ const HeroBannerSlider = () => {
         if (touchStartX.current === null || touchEndX.current === null) return
 
         const distance = touchStartX.current - touchEndX.current
-        const minimumSwipeDistance = 50
+        const minimumSwipeDistance = 45
 
         if (distance > minimumSwipeDistance) showNext()
         if (distance < -minimumSwipeDistance) showPrevious()
@@ -73,20 +74,21 @@ const HeroBannerSlider = () => {
         }, AUTOPLAY_DELAY)
 
         return () => clearInterval(timer)
-    }, [isPaused])
+    }, [isPaused, activeIndex])
 
     return (
-        <section aria-label="Featured UK Brand Lover promotions">
+        <section aria-label="Featured UK Brand Lover promotions" className="relative group">
             <div
-                className="relative max-w-7xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-2xs"
+                className="relative max-w-7xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-[0_8px_30px_rgba(58,12,56,0.06)]"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
+                {/* Slides Track with Smooth Cubic Easing */}
                 <div
-                    className="flex transition-transform duration-700 ease-out"
+                    className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                     style={{ transform: `translateX(-${activeIndex * 100}%)` }}
                 >
                     {slides.map((slide, index) => (
@@ -98,44 +100,66 @@ const HeroBannerSlider = () => {
                             <Image
                                 src={slide.image}
                                 alt={slide.imageAlt}
+                                className="w-full h-auto object-cover max-h-[220px] min-[450px]:max-h-[280px] sm:max-h-[380px] md:max-h-[460px] lg:max-h-[520px] transition-transform duration-1000 ease-out select-none"
                                 priority={index === 0}
-                                sizes="(max-width: 768px) 100vw, 1280px"
-                                className="w-full h-auto block object-contain rounded-2xl sm:rounded-3xl"
+                                quality={92}
                             />
                         </article>
                     ))}
                 </div>
 
-                <button
+                {/* Glassmorphic Navigation Buttons (Appear smoothly on hover) */}
+                <motion.button
                     type="button"
-                    aria-label="Show previous banner slide"
                     onClick={showPrevious}
-                    className="absolute left-2 sm:left-4 top-1/2 z-20 flex size-7 sm:size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 backdrop-blur text-[#3A0C38] border border-[#EFE0EF] shadow-md transition hover:bg-[#6C306E] hover:text-white"
+                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Previous promotional slide"
+                    className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/80 backdrop-blur-md border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer"
                 >
-                    <ChevronLeft className="size-4 sm:size-5" />
-                </button>
+                    <ChevronLeftIcon size={18} color="#6C306E" />
+                </motion.button>
 
-                <button
+                <motion.button
                     type="button"
-                    aria-label="Show next banner slide"
                     onClick={showNext}
-                    className="absolute right-2 sm:right-4 top-1/2 z-20 flex size-7 sm:size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 backdrop-blur text-[#3A0C38] border border-[#EFE0EF] shadow-md transition hover:bg-[#6C306E] hover:text-white"
+                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Next promotional slide"
+                    className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/80 backdrop-blur-md border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer"
                 >
-                    <ChevronRight className="size-4 sm:size-5" />
-                </button>
+                    <ChevronRightIcon size={18} color="#6C306E" />
+                </motion.button>
 
-                <div className="absolute bottom-2 sm:bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5" role="tablist" aria-label="Banner slides">
-                    {slides.map((slide, index) => (
-                        <button
-                            key={slide.imageAlt || index}
-                            type="button"
-                            role="tab"
-                            aria-label={`Show banner image ${index + 1}`}
-                            aria-selected={activeIndex === index}
-                            onClick={() => goToSlide(index)}
-                            className={`h-1.5 sm:h-2 rounded-full transition-all ${activeIndex === index ? 'w-5 sm:w-7 bg-[#6C306E]' : 'w-1.5 sm:w-2 bg-[#C599CB]/70 hover:bg-[#6C306E]/60'}`}
-                        />
-                    ))}
+                {/* Animated Pagination Pill Indicators */}
+                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md z-20">
+                    {slides.map((_, index) => {
+                        const isActive = activeIndex === index
+                        return (
+                            <button
+                                key={index}
+                                type="button"
+                                onClick={() => goToSlide(index)}
+                                aria-label={`Go to slide ${index + 1}`}
+                                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                                    isActive
+                                        ? 'w-6 sm:w-7 h-1.5 bg-white'
+                                        : 'size-1.5 bg-white/50 hover:bg-white/80'
+                                }`}
+                            />
+                        )
+                    })}
+                </div>
+
+                {/* Ambient Bottom Progress Line */}
+                <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-white/20 overflow-hidden z-20 pointer-events-none">
+                    <motion.div
+                        key={activeIndex}
+                        initial={{ width: '0%' }}
+                        animate={{ width: isPaused ? '0%' : '100%' }}
+                        transition={{ duration: AUTOPLAY_DELAY / 1000, ease: 'linear' }}
+                        className="h-full bg-gradient-to-r from-[#D8B56D] to-[#6C306E]"
+                    />
                 </div>
             </div>
         </section>

@@ -12,8 +12,17 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     button {
         cursor: pointer;
+    }
+
+    ::selection {
+        background-color: #6C306E;
+        color: #FFFFFF;
     }
 }
 
@@ -29,8 +38,18 @@
 
 /* Accessibility: Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
     .animate-\[marqueeScroll_10s_linear_infinite\],
     .animate-\[marqueeScroll_35s_linear_infinite\],
+    .animate-\[marqueeScroll_38s_linear_infinite\],
     .animate-\[marqueeScroll_40s_linear_infinite\] {
         animation: none !important;
     }
