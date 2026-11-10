@@ -178,16 +178,13 @@ const ProductDetails = ({ product }) => {
                 {/* Action Buttons Row */}
                 <div className="flex flex-wrap items-center gap-3.5 my-6">
                     {product.inStock === false ? (
-                        <span className="px-6 py-3.5 bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
+                        <span className="px-6 h-11 sm:h-12 inline-flex items-center justify-center bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
                             Currently Out of Stock
                         </span>
                     ) : (
                         <>
                             {cart[productId] && (
-                                <div className="flex flex-col gap-1.5 mr-1">
-                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Qty</span>
-                                    <Counter productId={productId} />
-                                </div>
+                                <Counter productId={productId} className="h-11 sm:h-12" />
                             )}
 
                             {/* 1. ADD TO BAG: Velvet Imperial Plum with Gloss Sheen & Tilt Icon */}
@@ -196,7 +193,7 @@ const ProductDetails = ({ product }) => {
                                 whileTap={{ scale: 0.97 }}
                                 type="button"
                                 onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} 
-                                className={`group relative overflow-hidden inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer border border-white/20 shimmer-active ${
+                                className={`group relative overflow-hidden inline-flex items-center justify-center gap-2.5 px-7 sm:px-9 h-11 sm:h-12 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer border border-white/20 shimmer-active ${
                                     isAdded
                                         ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-700 text-white shadow-[0_8px_24px_rgba(5,150,105,0.45)]'
                                         : 'bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.7)]'
@@ -224,13 +221,13 @@ const ProductDetails = ({ product }) => {
                             </motion.button>
 
                             {/* 2. BUY NOW: Restored to original clean outline aesthetic with Magnetic Cursor Follow */}
-                            <MagneticButton distance={0.38} radius={110}>
+                            <MagneticButton distance={0.38} radius={110} className="inline-flex items-center">
                                 <motion.button 
                                     whileHover={{ scale: 1.025 }}
                                     whileTap={{ scale: 0.96 }}
                                     type="button"
                                     onClick={buyNowHandler} 
-                                    className="inline-flex items-center justify-center px-8 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-colors duration-200 shadow-2xs active:scale-95 cursor-pointer select-none"
+                                    className="inline-flex items-center justify-center px-7 sm:px-9 h-11 sm:h-12 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-colors duration-200 shadow-2xs active:scale-95 cursor-pointer select-none"
                                 >
                                     Buy Now
                                 </motion.button>

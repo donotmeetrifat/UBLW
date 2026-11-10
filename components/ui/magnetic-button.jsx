@@ -59,7 +59,7 @@ function MagneticButton({
   return (
     <div 
       ref={containerRef} 
-      className={`inline-block ${className}`}
+      className={`inline-flex items-center ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -68,6 +68,7 @@ function MagneticButton({
       }}
     >
       <motion.div
+        className="inline-flex items-center"
         style={{
           x: springX,
           y: springY
