@@ -145,20 +145,20 @@ const Navbar = () => {
                             </Link>
                         </nav>
 
-                        {/* Actions: Search, Cart, Account */}
-                        <div className="flex items-center gap-2.5 sm:gap-4">
-                            {/* Smooth Expanding Search Bar */}
+                        {/* Actions: Search, Cart, Account - Uniform Height & Pixel-Perfect Alignment */}
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            {/* 1. Smooth Expanding Search Bar (h-10) */}
                             <form
                                 onSubmit={handleSearch}
-                                className={`hidden sm:flex items-center text-xs gap-2 px-3.5 py-2 rounded-full border transition-all duration-300 ${
+                                className={`hidden sm:flex items-center text-xs gap-2 px-3.5 h-10 rounded-full border transition-all duration-300 select-none ${
                                     isSearchFocused
                                         ? 'w-56 lg:w-68 bg-white border-[#6C306E] shadow-[0_0_0_3px_rgba(108,48,110,0.08)]'
-                                        : 'w-40 lg:w-52 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                        : 'w-44 lg:w-56 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
                                 <SearchIcon size={16} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
                                 <input
-                                    className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium"
+                                    className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium leading-none"
                                     type="text"
                                     placeholder="Search UK beauty..."
                                     value={search}
@@ -168,51 +168,52 @@ const Navbar = () => {
                                 />
                             </form>
 
-                            {/* Luxury Cart Button with Spring Reaction */}
+                            {/* 2. Luxury Cart Button (h-10) */}
                             <Link
                                 id="navbar-cart-icon"
                                 href="/cart"
-                                className={`relative flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all duration-300 select-none ${
+                                className={`relative flex items-center justify-center gap-2 px-4 h-10 rounded-full border transition-all duration-300 select-none cursor-pointer ${
                                     isCartBumping
                                         ? 'bg-[#FAF6FA] border-[#6C306E] scale-105 shadow-sm'
-                                        : 'bg-white border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA]/60'
+                                        : 'bg-white border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA]/80 shadow-2xs hover:shadow-xs'
                                 }`}
                             >
                                 <motion.div
                                     animate={isCartBumping ? { rotate: [0, -12, 12, -6, 0], scale: [1, 1.18, 1] } : {}}
                                     transition={{ duration: 0.4 }}
+                                    className="flex items-center justify-center"
                                 >
-                                    <BagIcon size={18} color="#6C306E" />
+                                    <BagIcon size={16} color="#6C306E" />
                                 </motion.div>
-                                <span className="hidden sm:inline text-xs font-semibold text-[#241224]">Bag</span>
+                                <span className="hidden sm:inline text-xs font-bold text-[#241224] leading-none">Bag</span>
 
                                 {/* Counter Badge */}
                                 <motion.span
                                     key={cartCount}
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
-                                    className={`text-[10px] font-bold text-white size-4.5 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                                        isCartBumping ? 'bg-[#3A0C38]' : 'bg-[#6C306E]'
+                                    className={`text-[10px] font-extrabold text-white size-5 rounded-full flex items-center justify-center transition-colors duration-200 leading-none shadow-2xs shrink-0 ${
+                                        isCartBumping ? 'bg-[#3A0C38]' : 'bg-gradient-to-r from-[#6C306E] to-[#401242]'
                                     }`}
                                 >
                                     {cartCount}
                                 </motion.span>
                             </Link>
 
-                            {/* Luxury Account Area */}
+                            {/* 3. Luxury Account Area (h-10) */}
                             {currentUser ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] transition-all cursor-pointer"
+                                        className="flex items-center justify-center gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] transition-all cursor-pointer shadow-2xs select-none"
                                     >
-                                        <div className="size-6 rounded-full bg-[#6C306E] text-white flex items-center justify-center text-[11px] font-bold">
+                                        <div className="size-6.5 rounded-full bg-gradient-to-br from-[#6C306E] to-[#401242] text-white flex items-center justify-center text-xs font-bold shadow-2xs shrink-0">
                                             {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
                                         </div>
-                                        <span className="text-xs font-bold text-[#241224] hidden sm:inline max-w-[80px] truncate">
+                                        <span className="text-xs font-bold text-[#241224] hidden sm:inline max-w-[90px] truncate leading-none">
                                             {currentUser.name.split(' ')[0]}
                                         </span>
-                                        <ChevronDownIcon size={12} color="#6C306E" />
+                                        <ChevronDownIcon size={13} color="#6C306E" />
                                     </button>
 
                                     {/* Dropdown Menu */}
@@ -278,26 +279,26 @@ const Navbar = () => {
                                     whileTap={{ scale: 0.96 }}
                                     transition={{ duration: 0.2 }}
                                     onClick={() => setIsAuthModalOpen(true)}
-                                    className="group relative overflow-hidden inline-flex items-center gap-1.5 px-4.5 sm:px-5.5 py-2 bg-gradient-to-r from-[#4A154A] via-[#632266] to-[#380E38] hover:from-[#581F5A] hover:to-[#451245] text-white text-xs font-bold rounded-full border border-[#D8B56D]/50 hover:border-[#F2D086] shadow-[0_4px_16px_rgba(108,48,110,0.3)] hover:shadow-[0_8px_24px_rgba(216,181,109,0.4)] transition-all cursor-pointer shimmer-active"
+                                    className="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-5 h-10 bg-gradient-to-r from-[#4A154A] via-[#632266] to-[#380E38] hover:from-[#581F5A] hover:to-[#451245] text-white text-xs font-bold rounded-full border border-[#D8B56D]/50 hover:border-[#F2D086] shadow-[0_4px_16px_rgba(108,48,110,0.3)] hover:shadow-[0_8px_24px_rgba(216,181,109,0.4)] transition-all cursor-pointer shimmer-active select-none"
                                 >
-                                    <div className="group-hover:scale-110 transition-transform duration-300">
+                                    <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                         <UserIcon size={14} color="#FCE4A6" />
                                     </div>
-                                    <span className="tracking-wide">Sign In</span>
+                                    <span className="tracking-wide leading-none">Sign In</span>
                                 </motion.button>
                             )}
                         </div>
                     </div>
 
-                    {/* Mobile Search Bar Row */}
+                    {/* Mobile Search Bar Row - Uniform Height & Alignment */}
                     <div className="sm:hidden mt-2.5 pb-1 flex items-center gap-2">
                         <form
                             onSubmit={handleSearch}
-                            className="flex-1 flex items-center text-xs gap-2 px-3.5 py-2 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
+                            className="flex-1 flex items-center text-xs gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
                         >
                             <SearchIcon size={15} color="#6C306E" className="shrink-0" />
                             <input
-                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium"
+                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium leading-none"
                                 type="text"
                                 placeholder="Search 100% authentic UK products..."
                                 value={search}
@@ -306,9 +307,10 @@ const Navbar = () => {
                         </form>
                         <Link
                             href="/orders"
-                            className="px-3 py-2 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] text-xs font-bold flex items-center gap-1"
+                            className="size-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center hover:bg-[#EFE0EF] transition-colors shadow-2xs shrink-0"
+                            aria-label="Track orders"
                         >
-                            <TruckIcon size={14} color="#6C306E" />
+                            <TruckIcon size={16} color="#6C306E" />
                         </Link>
                     </div>
                 </div>
