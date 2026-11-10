@@ -41,7 +41,7 @@ const Navbar = () => {
             if (saved) {
                 try {
                     setCurrentUser(JSON.parse(saved));
-                } catch (e) {}
+                } catch (e) { }
             }
         }
     }, []);
@@ -105,11 +105,10 @@ const Navbar = () => {
     return (
         <>
             <header
-                className={`sticky top-0 z-40 transition-all duration-300 ${
-                    isScrolled
+                className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
                         ? 'bg-white/95 backdrop-blur-md border-b border-[#EFE0EF]/90 shadow-[0_4px_24px_rgba(58,12,56,0.04)] py-2.5 sm:py-3'
                         : 'bg-white border-b border-[#EFE0EF] py-3.5 sm:py-4'
-                }`}
+                    }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between gap-4">
@@ -150,11 +149,10 @@ const Navbar = () => {
                             {/* 1. Smooth Expanding Search Bar (h-10) */}
                             <form
                                 onSubmit={handleSearch}
-                                className={`hidden sm:flex items-center text-xs gap-2 px-3.5 h-10 rounded-full border transition-all duration-300 select-none ${
-                                    isSearchFocused
+                                className={`hidden sm:flex items-center text-xs gap-2 px-3.5 h-10 rounded-full border transition-all duration-300 select-none ${isSearchFocused
                                         ? 'w-56 lg:w-68 bg-white border-[#6C306E] shadow-[0_0_0_3px_rgba(108,48,110,0.08)]'
                                         : 'w-44 lg:w-56 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
-                                }`}
+                                    }`}
                             >
                                 <SearchIcon size={16} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
                                 <input
@@ -172,11 +170,10 @@ const Navbar = () => {
                             <Link
                                 id="navbar-cart-icon"
                                 href="/cart"
-                                className={`relative flex items-center justify-center gap-2 px-4 h-10 rounded-full border transition-all duration-300 select-none cursor-pointer ${
-                                    isCartBumping
+                                className={`relative flex items-center justify-center gap-2 px-4 h-10 rounded-full border transition-all duration-300 select-none cursor-pointer ${isCartBumping
                                         ? 'bg-[#FAF6FA] border-[#6C306E] scale-105 shadow-sm'
                                         : 'bg-white border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA]/80 shadow-2xs hover:shadow-xs'
-                                }`}
+                                    }`}
                             >
                                 <motion.div
                                     animate={isCartBumping ? { rotate: [0, -12, 12, -6, 0], scale: [1, 1.18, 1] } : {}}
@@ -192,9 +189,8 @@ const Navbar = () => {
                                     key={cartCount}
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
-                                    className={`text-[10px] font-extrabold text-white size-5 rounded-full flex items-center justify-center transition-colors duration-200 leading-none shadow-2xs shrink-0 ${
-                                        isCartBumping ? 'bg-[#3A0C38]' : 'bg-gradient-to-r from-[#6C306E] to-[#401242]'
-                                    }`}
+                                    className={`text-[10px] font-extrabold text-white size-5 rounded-full flex items-center justify-center transition-colors duration-200 leading-none shadow-2xs shrink-0 ${isCartBumping ? 'bg-[#3A0C38]' : 'bg-gradient-to-r from-[#6C306E] to-[#401242]'
+                                        }`}
                                 >
                                     {cartCount}
                                 </motion.span>

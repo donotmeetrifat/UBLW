@@ -10,7 +10,6 @@ import {
     PhoneIcon,
     MailIcon,
     MapPinIcon,
-    ShieldCheckIcon,
     RoyalCrownIcon
 } from "@/components/icons";
 import { motion } from "framer-motion";
@@ -55,43 +54,6 @@ const Footer = () => {
 
     return (
         <footer className="bg-gradient-to-b from-white via-[#FCF9FC] to-[#FAF5FA] border-t border-[#EFE0EF]">
-            {/* Top Trust Bar */}
-            <div className="border-b border-[#EFE0EF]/70 py-6 bg-[#FAF6FA]/60">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-3">
-                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
-                                <RoyalCrownIcon size={18} color="#6C306E" />
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">Direct UK Import</h4>
-                                <p className="text-[11px] text-slate-500 font-normal">Authentic products from trusted UK retailers</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-center sm:justify-start gap-3">
-                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
-                                <ShieldCheckIcon size={18} color="#6C306E" accentColor="#D8B56D" />
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">100% Original Guarantee</h4>
-                                <p className="text-[11px] text-slate-500 font-normal">Full authenticity verification on every item</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-center sm:justify-start gap-3">
-                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
-                                <WhatsAppIcon size={18} color="#6C306E" />
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-[#241224] tracking-tight">Instant Consultation</h4>
-                                <p className="text-[11px] text-slate-500 font-normal">Expert beauty & skincare advice on WhatsApp</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row items-start justify-between gap-12 py-16 sm:py-20 border-b border-[#EFE0EF]/80 text-slate-600">
                     {/* Brand Column */}
