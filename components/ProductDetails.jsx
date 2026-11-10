@@ -119,11 +119,7 @@ const ProductDetails = ({ product }) => {
                     <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1 rounded-full uppercase tracking-widest">
                         {product.category || 'Skincare'}
                     </span>
-                    {product.inStock !== false ? (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
-                            In Stock • 100% Authentic UK
-                        </span>
-                    ) : (
+                    {product.inStock === false && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
                             Sold Out • Restocking Soon
                         </span>
