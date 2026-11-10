@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
-const SPRING_CONFIG = { damping: 100, stiffness: 400 };
+// Silky, low-latency, luxury spring physics
+const SPRING_CONFIG = { damping: 18, stiffness: 180, mass: 0.25 };
 
-function MagneticButton({ children, distance = 0.6 }) {
+function MagneticButton({ 
+  children, 
+  distance = 0.38, 
+  radius = 110,
+  className = '' 
+}) {
+  const containerRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -16,42 +22,60 @@ function MagneticButton({ children, distance = 0.6 }) {
   const springY = useSpring(y, SPRING_CONFIG);
 
   useEffect(() => {
-    const calculateDistance = (e) => {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const distanceX = e.clientX - centerX;
-        const distanceY = e.clientY - centerY;
+    const handleMouseMove = (e) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
 
-        if (isHovered) {
-          x.set(distanceX * distance);
-          y.set(distanceY * distance);
-        } else {
-          x.set(0);
-          y.set(0);
-        }
+      const distanceX = e.clientX - centerX;
+      const distanceY = e.clientY - centerY;
+      const dist = Math.hypot(distanceX, distanceY);
+
+      // Check if mouse is hovering or within magnetic influence radius around the button
+      if (dist < radius || isHovered) {
+        x.set(distanceX * distance);
+        y.set(distanceY * distance);
+      } else {
+        x.set(0);
+        y.set(0);
       }
     };
 
-    document.addEventListener('mousemove', calculateDistance);
+    const handleMouseLeaveWindow = () => {
+      x.set(0);
+      y.set(0);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeaveWindow);
 
     return () => {
-      document.removeEventListener('mousemove', calculateDistance);
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeaveWindow);
     };
-  }, [ref, isHovered, distance, x, y]);
+  }, [distance, radius, isHovered, x, y]);
 
   return (
-    <motion.div
-      ref={ref}
+    <div 
+      ref={containerRef} 
+      className={`inline-block ${className}`}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        x: springX,
-        y: springY
-      }}>
-      {children}
-    </motion.div>
+      onMouseLeave={() => {
+        setIsHovered(false);
+        x.set(0);
+        y.set(0);
+      }}
+    >
+      <motion.div
+        style={{
+          x: springX,
+          y: springY
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
   );
 }
 

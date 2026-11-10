@@ -223,16 +223,18 @@ const ProductDetails = ({ product }) => {
                                 )}
                             </motion.button>
 
-                            {/* 2. BUY NOW: Restored to original clean outline aesthetic */}
-                            <motion.button 
-                                whileHover={{ scale: 1.025, y: -1 }}
-                                whileTap={{ scale: 0.97 }}
-                                type="button"
-                                onClick={buyNowHandler} 
-                                className="inline-flex items-center justify-center px-8 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-all duration-200 shadow-2xs active:scale-95 cursor-pointer"
-                            >
-                                Buy Now
-                            </motion.button>
+                            {/* 2. BUY NOW: Restored to original clean outline aesthetic with Magnetic Cursor Follow */}
+                            <MagneticButton distance={0.38} radius={110}>
+                                <motion.button 
+                                    whileHover={{ scale: 1.025 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    type="button"
+                                    onClick={buyNowHandler} 
+                                    className="inline-flex items-center justify-center px-8 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-colors duration-200 shadow-2xs active:scale-95 cursor-pointer select-none"
+                                >
+                                    Buy Now
+                                </motion.button>
+                            </MagneticButton>
                         </>
                     )}
                 </div>
