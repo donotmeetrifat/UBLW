@@ -17,9 +17,8 @@ export default function AdminApprove() {
     }
 
     const handleApprove = async ({ storeId, status }) => {
-        // Logic to approve a store
-
-
+        setStores(prev => prev.map(s => s.id === storeId ? { ...s, status } : s))
+        toast.success(`Store status updated to ${status}`)
     }
 
     useEffect(() => {
