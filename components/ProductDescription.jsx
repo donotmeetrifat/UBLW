@@ -28,7 +28,7 @@ const ProductDescription = ({ product }) => {
                         <button 
                             key={index} 
                             onClick={() => setSelectedTab(tab)}
-                            className={`px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 relative cursor-pointer rounded-full ${
+                            className={`px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 relative cursor-pointer rounded-xl ${
                                 isSelected ? 'text-[#6C306E]' : 'text-slate-400 hover:text-slate-700 hover:bg-[#FAF6FA]/50'
                             }`}
                         >
@@ -38,7 +38,7 @@ const ProductDescription = ({ product }) => {
                             {isSelected && (
                                 <motion.div
                                     layoutId="activeTabPill"
-                                    className="absolute inset-0 bg-[#FAF6FA] border border-[#EFE0EF] rounded-full shadow-2xs z-0"
+                                    className="absolute inset-0 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl shadow-2xs z-0"
                                     transition={{ type: "spring", stiffness: 450, damping: 35 }}
                                 />
                             )}
