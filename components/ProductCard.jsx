@@ -27,9 +27,13 @@ const ProductCard = ({ product }) => {
         ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
         : 0
 
-    const badgeText = discountPercentage > 0
-        ? `${discountPercentage}% OFF`
-        : product?.category || 'UK Import'
+    const isOutOfStock = product.inStock === false
+
+    const badgeText = isOutOfStock
+        ? 'Sold Out'
+        : discountPercentage > 0
+            ? `${discountPercentage}% OFF`
+            : product?.category || 'UK Import'
 
     const handleAddToCart = (e) => {
         e.preventDefault()
@@ -212,16 +216,22 @@ const ProductCard = ({ product }) => {
                 {/* Luxury Add to Cart Button */}
                 <motion.button
                     type="button"
-                    onClick={handleAddToCart}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.92 }}
-                    aria-label={`Add ${product.name} to cart`}
-                    className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xs cursor-pointer ${isAdded
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)]'
+                    disabled={isOutOfStock}
+                    onClick={isOutOfStock ? (e) => { e.preventDefault(); e.stopPropagation(); } : handleAddToCart}
+                    whileHover={{ scale: isOutOfStock ? 1 : 1.05 }}
+                    whileTap={{ scale: isOutOfStock ? 1 : 0.92 }}
+                    aria-label={isOutOfStock ? `${product.name} is sold out` : `Add ${product.name} to cart`}
+                    className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xs ${
+                        isOutOfStock
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : isAdded
+                                ? 'bg-emerald-600 text-white cursor-pointer'
+                                : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)] cursor-pointer'
                         }`}
                 >
-                    {isAdded ? (
+                    {isOutOfStock ? (
+                        <span className="text-[10px] font-bold">X</span>
+                    ) : isAdded ? (
                         <CheckIcon size={16} color="#FFFFFF" strokeWidth={2.5} />
                     ) : (
                         <BagIcon size={16} color="#FFFFFF" />

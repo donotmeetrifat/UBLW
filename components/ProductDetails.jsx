@@ -124,9 +124,15 @@ const ProductDetails = ({ product }) => {
                     <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1 rounded-full uppercase tracking-widest">
                         {product.category || 'Skincare'}
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
-                        In Stock • 100% Authentic UK
-                    </span>
+                    {product.inStock !== false ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                            In Stock • 100% Authentic UK
+                        </span>
+                    ) : (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                            Sold Out • Restocking Soon
+                        </span>
+                    )}
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight tracking-tight">
@@ -176,59 +182,80 @@ const ProductDetails = ({ product }) => {
 
                 {/* Action Buttons Row */}
                 <div className="flex flex-wrap items-center gap-3 my-6">
-                    {cart[productId] && (
-                        <div className="flex flex-col gap-1.5 mr-2">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Qty</span>
-                            <Counter productId={productId} />
-                        </div>
+                    {product.inStock === false ? (
+                        <>
+                            <span className="px-6 py-3.5 bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200">
+                                Currently Out of Stock
+                            </span>
+                            <motion.a
+                                href={`https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20please%20notify%20me%20when%20${encodeURIComponent(product.name)}%20is%20back%20in%20stock!`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-full transition shadow-2xs"
+                            >
+                                <WhatsAppIcon size={15} color="#059669" />
+                                <span>Pre-Order via WhatsApp</span>
+                            </motion.a>
+                        </>
+                    ) : (
+                        <>
+                            {cart[productId] && (
+                                <div className="flex flex-col gap-1.5 mr-2">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Qty</span>
+                                    <Counter productId={productId} />
+                                </div>
+                            )}
+
+                            <motion.button 
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                type="button"
+                                onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} 
+                                className={`inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 text-xs font-bold rounded-full transition-all duration-200 shadow-sm cursor-pointer ${
+                                    isAdded
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white shadow-[0_4px_16px_rgba(108,48,110,0.22)]'
+                                }`}
+                            >
+                                {isAdded ? (
+                                    <>
+                                        <CheckIcon size={16} color="#FFFFFF" strokeWidth={2.5} />
+                                        <span>Added to Bag!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <BagIcon size={16} color="#FFFFFF" />
+                                        <span>{!cart[productId] ? 'Add to Bag' : 'View Bag & Checkout'}</span>
+                                    </>
+                                )}
+                            </motion.button>
+
+                            <MagneticButton>
+                                <button 
+                                    type="button"
+                                    onClick={buyNowHandler} 
+                                    className="inline-flex items-center justify-center px-7 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-all duration-200 shadow-2xs active:scale-95 cursor-pointer"
+                                >
+                                    Buy Now
+                                </button>
+                            </MagneticButton>
+
+                            {/* Instant WhatsApp Order CTA */}
+                            <motion.a
+                                href={whatsappOrderUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-full transition-all shadow-2xs"
+                            >
+                                <WhatsAppIcon size={15} color="#059669" />
+                                <span>Order via WhatsApp</span>
+                            </motion.a>
+                        </>
                     )}
-
-                    <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        type="button"
-                        onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} 
-                        className={`inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 text-xs font-bold rounded-full transition-all duration-200 shadow-sm cursor-pointer ${
-                            isAdded
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white shadow-[0_4px_16px_rgba(108,48,110,0.22)]'
-                        }`}
-                    >
-                        {isAdded ? (
-                            <>
-                                <CheckIcon size={16} color="#FFFFFF" strokeWidth={2.5} />
-                                <span>Added to Bag!</span>
-                            </>
-                        ) : (
-                            <>
-                                <BagIcon size={16} color="#FFFFFF" />
-                                <span>{!cart[productId] ? 'Add to Bag' : 'View Bag & Checkout'}</span>
-                            </>
-                        )}
-                    </motion.button>
-
-                    <MagneticButton>
-                        <button 
-                            type="button"
-                            onClick={buyNowHandler} 
-                            className="inline-flex items-center justify-center px-7 sm:px-9 py-3.5 text-xs font-bold text-[#6C306E] bg-white border border-[#6C306E] rounded-full hover:bg-[#FAF6FA] hover:border-[#3A0C38] transition-all duration-200 shadow-2xs active:scale-95 cursor-pointer"
-                        >
-                            Buy Now
-                        </button>
-                    </MagneticButton>
-
-                    {/* Instant WhatsApp Order CTA */}
-                    <motion.a
-                        href={whatsappOrderUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-3.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-full transition-all shadow-2xs"
-                    >
-                        <WhatsAppIcon size={15} color="#059669" />
-                        <span>Order via WhatsApp</span>
-                    </motion.a>
                 </div>
 
                 <hr className="border-[#EFE0EF] my-6" />

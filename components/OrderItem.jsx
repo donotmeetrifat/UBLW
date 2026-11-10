@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import Rating from "./Rating";
 import { useState } from "react";
 import RatingModal from "./RatingModal";
+import InvoiceModal from "./InvoiceModal";
 import {
     SparklesIcon,
     CheckIcon,
@@ -28,6 +29,7 @@ const STAGES = [
 const OrderItem = ({ order }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
     const [ratingModal, setRatingModal] = useState(null);
+    const [showInvoice, setShowInvoice] = useState(false);
 
     const { ratings } = useSelector(state => state.rating);
 
@@ -82,9 +84,7 @@ const OrderItem = ({ order }) => {
                     </div>
 
                     <button
-                        onClick={() => {
-                            if (typeof window !== 'undefined') window.print();
-                        }}
+                        onClick={() => setShowInvoice(true)}
                         className="px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] hover:bg-[#EFE0EF] transition cursor-pointer"
                     >
                         Invoice
@@ -247,6 +247,13 @@ const OrderItem = ({ order }) => {
             {ratingModal && (
                 <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />
             )}
+
+            {/* Invoice Modal */}
+            <InvoiceModal
+                order={order}
+                isOpen={showInvoice}
+                onClose={() => setShowInvoice(false)}
+            />
         </motion.div>
     );
 };
