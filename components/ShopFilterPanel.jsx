@@ -91,7 +91,7 @@ const FilterGroup = ({ group, filters, onToggle }) => {
             </button>
 
             {isOpen && (
-                <div className="mt-3.5 space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                <div className="mt-3.5 space-y-2.5">
                     {group.options.map((option) => {
                         const inputId = `${group.key}-${option.value}`.replaceAll(' ', '-').toLowerCase()
                         const checked = filters[group.key].includes(option.value)
