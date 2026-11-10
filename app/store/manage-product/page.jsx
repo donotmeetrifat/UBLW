@@ -133,11 +133,11 @@ export default function StoreManageProducts() {
                                 <tr key={product.id} className="hover:bg-[#FAF6FA]/70 transition-colors">
                                     <td className="px-5 py-3.5">
                                         <div className="flex gap-3 items-center">
-                                            <div className="size-12 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center p-1 shrink-0">
+                                            <div className="size-12 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center p-1 shrink-0">
                                                 <Image
                                                     width={40}
                                                     height={40}
-                                                    className="max-h-10 w-auto object-contain mix-blend-multiply"
+                                                    className="max-h-10 w-auto object-contain"
                                                     src={imageSrc}
                                                     alt={product.name}
                                                 />

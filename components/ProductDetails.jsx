@@ -76,20 +76,20 @@ const ProductDetails = ({ product }) => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setMainImage(image)} 
-                                className={`bg-[#FAF6FA] border overflow-hidden size-18 sm:size-20 rounded-2xl cursor-pointer transition-all duration-200 p-1.5 ${
+                                className={`bg-white border overflow-hidden size-18 sm:size-20 rounded-2xl cursor-pointer transition-all duration-200 p-1.5 ${
                                     isSelected 
                                         ? 'border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/15' 
                                         : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
-                                <Image src={image} className="w-full h-full object-contain mix-blend-multiply" alt="" width={80} height={80} />
+                                <Image src={image} className="w-full h-full object-contain" alt="" width={80} height={80} />
                             </motion.button>
                         );
                     })}
                 </div>
 
                 {/* Main Image Showcase with Smooth Switch */}
-                <div className="relative aspect-square w-full sm:size-112 md:size-120 bg-[#FAF6FA] rounded-3xl border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-6 shadow-2xs">
+                <div className="relative aspect-square w-full sm:size-112 md:size-120 bg-white rounded-3xl border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-6 shadow-2xs">
                     {discountPercentage > 0 && (
                         <span className="absolute top-4 left-4 z-10 bg-[#6C306E] text-white text-xs font-bold px-3.5 py-1 rounded-full shadow-xs">
                             {discountPercentage}% OFF
@@ -110,7 +110,7 @@ const ProductDetails = ({ product }) => {
                                 alt={product.name} 
                                 width={500} 
                                 height={500} 
-                                className="w-full h-full object-contain mix-blend-multiply" 
+                                className="w-full h-full object-contain" 
                                 priority
                             />
                         </motion.div>

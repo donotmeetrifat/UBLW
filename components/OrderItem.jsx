@@ -177,13 +177,13 @@ const OrderItem = ({ order }) => {
                     return (
                         <div key={index} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3.5 min-w-0">
-                                <div className="size-16 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center p-2 shrink-0">
+                                <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] flex items-center justify-center p-2 shrink-0">
                                     <Image
                                         src={prodImage}
                                         alt={prodName}
                                         width={48}
                                         height={48}
-                                        className="max-h-12 w-auto object-contain mix-blend-multiply"
+                                        className="max-h-12 w-auto object-contain"
                                     />
                                 </div>
                                 <div className="min-w-0">

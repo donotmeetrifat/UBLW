@@ -78,10 +78,10 @@ export default function Cart() {
                                         >
                                             <td className="py-4">
                                                 <div className="flex gap-4 items-center">
-                                                    <div className="flex items-center justify-center bg-[#FAF6FA] border border-[#EFE0EF] size-20 sm:size-24 rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                                                    <div className="flex items-center justify-center bg-white border border-[#EFE0EF] size-20 sm:size-24 rounded-2xl p-1.5 shrink-0 overflow-hidden shadow-2xs">
                                                         <Image 
                                                             src={item.images[0]} 
-                                                            className="w-full h-full object-contain p-1 mix-blend-multiply" 
+                                                            className="w-full h-full object-contain p-1" 
                                                             alt={item.name} 
                                                             width={96} 
                                                             height={96} 

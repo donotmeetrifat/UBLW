@@ -329,8 +329,8 @@ export default function AdminCustomerMarketingHub() {
                             <div key={lead.id} className="bg-white border border-[#EFE0EF] rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
                                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EFE0EF] pb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="size-14 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center p-1 shrink-0">
-                                            <img src={lead.productImage} alt={lead.productName} className="max-h-12 w-auto object-contain mix-blend-multiply" />
+                                        <div className="size-14 rounded-2xl bg-white border border-[#EFE0EF] flex items-center justify-center p-1 shrink-0">
+                                            <img src={lead.productImage} alt={lead.productName} className="max-h-12 w-auto object-contain" />
                                         </div>
                                         <div>
                                             <p className="font-extrabold text-sm text-[#241224]">{lead.customerName}</p>
