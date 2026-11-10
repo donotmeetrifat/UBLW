@@ -66,10 +66,10 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    {/* Right-Aligned Large Transparent Image */}
-                    <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
+                    {/* Right-Aligned Large Transparent Image with Safe Inset Space */}
+                    <div className='absolute right-2 sm:right-4 md:right-6 bottom-0 top-2 sm:top-4 w-[42%] min-[450px]:w-[46%] sm:w-[48%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden'>
                         <Image 
-                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
+                            className='max-h-[90%] sm:max-h-[92%] w-auto max-w-full object-contain object-right-bottom origin-bottom-right group-hover/hero:scale-104 transition-transform duration-700 ease-out' 
                             src={assets.hero_card_img1} 
                             alt="Direct from the UK - Premium Beauty" 
                             priority
@@ -104,9 +104,9 @@ const Hero = () => {
                                 </p>
                             </div>
 
-                            <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                            <div className='w-[44%] sm:w-[46%] h-full flex items-end justify-end relative shrink-0 p-2 sm:p-2.5 overflow-hidden pointer-events-none'>
                                 <Image 
-                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                    className='max-h-[82%] sm:max-h-[85%] w-auto max-w-full object-contain object-right-bottom origin-bottom-right group-hover:scale-105 transition-transform duration-500 ease-out' 
                                     src={assets.hero_card_img2} 
                                     alt="Skincare Top Selected" 
                                 />
@@ -139,9 +139,9 @@ const Hero = () => {
                                 </p>
                             </div>
 
-                            <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                            <div className='w-[44%] sm:w-[46%] h-full flex items-end justify-end relative shrink-0 p-2 sm:p-2.5 overflow-hidden pointer-events-none'>
                                 <Image 
-                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                    className='max-h-[82%] sm:max-h-[85%] w-auto max-w-full object-contain object-right-bottom origin-bottom-right group-hover:scale-105 transition-transform duration-500 ease-out' 
                                     src={assets.hero_card_img3} 
                                     alt="Cosmetics Exclusive Deals" 
                                 />
