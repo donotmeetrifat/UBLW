@@ -3,13 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { assets } from "@/assets/assets";
-import { 
-    FacebookIcon, 
-    InstagramIcon, 
-    WhatsAppIcon, 
-    PhoneIcon, 
-    MailIcon, 
-    MapPinIcon, 
+import {
+    FacebookIcon,
+    InstagramIcon,
+    WhatsAppIcon,
+    PhoneIcon,
+    MailIcon,
+    MapPinIcon,
     ShieldCheckIcon,
     RoyalCrownIcon
 } from "@/components/icons";
@@ -98,17 +98,17 @@ const Footer = () => {
                     <div className="max-w-md">
                         <Link href="/" className="inline-block group mb-3">
                             <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                                <Image 
-                                    src={assets.webLogo} 
-                                    alt="UK Brand Lover Logo" 
-                                    className="h-12 sm:h-14 w-auto object-contain" 
+                                <Image
+                                    src={assets.webLogo}
+                                    alt="UK Brand Lover Logo"
+                                    className="h-12 sm:h-14 w-auto object-contain"
                                 />
                             </motion.div>
                         </Link>
                         <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-500 font-normal">
                             Your premier destination in Bangladesh for authentic UK imported beauty, dermatological skincare, cult makeup, haircare, and personal care essentials.
                         </p>
-                        
+
                         {/* Social Buttons with Smooth Hover */}
                         <div className="flex items-center gap-3 mt-6">
                             {socialLinks.map((item, i) => (

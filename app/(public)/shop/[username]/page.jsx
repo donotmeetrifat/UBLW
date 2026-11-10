@@ -2,7 +2,7 @@
 import ProductCard from "@/components/ProductCard"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { MailIcon, MapPinIcon } from "lucide-react"
+import { MailIcon, MapPinIcon } from "@/components/icons"
 import Loading from "@/components/Loading"
 import Image from "next/image"
 import { dummyStoreData, productDummyData } from "@/assets/assets"

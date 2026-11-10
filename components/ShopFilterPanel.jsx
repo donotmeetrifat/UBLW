@@ -38,13 +38,13 @@ const CustomSelect = ({ value, onChange, options }) => {
             <AnimatePresence>
                 {isOpen && (
                     <>
-                        <div 
-                            className="fixed inset-0 z-40" 
+                        <div
+                            className="fixed inset-0 z-40"
                             onClick={() => setIsOpen(false)}
                             aria-hidden="true"
                         />
-                        
-                        <motion.div 
+
+                        <motion.div
                             initial={{ opacity: 0, y: -6, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -59,11 +59,10 @@ const CustomSelect = ({ value, onChange, options }) => {
                                         onChange(option.value)
                                         setIsOpen(false)
                                     }}
-                                    className={`w-full px-4 py-2.5 text-left text-xs transition-colors cursor-pointer ${
-                                        value === option.value
-                                            ? 'bg-[#FAF6FA] text-[#6C306E] font-bold'
-                                            : 'text-[#503E50] hover:bg-[#FAF6FA] hover:text-[#6C306E]'
-                                    }`}
+                                    className={`w-full px-4 py-2.5 text-left text-xs transition-colors cursor-pointer ${value === option.value
+                                        ? 'bg-[#FAF6FA] text-[#6C306E] font-bold'
+                                        : 'text-[#503E50] hover:bg-[#FAF6FA] hover:text-[#6C306E]'
+                                        }`}
                                 >
                                     {option.label}
                                 </button>
@@ -151,10 +150,10 @@ const ShopFilterPanel = ({ filters, sortBy, onToggle, onPriceChange, onClear, on
                 <label className="block text-xs font-bold text-[#241224] tracking-wide" htmlFor="sort-products-sidebar">
                     Sort Collection
                 </label>
-                <CustomSelect 
-                    value={sortBy} 
-                    onChange={onSortChange} 
-                    options={filterOptions.sortOptions} 
+                <CustomSelect
+                    value={sortBy}
+                    onChange={onSortChange}
+                    options={filterOptions.sortOptions}
                 />
             </div>
 

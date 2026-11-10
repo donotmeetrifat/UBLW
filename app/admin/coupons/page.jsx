@@ -1,14 +1,13 @@
 'use client'
+
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import toast from "react-hot-toast"
-import { DeleteIcon } from "lucide-react"
+import { TrashIcon, TagIcon, SparklesIcon, PlusIcon } from "@/components/icons"
 import { couponDummyData } from "@/assets/assets"
 
 export default function AdminCoupons() {
-
     const [coupons, setCoupons] = useState([])
-
     const [newCoupon, setNewCoupon] = useState({
         code: '',
         description: '',
@@ -16,7 +15,7 @@ export default function AdminCoupons() {
         forNewUser: false,
         forMember: false,
         isPublic: false,
-        expiresAt: new Date()
+        expiresAt: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0]
     })
 
     const fetchCoupons = async () => {
@@ -25,110 +24,193 @@ export default function AdminCoupons() {
 
     const handleAddCoupon = async (e) => {
         e.preventDefault()
-        // Logic to add a coupon
+        const code = newCoupon.code.trim().toUpperCase()
+        const discount = Number(newCoupon.discount)
 
+        if (!code || !discount) {
+            toast.error("Please provide valid code and discount percentage")
+            return
+        }
 
+        const created = {
+            code,
+            description: newCoupon.description || `${discount}% Promotional Discount`,
+            discount,
+            forNewUser: newCoupon.forNewUser,
+            forMember: newCoupon.forMember,
+            isPublic: newCoupon.isPublic,
+            expiresAt: new Date(newCoupon.expiresAt).toISOString(),
+            createdAt: new Date().toISOString()
+        }
+
+        setCoupons(prev => [created, ...prev])
+        setNewCoupon({
+            code: '',
+            description: '',
+            discount: '',
+            forNewUser: false,
+            forMember: false,
+            isPublic: false,
+            expiresAt: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0]
+        })
+        toast.success(`Coupon ${code} added successfully!`)
     }
 
     const handleChange = (e) => {
-        setNewCoupon({ ...newCoupon, [e.target.name]: e.target.value })
+        const { name, value, type, checked } = e.target
+        setNewCoupon({
+            ...newCoupon,
+            [name]: type === 'checkbox' ? checked : value
+        })
     }
 
     const deleteCoupon = async (code) => {
-        // Logic to delete a coupon
-
-
+        setCoupons(prev => prev.filter(c => c.code !== code))
+        toast.success(`Coupon ${code} removed`)
     }
 
     useEffect(() => {
-        fetchCoupons();
+        fetchCoupons()
     }, [])
 
     return (
-        <div className="text-slate-500 mb-40">
+        <div className="text-slate-800 pb-20">
+            <h1 className="text-2xl font-extrabold text-[#241224] mb-1">
+                Admin <span className="text-[#6C306E]">Coupons</span>
+            </h1>
+            <p className="text-xs text-slate-500 mb-6">
+                Create and manage customer discount vouchers and seasonal promotions
+            </p>
 
-            {/* Add Coupon */}
-            <form onSubmit={(e) => toast.promise(handleAddCoupon(e), { loading: "Adding coupon..." })} className="max-w-sm text-sm">
-                <h2 className="text-2xl">Add <span className="text-slate-800 font-medium">Coupons</span></h2>
-                <div className="flex gap-2 max-sm:flex-col mt-2">
-                    <input type="text" placeholder="Coupon Code" className="w-full mt-2 p-2 border border-slate-200 outline-slate-400 rounded-md"
-                        name="code" value={newCoupon.code} onChange={handleChange} required
+            {/* Add Coupon Form */}
+            <form onSubmit={handleAddCoupon} className="max-w-xl bg-white p-6 rounded-3xl border border-[#EFE0EF] mb-8 shadow-[0_4px_24px_rgba(58,12,56,0.04)]">
+                <h2 className="text-sm font-extrabold text-[#241224] uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <TagIcon size={16} color="#6C306E" />
+                    <span>Create New Promo Voucher</span>
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <input
+                        type="text"
+                        placeholder="Coupon Code (e.g. EID25)"
+                        className="w-full p-2.5 px-3.5 border border-[#EFE0EF] focus:border-[#6C306E] outline-none rounded-xl text-xs uppercase font-mono font-bold bg-[#FAF6FA]"
+                        name="code"
+                        value={newCoupon.code}
+                        onChange={handleChange}
+                        required
                     />
-                    <input type="number" placeholder="Coupon Discount (%)" min={1} max={100} className="w-full mt-2 p-2 border border-slate-200 outline-slate-400 rounded-md"
-                        name="discount" value={newCoupon.discount} onChange={handleChange} required
+                    <input
+                        type="number"
+                        placeholder="Discount Percentage (%)"
+                        min={1}
+                        max={100}
+                        className="w-full p-2.5 px-3.5 border border-[#EFE0EF] focus:border-[#6C306E] outline-none rounded-xl text-xs bg-[#FAF6FA]"
+                        name="discount"
+                        value={newCoupon.discount}
+                        onChange={handleChange}
+                        required
                     />
                 </div>
-                <input type="text" placeholder="Coupon Description" className="w-full mt-2 p-2 border border-slate-200 outline-slate-400 rounded-md"
-                    name="description" value={newCoupon.description} onChange={handleChange} required
+
+                <input
+                    type="text"
+                    placeholder="Description (e.g. 25% Off Eid Festival Privilege)"
+                    className="w-full p-2.5 px-3.5 border border-[#EFE0EF] focus:border-[#6C306E] outline-none rounded-xl text-xs bg-[#FAF6FA] mb-3"
+                    name="description"
+                    value={newCoupon.description}
+                    onChange={handleChange}
+                    required
                 />
 
-                <label>
-                    <p className="mt-3">Coupon Expiry Date</p>
-                    <input type="date" placeholder="Coupon Expires At" className="w-full mt-1 p-2 border border-slate-200 outline-slate-400 rounded-md"
-                        name="expiresAt" value={format(newCoupon.expiresAt, 'yyyy-MM-dd')} onChange={handleChange}
+                <div className="mb-4">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Expiration Date</label>
+                    <input
+                        type="date"
+                        className="w-full p-2.5 px-3.5 border border-[#EFE0EF] focus:border-[#6C306E] outline-none rounded-xl text-xs bg-[#FAF6FA]"
+                        name="expiresAt"
+                        value={newCoupon.expiresAt}
+                        onChange={handleChange}
+                        required
                     />
-                </label>
-
-                <div className="mt-5">
-                    <div className="flex gap-2 mt-3">
-                        <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                            <input type="checkbox" className="sr-only peer"
-                                name="forNewUser" checked={newCoupon.forNewUser}
-                                onChange={(e) => setNewCoupon({ ...newCoupon, forNewUser: e.target.checked })}
-                            />
-                            <div className="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
-                            <span className="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
-                        </label>
-                        <p>For New User</p>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                        <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                            <input type="checkbox" className="sr-only peer"
-                                name="forMember" checked={newCoupon.forMember}
-                                onChange={(e) => setNewCoupon({ ...newCoupon, forMember: e.target.checked })}
-                            />
-                            <div className="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
-                            <span className="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
-                        </label>
-                        <p>For Member</p>
-                    </div>
                 </div>
-                <button className="mt-4 p-2 px-10 rounded bg-slate-700 text-white active:scale-95 transition">Add Coupon</button>
+
+                <div className="flex flex-wrap gap-4 text-xs text-slate-600 mb-5">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="forNewUser"
+                            checked={newCoupon.forNewUser}
+                            onChange={handleChange}
+                            className="rounded text-[#6C306E]"
+                        />
+                        <span>New Customers Only</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="forMember"
+                            checked={newCoupon.forMember}
+                            onChange={handleChange}
+                            className="rounded text-[#6C306E]"
+                        />
+                        <span>VIP Members Only</span>
+                    </label>
+                </div>
+
+                <button
+                    type="submit"
+                    className="bg-[#6C306E] hover:bg-[#3A0C38] text-white px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition shadow-2xs cursor-pointer"
+                >
+                    Add Coupon
+                </button>
             </form>
 
-            {/* List Coupons */}
-            <div className="mt-14">
-                <h2 className="text-2xl">List <span className="text-slate-800 font-medium">Coupons</span></h2>
-                <div className="overflow-x-auto mt-4 rounded-lg border border-slate-200 max-w-4xl">
-                    <table className="min-w-full bg-white text-sm">
-                        <thead className="bg-slate-50">
-                            <tr>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">Code</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">Description</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">Discount</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">Expires At</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">New User</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">For Member</th>
-                                <th className="py-3 px-4 text-left font-semibold text-slate-600">Action</th>
+            {/* Coupons Table */}
+            <div className="overflow-x-auto bg-white rounded-3xl shadow-[0_4px_24px_rgba(58,12,56,0.04)] border border-[#EFE0EF] max-w-4xl">
+                <table className="w-full text-left text-xs">
+                    <thead className="bg-[#FAF6FA] text-[#241224] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#EFE0EF]">
+                        <tr>
+                            <th className="px-5 py-4">Code</th>
+                            <th className="px-4 py-4">Description</th>
+                            <th className="px-4 py-4">Discount</th>
+                            <th className="px-4 py-4">Audience</th>
+                            <th className="px-4 py-4">Expires</th>
+                            <th className="px-4 py-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EFE0EF]/60">
+                        {coupons.map((coupon) => (
+                            <tr key={coupon.code} className="hover:bg-[#FAF6FA]/70 transition-colors">
+                                <td className="px-5 py-3.5 font-mono font-extrabold text-[#6C306E]">
+                                    {coupon.code}
+                                </td>
+                                <td className="px-4 py-3.5 font-medium text-[#241224]">
+                                    {coupon.description}
+                                </td>
+                                <td className="px-4 py-3.5 font-extrabold text-[#3A0C38] text-sm">
+                                    {coupon.discount}% OFF
+                                </td>
+                                <td className="px-4 py-3.5">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600">
+                                        {coupon.forNewUser ? "New Users" : coupon.forMember ? "VIP Members" : "All Shoppers"}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3.5 text-slate-400 text-[11px]">
+                                    {coupon.expiresAt ? format(new Date(coupon.expiresAt), "dd MMM yyyy") : "No Expiry"}
+                                </td>
+                                <td className="px-4 py-3.5 text-right">
+                                    <button
+                                        onClick={() => deleteCoupon(coupon.code)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                                        title="Delete coupon"
+                                    >
+                                        <TrashIcon size={14} color="currentColor" />
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                            {coupons.map((coupon) => (
-                                <tr key={coupon.code} className="hover:bg-slate-50">
-                                    <td className="py-3 px-4 font-medium text-slate-800">{coupon.code}</td>
-                                    <td className="py-3 px-4 text-slate-800">{coupon.description}</td>
-                                    <td className="py-3 px-4 text-slate-800">{coupon.discount}%</td>
-                                    <td className="py-3 px-4 text-slate-800">{format(coupon.expiresAt, 'yyyy-MM-dd')}</td>
-                                    <td className="py-3 px-4 text-slate-800">{coupon.forNewUser ? 'Yes' : 'No'}</td>
-                                    <td className="py-3 px-4 text-slate-800">{coupon.forMember ? 'Yes' : 'No'}</td>
-                                    <td className="py-3 px-4 text-slate-800">
-                                        <DeleteIcon onClick={() => toast.promise(deleteCoupon(coupon.code), { loading: "Deleting coupon..." })} className="w-5 h-5 text-red-500 hover:text-red-800 cursor-pointer" />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     )

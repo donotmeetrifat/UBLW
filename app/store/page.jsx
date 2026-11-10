@@ -27,8 +27,25 @@ export default function Dashboard() {
     ]
 
     const fetchDashboardData = async () => {
-        setDashboardData(dummyStoreDashboardData)
-        setLoading(false)
+        try {
+            const res = await fetch('/api/admin/dashboard')
+            const data = await res.json()
+            if (data.success && data.dashboardData) {
+                setDashboardData({
+                    totalProducts: data.dashboardData.products,
+                    totalEarnings: Number(data.dashboardData.revenue) || 0,
+                    totalOrders: data.dashboardData.orders,
+                    ratings: dummyStoreDashboardData.ratings,
+                })
+            } else {
+                setDashboardData(dummyStoreDashboardData)
+            }
+        } catch (error) {
+            console.error('Error fetching seller metrics:', error)
+            setDashboardData(dummyStoreDashboardData)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

@@ -26,8 +26,20 @@ export default function AdminDashboard() {
     ]
 
     const fetchDashboardData = async () => {
-        setDashboardData(dummyAdminDashboardData)
-        setLoading(false)
+        try {
+            const res = await fetch('/api/admin/dashboard')
+            const data = await res.json()
+            if (data.success && data.dashboardData) {
+                setDashboardData(data.dashboardData)
+            } else {
+                setDashboardData(dummyAdminDashboardData)
+            }
+        } catch (error) {
+            console.error('Error fetching admin dashboard data:', error)
+            setDashboardData(dummyAdminDashboardData)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

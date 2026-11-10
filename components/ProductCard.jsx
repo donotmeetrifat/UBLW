@@ -19,7 +19,7 @@ const ProductCard = ({ product }) => {
     // Calculate average rating safely
     const ratingList = product?.rating || []
     const ratingCount = ratingList.length
-    const avgRating = ratingCount > 0 
+    const avgRating = ratingCount > 0
         ? (ratingList.reduce((acc, curr) => acc + (curr.rating || 0), 0) / ratingCount)
         : 5.0
 
@@ -149,8 +149,8 @@ const ProductCard = ({ product }) => {
         >
             <Link href={`/product/${product.id}`} className="block flex-1">
                 {/* Product Image Container with Smooth Zoom */}
-                <div 
-                    ref={imageRef} 
+                <div
+                    ref={imageRef}
                     className="relative aspect-square w-full rounded-2xl bg-[#FAF6FA] flex items-center justify-center p-3 sm:p-4 overflow-hidden border border-[#EFE0EF]/60"
                 >
                     {/* Badge */}
@@ -216,11 +216,10 @@ const ProductCard = ({ product }) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.92 }}
                     aria-label={`Add ${product.name} to cart`}
-                    className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xs cursor-pointer ${
-                        isAdded
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)]'
-                    }`}
+                    className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xs cursor-pointer ${isAdded
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-[#6C306E] hover:bg-[#3A0C38] text-white hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)]'
+                        }`}
                 >
                     {isAdded ? (
                         <CheckIcon size={16} color="#FFFFFF" strokeWidth={2.5} />
