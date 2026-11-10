@@ -29,8 +29,12 @@ const slides = [
 const HeroBannerSlider = () => {
     const [activeIndex, setActiveIndex] = useState(0)
     const [isPaused, setIsPaused] = useState(false)
-    const touchStartX = useRef(null)
-    const touchEndX = useRef(null)
+    const [isDragging, setIsDragging] = useState(false)
+    const [dragOffset, setDragOffset] = useState(0)
+
+    const dragStartX = useRef(0)
+    const isPointerDown = useRef(false)
+    const currentDragOffset = useRef(0)
 
     const goToSlide = (index) => {
         setActiveIndex((index + slides.length) % slides.length)
@@ -44,74 +48,135 @@ const HeroBannerSlider = () => {
         goToSlide(activeIndex + 1)
     }
 
-    const handleTouchStart = (event) => {
-        touchStartX.current = event.touches[0].clientX
-        touchEndX.current = null
+    /* Unified Smooth Pointer / Mouse Drag Handlers */
+    const handlePointerDown = (event) => {
+        // Only accept primary button (left click) or touch
+        if (event.button !== undefined && event.button !== 0) return
+
+        isPointerDown.current = true
+        dragStartX.current = event.clientX
+        currentDragOffset.current = 0
+        setIsPaused(true)
     }
 
-    const handleTouchMove = (event) => {
-        touchEndX.current = event.touches[0].clientX
+    const handlePointerMove = (event) => {
+        if (!isPointerDown.current) return
+
+        let diff = event.clientX - dragStartX.current
+
+        // Add rubber-band resistance at boundary edges
+        if (activeIndex === 0 && diff > 0) {
+            diff = diff * 0.3
+        } else if (activeIndex === slides.length - 1 && diff < 0) {
+            diff = diff * 0.3
+        }
+
+        if (Math.abs(diff) > 3) {
+            setIsDragging(true)
+        }
+
+        currentDragOffset.current = diff
+        setDragOffset(diff)
     }
 
-    const handleTouchEnd = () => {
-        if (touchStartX.current === null || touchEndX.current === null) return
+    const handlePointerUp = () => {
+        if (!isPointerDown.current) return
 
-        const distance = touchStartX.current - touchEndX.current
-        const minimumSwipeDistance = 45
+        isPointerDown.current = false
+        const diff = currentDragOffset.current
+        const threshold = 55 // Minimum distance to trigger slide change
 
-        if (distance > minimumSwipeDistance) showNext()
-        if (distance < -minimumSwipeDistance) showPrevious()
+        if (diff < -threshold) {
+            showNext()
+        } else if (diff > threshold) {
+            showPrevious()
+        }
 
-        touchStartX.current = null
-        touchEndX.current = null
+        setIsDragging(false)
+        setDragOffset(0)
+        currentDragOffset.current = 0
+        setIsPaused(false)
+    }
+
+    const handlePointerCancel = () => {
+        if (!isPointerDown.current) return
+        isPointerDown.current = false
+        setIsDragging(false)
+        setDragOffset(0)
+        currentDragOffset.current = 0
+        setIsPaused(false)
     }
 
     useEffect(() => {
-        if (isPaused) return
+        if (isPaused || isDragging) return
 
         const timer = setInterval(() => {
             setActiveIndex((currentIndex) => (currentIndex + 1) % slides.length)
         }, AUTOPLAY_DELAY)
 
         return () => clearInterval(timer)
-    }, [isPaused, activeIndex])
+    }, [isPaused, isDragging, activeIndex])
 
     return (
-        <section aria-label="Featured UK Brand Lover promotions" className="relative group">
+        <section aria-label="Featured UK Brand Lover promotions" className="relative group select-none">
             <div
-                className="relative max-w-7xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-[0_8px_30px_rgba(58,12,56,0.06)]"
+                className={`relative max-w-7xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-[0_8px_30px_rgba(58,12,56,0.06)] touch-pan-y ${
+                    isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
                 onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                onMouseLeave={() => {
+                    handlePointerCancel()
+                    setIsPaused(false)
+                }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+                onDragStart={(e) => e.preventDefault()}
             >
-                {/* Slides Track with Smooth Cubic Easing */}
+                {/* Slides Track with Smooth Dek-celerated Easing & Real-Time Mouse Drag */}
                 <div
-                    className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                    style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+                    className="flex will-change-transform"
+                    style={{
+                        transform: isDragging
+                            ? `translateX(calc(-${activeIndex * 100}% + ${dragOffset}px))`
+                            : `translateX(-${activeIndex * 100}%)`,
+                        transition: isDragging
+                            ? 'none'
+                            : 'transform 750ms cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
                 >
-                    {slides.map((slide, index) => (
-                        <article
-                            key={slide.imageAlt || index}
-                            className="relative min-w-full w-full overflow-hidden flex items-center justify-center bg-[#FAF6FA]"
-                            aria-hidden={activeIndex !== index}
-                        >
-                            <Image
-                                src={slide.image}
-                                alt={slide.imageAlt}
-                                className="w-full h-auto object-cover max-h-[220px] min-[450px]:max-h-[280px] sm:max-h-[380px] md:max-h-[460px] lg:max-h-[520px] transition-transform duration-1000 ease-out select-none"
-                                priority={index === 0}
-                                quality={92}
-                            />
-                        </article>
-                    ))}
+                    {slides.map((slide, index) => {
+                        const isActive = activeIndex === index
+                        return (
+                            <article
+                                key={slide.imageAlt || index}
+                                className="relative min-w-full w-full overflow-hidden flex items-center justify-center bg-[#FAF6FA] shrink-0"
+                                aria-hidden={!isActive}
+                            >
+                                <Image
+                                    src={slide.image}
+                                    alt={slide.imageAlt}
+                                    draggable={false}
+                                    className={`w-full h-auto object-cover max-h-[220px] min-[450px]:max-h-[280px] sm:max-h-[380px] md:max-h-[460px] lg:max-h-[520px] transition-transform duration-[6000ms] ease-out pointer-events-none select-none ${
+                                        isActive ? 'scale-[1.02]' : 'scale-100'
+                                    }`}
+                                    priority={index === 0}
+                                    quality={92}
+                                />
+                            </article>
+                        )
+                    })}
                 </div>
 
                 {/* Glassmorphic Navigation Buttons (Appear smoothly on hover) */}
                 <motion.button
                     type="button"
-                    onClick={showPrevious}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        showPrevious()
+                    }}
                     whileHover={{ scale: 1.12, backgroundColor: 'rgba(255, 255, 255, 1)' }}
                     whileTap={{ scale: 0.9 }}
                     aria-label="Previous promotional slide"
@@ -122,7 +187,11 @@ const HeroBannerSlider = () => {
 
                 <motion.button
                     type="button"
-                    onClick={showNext}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        showNext()
+                    }}
                     whileHover={{ scale: 1.12, backgroundColor: 'rgba(255, 255, 255, 1)' }}
                     whileTap={{ scale: 0.9 }}
                     aria-label="Next promotional slide"
@@ -132,7 +201,12 @@ const HeroBannerSlider = () => {
                 </motion.button>
 
                 {/* Round Small Clickable Slide Indicators (Dots in Glass Capsule) */}
-                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md border border-white/20 shadow-md z-20" role="tablist" aria-label="Banner slides">
+                <div 
+                    className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md border border-white/20 shadow-md z-20" 
+                    role="tablist" 
+                    aria-label="Banner slides"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
                     {slides.map((_, index) => {
                         const isActive = activeIndex === index
                         return (
@@ -142,7 +216,11 @@ const HeroBannerSlider = () => {
                                 role="tab"
                                 aria-label={`Go to slide ${index + 1}`}
                                 aria-selected={isActive}
-                                onClick={() => goToSlide(index)}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    goToSlide(index)
+                                }}
                                 className={`transition-all duration-300 cursor-pointer rounded-full ${
                                     isActive
                                         ? 'w-6 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)]'
