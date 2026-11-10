@@ -136,20 +136,7 @@ const Navbar = () => {
                                 <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
                             </Link>
                             <Link href="/shop" className="relative hover:text-[#6C306E] transition-colors py-1 group">
-                                Shop All
-                                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
-                            </Link>
-                            <Link href="/shop?category=Skincare" className="relative hover:text-[#6C306E] transition-colors py-1 group">
-                                Skincare
-                                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
-                            </Link>
-                            <Link href="/shop?category=Makeup" className="relative hover:text-[#6C306E] transition-colors py-1 group">
-                                Cosmetics
-                                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
-                            </Link>
-                            <Link href="/orders" className="relative hover:text-[#6C306E] transition-colors py-1 group flex items-center gap-1 text-[#6C306E]">
-                                <TruckIcon size={14} color="#6C306E" />
-                                <span>Track Orders</span>
+                                Shop
                                 <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
                             </Link>
                             <Link href="/contact" className="relative hover:text-[#6C306E] transition-colors py-1 group">
