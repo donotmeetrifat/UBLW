@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1165.0",
+    "@paper-design/shaders-react": "^0.0.82",
     "@prisma/client": "^6.19.3",
     "@reduxjs/toolkit": "^2.8.2",
     "@supabase/supabase-js": "^2.119.0",
