@@ -47,8 +47,8 @@ const Footer = () => {
     ];
 
     const socialLinks = [
-        { icon: FacebookIcon, link: "https://www.facebook.com/tuhinatopa", label: "Facebook" },
-        { icon: InstagramIcon, link: "https://instagram.com/tuhinajahantopa", label: "Instagram" },
+        { icon: FacebookIcon, link: "https://www.facebook.com/ukbrandlover", label: "Facebook" },
+        { icon: InstagramIcon, link: "http://instagram.com/ukbrandlover", label: "Instagram" },
         { icon: WhatsAppIcon, link: "https://wa.me/8801959524393", label: "WhatsApp" },
     ];
 

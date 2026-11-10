@@ -189,10 +189,24 @@ export const WhatsAppIcon = ({ size = 18, className = '', color = 'currentColor'
     </svg>
 )
 
+export const OfficialWhatsAppIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="24" cy="24" r="24" fill="#25D366" />
+        <path d="M35.15 12.85C32.18 9.88 28.24 8.24 24.03 8.24C15.22 8.24 8.07 15.39 8.07 24.2C8.07 27.01 8.8 29.76 10.19 32.17L8 40.16L16.19 38.01C18.52 39.28 21.24 39.95 24.02 39.95H24.03C32.84 39.95 40 32.8 40 23.99C40 19.78 38.12 15.82 35.15 12.85ZM24.03 37.26C21.65 37.26 19.32 36.62 17.29 35.41L16.81 35.12L12 36.38L13.29 31.69L12.97 31.18C11.64 29.07 10.94 26.68 10.94 24.2C10.94 16.98 16.82 11.11 24.04 11.11C27.54 11.11 30.82 12.47 33.29 14.95C35.76 17.42 37.13 20.71 37.12 24.21C37.12 31.43 31.25 37.26 24.03 37.26ZM31.23 27.56C30.83 27.36 28.89 26.4 28.53 26.27C28.17 26.14 27.91 26.07 27.65 26.47C27.39 26.87 26.64 27.75 26.41 28.01C26.18 28.28 25.95 28.31 25.55 28.11C25.15 27.91 23.86 27.49 22.33 26.12C21.13 25.06 20.32 23.75 20.09 23.35C19.86 22.95 20.06 22.73 20.26 22.53C20.44 22.35 20.66 22.06 20.86 21.83C21.06 21.6 21.13 21.43 21.26 21.17C21.39 20.9 21.33 20.67 21.23 20.47C21.13 20.27 20.34 18.33 20.01 17.53C19.69 16.76 19.36 16.86 19.12 16.85C18.89 16.84 18.63 16.84 18.37 16.84C18.11 16.84 17.68 16.94 17.32 17.33C16.96 17.73 15.93 18.69 15.93 20.66C15.93 22.63 17.36 24.53 17.56 24.8C17.76 25.06 20.38 29.11 24.39 30.84C25.35 31.25 26.09 31.5 26.67 31.68C27.63 31.99 28.51 31.94 29.2 31.84C29.98 31.72 31.59 30.86 31.92 29.93C32.25 29 32.25 28.2 32.15 28.03C32.05 27.87 31.63 27.76 31.23 27.56Z" fill="white" />
+    </svg>
+)
+
 // 15. Socials
 export const FacebookIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <path d="M18 2H15C12.7909 2 11 3.79086 11 6V9H8V13H11V22H15V13H18L19 9H15V6C15 5.44772 15.4477 5 16 5H18V2Z" stroke={color} strokeWidth="1.75" strokeLinejoin="round" />
+    </svg>
+)
+
+export const OfficialFacebookIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="24" cy="24" r="24" fill="#1877F2" />
+        <path d="M29.5 24.8L30.2 20.2H25.8V17.2C25.8 15.9 26.4 14.7 28.4 14.7H30.4V10.8C29.2 10.6 28 10.5 26.8 10.5C23.1 10.5 20.7 12.8 20.7 16.8V20.2H16.7V24.8H20.7V36.2C21.6 36.3 22.5 36.4 23.4 36.4C24.3 36.4 25.2 36.3 26.1 36.2V24.8H29.5Z" fill="white" />
     </svg>
 )
 
@@ -201,6 +215,24 @@ export const InstagramIcon = ({ size = 18, className = '', color = 'currentColor
         <rect x="3" y="3" width="18" height="18" rx="5" stroke={color} strokeWidth="1.75" />
         <circle cx="12" cy="12" r="4.5" stroke={color} strokeWidth="1.75" />
         <circle cx="17.5" cy="6.5" r="1.25" fill={color} />
+    </svg>
+)
+
+export const OfficialInstagramIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <defs>
+            <radialGradient id="official-ig-grad" cx="30%" cy="107%" r="130%" fx="30%" fy="107%">
+                <stop offset="0%" stopColor="#fdf497" />
+                <stop offset="5%" stopColor="#fdf497" />
+                <stop offset="45%" stopColor="#fd5949" />
+                <stop offset="60%" stopColor="#d6249f" />
+                <stop offset="90%" stopColor="#285AEB" />
+            </radialGradient>
+        </defs>
+        <rect width="48" height="48" rx="14" fill="url(#official-ig-grad)" />
+        <rect x="11" y="11" width="26" height="26" rx="8" stroke="white" strokeWidth="3" fill="none" />
+        <circle cx="24" cy="24" r="6" stroke="white" strokeWidth="3" fill="none" />
+        <circle cx="31.5" cy="16.5" r="1.75" fill="white" />
     </svg>
 )
 
