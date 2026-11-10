@@ -19,19 +19,19 @@ const Hero = () => {
             <HeroBannerSlider />
 
             {/* SECONDARY PROMOTIONAL AREA */}
-            <div className='grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6 mt-6 sm:mt-10'>
+            <div className='grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 mt-6 sm:mt-10'>
                 {/* Secondary Main Feature Card: Direct from the UK (Main Focal Point) */}
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[300px] min-[420px]:min-h-[340px] sm:min-h-[400px] lg:min-h-[430px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                    className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                 >
                     {/* Subtle ambient light orb */}
                     <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                    <div className='z-10 max-w-[54%] min-[450px]:max-w-[56%] sm:max-w-md'>
+                    <div className='z-10 max-w-[56%] min-[450px]:max-w-[58%] sm:max-w-md'>
                         <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
                             <RoyalCrownIcon size={13} color="#D8B56D" />
                             <span>100% Original UK Imports</span>
@@ -57,7 +57,7 @@ const Hero = () => {
                             </span>
                         </div>
 
-                        <div className="mt-5 sm:mt-6">
+                        <div className="mt-5">
                             <FlowButton 
                                 text="Explore Collection" 
                                 href="/shop" 
@@ -66,10 +66,10 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    {/* Right-Aligned Large Transparent Image with Big Dedicated Space */}
-                    <div className='absolute right-0 sm:right-2 bottom-0 top-0 w-[46%] min-[450px]:w-[50%] sm:w-[52%] max-w-[420px] flex items-end justify-end pointer-events-none z-0 overflow-hidden'>
+                    {/* Right-Aligned Large Transparent Image */}
+                    <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
                         <Image 
-                            className='h-full max-h-full w-auto object-contain object-right-bottom origin-bottom-right group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-0.5' 
+                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
                             src={assets.hero_card_img1} 
                             alt="Direct from the UK - Premium Beauty" 
                             priority
@@ -78,7 +78,7 @@ const Hero = () => {
                 </motion.div>
 
                 {/* Hero Secondary Side Promotional Cards (Skincare & Cosmetics) */}
-                <div className='flex flex-col sm:flex-row xl:flex-col gap-5 sm:gap-6 text-xs justify-between'>
+                <div className='flex flex-col sm:flex-row xl:flex-col gap-4 sm:gap-5 text-xs justify-between'>
                     {/* Top Card: TOP SELECTED / Skincare */}
                     <motion.div
                         initial={{ opacity: 0, y: 15 }}
@@ -89,25 +89,24 @@ const Hero = () => {
                     >
                         <Link 
                             href="/shop?category=Skincare" 
-                            className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-6 sm:p-7 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[190px] sm:min-h-[205px]'
+                            className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
                         >
-                            <div className='z-10 max-w-[48%] pr-1'>
-                                <span className='text-[9px] sm:text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1.5'>
+                            <div className='z-10 max-w-[54%] pr-1'>
+                                <span className='text-[9px] sm:text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1'>
                                     TOP SELECTED
                                 </span>
                                 <h3 className='text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
                                     Skincare
                                 </h3>
-                                <p className='inline-flex items-center gap-1.5 mt-3 sm:mt-4 text-xs font-bold text-[#6C306E]'>
+                                <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
                                     Shop Skincare 
                                     <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                 </p>
                             </div>
 
-                            {/* Big Dedicated Image Space */}
-                            <div className='w-[52%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                            <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
                                 <Image 
-                                    className='h-full max-h-full w-auto object-contain object-right-bottom origin-bottom-right group-hover:scale-104 transition-transform duration-500 ease-out' 
+                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
                                     src={assets.hero_card_img2} 
                                     alt="Skincare Top Selected" 
                                 />
@@ -125,25 +124,24 @@ const Hero = () => {
                     >
                         <Link 
                             href="/shop?category=Makeup" 
-                            className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-6 sm:p-7 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[190px] sm:min-h-[205px]'
+                            className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
                         >
-                            <div className='z-10 max-w-[48%] pr-1'>
-                                <span className='text-[9px] sm:text-[10px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1.5'>
+                            <div className='z-10 max-w-[54%] pr-1'>
+                                <span className='text-[9px] sm:text-[10px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1'>
                                     EXCLUSIVE DEALS
                                 </span>
                                 <h3 className='text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
                                     Cosmetics
                                 </h3>
-                                <p className='inline-flex items-center gap-1.5 mt-3 sm:mt-4 text-xs font-bold text-[#6C306E]'>
+                                <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
                                     Shop Makeup 
                                     <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                 </p>
                             </div>
 
-                            {/* Big Dedicated Image Space */}
-                            <div className='w-[52%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                            <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
                                 <Image 
-                                    className='h-full max-h-full w-auto object-contain object-right-bottom origin-bottom-right group-hover:scale-104 transition-transform duration-500 ease-out' 
+                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
                                     src={assets.hero_card_img3} 
                                     alt="Cosmetics Exclusive Deals" 
                                 />
