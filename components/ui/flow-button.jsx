@@ -8,8 +8,16 @@ export function FlowButton({
   text = "Sign In", 
   href, 
   onClick, 
-  className = "" 
+  className = "",
+  target,
+  rel,
+  type = "button",
+  ...props
 }) {
+  const isExternal = href && (href.startsWith('http://') || href.startsWith('https://'));
+  const linkTarget = target || (isExternal ? "_blank" : undefined);
+  const linkRel = rel || (isExternal ? "noopener noreferrer" : undefined);
+
   const content = (
     <>
       {/* Left arrow (arr-2) */}
@@ -32,18 +40,18 @@ export function FlowButton({
     </>
   );
 
-  const baseClasses = `group/flow relative inline-flex items-center justify-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#6C306E]/40 bg-transparent px-7 h-10 text-xs font-bold text-[#6C306E] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:rounded-[12px] hover:shadow-[0_8px_24px_rgba(108,48,110,0.35)] active:scale-[0.95] select-none ${className}`;
+  const baseClasses = `group/flow relative inline-flex items-center justify-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#6C306E]/40 bg-transparent px-7 h-11 text-xs font-bold text-[#6C306E] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:rounded-[12px] hover:shadow-[0_8px_24px_rgba(108,48,110,0.35)] active:scale-[0.95] select-none ${className}`;
 
   if (href) {
     return (
-      <Link href={href} className={baseClasses} onClick={onClick}>
+      <Link href={href} target={linkTarget} rel={linkRel} className={baseClasses} onClick={onClick} {...props}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className={baseClasses}>
+    <button type={type} onClick={onClick} className={baseClasses} {...props}>
       {content}
     </button>
   );
