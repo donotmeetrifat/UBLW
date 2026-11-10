@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { uploadToR2, isR2Configured } from '@/lib/r2';
+import { uploadMedia, isSupabaseStorageConfigured } from '@/lib/storage';
 
 export async function POST(request) {
     try {
@@ -13,7 +13,7 @@ export async function POST(request) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        const url = await uploadToR2({
+        const result = await uploadMedia({
             buffer,
             filename: file.name || 'product_image.webp',
             contentType: file.type || 'image/webp'
@@ -21,15 +21,16 @@ export async function POST(request) {
 
         return NextResponse.json({
             success: true,
-            url,
-            isR2Active: isR2Configured(),
-            message: isR2Configured() 
-                ? 'Uploaded to Cloudflare R2' 
-                : 'Processed in preview mode (configure R2 credentials in production)'
+            url: result.url,
+            provider: result.provider,
+            message: result.provider === 'SUPABASE_STORAGE'
+                ? 'Uploaded to Supabase Storage (100% Free, No Card Required)'
+                : result.provider === 'CLOUDFLARE_R2'
+                    ? 'Uploaded to Cloudflare R2'
+                    : 'Processed in preview mode'
         });
     } catch (error) {
         console.error('Error in /api/upload:', error);
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 }
-
