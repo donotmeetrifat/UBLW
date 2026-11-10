@@ -10,8 +10,7 @@ import {
     EyeIcon, 
     EyeOffIcon, 
     RoyalCrownIcon, 
-    ShieldCheckIcon,
-    PlaneIcon
+    ShieldCheckIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 
@@ -43,12 +42,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
             const rawPhone = phone.replace(/[^0-9]/g, '')
 
             if (!trimmedEmail || !trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-                setErrorMsg('Please provide a valid email address.')
+                setErrorMsg('Please enter a valid email address.')
                 return
             }
 
             if (!rawPhone || rawPhone.length < 11) {
-                setErrorMsg('Please provide a valid 11-digit Bangladesh phone / WhatsApp number (e.g. 019XXXXXXXX).')
+                setErrorMsg('Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX).')
                 return
             }
 
@@ -89,7 +88,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                     localStorage.setItem('ukbl_current_user', JSON.stringify(newUser))
                 }
 
-                toast.success('VIP Account created successfully! Welcome to UK Brand Lover.')
+                toast.success('Welcome to the UK Brand Lover family!')
                 setSuccessMsg('Account created successfully! Redirecting...')
                 
                 setTimeout(() => {
@@ -108,7 +107,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
         if (mode === 'signin') {
             const rawInput = email.trim()
             if (!rawInput) {
-                setErrorMsg('Please enter your registered email address or mobile number.')
+                setErrorMsg('Please enter your registered email address or phone number.')
                 return
             }
 
@@ -160,42 +159,42 @@ export default function AuthSection({ initialMode = 'signin' }) {
             setLoading(true)
             setTimeout(() => {
                 setLoading(false)
-                setSuccessMsg('Password recovery instructions sent! Please check your inbox or WhatsApp.')
+                setSuccessMsg('Password recovery instructions sent! Please check your inbox.')
             }, 800)
         }
     }
 
     return (
-        <section className="min-h-screen bg-[#FAF6FA] text-[#241224] antialiased flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden font-sans">
-            {/* Ambient Brand Sheen Backdrops */}
-            <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(108,48,110,0.12),transparent_70%)] blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-40 right-10 w-[500px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(216,181,109,0.10),transparent_70%)] blur-3xl" />
+        <section className="min-h-screen bg-[#FAF6FA] text-[#241224] antialiased flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-hidden font-poppins">
+            {/* Ambient Brand Glow Backdrops */}
+            <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(108,48,110,0.10),transparent_70%)] blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-40 right-10 w-[500px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(216,181,109,0.08),transparent_70%)] blur-3xl" />
 
-            {/* Main Auth Split-Screen Container (exFramer Proportions) */}
+            {/* Main Auth Split-Screen Container */}
             <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                initial={{ opacity: 0, y: 16, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-[94%] sm:w-[90%] lg:w-[85%] max-w-[1240px] min-h-[80vh] lg:min-h-[82vh] rounded-3xl border border-[#EFE0EF] bg-white shadow-[0_16px_50px_rgba(58,12,56,0.08)] overflow-hidden grid lg:grid-cols-[1.12fr_0.88fr]"
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-[1140px] rounded-[32px] border border-[#EFE0EF] bg-white shadow-[0_20px_60px_-15px_rgba(58,12,56,0.07)] overflow-hidden grid lg:grid-cols-[1.12fr_0.88fr]"
             >
                 {/* Left Form Column */}
                 <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-white text-[#241224]">
-                    <div className="max-w-[420px] w-full mx-auto">
+                    <div className="max-w-[440px] w-full mx-auto">
                         {/* Top Navigation Bar */}
-                        <div className="flex items-center justify-between mb-6 sm:mb-8">
+                        <div className="flex items-center justify-between mb-8 sm:mb-9">
                             <Link
                                 href="/"
-                                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#6C306E] transition-colors"
+                                className="group inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#6C306E] transition-colors"
                             >
-                                <ArrowLeftIcon size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                                <ArrowLeftIcon size={14} className="group-hover:-translate-x-1 transition-transform" />
                                 <span>Back to Home</span>
                             </Link>
 
                             {/* Mode Switcher */}
-                            <div className="flex items-center gap-1 text-xs">
+                            <div className="flex items-center gap-1.5 text-xs">
                                 {mode === 'forgot' ? (
                                     <>
-                                        <span className="text-slate-400">Remember password?</span>
+                                        <span className="text-slate-500">Remember password?</span>
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -203,15 +202,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                                 setErrorMsg(null)
                                                 setSuccessMsg(null)
                                             }}
-                                            className="font-bold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-2 transition-colors cursor-pointer ml-1"
+                                            className="font-bold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-4 transition-colors cursor-pointer"
                                         >
                                             Sign in
                                         </button>
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-slate-400">
-                                            {mode === 'signup' ? 'Have an account?' : 'No account?'}
+                                        <span className="text-slate-500">
+                                            {mode === 'signup' ? 'Already a member?' : 'New here?'}
                                         </span>
                                         <button
                                             type="button"
@@ -221,38 +220,38 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                                 setSuccessMsg(null)
                                                 setConfirmPassword('')
                                             }}
-                                            className="font-bold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-2 transition-colors cursor-pointer ml-1"
+                                            className="font-bold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-4 transition-colors cursor-pointer"
                                         >
-                                            {mode === 'signup' ? 'Sign in' : 'Create one'}
+                                            {mode === 'signup' ? 'Sign in' : 'Join us'}
                                         </button>
                                     </>
                                 )}
                             </div>
                         </div>
 
-                        {/* Title & Subtitle with Animated Transition */}
+                        {/* Title & Subtitle */}
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={mode}
-                                initial={{ opacity: 0, y: 5 }}
+                                initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                className="mb-6 sm:mb-7"
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.2 }}
+                                className="mb-7 sm:mb-8"
                             >
-                                <h1 className="text-2xl sm:text-[28px] font-extrabold text-[#241224] tracking-tight leading-tight">
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight leading-tight">
                                     {mode === 'signup'
-                                        ? 'Create an account'
+                                        ? 'Join UK Brand Lover'
                                         : mode === 'signin'
                                         ? 'Welcome back'
                                         : 'Reset your password'}
                                 </h1>
-                                <p className="mt-1 text-xs sm:text-sm text-slate-500">
+                                <p className="mt-2 text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
                                     {mode === 'signup'
-                                        ? 'Join our VIP Beauty Club for authentic UK restock alerts, flash drops, and express order tracking.'
+                                        ? "We're delighted to welcome you. Create your account to discover 100% authentic British beauty, personalised care, and fast delivery across Bangladesh."
                                         : mode === 'signin'
-                                        ? 'Sign in to access your shopping bag, saved delivery addresses, and order history.'
-                                        : "Enter your registered email address or phone and we'll send you an instant reset link."}
+                                        ? 'Sign in to access your shopping bag, track your deliveries, and view your order history.'
+                                        : "Enter your registered email address and we'll send you an instant reset link."}
                                 </p>
                             </motion.div>
                         </AnimatePresence>
@@ -262,7 +261,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                             <motion.div
                                 initial={{ opacity: 0, y: -4 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"
+                                className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"
                             >
                                 <span>{errorMsg}</span>
                             </motion.div>
@@ -272,15 +271,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                             <motion.div
                                 initial={{ opacity: 0, y: -4 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2"
+                                className="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2"
                             >
                                 <CheckIcon size={16} color="#059669" strokeWidth={2.5} />
                                 <span>{successMsg}</span>
                             </motion.div>
                         )}
 
-                        {/* Form Fields */}
-                        <form onSubmit={handleSubmit} className="space-y-3">
+                        {/* Form Fields with Generous Whitespace */}
+                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4.5">
                             {/* First Name & Last Name (Sign Up only) */}
                             <AnimatePresence initial={false}>
                                 {mode === 'signup' && (
@@ -289,17 +288,18 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
                                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                                        className="grid gap-3 sm:grid-cols-2 overflow-hidden"
+                                        className="grid gap-3.5 sm:grid-cols-2 overflow-hidden"
                                     >
-                                        <FieldBox
+                                        <FormField
                                             label="First Name"
-                                            placeholder="Your name"
+                                            placeholder="e.g. Ayesha"
                                             value={firstName}
                                             onChange={(val) => setFirstName(val)}
+                                            required
                                         />
-                                        <FieldBox
+                                        <FormField
                                             label="Last Name"
-                                            placeholder="Optional"
+                                            placeholder="e.g. Rahman (Optional)"
                                             value={lastName}
                                             onChange={(val) => setLastName(val)}
                                         />
@@ -307,16 +307,17 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 )}
                             </AnimatePresence>
 
-                            {/* Email Address (Always visible) */}
-                            <FieldBox
-                                label="Email"
+                            {/* Email Address */}
+                            <FormField
+                                label="Email Address"
                                 type="email"
-                                placeholder={mode === 'signin' ? 'Email or phone number' : 'name@example.com'}
+                                placeholder={mode === 'signin' ? 'Your email or phone number' : 'name@example.com'}
                                 value={email}
                                 onChange={(val) => setEmail(val)}
+                                required
                             />
 
-                            {/* Phone Number (Sign Up only - Mandatory as requested) */}
+                            {/* Phone Number (Sign Up only) */}
                             <AnimatePresence initial={false}>
                                 {mode === 'signup' && (
                                     <motion.div
@@ -326,18 +327,20 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                                         className="overflow-hidden"
                                     >
-                                        <FieldBox
-                                            label="Number / WhatsApp"
+                                        <FormField
+                                            label="Phone Number"
                                             type="tel"
-                                            placeholder="019XXXXXXXX or +88019XXXXXXXX"
+                                            placeholder="01XXXXXXXXX"
                                             value={phone}
                                             onChange={(val) => setPhone(val)}
+                                            helperText="For order updates & delivery tracking"
+                                            required
                                         />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* Password (Sign In & Sign Up) */}
+                            {/* Password */}
                             <AnimatePresence initial={false}>
                                 {mode !== 'forgot' && (
                                     <motion.div
@@ -345,19 +348,20 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
                                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                                        className="overflow-hidden space-y-2"
+                                        className="overflow-hidden space-y-1.5"
                                     >
-                                        <FieldBox
+                                        <FormField
                                             label="Password"
                                             type="password"
-                                            placeholder="••••••••••••"
+                                            placeholder="At least 6 characters"
                                             value={password}
                                             onChange={(val) => setPassword(val)}
+                                            required
                                         />
 
                                         {/* Forgot Password Link in Sign In mode */}
                                         {mode === 'signin' && (
-                                            <div className="flex justify-end pt-0.5">
+                                            <div className="flex justify-end pt-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -365,7 +369,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                                         setErrorMsg(null)
                                                         setSuccessMsg(null)
                                                     }}
-                                                    className="text-[11px] sm:text-xs font-semibold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-2 transition-colors cursor-pointer"
+                                                    className="text-xs font-semibold text-[#6C306E] hover:text-[#3A0C38] underline underline-offset-2 transition-colors cursor-pointer"
                                                 >
                                                     Forgot password?
                                                 </button>
@@ -385,42 +389,43 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                                         className="overflow-hidden"
                                     >
-                                        <FieldBox
+                                        <FormField
                                             label="Confirm Password"
                                             type="password"
-                                            placeholder="••••••••••••"
+                                            placeholder="Re-enter your password"
                                             value={confirmPassword}
                                             onChange={(val) => setConfirmPassword(val)}
+                                            required
                                         />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* Submit Button with Signature Velvet Plum & Shimmer */}
+                            {/* Submit Button with Warmth & Connection */}
                             <motion.button
                                 whileHover={{ scale: 1.015, y: -1 }}
                                 whileTap={{ scale: 0.985 }}
                                 type="submit"
                                 disabled={loading}
-                                className="group relative overflow-hidden w-full h-11 sm:h-12 mt-3 rounded-xl bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs sm:text-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer border border-white/20 shimmer-active"
+                                className="group relative overflow-hidden w-full h-12 mt-3 rounded-2xl bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs sm:text-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer border border-white/20 shimmer-active"
                             >
                                 {loading ? (
-                                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                    <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
                                         <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         <span>
                                             {mode === 'signup'
-                                                ? 'Creating VIP Account...'
+                                                ? 'Creating your account...'
                                                 : mode === 'signin'
-                                                ? 'Signing In...'
-                                                : 'Sending Reset Link...'}
+                                                ? 'Signing in...'
+                                                : 'Sending reset link...'}
                                         </span>
                                     </div>
                                 ) : (
-                                    <span>
+                                    <span className="font-semibold text-xs sm:text-sm">
                                         {mode === 'signup'
-                                            ? 'Create VIP Account'
+                                            ? 'Join the UK Brand Lover Family'
                                             : mode === 'signin'
-                                            ? 'Sign In to UK Brand Lover'
+                                            ? 'Sign In to Your Account'
                                             : 'Send Recovery Link'}
                                     </span>
                                 )}
@@ -428,14 +433,14 @@ export default function AuthSection({ initialMode = 'signin' }) {
                         </form>
 
                         {/* Security Assurance Tag */}
-                        <div className="mt-6 pt-5 border-t border-[#EFE0EF] flex items-center justify-center gap-2 text-[11px] text-slate-500 font-medium">
-                            <ShieldCheckIcon size={14} color="#059669" />
-                            <span>100% Authentic UK Imported Beauty • Direct London Heathrow</span>
+                        <div className="mt-8 pt-6 border-t border-[#EFE0EF] flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+                            <ShieldCheckIcon size={15} color="#059669" />
+                            <span>100% Genuine British Beauty • Direct London Heathrow</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Editorial Column (exFramer Visual Splendor with UK Brand Lover Palette) */}
+                {/* Right Editorial Column with UK Brand Lover Palette & Poppins Typography */}
                 <div className="relative flex min-h-[420px] lg:min-h-full overflow-hidden bg-gradient-to-br from-[#2D0B2E] via-[#481249] to-[#180519] p-8 sm:p-12 lg:p-16 text-white flex-col justify-between">
                     {/* Ambient Light Orbs */}
                     <div className="size-80 rounded-full bg-[#9956A1]/15 blur-3xl absolute -top-16 -right-16 pointer-events-none" />
@@ -449,12 +454,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
                         </div>
                     </div>
 
-                    {/* Clean, Iconic Minimalist Headline (exFramer Inspired Typography) */}
+                    {/* Clean, Iconic Minimalist Headline */}
                     <div className="relative z-10 max-w-md my-auto py-12">
-                        <h2 className="text-4xl sm:text-5xl lg:text-[58px] font-extrabold tracking-[-0.03em] text-white leading-[1.04]">
+                        <h2 className="text-3xl sm:text-4xl lg:text-[46px] font-extrabold tracking-tight text-white leading-[1.08]">
                             100% Authentic.
                             <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F2D086] via-[#FFE29A] to-[#D8B56D]">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F2D086] via-[#FFE29A] to-[#D8A74E]">
                                 Direct from London.
                             </span>
                         </h2>
@@ -464,7 +469,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                     </div>
 
                     {/* Bottom Feature Highlights */}
-                    <div className="relative z-10 pt-4 border-t border-white/10 grid grid-cols-3 gap-2 text-center sm:text-left">
+                    <div className="relative z-10 pt-5 border-t border-white/10 grid grid-cols-3 gap-3 text-center sm:text-left">
                         <div>
                             <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Origin</p>
                             <p className="text-xs font-bold text-white mt-0.5">London Heathrow</p>
@@ -485,31 +490,42 @@ export default function AuthSection({ initialMode = 'signin' }) {
 }
 
 /**
- * Clean, compact input field box tailored to exFramer's signature design
- * with password visibility toggle and right-aligned label.
+ * Ultra-clean, modern FormField with dedicated top label and spacious input styling.
  */
-function FieldBox({
+function FormField({
     label,
     value,
     type = 'text',
     placeholder,
     onChange,
+    required = false,
+    helperText = null,
 }) {
     const [showPassword, setShowPassword] = useState(false)
     const isPassword = type === 'password'
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
 
     return (
-        <label className="flex h-11 sm:h-12 items-center justify-between gap-2.5 rounded-xl border border-[#EFE0EF] bg-white px-3.5 sm:px-4 text-xs sm:text-sm text-[#241224] transition-all focus-within:border-[#6C306E] focus-within:ring-2 focus-within:ring-[#6C306E]/15 cursor-text shadow-2xs hover:border-[#6C306E]/40">
-            <input
-                type={inputType}
-                value={value}
-                placeholder={placeholder}
-                aria-label={label}
-                onChange={(e) => onChange?.(e.target.value)}
-                className="min-w-0 flex-1 truncate bg-transparent text-[#241224] outline-none placeholder:text-slate-400 text-xs sm:text-sm font-medium"
-            />
-            <div className="flex items-center gap-2 shrink-0">
+        <div className="w-full">
+            <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-[#241224] tracking-wide">
+                    {label} {required && <span className="text-[#6C306E]">*</span>}
+                </label>
+                {helperText && (
+                    <span className="text-[10px] text-slate-400 font-normal">
+                        {helperText}
+                    </span>
+                )}
+            </div>
+            <div className="relative">
+                <input
+                    type={inputType}
+                    value={value}
+                    placeholder={placeholder}
+                    aria-label={label}
+                    onChange={(e) => onChange?.(e.target.value)}
+                    className="w-full h-11 sm:h-12 rounded-2xl border border-[#EFE0EF] bg-[#FCFAFC] px-4 text-xs sm:text-sm text-[#241224] placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:border-[#6C306E] focus:ring-4 focus:ring-[#6C306E]/10 hover:border-[#6C306E]/40"
+                />
                 {isPassword && (
                     <button
                         type="button"
@@ -520,7 +536,7 @@ function FieldBox({
                         }}
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                         title={showPassword ? 'Hide password' : 'Show password'}
-                        className="p-1 text-slate-400 hover:text-[#6C306E] transition-colors cursor-pointer rounded-md hover:bg-[#FAF6FA] flex items-center justify-center"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-[#6C306E] transition-colors rounded-lg cursor-pointer"
                     >
                         {showPassword ? (
                             <EyeOffIcon size={16} color="#6C306E" />
@@ -529,11 +545,7 @@ function FieldBox({
                         )}
                     </button>
                 )}
-                <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider select-none">
-                    {label}
-                </span>
             </div>
-        </label>
+        </div>
     )
 }
-

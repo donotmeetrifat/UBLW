@@ -2,8 +2,8 @@ import React, { Suspense } from 'react'
 import AuthSection from '@/components/AuthSection'
 
 export const metadata = {
-    title: 'Create Account | UK Brand Lover',
-    description: 'Create an account to join UK Brand Lover VIP Club for 100% authentic UK imported beauty in Bangladesh.'
+    title: 'Join UK Brand Lover | Authentic British Beauty',
+    description: 'Join the UK Brand Lover family for 100% authentic UK imported beauty, personalised skincare guidance, and fast delivery across Bangladesh.'
 }
 
 export default function SignUpPage() {
