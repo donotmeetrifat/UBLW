@@ -26,7 +26,7 @@ const Hero = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                    className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                 >
                     {/* Subtle ambient light orb */}
                     <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
@@ -69,7 +69,7 @@ const Hero = () => {
                     {/* Right-Aligned Large Transparent Image */}
                     <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
                         <Image 
-                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-104 transition-transform duration-700 ease-out translate-y-1' 
+                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
                             src={assets.hero_card_img1} 
                             alt="Direct from the UK - Premium Beauty" 
                             priority
