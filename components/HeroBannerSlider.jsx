@@ -130,6 +130,28 @@ const HeroBannerSlider = () => {
                 >
                     <ChevronRightIcon size={18} color="#6C306E" />
                 </motion.button>
+
+                {/* Round Small Clickable Slide Indicators (Dots) */}
+                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" role="tablist" aria-label="Banner slides">
+                    {slides.map((_, index) => {
+                        const isActive = activeIndex === index
+                        return (
+                            <button
+                                key={index}
+                                type="button"
+                                role="tab"
+                                aria-label={`Go to slide ${index + 1}`}
+                                aria-selected={isActive}
+                                onClick={() => goToSlide(index)}
+                                className={`size-2 sm:size-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                    isActive
+                                        ? 'bg-[#6C306E] scale-125 shadow-xs ring-2 ring-white/60'
+                                        : 'bg-white/80 hover:bg-white shadow-2xs'
+                                }`}
+                            />
+                        )
+                    })}
+                </div>
             </div>
         </section>
     )
