@@ -27,7 +27,7 @@ const PremiumSelect = ({ value, onChange, options, placeholder = "Select an opti
                 className={`flex w-full items-center justify-between rounded-2xl border bg-white px-4 h-12 text-xs sm:text-sm outline-none transition-all duration-200 cursor-pointer
                     ${disabled 
                         ? 'border-[#EFE0EF] bg-[#FAF6FA] text-slate-400 opacity-70 cursor-not-allowed' 
-                        : 'border-[#EFE0EF] text-[#241224] shadow-2xs hover:border-[#6C306E]/40 focus:border-[#6C306E] focus:ring-4 focus:ring-[#6C306E]/10'
+                        : 'border-[#EFE0EF] text-[#241224] shadow-2xs hover:border-[#6C306E]/40 focus:border-[#6C306E] focus:bg-[#FAF6FA]'
                     }`}
             >
                 <span className={`truncate ${!selectedOption ? 'text-slate-400' : 'font-semibold'}`}>

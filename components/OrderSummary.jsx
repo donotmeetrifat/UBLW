@@ -274,7 +274,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                                 key={address.id || idx}
                                 onClick={() => setSelectedAddress(address)}
                                 className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedAddress?.id === address.id
-                                    ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/20'
+                                    ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs'
                                     : 'border-[#EFE0EF] hover:border-[#6C306E]/30 bg-white'
                                     }`}
                             >

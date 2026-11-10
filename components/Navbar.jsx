@@ -149,7 +149,7 @@ const Navbar = () => {
                             <form
                                 onSubmit={handleSearch}
                                 className={`hidden sm:flex items-center text-xs gap-2 px-3.5 h-10 rounded-full border transition-all duration-300 select-none ${isSearchFocused
-                                        ? 'w-56 lg:w-68 bg-white border-[#6C306E] shadow-[0_0_0_3px_rgba(108,48,110,0.08)]'
+                                        ? 'w-56 lg:w-68 bg-[#FAF6FA] border-[#6C306E] shadow-2xs'
                                         : 'w-44 lg:w-56 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
                                     }`}
                             >

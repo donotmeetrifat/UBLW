@@ -524,7 +524,7 @@ function FormField({
                     placeholder={placeholder}
                     aria-label={label}
                     onChange={(e) => onChange?.(e.target.value)}
-                    className="w-full h-11 sm:h-12 rounded-2xl border border-[#EFE0EF] bg-[#FCFAFC] px-4 text-xs sm:text-sm text-[#241224] placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:border-[#6C306E] focus:ring-4 focus:ring-[#6C306E]/10 hover:border-[#6C306E]/40"
+                    className="w-full h-11 sm:h-12 rounded-2xl border border-[#EFE0EF] bg-[#FCFAFC] px-4 text-xs sm:text-sm text-[#241224] placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-[#FAF6FA] focus:border-[#6C306E] hover:border-[#6C306E]/40 shadow-2xs"
                 />
                 {isPassword && (
                     <button
