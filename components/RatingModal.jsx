@@ -138,15 +138,16 @@ const RatingModal = ({ ratingModal, setRatingModal }) => {
                     />
                 </div>
 
-                {/* Submit Action */}
+                {/* Submit Action with Micro-Animation & Shimmer */}
                 <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.025, y: -1 }}
                     whileTap={{ scale: 0.97 }}
                     disabled={isSubmitting}
                     onClick={handleSubmit}
-                    className='w-full bg-[#6C306E] hover:bg-[#3A0C38] text-white py-3 rounded-full text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50'
+                    className='group relative overflow-hidden w-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white py-3.5 rounded-full text-xs font-bold transition-all duration-300 shadow-[0_6px_20px_rgba(108,48,110,0.35)] hover:shadow-[0_12px_28px_rgba(108,48,110,0.6)] cursor-pointer disabled:opacity-50 shimmer-active flex items-center justify-center gap-2 border border-white/20'
                 >
-                    {isSubmitting ? 'Publishing...' : 'Submit Verified Review'}
+                    <StarIcon size={14} color="#D8B56D" filled={true} className="group-hover:rotate-12 transition-transform duration-300" />
+                    <span>{isSubmitting ? 'Publishing Review...' : 'Submit Verified UK Review'}</span>
                 </motion.button>
             </motion.div>
         </div>

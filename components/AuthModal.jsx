@@ -159,34 +159,55 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                     </p>
                 </div>
 
-                {/* Mode Selector Tabs */}
-                <div className="flex bg-[#FAF6FA] border border-[#EFE0EF] p-1 rounded-2xl mb-6 text-xs font-bold">
+                {/* Mode Selector Tabs with Spring Pill */}
+                <div className="flex bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 rounded-2xl mb-6 text-xs font-bold relative">
                     <button
                         type="button"
                         onClick={() => setMode('login')}
-                        className={`flex-1 py-2 rounded-xl transition cursor-pointer ${
-                            mode === 'login' ? 'bg-[#6C306E] text-white shadow-2xs' : 'text-slate-500 hover:text-[#6C306E]'
+                        className={`relative z-10 flex-1 py-2 rounded-xl transition-colors cursor-pointer ${
+                            mode === 'login' ? 'text-white' : 'text-slate-500 hover:text-[#6C306E]'
                         }`}
                     >
-                        Sign In
+                        {mode === 'login' && (
+                            <motion.div
+                                layoutId="authModalTab"
+                                className="absolute inset-0 bg-gradient-to-r from-[#6C306E] to-[#4A154A] rounded-xl shadow-xs -z-10"
+                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                            />
+                        )}
+                        <span>Sign In</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('register')}
-                        className={`flex-1 py-2 rounded-xl transition cursor-pointer ${
-                            mode === 'register' ? 'bg-[#6C306E] text-white shadow-2xs' : 'text-slate-500 hover:text-[#6C306E]'
+                        className={`relative z-10 flex-1 py-2 rounded-xl transition-colors cursor-pointer ${
+                            mode === 'register' ? 'text-white' : 'text-slate-500 hover:text-[#6C306E]'
                         }`}
                     >
-                        Create VIP Account
+                        {mode === 'register' && (
+                            <motion.div
+                                layoutId="authModalTab"
+                                className="absolute inset-0 bg-gradient-to-r from-[#6C306E] to-[#4A154A] rounded-xl shadow-xs -z-10"
+                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                            />
+                        )}
+                        <span>Create VIP Account</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('admin')}
-                        className={`flex-1 py-2 rounded-xl transition cursor-pointer ${
-                            mode === 'admin' ? 'bg-[#3A0C38] text-white shadow-2xs' : 'text-slate-500 hover:text-[#3A0C38]'
+                        className={`relative z-10 flex-1 py-2 rounded-xl transition-colors cursor-pointer ${
+                            mode === 'admin' ? 'text-white' : 'text-slate-500 hover:text-[#3A0C38]'
                         }`}
                     >
-                        Admin
+                        {mode === 'admin' && (
+                            <motion.div
+                                layoutId="authModalTab"
+                                className="absolute inset-0 bg-gradient-to-r from-[#3A0C38] to-[#250824] rounded-xl shadow-xs -z-10"
+                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                            />
+                        )}
+                        <span>Admin</span>
                     </button>
                 </div>
 
@@ -287,13 +308,15 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                         </div>
                     </div>
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={loading}
-                        className="w-full mt-2 bg-[#6C306E] hover:bg-[#3A0C38] text-white py-3 rounded-full font-bold uppercase tracking-wider text-xs transition-all shadow-[0_4px_16px_rgba(108,48,110,0.25)] cursor-pointer disabled:opacity-50"
+                        className="group relative overflow-hidden w-full mt-2 bg-gradient-to-r from-[#5C235A] via-[#7B2E79] to-[#3A0C38] hover:from-[#6E2A70] hover:to-[#451245] text-white py-3.5 rounded-full font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] cursor-pointer disabled:opacity-50 border border-white/20 shimmer-active flex items-center justify-center gap-2"
                     >
-                        {loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : mode === 'register' ? 'Join VIP Club & Get Offers' : 'Access Admin Portal'}
-                    </button>
+                        <span>{loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : mode === 'register' ? 'Join VIP Club & Get Exclusive Offers' : 'Access Admin Portal'}</span>
+                    </motion.button>
                 </form>
 
                 {/* Footer Security Badge */}

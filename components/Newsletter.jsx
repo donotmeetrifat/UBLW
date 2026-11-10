@@ -60,19 +60,21 @@ const Newsletter = () => {
                         </span>
                     </div>
 
-                    {/* Primary Facebook CTA Button with Spring */}
+                    {/* Primary Facebook CTA Button with Distinct Royal Sapphire Aesthetic */}
                     <motion.a
                         href="https://www.facebook.com/tuhinatopa"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Follow UK Brand Lover on Facebook"
-                        whileHover={{ scale: 1.04, y: -2 }}
+                        whileHover={{ scale: 1.035, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                         transition={{ duration: 0.2 }}
-                        className='inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#6C306E] to-[#4F1A51] hover:from-[#4F1A51] hover:to-[#3A0C38] text-white px-8 py-3.5 rounded-full text-xs font-bold shadow-[0_4px_18px_rgba(108,48,110,0.25)] mx-auto mt-7'
+                        className='group relative overflow-hidden inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0E52B5] hover:from-[#1A82FF] hover:to-[#1264DA] text-white px-9 py-4 rounded-full text-xs font-bold border border-blue-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_-4px_rgba(24,119,242,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_14px_34px_-2px_rgba(24,119,242,0.7)] mx-auto mt-7 transition-all duration-300 shimmer-active cursor-pointer'
                     >
-                        <FacebookIcon size={16} color="#FFFFFF" fill="#FFFFFF" />
-                        Follow on Facebook
+                        <div className="group-hover:scale-115 group-hover:-rotate-6 transition-transform duration-300">
+                            <FacebookIcon size={16} color="#FFFFFF" fill="#FFFFFF" />
+                        </div>
+                        <span className="tracking-wide">Join 10k+ Community on Facebook</span>
                     </motion.a>
 
                     {/* Sub-label */}

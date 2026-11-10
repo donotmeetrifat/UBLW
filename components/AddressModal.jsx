@@ -197,19 +197,23 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                     </div>
 
                     <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[#EFE0EF]">
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             type="button"
                             onClick={() => setShowAddressModal(false)}
                             className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#FAF6FA] text-[#3A0C38] border border-[#EFE0EF] hover:bg-slate-100 font-bold transition text-xs cursor-pointer"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -1 }}
+                            whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="w-full sm:flex-1 px-6 py-3 rounded-full bg-[#6C306E] text-white hover:bg-[#3A0C38] font-bold transition shadow-md active:scale-95 text-xs cursor-pointer"
+                            className="group relative overflow-hidden w-full sm:flex-1 px-7 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white hover:from-[#7E3780] hover:to-[#4A164C] font-bold transition-all duration-300 shadow-[0_4px_16px_rgba(108,48,110,0.3)] hover:shadow-[0_8px_24px_rgba(108,48,110,0.5)] text-xs cursor-pointer border border-white/20 shimmer-active"
                         >
-                            Save Address
-                        </button>
+                            <span>Save & Use Delivery Address</span>
+                        </motion.button>
                     </div>
                 </form>
             </motion.div>

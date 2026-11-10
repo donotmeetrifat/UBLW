@@ -162,23 +162,31 @@ const ProductCard = ({ product }) => {
                     />
                 </Link>
 
-                {/* Small Premium Floating Add-to-Cart Button (Top-Right) */}
+                {/* Floating Add-to-Cart Action Button with Micro-Animation & Glow */}
                 <button
                     type="button"
                     onClick={handleAddToCart}
                     aria-label={`Add ${product.name} to cart`}
-                    className={`absolute top-2.5 right-2.5 z-10 size-7.5 sm:size-8.5 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 ${
+                    className={`group/cartbtn absolute top-2.5 right-2.5 z-10 size-8 sm:size-9 rounded-full flex items-center justify-center border transition-all duration-300 cursor-pointer active:scale-90 ${
                         isPressed ? 'scale-90' : ''
                     } ${
                         isAdded
-                            ? 'bg-[#6C306E] text-white border-[#6C306E]'
-                            : 'bg-white border-[#EFE0EF] text-[#6C306E] hover:bg-[#6C306E] hover:text-white hover:border-[#6C306E] hover:scale-105'
+                            ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-400 shadow-[0_4px_16px_rgba(5,150,105,0.45)] scale-105'
+                            : 'bg-white border-[#EFE0EF] text-[#6C306E] hover:bg-gradient-to-br hover:from-[#6C306E] hover:to-[#401242] hover:text-white hover:border-[#6C306E] hover:scale-110 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_20px_rgba(108,48,110,0.4)]'
                     }`}
                 >
                     {isAdded ? (
-                        <CheckIcon size={14} color="#FFFFFF" strokeWidth={2.5} />
+                        <motion.div
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 20 }}
+                        >
+                            <CheckIcon size={14} color="#FFFFFF" strokeWidth={2.5} />
+                        </motion.div>
                     ) : (
-                        <BagIcon size={14} color="currentColor" />
+                        <div className="group-hover/cartbtn:scale-110 group-hover/cartbtn:-rotate-12 transition-transform duration-300">
+                            <BagIcon size={14} color="currentColor" />
+                        </div>
                     )}
                 </button>
             </div>

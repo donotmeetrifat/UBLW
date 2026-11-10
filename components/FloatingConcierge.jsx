@@ -100,19 +100,24 @@ const FloatingConcierge = () => {
                 )}
             </AnimatePresence>
 
-            {/* Floating Action Pill / Circle */}
+            {/* Floating Action Pill / Circle with Breathing Emerald Halo */}
             <motion.button
-                whileHover={{ scale: 1.08 }}
+                whileHover={{ scale: 1.06, y: -2 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Open WhatsApp Concierge"
-                className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-[0_4px_20px_rgba(5,150,105,0.4)] cursor-pointer"
+                className="group relative overflow-hidden flex items-center gap-2.5 px-5 py-3.5 rounded-full bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] hover:from-[#059669] hover:to-[#065F46] text-white border border-emerald-300/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_25px_-4px_rgba(5,150,105,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_16px_36px_-2px_rgba(5,150,105,0.75)] transition-all duration-300 cursor-pointer shimmer-active"
             >
-                <WhatsAppIcon size={20} color="#FFFFFF" />
-                <span className="text-xs font-bold hidden sm:inline tracking-wide">
-                    {isOpen ? 'Close' : 'Chat & Order'}
+                <div className="phone-icon-wiggle transition-transform duration-300">
+                    <WhatsAppIcon size={20} color="#FFFFFF" />
+                </div>
+                <span className="text-xs font-bold tracking-wide">
+                    {isOpen ? 'Close Concierge' : 'Chat & Order'}
                 </span>
-                <span className="size-2 rounded-full bg-white animate-ping sm:hidden" />
+                <span className="relative flex h-2 w-2 ml-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-80"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
             </motion.button>
         </div>
     )

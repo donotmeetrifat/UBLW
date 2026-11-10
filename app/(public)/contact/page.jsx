@@ -147,13 +147,13 @@ export default function ContactPage() {
                                 </label>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center pt-2">
                                     <motion.button 
-                                        whileHover={{ scale: 1.02 }}
+                                        whileHover={{ scale: 1.025, y: -1 }}
                                         whileTap={{ scale: 0.97 }}
                                         type="submit" 
-                                        className="bg-[#6C306E] hover:bg-[#3A0C38] text-white inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-xs font-bold transition shadow-sm cursor-pointer"
+                                        className="group relative overflow-hidden bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white inline-flex items-center justify-center gap-2.5 rounded-full px-9 py-3.5 text-xs font-bold transition-all duration-300 shadow-[0_6px_20px_rgba(108,48,110,0.35)] hover:shadow-[0_12px_28px_rgba(108,48,110,0.55)] cursor-pointer border border-white/20 shimmer-active"
                                     >
-                                        <span>Submit Message</span>
-                                        <ArrowRightIcon size={14} color="#FFFFFF" />
+                                        <span className="tracking-wide">Submit Inquiry Message</span>
+                                        <ArrowRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
                                     </motion.button>
                                     {formStatus && (
                                         <p className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-full flex items-center gap-1.5" role="status">

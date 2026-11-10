@@ -59,10 +59,10 @@ const CategoriesMarqueeContent = () => {
                                 whileTap={{ scale: 0.96 }}
                                 transition={{ duration: 0.15 }}
                                 onClick={() => handleCategoryClick(catName)}
-                                className={`flex items-center gap-1.5 h-[38px] sm:h-[42px] px-4 sm:px-5 rounded-full border transition-all duration-200 shrink-0 text-xs font-semibold tracking-wide whitespace-nowrap cursor-pointer ${
+                                className={`flex items-center gap-1.5 h-[38px] sm:h-[42px] px-4.5 sm:px-5.5 rounded-full border transition-all duration-300 shrink-0 text-xs font-bold tracking-wide whitespace-nowrap cursor-pointer ${
                                     isActive
-                                        ? 'bg-[#6C306E] border-[#6C306E] text-white shadow-sm'
-                                        : 'bg-white border-[#EFE0EF] text-[#3A0C38] hover:bg-[#FAF6FA] hover:border-[#6C306E]/40 hover:shadow-2xs'
+                                        ? 'bg-gradient-to-r from-[#6C306E] to-[#401242] border-[#6C306E] text-white shadow-[0_4px_14px_rgba(108,48,110,0.35)] scale-102'
+                                        : 'bg-white border-[#EFE0EF] text-[#3A0C38] hover:bg-[#FAF6FA] hover:border-[#6C306E]/40 hover:shadow-xs'
                                 }`}
                             >
                                 {isActive && <SparklesIcon size={11} color="#FFFFFF" />}

@@ -11,7 +11,9 @@ import {
     WhatsAppIcon,
     CheckIcon,
     ShieldCheckIcon,
-    TruckIcon
+    TruckIcon,
+    ArrowRightIcon,
+    PrinterIcon
 } from '@/components/icons';
 import React, { useState } from 'react'
 import AddressModal from './AddressModal';
@@ -258,11 +260,11 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                     <p className='text-[#241224] font-extrabold text-[11px] uppercase tracking-widest'>DELIVERY ADDRESS</p>
                     <button
                         type="button"
-                        className='flex items-center gap-1 text-[#6C306E] text-xs font-bold bg-[#FAF6FA] hover:bg-[#EFE0EF] px-3 py-1 rounded-full transition-colors border border-[#EFE0EF] cursor-pointer'
+                        className='group inline-flex items-center gap-1.5 text-[#6C306E] text-xs font-bold bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-3.5 py-1.5 rounded-full transition-all duration-200 border border-[#EFE0EF] hover:border-[#6C306E] shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
                         onClick={() => { setEditingAddress(null); setShowAddressModal(true); }}
                     >
-                        <PlusIcon size={12} color="#6C306E" />
-                        <span>Add New</span>
+                        <PlusIcon size={12} color="currentColor" className="group-hover:rotate-90 transition-transform duration-200" />
+                        <span>Add New Address</span>
                     </button>
                 </div>
 
@@ -354,9 +356,9 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                         <button
                             type="submit"
                             disabled={isApplyingCoupon}
-                            className='bg-[#6C306E] hover:bg-[#3A0C38] text-white px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-50'
+                            className='bg-slate-900 hover:bg-[#6C306E] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)] active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-50'
                         >
-                            {isApplyingCoupon ? '...' : 'Apply'}
+                            {isApplyingCoupon ? 'Verifying...' : 'Apply Coupon'}
                         </button>
                     </form>
                 ) : (
@@ -378,16 +380,23 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                 <p className='text-[#3A0C38] text-lg'>{currency}{finalTotal.toLocaleString()}</p>
             </div>
 
-            {/* Place Order CTA */}
+            {/* Place Order CTA with Imperial Plum Glow & Light Sweep */}
             <motion.button
                 type="button"
                 disabled={isSubmitting || items.length === 0}
-                whileHover={{ scale: items.length > 0 ? 1.02 : 1 }}
-                whileTap={{ scale: items.length > 0 ? 0.97 : 1 }}
+                whileHover={{ scale: items.length > 0 ? 1.025 : 1, y: items.length > 0 ? -1 : 0 }}
+                whileTap={{ scale: items.length > 0 ? 0.98 : 1 }}
                 onClick={handlePlaceOrder}
-                className='w-full bg-[#6C306E] hover:bg-[#3A0C38] text-white py-3.5 rounded-full font-bold text-xs tracking-wider uppercase transition-all shadow-[0_4px_16px_rgba(108,48,110,0.25)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                className='group relative overflow-hidden w-full bg-gradient-to-r from-[#5E225C] via-[#7B2E79] to-[#3A0C38] hover:from-[#6E2A70] hover:to-[#451245] text-white py-4 rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_10px_28px_-4px_rgba(108,48,110,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_16px_36px_-2px_rgba(108,48,110,0.7)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shimmer-active flex items-center justify-center gap-2 border border-white/20'
             >
-                {isSubmitting ? 'Placing Order...' : 'Confirm Order'}
+                <span>{isSubmitting ? 'Placing Order...' : 'Confirm Order & Place Booking'}</span>
+                {!isSubmitting && (
+                    <ArrowRightIcon 
+                        size={14} 
+                        color="#FFFFFF" 
+                        className="group-hover:translate-x-1.5 transition-transform duration-300" 
+                    />
+                )}
             </motion.button>
 
             {showAddressModal && (
@@ -436,23 +445,29 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                             </div>
 
                             <div className="flex flex-col gap-2.5">
-                                <button
+                                <motion.button
+                                    whileHover={{ scale: 1.02, y: -1 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => {
                                         setConfirmedOrder(null);
                                         router.push('/orders');
                                     }}
-                                    className="w-full bg-[#6C306E] hover:bg-[#3A0C38] text-white py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-2xs cursor-pointer"
+                                    className="group relative overflow-hidden w-full bg-gradient-to-r from-[#6C306E] to-[#401242] hover:from-[#7E3780] hover:to-[#4A164C] text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_6px_20px_rgba(108,48,110,0.35)] cursor-pointer flex items-center justify-center gap-2 border border-white/20 shimmer-active"
                                 >
-                                    Track Your Order
-                                </button>
-                                <button
+                                    <TruckIcon size={16} color="#FFFFFF" className="group-hover:translate-x-1 transition-transform duration-300" />
+                                    <span>Track Your Order & Delivery</span>
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => {
                                         if (typeof window !== 'undefined') window.print();
                                     }}
-                                    className="w-full bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#503E50] py-2.5 rounded-full font-bold text-xs transition cursor-pointer"
+                                    className="w-full bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] hover:border-[#6C306E]/40 text-[#503E50] py-3 rounded-full font-bold text-xs transition duration-200 cursor-pointer shadow-2xs flex items-center justify-center gap-2"
                                 >
-                                    Print Order Receipt
-                                </button>
+                                    <PrinterIcon size={14} color="#6C306E" />
+                                    <span>Print Order Receipt</span>
+                                </motion.button>
                             </div>
                         </motion.div>
                     </div>

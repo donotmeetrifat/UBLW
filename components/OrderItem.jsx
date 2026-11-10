@@ -201,9 +201,9 @@ const OrderItem = ({ order }) => {
                                         ) : currentStatus === 'DELIVERED' ? (
                                             <button
                                                 onClick={() => setRatingModal({ orderId: order.id, productId: prodId })}
-                                                className="text-xs font-bold text-[#6C306E] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                                className="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6FA] hover:bg-[#6C306E] text-[#6C306E] hover:text-white border border-[#EFE0EF] hover:border-[#6C306E] text-xs font-bold transition-all duration-200 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
                                             >
-                                                <SparklesIcon size={12} color="#6C306E" />
+                                                <SparklesIcon size={12} color="#D8B56D" className="group-hover:rotate-12 transition-transform duration-200" />
                                                 <span>Write Verified Review</span>
                                             </button>
                                         ) : (

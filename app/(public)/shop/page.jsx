@@ -152,13 +152,13 @@ function ShopContent() {
                     <div className="flex items-center gap-3 lg:hidden">
                         <motion.button
                             type="button"
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.96 }}
+                            whileHover={{ scale: 1.04, y: -1 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setIsMobileFilterOpen(true)}
-                            className="bg-white border border-[#6C306E]/40 text-[#6C306E] flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition shadow-2xs cursor-pointer"
+                            className="bg-white/95 border border-[#6C306E]/30 hover:border-[#6C306E] text-[#6C306E] hover:bg-[#FAF6FA] flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-[0_4px_16px_rgba(108,48,110,0.18)] cursor-pointer"
                         >
                             <FilterIcon size={14} color="#6C306E" />
-                            Filter & Sort
+                            <span>Filter & Sort</span>
                         </motion.button>
                     </div>
                 </div>

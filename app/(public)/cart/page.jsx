@@ -110,10 +110,10 @@ export default function Cart() {
                                             </td>
                                             <td className="py-4 text-center max-md:hidden">
                                                 <motion.button 
-                                                    whileHover={{ scale: 1.15 }}
-                                                    whileTap={{ scale: 0.9 }}
+                                                    whileHover={{ scale: 1.15, rotate: 6 }}
+                                                    whileTap={{ scale: 0.88 }}
                                                     onClick={() => handleDeleteItemFromCart(item.id)} 
-                                                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all cursor-pointer"
+                                                    className="text-slate-400 hover:text-red-600 hover:bg-red-50 hover:shadow-[0_2px_10px_rgba(239,68,68,0.2)] p-2.5 rounded-full transition-all duration-200 cursor-pointer"
                                                     title="Remove item"
                                                 >
                                                     <TrashIcon size={16} color="currentColor" />
@@ -146,10 +146,10 @@ export default function Cart() {
             </p>
             <Link 
                 href="/shop" 
-                className="mt-6 inline-flex items-center gap-2 bg-[#6C306E] hover:bg-[#3A0C38] text-white px-8 py-3.5 rounded-full text-xs font-bold transition-all shadow-[0_4px_16px_rgba(108,48,110,0.25)] active:scale-95"
+                className="group relative overflow-hidden mt-6 inline-flex items-center gap-2.5 bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white px-9 py-4 rounded-full text-xs font-bold transition-all duration-300 shadow-[0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[0_14px_34px_-2px_rgba(108,48,110,0.65)] hover:-translate-y-0.5 active:scale-95 shimmer-active border border-white/20"
             >
-                <span>Browse UK Collections</span>
-                <ArrowRightIcon size={14} color="#FFFFFF" />
+                <span className="tracking-wide">Browse UK Collections</span>
+                <ArrowRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
             </Link>
         </motion.div>
     )

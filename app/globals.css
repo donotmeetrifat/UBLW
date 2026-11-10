@@ -14,6 +14,73 @@ body {
             transform: translateX(-50%);
         }
     }
+
+    /* Luxury Button Micro-Animations */
+    @keyframes shimmerSlide {
+        0% {
+            transform: translateX(-120%) skewX(-20deg);
+        }
+        100% {
+            transform: translateX(240%) skewX(-20deg);
+        }
+    }
+
+    @keyframes phoneWiggle {
+        0%, 100% { transform: rotate(0deg); }
+        15% { transform: rotate(-14deg) scale(1.05); }
+        30% { transform: rotate(12deg) scale(1.05); }
+        45% { transform: rotate(-10deg) scale(1.03); }
+        60% { transform: rotate(8deg) scale(1.02); }
+        75% { transform: rotate(-4deg); }
+    }
+
+    @keyframes goldRadiance {
+        0%, 100% {
+            box-shadow: 0 8px 24px -4px rgba(216, 181, 109, 0.45), 0 0 0 1px rgba(255, 235, 170, 0.35);
+        }
+        50% {
+            box-shadow: 0 14px 34px -2px rgba(216, 181, 109, 0.75), 0 0 0 2px rgba(255, 235, 170, 0.85);
+        }
+    }
+
+    @keyframes emeraldRadiance {
+        0%, 100% {
+            box-shadow: 0 8px 24px -4px rgba(5, 150, 105, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
+        }
+        50% {
+            box-shadow: 0 14px 32px -2px rgba(5, 150, 105, 0.65), 0 0 0 5px rgba(16, 185, 129, 0);
+        }
+    }
+
+    @keyframes plumRadiance {
+        0%, 100% {
+            box-shadow: 0 8px 24px -4px rgba(108, 48, 110, 0.45);
+        }
+        50% {
+            box-shadow: 0 16px 36px -2px rgba(108, 48, 110, 0.7);
+        }
+    }
+
+    .shimmer-active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+        transform: translateX(-120%) skewX(-20deg);
+        pointer-events: none;
+    }
+
+    .shimmer-active:hover::after {
+        animation: shimmerSlide 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .animate-wiggle-hover:hover .phone-icon-wiggle,
+    .group:hover .phone-icon-wiggle {
+        animation: phoneWiggle 0.85s ease-in-out infinite;
+    }
 }
 
 @layer base {

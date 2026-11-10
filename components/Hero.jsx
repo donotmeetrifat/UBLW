@@ -58,12 +58,10 @@ const Hero = () => {
 
                         <Link 
                             href="/shop" 
-                            className='inline-flex items-center gap-2 bg-[#6C306E] hover:bg-[#3A0C38] text-white text-xs font-bold px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full mt-5 transition-all shadow-[0_4px_16px_rgba(108,48,110,0.2)] active:scale-95 group/btn'
+                            className='group relative overflow-hidden inline-flex items-center gap-2.5 bg-gradient-to-r from-[#5C235A] via-[#7B2F79] to-[#3E113C] text-white text-xs font-bold px-6 sm:px-8 py-3 sm:py-3.5 rounded-full mt-5 transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] hover:-translate-y-0.5 active:scale-95 shimmer-active border border-white/20'
                         >
-                            <span>Explore Collection</span>
-                            <motion.span whileHover={{ x: 3 }} transition={{ duration: 0.2 }}>
-                                <ChevronRightIcon size={14} color="#FFFFFF" />
-                            </motion.span>
+                            <span className="tracking-wide">Explore Collection</span>
+                            <ChevronRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
                         </Link>
                     </div>
 

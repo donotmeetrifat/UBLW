@@ -20,24 +20,33 @@ const ProductDescription = ({ product }) => {
 
     return (
         <div className="my-16 text-sm text-slate-600">
-            {/* Navigation Tabs with Animated Underline Indicator */}
-            <div className="flex border-b border-[#EFE0EF] mb-8 max-w-2xl relative">
+            {/* Navigation Tabs with Spring Animated Indicator */}
+            <div className="flex items-center gap-2 border-b border-[#EFE0EF] mb-8 pb-2 max-w-2xl relative">
                 {['Description', 'Reviews'].map((tab, index) => {
                     const isSelected = selectedTab === tab;
                     return (
                         <button 
                             key={index} 
                             onClick={() => setSelectedTab(tab)}
-                            className={`px-6 py-3 font-bold text-xs sm:text-sm transition-colors relative cursor-pointer ${
-                                isSelected ? 'text-[#6C306E]' : 'text-slate-400 hover:text-slate-700'
+                            className={`px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 relative cursor-pointer rounded-full ${
+                                isSelected ? 'text-[#6C306E]' : 'text-slate-400 hover:text-slate-700 hover:bg-[#FAF6FA]/50'
                             }`}
                         >
-                            {tab === 'Reviews' ? `Customer Reviews (${product.rating?.length || 0})` : 'Product Details & Specs'}
+                            <span className="relative z-10">
+                                {tab === 'Reviews' ? `Customer Reviews (${product.rating?.length || 0})` : 'Product Details & Specs'}
+                            </span>
                             {isSelected && (
                                 <motion.div
-                                    layoutId="activeTabIndicator"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C306E]"
-                                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                    layoutId="activeTabPill"
+                                    className="absolute inset-0 bg-[#FAF6FA] border border-[#EFE0EF] rounded-full shadow-2xs z-0"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                />
+                            )}
+                            {isSelected && (
+                                <motion.div
+                                    layoutId="activeTabLine"
+                                    className="absolute -bottom-2.5 left-4 right-4 h-0.75 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full shadow-xs"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
                                 />
                             )}
                         </button>

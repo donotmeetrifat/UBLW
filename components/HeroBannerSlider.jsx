@@ -112,10 +112,10 @@ const HeroBannerSlider = () => {
                 <motion.button
                     type="button"
                     onClick={showPrevious}
-                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.12, backgroundColor: 'rgba(255, 255, 255, 1)' }}
+                    whileTap={{ scale: 0.9 }}
                     aria-label="Previous promotional slide"
-                    className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/80 backdrop-blur-md border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer"
+                    className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/85 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.12)] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer hover:shadow-[0_6px_22px_rgba(108,48,110,0.35)]"
                 >
                     <ChevronLeftIcon size={18} color="#6C306E" />
                 </motion.button>
@@ -123,16 +123,16 @@ const HeroBannerSlider = () => {
                 <motion.button
                     type="button"
                     onClick={showNext}
-                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.12, backgroundColor: 'rgba(255, 255, 255, 1)' }}
+                    whileTap={{ scale: 0.9 }}
                     aria-label="Next promotional slide"
-                    className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/80 backdrop-blur-md border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 cursor-pointer"
+                    className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-full bg-white/85 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.12)] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer hover:shadow-[0_6px_22px_rgba(108,48,110,0.35)]"
                 >
                     <ChevronRightIcon size={18} color="#6C306E" />
                 </motion.button>
 
-                {/* Round Small Clickable Slide Indicators (Dots) */}
-                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" role="tablist" aria-label="Banner slides">
+                {/* Round Small Clickable Slide Indicators (Dots in Glass Capsule) */}
+                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md border border-white/20 shadow-md z-20" role="tablist" aria-label="Banner slides">
                     {slides.map((_, index) => {
                         const isActive = activeIndex === index
                         return (
@@ -143,10 +143,10 @@ const HeroBannerSlider = () => {
                                 aria-label={`Go to slide ${index + 1}`}
                                 aria-selected={isActive}
                                 onClick={() => goToSlide(index)}
-                                className={`size-2 sm:size-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                className={`transition-all duration-300 cursor-pointer rounded-full ${
                                     isActive
-                                        ? 'bg-[#6C306E] scale-125 shadow-xs ring-2 ring-white/60'
-                                        : 'bg-white/80 hover:bg-white shadow-2xs'
+                                        ? 'w-6 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)]'
+                                        : 'size-2 bg-white/60 hover:bg-white hover:scale-125'
                                 }`}
                             />
                         )
