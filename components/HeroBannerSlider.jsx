@@ -130,37 +130,6 @@ const HeroBannerSlider = () => {
                 >
                     <ChevronRightIcon size={18} color="#6C306E" />
                 </motion.button>
-
-                {/* Animated Pagination Pill Indicators */}
-                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md z-20">
-                    {slides.map((_, index) => {
-                        const isActive = activeIndex === index
-                        return (
-                            <button
-                                key={index}
-                                type="button"
-                                onClick={() => goToSlide(index)}
-                                aria-label={`Go to slide ${index + 1}`}
-                                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                                    isActive
-                                        ? 'w-6 sm:w-7 h-1.5 bg-white'
-                                        : 'size-1.5 bg-white/50 hover:bg-white/80'
-                                }`}
-                            />
-                        )
-                    })}
-                </div>
-
-                {/* Ambient Bottom Progress Line */}
-                <div className="absolute bottom-0 left-0 w-full h-[2.5px] bg-white/20 overflow-hidden z-20 pointer-events-none">
-                    <motion.div
-                        key={activeIndex}
-                        initial={{ width: '0%' }}
-                        animate={{ width: isPaused ? '0%' : '100%' }}
-                        transition={{ duration: AUTOPLAY_DELAY / 1000, ease: 'linear' }}
-                        className="h-full bg-gradient-to-r from-[#D8B56D] to-[#6C306E]"
-                    />
-                </div>
             </div>
         </section>
     )
