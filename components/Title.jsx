@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRightIcon, SparklesIcon } from '@/components/icons'
+import { ArrowRightIcon } from '@/components/icons'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import React from 'react'
@@ -14,13 +14,6 @@ const Title = ({ title, description, visibleButton = true, href = '' }) => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className='flex flex-col items-center text-center'
         >
-            {/* Elegant Luxury Eyebrow / Accent */}
-            <div className='flex items-center gap-2 mb-2'>
-                <span className='h-[1px] w-6 bg-gradient-to-r from-transparent to-[#D8B56D]' />
-                <SparklesIcon size={13} color="#D8B56D" />
-                <span className='h-[1px] w-6 bg-gradient-to-l from-transparent to-[#D8B56D]' />
-            </div>
-
             <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight'>
                 {title}
             </h2>

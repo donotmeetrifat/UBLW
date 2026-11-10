@@ -32,8 +32,7 @@ const Newsletter = () => {
                     </div>
 
                     {/* Small Eyebrow */}
-                    <span className='inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
-                        <SparklesIcon size={11} color="#D8B56D" />
+                    <span className='inline-block text-[10px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
                         THE UK BRAND LOVER COMMUNITY
                     </span>
 

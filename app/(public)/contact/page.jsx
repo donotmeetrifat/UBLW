@@ -68,8 +68,7 @@ export default function ContactPage() {
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                         className="text-center max-w-3xl mx-auto"
                     >
-                        <div className="flex items-center justify-center gap-1.5 mb-2">
-                            <SparklesIcon size={13} color="#D8B56D" />
+                        <div className="flex items-center justify-center mb-2">
                             <span className="text-[10px] font-bold text-[#6C306E] tracking-widest uppercase">
                                 WE ARE HERE TO HELP
                             </span>

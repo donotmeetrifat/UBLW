@@ -110,8 +110,7 @@ export default function Product() {
                     <div className="mt-20 pt-12 border-t border-[#EFE0EF]">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <div className="flex items-center gap-1.5 text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-1">
-                                    <SparklesIcon size={13} color="#D8B56D" />
+                                <div className="text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-1">
                                     <span>Curated British Collection</span>
                                 </div>
                                 <h3 className="text-xl sm:text-2xl font-extrabold text-[#241224]">
