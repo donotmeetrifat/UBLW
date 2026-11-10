@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { FlowButton } from "@/components/ui/flow-button";
 
 const Navbar = () => {
     const router = useRouter();
@@ -268,15 +269,7 @@ const Navbar = () => {
                                     </AnimatePresence>
                                 </div>
                             ) : (
-                                <Link
-                                    href="/login"
-                                    className="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-5 h-10 bg-gradient-to-r from-[#4A154A] via-[#632266] to-[#380E38] hover:from-[#581F5A] hover:to-[#451245] text-white text-xs font-bold rounded-full border border-[#D8B56D]/50 hover:border-[#F2D086] shadow-[0_4px_16px_rgba(108,48,110,0.3)] hover:shadow-[0_8px_24px_rgba(216,181,109,0.4)] hover:scale-[1.03] active:scale-[0.96] transition-all cursor-pointer shimmer-active select-none"
-                                >
-                                    <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <UserIcon size={14} color="#FCE4A6" />
-                                    </div>
-                                    <span className="tracking-wide leading-none">Sign In</span>
-                                </Link>
+                                <FlowButton text="Sign In" href="/login" />
                             )}
                         </div>
                     </div>
