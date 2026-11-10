@@ -45,7 +45,7 @@ const ProductDescription = ({ product }) => {
                             {isSelected && (
                                 <motion.div
                                     layoutId="activeTabLine"
-                                    className="absolute -bottom-2.5 left-4 right-4 h-0.75 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full shadow-xs"
+                                    className="absolute -bottom-2.5 left-0 right-0 h-0.75 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full shadow-xs"
                                     transition={{ type: "spring", stiffness: 450, damping: 35 }}
                                 />
                             )}
