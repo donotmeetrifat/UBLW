@@ -8,6 +8,7 @@ import Link from 'next/link'
 import React from 'react'
 import CategoriesMarquee from './CategoriesMarquee'
 import HeroBannerSlider from './HeroBannerSlider'
+import { FlowButton } from './ui/flow-button'
 
 const Hero = () => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -56,13 +57,13 @@ const Hero = () => {
                             </span>
                         </div>
 
-                        <Link 
-                            href="/shop" 
-                            className='group relative overflow-hidden inline-flex items-center gap-2.5 bg-gradient-to-r from-[#5C235A] via-[#7B2F79] to-[#3E113C] text-white text-xs font-bold px-6 sm:px-8 py-3 sm:py-3.5 rounded-full mt-5 transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] hover:-translate-y-0.5 active:scale-95 shimmer-active border border-white/20'
-                        >
-                            <span className="tracking-wide">Explore Collection</span>
-                            <ChevronRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
-                        </Link>
+                        <div className="mt-5">
+                            <FlowButton 
+                                text="Explore Collection" 
+                                href="/shop" 
+                                className="px-8 h-11 sm:h-12 text-xs sm:text-sm font-bold" 
+                            />
+                        </div>
                     </div>
 
                     {/* Right-Aligned Large Transparent Image */}
