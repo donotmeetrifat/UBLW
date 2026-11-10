@@ -11,7 +11,8 @@ import {
     ShieldCheckIcon,
     StoreFrontIcon,
     UserIcon,
-    CheckIcon
+    CheckIcon,
+    WhatsAppIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
@@ -21,6 +22,8 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     const [mode, setMode] = useState('login') // 'login', 'register', 'admin'
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
+        whatsappNumber: '',
         emailOrPhone: '',
         password: '',
     })
@@ -40,7 +43,8 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                     name: 'Flagship Admin',
                     email: 'support@ukbrandlover.com',
                     role: 'ADMIN',
-                    phone: '01959524393'
+                    phone: '01959524393',
+                    whatsapp: '01959524393'
                 }
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_current_user', JSON.stringify(adminUser))
@@ -52,16 +56,58 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 return
             }
 
-            if (!formData.emailOrPhone) {
-                toast.error('Please enter your mobile number or email')
+            if (mode === 'register') {
+                const rawWhatsApp = formData.whatsappNumber.replace(/[^0-9]/g, '')
+                if (!rawWhatsApp || rawWhatsApp.length < 11) {
+                    toast.error('Please enter a valid 11-digit Bangladesh WhatsApp Number (e.g. 019XXXXXXXX)')
+                    setLoading(false)
+                    return
+                }
+
+                const user = {
+                    id: `user_${Date.now()}`,
+                    name: formData.name.trim() || 'Valued Shopper',
+                    email: formData.email.trim() || `${rawWhatsApp}@ukbrandlover.com`,
+                    phone: rawWhatsApp,
+                    whatsapp: rawWhatsApp,
+                    role: 'CUSTOMER',
+                    cart: {},
+                    joinedDate: new Date().toISOString()
+                }
+
+                // Sync customer to database API
+                try {
+                    await fetch('/api/marketing/customers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(user)
+                    })
+                } catch (e) {}
+
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_current_user', JSON.stringify(user))
+                }
+
+                toast.success('VIP Account created successfully! Welcome to UK Brand Lover.')
+                if (onLoginSuccess) onLoginSuccess(user)
+                onClose()
                 return
             }
 
+            // Customer Login Mode
+            if (!formData.emailOrPhone) {
+                toast.error('Please enter your mobile or WhatsApp number')
+                setLoading(false)
+                return
+            }
+
+            const cleanPhone = formData.emailOrPhone.replace(/[^0-9]/g, '')
             const user = {
                 id: `user_${Date.now()}`,
-                name: formData.name || 'Valued Customer',
-                email: formData.emailOrPhone.includes('@') ? formData.emailOrPhone : `${formData.emailOrPhone}@ukbrandlover.com`,
-                phone: formData.emailOrPhone.replace(/[^0-9]/g, '') || '01959524393',
+                name: 'Valued Customer',
+                email: formData.emailOrPhone.includes('@') ? formData.emailOrPhone : `${cleanPhone || 'customer'}@ukbrandlover.com`,
+                phone: cleanPhone || '01959524393',
+                whatsapp: cleanPhone || '01959524393',
                 role: 'CUSTOMER'
             }
 
@@ -69,7 +115,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 localStorage.setItem('ukbl_current_user', JSON.stringify(user))
             }
 
-            toast.success(mode === 'register' ? 'Account created successfully! Welcome to UK Brand Lover.' : 'Signed in successfully!')
+            toast.success('Signed in successfully!')
             if (onLoginSuccess) onLoginSuccess(user)
             onClose()
         } catch (error) {
@@ -80,13 +126,13 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.25 }}
-                className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-[#EFE0EF] shadow-2xl relative"
+                className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-[#EFE0EF] shadow-2xl relative my-6"
             >
                 {/* Close Button */}
                 <button
@@ -102,12 +148,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                         <RoyalCrownIcon size={24} color="#6C306E" />
                     </div>
                     <h3 className="text-xl font-extrabold text-[#241224]">
-                        {mode === 'login' ? 'Customer Sign In' : mode === 'register' ? 'Join UK Brand Lover Club' : 'Store & Admin Portal'}
+                        {mode === 'login' ? 'Customer Sign In' : mode === 'register' ? 'Join VIP Beauty Club' : 'Store & Admin Portal'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                        {mode === 'admin'
-                            ? 'Manage inventory, verify bKash payments, and fulfill courier orders'
-                            : 'Access saved delivery addresses, track packages, and unlock VIP beauty rewards'}
+                        {mode === 'register'
+                            ? 'Provide your WhatsApp number to receive private secret discounts & priority parcel tracking'
+                            : mode === 'admin'
+                            ? 'Manage inventory, verify bKash payments, and run WhatsApp broadcasts'
+                            : 'Sign in to view your bag, saved addresses, and live order tracking'}
                     </p>
                 </div>
 
@@ -129,7 +177,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                             mode === 'register' ? 'bg-[#6C306E] text-white shadow-2xs' : 'text-slate-500 hover:text-[#6C306E]'
                         }`}
                     >
-                        Register
+                        Create VIP Account
                     </button>
                     <button
                         type="button"
@@ -138,24 +186,86 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                             mode === 'admin' ? 'bg-[#3A0C38] text-white shadow-2xs' : 'text-slate-500 hover:text-[#3A0C38]'
                         }`}
                     >
-                        Staff / Admin
+                        Admin
                     </button>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-                    {mode === 'register' && (
+                    {mode === 'register' ? (
+                        <>
+                            <div>
+                                <label className="block text-[#241224] font-bold mb-1">Full Name</label>
+                                <div className="relative">
+                                    <UserIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        placeholder="Ayesha Rahman"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Mandatory WhatsApp Number Field */}
+                            <div>
+                                <label className="block text-[#241224] font-bold mb-1 flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5 text-emerald-800">
+                                        <WhatsAppIcon size={14} color="#059669" />
+                                        <span>WhatsApp Mobile Number (Mandatory)</span>
+                                    </span>
+                                    <span className="text-[10px] text-emerald-600 font-bold">Bangladesh (+880)</span>
+                                </label>
+                                <div className="relative">
+                                    <PhoneIcon size={14} color="#059669" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    <input
+                                        type="tel"
+                                        placeholder="019XXXXXXXX or 017XXXXXXXX"
+                                        value={formData.whatsappNumber}
+                                        onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                                        className="w-full bg-emerald-50/40 border border-emerald-300 focus:border-emerald-600 rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224] font-mono font-bold"
+                                        required
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-500 mt-1">
+                                    💬 Used for parcel dispatch alerts, live courier tracking, & secret VIP member gifts.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-[#241224] font-bold mb-1">Email Address (Optional)</label>
+                                <div className="relative">
+                                    <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    <input
+                                        type="email"
+                                        placeholder="ayesha@gmail.com (Optional)"
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    ) : (
                         <div>
-                            <label className="block text-[#241224] font-bold mb-1">Full Name</label>
+                            <label className="block text-[#241224] font-bold mb-1">
+                                {mode === 'admin' ? 'Admin Email / Username' : 'WhatsApp Number or Email'}
+                            </label>
                             <div className="relative">
-                                <UserIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                {mode === 'admin' ? (
+                                    <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                ) : (
+                                    <WhatsAppIcon size={14} color="#059669" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                )}
                                 <input
-                                    type="text"
-                                    placeholder="Ayesha Rahman"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    type={mode === 'admin' ? 'email' : 'text'}
+                                    placeholder={mode === 'admin' ? 'support@ukbrandlover.com' : '019XXXXXXXX or customer@email.com'}
+                                    value={formData.emailOrPhone}
+                                    onChange={e => setFormData({ ...formData, emailOrPhone: e.target.value })}
                                     className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
-                                    required
+                                    required={mode !== 'admin'}
                                 />
                             </div>
                         </div>
@@ -163,34 +273,13 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
                     <div>
                         <label className="block text-[#241224] font-bold mb-1">
-                            {mode === 'admin' ? 'Admin Email / Username' : 'Mobile Number or Email'}
-                        </label>
-                        <div className="relative">
-                            {mode === 'admin' ? (
-                                <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            ) : (
-                                <PhoneIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            )}
-                            <input
-                                type={mode === 'admin' ? 'email' : 'text'}
-                                placeholder={mode === 'admin' ? 'support@ukbrandlover.com' : '019XXXXXXXX or email@domain.com'}
-                                value={formData.emailOrPhone}
-                                onChange={e => setFormData({ ...formData, emailOrPhone: e.target.value })}
-                                className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
-                                required={mode !== 'admin'}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-[#241224] font-bold mb-1">
-                            {mode === 'admin' ? 'Admin Security Key' : 'Password / Passcode'}
+                            {mode === 'admin' ? 'Admin Master Key' : 'Account Password (Optional)'}
                         </label>
                         <div className="relative">
                             <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                                 type="password"
-                                placeholder={mode === 'admin' ? '••••••••' : 'Enter password (or leave blank for guest)'}
+                                placeholder={mode === 'admin' ? '••••••••' : 'Enter password or leave blank for OTP login'}
                                 value={formData.password}
                                 onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
@@ -203,14 +292,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                         disabled={loading}
                         className="w-full mt-2 bg-[#6C306E] hover:bg-[#3A0C38] text-white py-3 rounded-full font-bold uppercase tracking-wider text-xs transition-all shadow-[0_4px_16px_rgba(108,48,110,0.25)] cursor-pointer disabled:opacity-50"
                     >
-                        {loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : mode === 'register' ? 'Create Free Account' : 'Access Admin Portal'}
+                        {loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : mode === 'register' ? 'Join VIP Club & Get Offers' : 'Access Admin Portal'}
                     </button>
                 </form>
 
                 {/* Footer Security Badge */}
                 <div className="mt-5 pt-4 border-t border-[#EFE0EF] flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
                     <ShieldCheckIcon size={14} color="#059669" />
-                    <span>100% Authentic UK Products Guaranteed</span>
+                    <span>100% Authentic British Stock Guaranteed</span>
                 </div>
             </motion.div>
         </div>
@@ -218,4 +307,3 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 }
 
 export default AuthModal
-
