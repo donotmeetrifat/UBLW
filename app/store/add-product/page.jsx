@@ -47,6 +47,31 @@ export default function StoreAddProduct() {
 
         setLoading(true)
         try {
+            // Upload selected images to Cloudflare R2 / Upload API
+            const uploadedImageUrls = []
+            const imageFiles = Object.values(images).filter(Boolean)
+
+            if (imageFiles.length > 0) {
+                toast.loading("Uploading product media to Cloudflare R2...", { id: "upload-toast" })
+                for (const file of imageFiles) {
+                    const fd = new FormData()
+                    fd.append('file', file)
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    const uploadData = await uploadRes.json()
+                    if (uploadData.success && uploadData.url) {
+                        uploadedImageUrls.push(uploadData.url)
+                    }
+                }
+                toast.dismiss("upload-toast")
+            }
+
+            const finalImages = uploadedImageUrls.length > 0 
+                ? uploadedImageUrls 
+                : ['/product_img1.png']
+
             const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -59,7 +84,7 @@ export default function StoreAddProduct() {
                     category: productInfo.category,
                     stockCount: Number(productInfo.stockCount) || 50,
                     inStock: true,
-                    images: ['/product_img1.png'],
+                    images: finalImages,
                 })
             })
             const data = await res.json()

@@ -814,4 +814,68 @@ export const BoxIcon = ({ size = 18, className = '', color = 'currentColor', ...
     </svg>
 )
 
+export const CrownIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+    >
+        <path d="M3 19H21V21H3V19Z" fill={color} />
+        <path d="M4 17L5.5 8L9.5 12L12 5L14.5 12L18.5 8L20 17H4Z" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+        <circle cx="12" cy="4" r="1" fill={color} />
+        <circle cx="5.5" cy="7" r="1" fill={color} />
+        <circle cx="18.5" cy="7" r="1" fill={color} />
+    </svg>
+)
+
+export const PlaneIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+    >
+        <path d="M17.8 19.2L16 11L21 6C21.6 5.4 21.6 4.4 21 3.8C20.4 3.2 19.4 3.2 18.8 3.8L13.8 8.8L5.6 7L3.5 9.1L8.5 13.3L5 16.8L3 16.3L1.5 17.8L5.7 19.9L7.8 24.1L9.3 22.6L8.8 20.6L12.3 17.1L16.5 22.1L18.6 20L17.8 19.2Z" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+)
+
+export const StoreIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+    >
+        <path d="M3 9L4.5 4H19.5L21 9V10C21 11.1 20.1 12 19 12C17.9 12 17 11.1 17 10C17 11.1 16.1 12 15 12C13.9 12 13 11.1 13 10C13 11.1 12.1 12 11 12C9.9 12 9 11.1 9 10C9 11.1 8.1 12 7 12C5.9 12 5 11.1 5 10V9H3Z" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M4 12V20C4 20.55 4.45 21 5 21H19C19.55 21 20 20.55 20 20V12" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M9 21V15H15V21" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+)
+
+export const UploadIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+    >
+        <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="17 8 12 3 7 8" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="3" x2="12" y2="15" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+)
+
 
