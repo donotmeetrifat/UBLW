@@ -57,36 +57,36 @@ const ProductDetails = ({ product }) => {
         : 0;
 
     return (
-        <div className="flex max-lg:flex-col gap-10 lg:gap-14 my-4">
+        <div className="flex max-lg:flex-col gap-10 lg:gap-16 xl:gap-20 my-6 sm:my-10 lg:my-12">
             {/* Gallery Section */}
-            <div className="flex max-sm:flex-col-reverse gap-3.5">
+            <div className="flex max-sm:flex-col-reverse gap-4 sm:gap-5 lg:sticky lg:top-24 self-start">
                 {/* Thumbnails */}
-                <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-visible no-scrollbar">
+                <div className="flex sm:flex-col gap-3.5 overflow-x-auto sm:overflow-visible no-scrollbar">
                     {product.images.map((image, index) => {
                         const isSelected = mainImage === image;
                         return (
                             <motion.button 
                                 key={index} 
                                 type="button"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.96 }}
                                 onClick={() => setMainImage(image)} 
-                                className={`bg-white border overflow-hidden size-18 sm:size-20 rounded-2xl cursor-pointer transition-all duration-200 p-1.5 ${
+                                className={`bg-white border overflow-hidden size-18 sm:size-20 lg:size-22 rounded-2xl cursor-pointer transition-all duration-200 p-2 ${
                                     isSelected 
                                         ? 'border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/15' 
                                         : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
-                                <Image src={image} className="w-full h-full object-contain" alt="" width={80} height={80} />
+                                <Image src={image} className="w-full h-full object-contain" alt="" width={88} height={88} />
                             </motion.button>
                         );
                     })}
                 </div>
 
-                {/* Main Image Showcase with Smooth Switch */}
-                <div className="relative aspect-square w-full sm:size-112 md:size-120 bg-white rounded-3xl border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-6 shadow-2xs">
+                {/* Main Image Showcase with Smooth Switch & Airy Padding */}
+                <div className="relative aspect-square w-full sm:w-[460px] md:w-[500px] lg:w-[520px] bg-white rounded-[32px] border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-8 sm:p-10 lg:p-12 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
                     {discountPercentage > 0 && (
-                        <span className="absolute top-4 left-4 z-10 bg-[#6C306E] text-white text-xs font-bold px-3.5 py-1 rounded-full shadow-xs">
+                        <span className="absolute top-5 left-5 z-10 bg-[#6C306E] text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-xs tracking-wider">
                             {discountPercentage}% OFF
                         </span>
                     )}
@@ -103,8 +103,8 @@ const ProductDetails = ({ product }) => {
                             <Image 
                                 src={mainImage} 
                                 alt={product.name} 
-                                width={500} 
-                                height={500} 
+                                width={540} 
+                                height={540} 
                                 className="w-full h-full object-contain" 
                                 priority
                             />
@@ -113,30 +113,32 @@ const ProductDetails = ({ product }) => {
                 </div>
             </div>
 
-            {/* Product Meta & Actions */}
-            <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-2.5">
-                    <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1 rounded-full uppercase tracking-widest">
+            {/* Product Meta & Actions with Spacious Editorial Layout */}
+            <div className="flex-1 max-w-2xl">
+                {/* Category & Stock Tag */}
+                <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
+                    <span className="text-[11px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-3.5 py-1 rounded-full uppercase tracking-widest">
                         {product.category || 'Skincare'}
                     </span>
                     {product.inStock === false && (
-                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3.5 py-1 rounded-full uppercase tracking-wider">
                             Sold Out • Restocking Soon
                         </span>
                     )}
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight tracking-tight">
+                {/* Title */}
+                <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold text-[#241224] leading-[1.25] tracking-tight mb-4">
                     {product.name}
                 </h1>
                 
                 {/* Rating Bar */}
-                <div className='flex items-center mt-3 gap-2'>
+                <div className='flex items-center gap-2.5 mb-6'>
                     <div className='flex items-center gap-0.5'>
                         {Array(5).fill('').map((_, index) => (
                             <StarIcon 
                                 key={index} 
-                                size={15} 
+                                size={16} 
                                 filled={averageRating >= index + 1}
                                 color="#D8B56D"
                                 emptyColor="#E8DFE9"
@@ -149,30 +151,32 @@ const ProductDetails = ({ product }) => {
                 </div>
 
                 {/* Price Display */}
-                <div className="flex items-baseline my-5 gap-3">
-                    <p className="text-3xl sm:text-4xl font-extrabold text-[#3A0C38]">
+                <div className="flex items-baseline gap-3.5 mb-3">
+                    <p className="text-3xl sm:text-4xl font-extrabold text-[#3A0C38] tracking-tight">
                         {currency}{product.price.toLocaleString()}
                     </p>
                     {product?.mrp && product.mrp > product.price && (
-                        <p className="text-lg sm:text-xl text-slate-400 line-through">
+                        <p className="text-lg sm:text-xl text-slate-400 line-through font-normal">
                             {currency}{product.mrp.toLocaleString()}
                         </p>
                     )}
                 </div>
 
+                {/* Savings Pill */}
                 {discountPercentage > 0 && (
-                    <div className="flex items-center gap-2 text-xs font-semibold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-3.5 py-2 rounded-2xl w-fit mb-5">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-4 py-2 rounded-2xl w-fit mb-6 shadow-2xs">
                         <TagIcon size={14} color="#6C306E" />
                         <p>Save {currency}{(product.mrp - product.price).toLocaleString()} ({discountPercentage}% OFF) today</p>
                     </div>
                 )}
 
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6 font-normal">
+                {/* Product Description */}
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-8 max-w-xl font-normal">
                     {product.description}
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-wrap items-center gap-3.5 my-6">
+                <div className="flex flex-wrap items-center gap-4 pt-2 pb-8">
                     {product.inStock === false ? (
                         <span className="px-6 h-11 sm:h-12 inline-flex items-center justify-center bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
                             Currently Out of Stock
@@ -232,21 +236,28 @@ const ProductDetails = ({ product }) => {
                     )}
                 </div>
 
-                <hr className="border-[#EFE0EF] my-6" />
+                {/* Clean Divider Line */}
+                <hr className="border-[#EFE0EF] mb-8" />
 
-                {/* Luxury Trust Indicators */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs font-semibold text-slate-700">
-                    <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF]"> 
-                        <ShieldCheckIcon size={18} color="#6C306E" accentColor="#D8B56D" className="shrink-0" /> 
-                        <span className="text-[11px] leading-tight">100% Genuine UK Imported Product</span> 
+                {/* Luxury Trust Indicators - Clean, airy cards with generous padding */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 text-xs font-semibold text-slate-700">
+                    <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#FAF6FA]/80 border border-[#EFE0EF] hover:bg-[#FAF6FA] transition-colors"> 
+                        <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
+                            <ShieldCheckIcon size={18} color="#6C306E" accentColor="#D8B56D" /> 
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#241224] leading-tight">100% Genuine UK Imported Product</span> 
                     </div>
-                    <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF]"> 
-                        <TruckIcon size={18} color="#6C306E" className="shrink-0" /> 
-                        <span className="text-[11px] leading-tight">Fast Delivery Across Bangladesh</span> 
+                    <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#FAF6FA]/80 border border-[#EFE0EF] hover:bg-[#FAF6FA] transition-colors"> 
+                        <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
+                            <TruckIcon size={18} color="#6C306E" /> 
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#241224] leading-tight">Fast Delivery Across Bangladesh</span> 
                     </div>
-                    <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF]"> 
-                        <LockIcon size={18} color="#6C306E" className="shrink-0" /> 
-                        <span className="text-[11px] leading-tight">Cash on Delivery & bKash Verified</span> 
+                    <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#FAF6FA]/80 border border-[#EFE0EF] hover:bg-[#FAF6FA] transition-colors"> 
+                        <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
+                            <LockIcon size={18} color="#6C306E" /> 
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#241224] leading-tight">Cash on Delivery & bKash Verified</span> 
                     </div>
                 </div>
             </div>

@@ -19,16 +19,16 @@ const ProductDescription = ({ product }) => {
     ]
 
     return (
-        <div className="my-16 text-sm text-slate-600">
+        <div className="mt-16 sm:mt-20 mb-16 sm:mb-20 pt-10 sm:pt-14 border-t border-[#EFE0EF] text-sm text-slate-600">
             {/* Navigation Tabs with Spring Animated Indicator */}
-            <div className="flex items-center gap-2 border-b border-[#EFE0EF] mb-8 pb-2 max-w-2xl relative">
+            <div className="flex items-center gap-3 border-b border-[#EFE0EF] mb-10 pb-3 max-w-2xl relative">
                 {['Description', 'Reviews'].map((tab, index) => {
                     const isSelected = selectedTab === tab;
                     return (
                         <button 
                             key={index} 
                             onClick={() => setSelectedTab(tab)}
-                            className={`px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 relative cursor-pointer rounded-xl ${
+                            className={`px-6 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 relative cursor-pointer rounded-xl ${
                                 isSelected ? 'text-[#6C306E]' : 'text-slate-400 hover:text-slate-700 hover:bg-[#FAF6FA]/50'
                             }`}
                         >
@@ -45,7 +45,7 @@ const ProductDescription = ({ product }) => {
                             {isSelected && (
                                 <motion.div
                                     layoutId="activeTabLine"
-                                    className="absolute -bottom-2.5 left-0 right-0 h-0.75 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full shadow-xs"
+                                    className="absolute -bottom-3.5 left-0 right-0 h-0.75 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full shadow-xs"
                                     transition={{ type: "spring", stiffness: 450, damping: 35 }}
                                 />
                             )}
@@ -63,11 +63,11 @@ const ProductDescription = ({ product }) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
-                        className="max-w-3xl space-y-8 text-slate-700"
+                        className="max-w-3xl space-y-10 sm:space-y-12 text-slate-700"
                     >
                         {/* Section 1: Product Overview */}
-                        <div>
-                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-2.5">
+                        <div className="space-y-3">
+                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest">
                                 Formulation & Profile
                             </h4>
                             <p className="text-sm sm:text-base leading-relaxed text-slate-700">
@@ -76,26 +76,26 @@ const ProductDescription = ({ product }) => {
                         </div>
 
                         {/* Section 2: Key Benefits */}
-                        <div className="bg-[#FAF6FA] border border-[#EFE0EF] p-6 rounded-3xl">
-                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-3.5 flex items-center gap-2">
-                                <RoyalCrownIcon size={14} color="#6C306E" />
+                        <div className="bg-[#FAF6FA]/90 border border-[#EFE0EF] p-7 sm:p-9 rounded-[28px] shadow-2xs">
+                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-5 flex items-center gap-2">
+                                <RoyalCrownIcon size={15} color="#6C306E" />
                                 Key Proven Benefits
                             </h4>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs sm:text-sm">
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 text-xs sm:text-sm">
                                 {defaultBenefits.map((benefit, idx) => (
-                                    <li key={idx} className="flex items-start gap-2.5 text-slate-700">
+                                    <li key={idx} className="flex items-start gap-3 text-slate-700">
                                         <div className="size-5 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 mt-0.5 shadow-2xs">
                                             <CheckIcon size={12} color="#6C306E" strokeWidth={2.5} />
                                         </div>
-                                        <span className="leading-snug">{benefit}</span>
+                                        <span className="leading-relaxed">{benefit}</span>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
                         {/* Section 3: Why You'll Love It */}
-                        <div>
-                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-2">
+                        <div className="space-y-3">
+                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest">
                                 Why You'll Love It
                             </h4>
                             <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
@@ -104,11 +104,11 @@ const ProductDescription = ({ product }) => {
                         </div>
 
                         {/* Section 4: Specifications Grid */}
-                        <div className="pt-4 border-t border-[#EFE0EF]">
-                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-3">
+                        <div className="pt-6 border-t border-[#EFE0EF]">
+                            <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-4">
                                 Product Attributes
                             </h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs bg-white p-5 border border-[#EFE0EF] rounded-2xl shadow-2xs">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-xs bg-white p-6 sm:p-7 border border-[#EFE0EF] rounded-2xl shadow-2xs">
                                 <div>
                                     <span className="text-slate-400 block mb-1">Category</span>
                                     <span className="font-bold text-[#241224]">{category}</span>
@@ -135,10 +135,10 @@ const ProductDescription = ({ product }) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
-                        className="flex flex-col gap-4 max-w-3xl"
+                        className="flex flex-col gap-5 max-w-3xl"
                     >
                         {product.rating?.map((item, index) => (
-                            <div key={index} className="flex gap-4 p-5 rounded-2xl bg-[#FAF6FA]/70 border border-[#EFE0EF]">
+                            <div key={index} className="flex gap-4 sm:gap-5 p-6 rounded-2xl bg-[#FAF6FA]/70 border border-[#EFE0EF]">
                                 <Image 
                                     src={item.user.image} 
                                     alt={item.user.name} 
@@ -147,7 +147,7 @@ const ProductDescription = ({ product }) => {
                                     height={44} 
                                 />
                                 <div>
-                                    <div className="flex items-center gap-1 mb-1">
+                                    <div className="flex items-center gap-1 mb-1.5">
                                         {Array(5).fill('').map((_, idx) => (
                                             <StarIcon 
                                                 key={idx} 

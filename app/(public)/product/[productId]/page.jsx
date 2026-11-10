@@ -83,9 +83,9 @@ export default function Product() {
 
     return (
         <div className="mx-4 sm:mx-8">
-            <div className="max-w-7xl mx-auto pb-20">
-                {/* Luxury Interactive Breadcrumbs */}
-                <nav className="flex items-center gap-2 text-xs text-slate-400 mt-6 mb-6 font-medium">
+            <div className="max-w-7xl mx-auto pb-24 sm:pb-32">
+                {/* Luxury Interactive Breadcrumbs with Generous White Space */}
+                <nav className="flex items-center gap-2.5 text-xs text-slate-400 mt-6 sm:mt-8 mb-8 sm:mb-10 font-medium">
                     <Link href="/" className="hover:text-[#6C306E] transition">Home</Link>
                     <ChevronRightIcon size={12} color="#8A758A" />
                     <Link href="/shop" className="hover:text-[#6C306E] transition">Collection</Link>
@@ -107,10 +107,10 @@ export default function Product() {
 
                 {/* Related UK Products */}
                 {relatedProducts.length > 0 && (
-                    <div className="mt-20 pt-12 border-t border-[#EFE0EF]">
-                        <div className="flex items-center justify-between mb-8">
+                    <div className="mt-24 sm:mt-32 pt-14 sm:pt-18 border-t border-[#EFE0EF]">
+                        <div className="flex items-center justify-between mb-8 sm:mb-10">
                             <div>
-                                <div className="text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-1">
+                                <div className="text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-1.5">
                                     <span>Curated British Collection</span>
                                 </div>
                                 <h3 className="text-xl sm:text-2xl font-extrabold text-[#241224]">
@@ -119,14 +119,14 @@ export default function Product() {
                             </div>
                             <Link
                                 href={`/shop?category=${encodeURIComponent(product.category)}`}
-                                className="text-xs font-bold text-[#6C306E] hover:underline flex items-center gap-1"
+                                className="text-xs font-bold text-[#6C306E] hover:underline flex items-center gap-1.5"
                             >
                                 <span>View all</span>
                                 <ChevronRightIcon size={12} color="#6C306E" />
                             </Link>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-7">
                             {relatedProducts.map(rel => (
                                 <ProductCard key={rel.id} product={rel} />
                             ))}
