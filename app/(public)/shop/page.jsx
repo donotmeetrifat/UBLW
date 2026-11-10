@@ -128,8 +128,7 @@ function ShopContent() {
                 {/* Header */}
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#EFE0EF] pb-6">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <SparklesIcon size={12} color="#D8B56D" />
+                        <div className="mb-1">
                             <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-widest">
                                 100% ORIGINAL UK INVENTORY
                             </span>
