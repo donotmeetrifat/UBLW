@@ -177,7 +177,7 @@ export const TagIcon = ({ size = 16, className = '', color = 'currentColor', ...
 // 13. Communication & Location
 export const PhoneIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
-        <path d="M22 16.92V19.92C22 20.48 21.54 20.93 20.98 20.92C10.5 20.42 3.58 13.5 3.08 3.02C3.07 2.46 3.52 2 4.08 2H7.08C7.59 2 8.02 2.38 8.08 2.89L8.78 7.39C8.83 7.74 8.68 8.09 8.39 8.31L6.71 9.57C8.16 12.67 11.33 15.84 14.43 17.29L15.69 15.61C15.91 15.32 16.26 15.17 16.61 15.22L21.11 15.92C21.62 15.98 22 16.41 22 16.92Z" stroke={color} strokeWidth="1.75" strokeLinejoin="round" />
+        <path d="M22 16.92V19.92C22 20.48 21.54 20.93 20.98 20.92C10.5 20.42 3.58 13.5 3.08 3.02C3.07 2.46 3.52 2 4.08 2H7.08C7.59 2 8.02 2.38 8.08 2.89L8.78 7.39C8.83 7.74 8.68 8.09 8.39 8.31L6.71 9.57C8.16 12.67 11.33 15.84 14.43 17.29L15.69 15.61C15.91 15.32 16.26 15.17 16.61 15.22L21.11 15.92C21.62 15.98 22 16.41 22 16.92Z" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 )
 

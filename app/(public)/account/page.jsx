@@ -239,7 +239,7 @@ export default function AccountPage() {
                                 WhatsApp / Mobile Contact Number
                             </label>
                             <div className="relative">
-                                <PhoneIcon size={14} color="#059669" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <PhoneIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="tel"
                                     value={phone}
