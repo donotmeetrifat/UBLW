@@ -39,6 +39,19 @@ export default function AccountPage() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [passwordSaving, setPasswordSaving] = useState(false)
+    const [otpStep, setOtpStep] = useState(false) // false: enter password, true: verify OTP
+    const [otp, setOtp] = useState('')
+    const [otpTarget, setOtpTarget] = useState('')
+    const [isSendingOtp, setIsSendingOtp] = useState(false)
+    const [countdown, setCountdown] = useState(0)
+
+    // Resend countdown timer
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+            return () => clearTimeout(timer)
+        }
+    }, [countdown])
 
     // Address modal state
     const [showAddressModal, setShowAddressModal] = useState(false)
@@ -124,9 +137,9 @@ export default function AccountPage() {
         }
     }
 
-    // Update Password Handler
-    const handleUpdatePassword = async (e) => {
-        e.preventDefault()
+    // Step 1: Request Password Change OTP
+    const handleRequestPasswordOtp = async (e) => {
+        if (e) e.preventDefault()
 
         if (!password || password.length < 6) {
             toast.error('New password must be at least 6 characters')
@@ -138,13 +151,54 @@ export default function AccountPage() {
             return
         }
 
+        setIsSendingOtp(true)
+        try {
+            const res = await fetch('/api/auth/otp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            })
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                toast.error(data.message || 'Failed to dispatch verification code')
+                return
+            }
+
+            setOtpTarget(data.target || 'your registered contact')
+            setOtpStep(true)
+            setCountdown(60)
+            toast.success(data.message || 'Verification code dispatched!')
+            if (data.devCode) {
+                toast((t) => (
+                    <span className="text-xs">
+                        🔑 Verification Code: <strong className="font-mono text-sm text-[#6C306E]">{data.devCode}</strong>
+                    </span>
+                ), { duration: 10000 })
+            }
+        } catch {
+            toast.error('Network error. Please try again.')
+        } finally {
+            setIsSendingOtp(false)
+        }
+    }
+
+    // Step 2: Verify OTP & Commit Password Update
+    const handleVerifyAndUpdatePassword = async (e) => {
+        e.preventDefault()
+
+        const cleanOtp = otp.trim()
+        if (!cleanOtp || cleanOtp.length !== 6) {
+            toast.error('Please enter the 6-digit OTP code')
+            return
+        }
+
         setPasswordSaving(true)
 
         try {
             const res = await fetch('/api/auth/me', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ password, otp: cleanOtp }),
             })
 
             const data = await res.json()
@@ -156,6 +210,8 @@ export default function AccountPage() {
 
             setPassword('')
             setConfirmPassword('')
+            setOtp('')
+            setOtpStep(false)
             toast.success('Account password updated successfully!')
         } catch {
             toast.error('Network error. Please try again.')
@@ -374,53 +430,134 @@ export default function AccountPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white border border-[#EFE0EF] rounded-3xl p-6 sm:p-8 max-w-2xl shadow-2xs"
                 >
-                    <h2 className="text-base font-bold text-[#241224] mb-1">Change Account Password</h2>
-                    <p className="text-xs text-slate-500 mb-6">Choose a secure password of at least 6 characters</p>
-
-                    <form onSubmit={handleUpdatePassword} className="space-y-4 text-xs">
-                        <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">New Password</label>
-                            <div className="relative">
-                                <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter at least 6 characters"
-                                    className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs"
-                                    required
-                                />
+                    {!otpStep ? (
+                        <>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
+                                    <LockIcon size={18} color="#6C306E" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold text-[#241224]">Change Account Password</h2>
+                                    <p className="text-xs text-slate-500">Requires verified 6-digit OTP to protect your account</p>
+                                </div>
                             </div>
-                        </div>
 
-                        <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">Confirm New Password</label>
-                            <div className="relative">
-                                <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Re-enter new password"
-                                    className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs"
-                                    required
-                                />
+                            <form onSubmit={handleRequestPasswordOtp} className="space-y-4 text-xs">
+                                <div>
+                                    <label className="block text-slate-700 font-bold mb-1.5">New Password</label>
+                                    <div className="relative">
+                                        <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter at least 6 characters"
+                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-slate-700 font-bold mb-1.5">Confirm New Password</label>
+                                    <div className="relative">
+                                        <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Re-enter new password"
+                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-3">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        disabled={isSendingOtp}
+                                        className="px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                                    >
+                                        <ShieldCheckIcon size={16} color="#FFFFFF" />
+                                        <span>{isSendingOtp ? 'Sending OTP Code...' : 'Send OTP & Continue'}</span>
+                                    </motion.button>
+                                </div>
+                            </form>
+                        </>
+                    ) : (
+                        <div className="space-y-5 text-xs">
+                            <div className="flex items-center gap-3 pb-4 border-b border-[#EFE0EF]">
+                                <div className="size-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs">
+                                    <ShieldCheckIcon size={20} color="#059669" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold text-[#241224]">Enter Verification Code (OTP)</h2>
+                                    <p className="text-xs text-slate-500">
+                                        We sent a 6-digit security code to <strong className="text-[#6C306E] font-mono">{otpTarget}</strong>
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="pt-3">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="submit"
-                                disabled={passwordSaving}
-                                className="px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-2"
-                            >
-                                <CheckIcon size={14} color="#FFFFFF" />
-                                <span>{passwordSaving ? 'Updating Password...' : 'Update Password'}</span>
-                            </motion.button>
+                            <form onSubmit={handleVerifyAndUpdatePassword} className="space-y-4">
+                                <div>
+                                    <label className="block text-slate-700 font-bold mb-1.5 text-center">
+                                        6-Digit Verification Code
+                                    </label>
+                                    <div className="max-w-xs mx-auto">
+                                        <input
+                                            type="text"
+                                            maxLength={6}
+                                            autoFocus
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                                            placeholder="• • • • • •"
+                                            className="w-full bg-[#FAF6FA] border-2 border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl py-3.5 text-center font-mono text-xl font-extrabold tracking-[0.4em] text-[#3A0C38] outline-none shadow-inner transition"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="text-center text-xs text-slate-500">
+                                    {countdown > 0 ? (
+                                        <span>Resend code in <strong className="font-mono text-[#6C306E]">{countdown}s</strong></span>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={handleRequestPasswordOtp}
+                                            disabled={isSendingOtp}
+                                            className="font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                        >
+                                            {isSendingOtp ? 'Resending code...' : "Didn't receive code? Resend OTP"}
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 justify-center">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        disabled={passwordSaving || otp.length !== 6}
+                                        className="w-full sm:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        <CheckIcon size={14} color="#FFFFFF" />
+                                        <span>{passwordSaving ? 'Verifying & Updating...' : 'Verify OTP & Change Password'}</span>
+                                    </motion.button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => { setOtpStep(false); setOtp(''); }}
+                                        className="w-full sm:w-auto px-5 py-3 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-slate-600 font-bold text-xs transition cursor-pointer"
+                                    >
+                                        Back / Edit Password
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    )}
                 </motion.div>
             )}
 

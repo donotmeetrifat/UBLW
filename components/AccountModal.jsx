@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CloseIcon, UserIcon, PhoneIcon, MailIcon, LockIcon, CheckIcon, RoyalCrownIcon } from '@/components/icons'
+import { CloseIcon, UserIcon, PhoneIcon, MailIcon, LockIcon, CheckIcon, RoyalCrownIcon, ShieldCheckIcon } from '@/components/icons'
 import toast from 'react-hot-toast'
 
 export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
@@ -12,6 +12,17 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(false)
+    const [otpStep, setOtpStep] = useState(false)
+    const [otp, setOtp] = useState('')
+    const [otpTarget, setOtpTarget] = useState('')
+    const [countdown, setCountdown] = useState(0)
+
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+            return () => clearTimeout(timer)
+        }
+    }, [countdown])
 
     useEffect(() => {
         if (user) {
@@ -20,10 +31,52 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
             setEmail(user.email || '')
             setPassword('')
             setConfirmPassword('')
+            setOtp('')
+            setOtpStep(false)
         }
     }, [user, isOpen])
 
     if (!isOpen) return null
+
+    const handleClose = () => {
+        setOtpStep(false)
+        setOtp('')
+        setPassword('')
+        setConfirmPassword('')
+        onClose()
+    }
+
+    const requestOtp = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/auth/otp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            })
+            const data = await res.json()
+            if (!res.ok || !data.success) {
+                toast.error(data.message || 'Failed to send OTP code')
+                return false
+            }
+            setOtpTarget(data.target || 'your registered contact')
+            setOtpStep(true)
+            setCountdown(60)
+            toast.success(data.message || 'Verification code sent!')
+            if (data.devCode) {
+                toast((t) => (
+                    <span className="text-xs">
+                        🔑 Code: <strong className="font-mono text-sm text-[#6C306E]">{data.devCode}</strong>
+                    </span>
+                ), { duration: 10000 })
+            }
+            return true
+        } catch {
+            toast.error('Network error. Please try again.')
+            return false
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -33,14 +86,28 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
             return
         }
 
-        if (password && password.length < 6) {
-            toast.error('New password must be at least 6 characters')
-            return
-        }
+        // If password is being changed, validate it and require OTP
+        if (password) {
+            if (password.length < 6) {
+                toast.error('New password must be at least 6 characters')
+                return
+            }
 
-        if (password && password !== confirmPassword) {
-            toast.error('Passwords do not match')
-            return
+            if (password !== confirmPassword) {
+                toast.error('Passwords do not match')
+                return
+            }
+
+            if (!otpStep) {
+                // Request OTP first
+                await requestOtp()
+                return
+            }
+
+            if (!otp.trim() || otp.trim().length !== 6) {
+                toast.error('Please enter the 6-digit OTP code')
+                return
+            }
         }
 
         setLoading(true)
@@ -53,6 +120,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                     name: name.trim(),
                     phone: phone.trim(),
                     password: password || undefined,
+                    otp: password ? otp.trim() : undefined,
                 }),
             })
 
@@ -69,9 +137,9 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                 window.dispatchEvent(new Event('auth-change'))
             }
 
-            toast.success('Account profile updated successfully!')
+            toast.success(password ? 'Password and profile updated successfully!' : 'Account profile updated successfully!')
             if (onUserUpdated) onUserUpdated(updatedUser)
-            onClose()
+            handleClose()
         } catch {
             toast.error('Network error. Please try again.')
         } finally {
@@ -82,7 +150,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
     return (
         <AnimatePresence>
             <div 
-                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+                onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
                 className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md select-none transition-all duration-300"
             >
                 <motion.div
@@ -94,7 +162,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                 >
                     {/* Close button */}
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="absolute top-5 right-5 p-2 rounded-full hover:bg-[#FAF6FA] text-slate-400 hover:text-[#241224] transition cursor-pointer"
                         aria-label="Close Account Modal"
                     >
@@ -166,25 +234,57 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
 
                         {/* Password Section */}
                         <div className="pt-2 border-t border-[#EFE0EF]">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Change Password (Optional)
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                <span>Change Password (Optional)</span>
+                                {otpStep && <span className="text-[#6C306E] font-bold">OTP Required</span>}
                             </p>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="New Password"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition"
-                                />
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirm Password"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition"
-                                />
-                            </div>
+                            {!otpStep ? (
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="New Password"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    />
+                                    <input
+                                        type="password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirm Password"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl space-y-2">
+                                    <div className="flex items-center gap-2 text-[#6C306E]">
+                                        <ShieldCheckIcon size={15} color="#6C306E" />
+                                        <span className="font-bold text-[11px]">Verification code sent to {otpTarget}</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        autoFocus
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                                        placeholder="Enter 6-digit OTP"
+                                        className="w-full text-center py-2 rounded-xl border-2 border-[#EFE0EF] bg-white focus:border-[#6C306E] outline-none font-mono text-base font-black tracking-widest text-[#3A0C38]"
+                                        required
+                                    />
+                                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                                        {countdown > 0 ? (
+                                            <span>Resend in {countdown}s</span>
+                                        ) : (
+                                            <button type="button" onClick={requestOtp} className="text-[#6C306E] font-bold hover:underline cursor-pointer">
+                                                Resend OTP
+                                            </button>
+                                        )}
+                                        <button type="button" onClick={() => { setOtpStep(false); setOtp(''); }} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                                            Edit Password
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Save Button */}
@@ -193,14 +293,16 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || (otpStep && otp.length !== 6)}
                                 className="w-full py-3 rounded-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs transition duration-200 flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-60"
                             >
                                 {loading ? (
-                                    <span>Saving Changes...</span>
+                                    <span>Processing...</span>
                                 ) : (
                                     <>
-                                        <span>Save Changes</span>
+                                        <span>
+                                            {password ? (otpStep ? 'Verify OTP & Save Password' : 'Send OTP & Save Changes') : 'Save Changes'}
+                                        </span>
                                         <CheckIcon size={14} color="#FFFFFF" />
                                     </>
                                 )}

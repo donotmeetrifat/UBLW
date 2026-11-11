@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { getUserFromRequest, sanitizeUser, hashPassword, createSessionToken } from '@/lib/auth';
+import { getUserFromRequest, sanitizeUser, hashPassword, createSessionToken, verifyPasswordOtp } from '@/lib/auth';
 
 export async function GET(request) {
     try {
@@ -53,7 +53,7 @@ export async function PUT(request) {
         }
 
         const body = await request.json();
-        const { name, phone, email, password } = body;
+        const { name, phone, email, password, otp } = body;
 
         const updateData = {};
         if (name && typeof name === 'string' && name.trim().length >= 2) {
@@ -73,6 +73,24 @@ export async function PUT(request) {
         }
 
         if (password && typeof password === 'string' && password.length >= 6) {
+            // Require verified 6-digit OTP to change account password
+            if (!otp || String(otp).trim().length !== 6) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'A 6-digit OTP verification code is required to change your password.',
+                    requiresOtp: true,
+                }, { status: 400 });
+            }
+
+            const isValidOtp = verifyPasswordOtp(payload.id, otp);
+            if (!isValidOtp) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Invalid or expired OTP verification code. Please request a new code.',
+                    requiresOtp: true,
+                }, { status: 400 });
+            }
+
             updateData.passwordHash = hashPassword(password);
         }
 
