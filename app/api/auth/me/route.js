@@ -55,14 +55,37 @@ export async function PUT(request) {
         const body = await request.json();
         const { name, phone, email, password, otp } = body;
 
+        // Retrieve existing registered user to check immutable email constraint
+        let currentEmail = payload.email;
+        if (isDatabaseConfigured()) {
+            const existingUser = await prisma.user.findUnique({
+                where: { id: payload.id },
+                select: { email: true }
+            });
+            if (existingUser?.email) {
+                currentEmail = existingUser.email;
+            }
+        }
+
+        // STRICT BACKEND SECURITY: Email address cannot be changed under any circumstances
+        if (email && typeof email === 'string' && currentEmail) {
+            const submittedEmail = email.trim().toLowerCase();
+            const registeredEmail = currentEmail.trim().toLowerCase();
+            if (submittedEmail !== registeredEmail) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Account email address cannot be changed. It is permanently linked to your registered account.',
+                }, { status: 400 });
+            }
+        }
+
         const updateData = {};
         if (name && typeof name === 'string' && name.trim().length >= 2) {
             updateData.name = name.trim();
         }
 
-        if (email && typeof email === 'string' && email.includes('@')) {
-            updateData.email = email.trim().toLowerCase();
-        }
+        // NOTE: Email update is strictly prohibited on the backend.
+        // Account email is permanently immutable once registered.
 
         if (phone && typeof phone === 'string') {
             const cleanPhone = phone.replace(/[^0-9]/g, '');
@@ -120,7 +143,7 @@ export async function PUT(request) {
             return response;
         }
 
-        const updatedPayload = { ...payload, ...updateData };
+        const updatedPayload = { ...payload, ...updateData, email: currentEmail || payload.email };
         return NextResponse.json({
             success: true,
             message: 'Profile updated successfully!',

@@ -123,6 +123,9 @@ export default function AccountPage() {
 
             if (!res.ok || !data.success) {
                 toast.error(data.message || 'Unable to update profile')
+                if (currentUser?.email) {
+                    setEmail(currentUser.email)
+                }
                 return
             }
 
