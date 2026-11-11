@@ -188,6 +188,7 @@ model Rating {
     id                 String   @id @default(cuid())
     rating             Int      @default(5)
     review             String
+    images             String[] @default([])
     userId             String
     productId          String
     orderId            String?

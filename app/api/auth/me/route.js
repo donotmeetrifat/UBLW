@@ -53,11 +53,15 @@ export async function PUT(request) {
         }
 
         const body = await request.json();
-        const { name, phone, password } = body;
+        const { name, phone, email, password } = body;
 
         const updateData = {};
         if (name && typeof name === 'string' && name.trim().length >= 2) {
             updateData.name = name.trim();
+        }
+
+        if (email && typeof email === 'string' && email.includes('@')) {
+            updateData.email = email.trim().toLowerCase();
         }
 
         if (phone && typeof phone === 'string') {

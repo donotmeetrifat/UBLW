@@ -4,13 +4,14 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { rating, review, productId, orderId, userName } = body;
+        const { rating, review, productId, orderId, userName, images = [] } = body;
 
         if (!rating || !productId) {
             return NextResponse.json({ success: false, message: 'Rating and productId are required' }, { status: 400 });
         }
 
         const ratingNum = Math.min(5, Math.max(1, Number(rating)));
+        const reviewImages = Array.isArray(images) ? images.filter(img => typeof img === 'string' && img.length > 0) : [];
 
         if (isDatabaseConfigured()) {
             // Find or create customer
@@ -20,6 +21,7 @@ export async function POST(request) {
                 data: {
                     rating: ratingNum,
                     review: review || '100% authentic UK product, highly satisfied!',
+                    images: reviewImages,
                     productId,
                     orderId: orderId || null,
                     userId: user ? user.id : 'user_guest',
@@ -34,6 +36,7 @@ export async function POST(request) {
             id: `rat_${Date.now()}`,
             rating: ratingNum,
             review: review || 'Authentic UK beauty product, delivered quickly!',
+            images: reviewImages,
             productId,
             orderId: orderId || null,
             user: { name: userName || 'Verified Customer' },

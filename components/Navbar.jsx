@@ -264,17 +264,14 @@ const Navbar = () => {
 
                                                 <div className="space-y-1">
                                                     {/* 1. Manage My Account */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setIsProfileOpen(false);
-                                                            setIsAccountModalOpen(true);
-                                                        }}
-                                                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium cursor-pointer text-left"
+                                                    <Link
+                                                        href="/account"
+                                                        onClick={() => setIsProfileOpen(false)}
+                                                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium cursor-pointer"
                                                     >
                                                         <UserIcon size={15} color="#6C306E" />
                                                         <span>Manage My Account</span>
-                                                    </button>
+                                                    </Link>
 
                                                     {/* 2. My Orders */}
                                                     <Link
