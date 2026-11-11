@@ -37,7 +37,14 @@ export default function ReviewsPage() {
             setLoading(true);
 
             // 1. Fetch from database API
-            const res = await fetch('/api/reviews?my=true');
+            let currentUser = null;
+            if (typeof window !== 'undefined') {
+                try {
+                    currentUser = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null');
+                } catch {}
+            }
+            const emailParam = currentUser?.email ? `&email=${encodeURIComponent(currentUser.email)}` : '';
+            const res = await fetch(`/api/reviews?my=true${emailParam}`);
             const data = await res.json();
 
             let apiMyReviews = data.success && Array.isArray(data.myReviews) ? data.myReviews : [];
@@ -66,13 +73,17 @@ export default function ReviewsPage() {
             const mergedReviews = Array.from(combinedReviewsMap.values());
             const reviewedProductIds = new Set(mergedReviews.map(r => r.productId));
 
-            // Extract purchased products from local orders
+            // Extract purchased products from local orders ONLY IF order is DELIVERED
             const localToReviewMap = new Map();
             for (const order of localOrders) {
+                // STRICT RULE: Customer must receive the product before reviewing
+                if (order.status !== 'DELIVERED') {
+                    continue;
+                }
                 const items = order.orderItems || [];
                 for (const item of items) {
                     const prod = item.product || item;
-                    const prodId = prod.id || item.productId || `prod_${prod.name}`;
+                    const prodId = prod.id || item.productId;
                     if (prodId && !reviewedProductIds.has(prodId) && !localToReviewMap.has(prodId)) {
                         localToReviewMap.set(prodId, {
                             product: {
@@ -84,7 +95,8 @@ export default function ReviewsPage() {
                             },
                             orderId: order.id,
                             orderNumber: order.orderNumber,
-                            purchaseDate: order.createdAt || Date.now()
+                            purchaseDate: order.createdAt || Date.now(),
+                            deliveryStatus: order.status || 'DELIVERED'
                         });
                     }
                 }
@@ -99,21 +111,20 @@ export default function ReviewsPage() {
                 }
             });
 
-            // If completely empty on a brand new demo session, supply initial authentic starter cards
+            // If completely empty on a brand new demo session, supply initial authentic starter reviews
             if (mergedReviews.length === 0 && allToReviewMap.size === 0) {
-                // Populate default demonstration reviews to showcase the UI immediately
                 const starterReviews = (dummyRatingsData || []).slice(0, 3).map((dr, idx) => ({
                     id: `demo_${idx}`,
                     productId: dr.productId || `demo_p_${idx}`,
                     rating: dr.rating || 5,
-                    review: dr.review || '100% authentic British import! Verified batch code, flawless formulation.',
+                    review: dr.review || '100% authentic UK import! Verified batch code, flawless formulation.',
                     images: dr.images || [],
                     videos: [],
                     createdAt: dr.createdAt || new Date(Date.now() - idx * 86400000).toISOString(),
                     isVerifiedPurchase: true,
                     product: {
                         id: dr.productId || `demo_p_${idx}`,
-                        name: dr.productName || 'CeraVe Foaming Cleanser for Normal to Oily Skin 236ml',
+                        name: dr.productName || 'CeraVe Foaming Cleanser for Normal to Oily Skin 473ml',
                         images: ['/product_img1.png'],
                         price: 2450,
                         brand: 'CeraVe UK'
@@ -265,7 +276,7 @@ export default function ReviewsPage() {
                                                     {prod.name}
                                                 </h4>
                                                 <p className="text-[11px] text-slate-500 font-medium">
-                                                    {prod.brand || 'Authentic British Cosmetics'}
+                                                    {prod.brand || '100% Original UK Imported'}
                                                 </p>
                                             </div>
                                         </div>
@@ -452,7 +463,7 @@ export default function ReviewsPage() {
                             </div>
                             <h3 className="text-lg font-extrabold text-[#241224]">No Reviews Published Yet</h3>
                             <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                                Share your thoughts on purchased British cosmetics to help over 3,000+ beauty lovers in Bangladesh!
+                                Share your thoughts on purchased 100% original UK imported cosmetics to help over 3,000+ beauty lovers in Bangladesh!
                             </p>
                             <button
                                 type="button"

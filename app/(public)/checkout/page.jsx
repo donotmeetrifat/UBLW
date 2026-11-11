@@ -281,7 +281,7 @@ export default function CheckoutPage() {
                 </div>
                 <h1 className="text-2xl font-extrabold text-[#241224]">Your Shopping Bag is Empty</h1>
                 <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-sm">
-                    Please add authentic British cosmetics or skincare products to your bag before proceeding to payment.
+                    Please add authentic 100% original UK imported cosmetics or skincare products to your bag before proceeding to payment.
                 </p>
                 <Link
                     href="/shop"
@@ -705,7 +705,7 @@ export default function CheckoutPage() {
                         <div className="mt-5 pt-4 border-t border-[#EFE0EF] space-y-2 text-[11px] text-slate-500">
                             <div className="flex items-center gap-2">
                                 <ShieldCheckIcon size={14} color="#059669" />
-                                <span>100% Authentic UK British Imports Guaranteed</span>
+                                <span>100% Original UK Imported Products Guaranteed</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <TruckIcon size={14} color="#6C306E" />

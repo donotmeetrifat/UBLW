@@ -23,13 +23,14 @@ export const SearchIcon = ({ size = 18, className = '', color = 'currentColor', 
     </svg>
 )
 
-// 3. Golden Star
-export const StarIcon = ({ size = 16, className = '', filled = false, color = '#D8B56D', emptyColor = '#E2E8F0', ...props }) => (
+// 3. Golden Star (Bespoke 2D Clean Luxury Vector)
+export const StarIcon = ({ size = 16, className = '', filled = false, color = '#D8B56D', emptyColor = '#E2D9E2', strokeWidth = 1.75, ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <path
-            d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+            d="M12 2.5L14.5 8.6L21 9.1L16 13.3L17.6 19.7L12 16.2L6.4 19.7L8 13.3L3 9.1L9.5 8.6L12 2.5Z"
             stroke={filled ? color : emptyColor}
-            strokeWidth="1.5"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
             strokeLinejoin="round"
         />
     </svg>

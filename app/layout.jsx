@@ -17,12 +17,13 @@ export const metadata = {
         "The Ordinary Dhaka",
         "Charlotte Tilbury Bangladesh",
         "London Heathrow beauty",
-        "British cosmetics store"
+        "100% original UK imported products",
+        "UK beauty store Dhaka"
     ],
     metadataBase: new URL("https://ukbrandlover.vercel.app"),
     openGraph: {
         title: "UK Brand Lover | 100% Authentic UK Imported Beauty in Bangladesh",
-        description: "Direct London shipments of CeraVe, The Ordinary, Pixi, Olaplex & luxury British perfumes in Bangladesh.",
+        description: "Direct London shipments of CeraVe, The Ordinary, Pixi, Olaplex & luxury UK imported perfumes in Bangladesh.",
         url: "https://ukbrandlover.vercel.app",
         siteName: "UK Brand Lover",
         locale: "en_BD",

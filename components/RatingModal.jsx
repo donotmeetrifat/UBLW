@@ -10,39 +10,47 @@ import { addRating } from '@/lib/features/rating/ratingSlice';
 
 export const REVIEW_SUGGESTIONS_EN = [
     {
+        tag: "100% Authentic UK",
         title: "Authentic & Verified Batch",
-        text: "100% authentic UK product! The barcode and batch code verified instantly. My skin feels deeply hydrated and glowing. Fast delivery too!"
+        text: "100% authentic UK product! The batch code and barcode verified immediately. Formula and texture are completely genuine and gentle on skin."
     },
     {
-        title: "British Luxury Packaging",
-        text: "Original British skincare delivered securely sealed! Texture and fragrance match the UK store version exactly. 10/10 recommended!"
+        tag: "UK Packaging",
+        title: "Pristine London Packaging",
+        text: "Original UK skincare delivered securely sealed! Texture and fragrance match the UK store version exactly. 10/10 recommended!"
     },
     {
+        tag: "Express Delivery",
         title: "Fast Dhaka Delivery",
-        text: "Super fast delivery in Dhaka! Packaging was luxurious with bubble wrap protection. Will definitely order from UK Brand Lover again!"
+        text: "Super fast delivery in Dhaka! Packaging was luxurious with bubble wrap protection. Received in pristine condition. Will definitely reorder!"
     },
     {
+        tag: "High Trust",
         title: "Trustworthy & Best Price",
-        text: "Best authentic cosmetics shop in Bangladesh. Genuine import quality, no duplicate or fake issues. Completely trustworthy!"
+        text: "Best authentic UK cosmetics shop in Bangladesh. Genuine import quality with transparent pricing and zero duplicate risk. Highly trustworthy!"
     }
 ];
 
 export const REVIEW_SUGGESTIONS_BN = [
     {
-        title: "১০০% আসল প্রোডাক্ট",
-        text: "১০০% অরিজিনাল ইউকে প্রোডাক্ট! ব্যাচ কোড চেক করে দেখেছি একদম জেনুইন। স্কিনের জন্য অসাধারণ কাজ করছে।"
+        tag: "১০০% আসল ইউকে",
+        title: "আসল ও ভেরিফাইড ব্যাচ কোড",
+        text: "১০০% অরিজিনাল ইউকে প্রোডাক্ট! ব্যাচ কোড ও বারকোড চেক করে শতভাগ নিশ্চিন্ত হলাম। স্কিনের জন্য অসাধারণ কাজ করছে।"
     },
     {
-        title: "দ্রুত ও নিরাপদ ডেলিভারি",
-        text: "লন্ডন থেকে ইমপোর্ট করা আসল কসমেটিকস পেয়ে খুবই আনন্দিত। খুব দ্রুত ও সুরক্ষিতভাবে ডেলিভারি পেয়েছি। ধন্যবাদ ইউকে ব্র্যান্ড লাভার!"
+        tag: "ইউকে প্যাকেজিং",
+        title: "সুরক্ষিত ইনট্যাক্ট সিল",
+        text: "লন্ডন থেকে ইমপোর্ট করা আসল কসমেটিকস একদম ইনট্যাক্ট সিল করা অবস্থায় পেয়েছি। কোয়ালিটি নিয়ে কোনো সন্দেহ নেই, ১০/১০!"
     },
     {
-        title: "বিশ্বস্ত ব্রিটিশ কোয়ালিটি",
-        text: "অরিজিনাল ব্রিটিশ স্কিনকেয়ারের জন্য বাংলাদেশের এক নম্বর বিশ্বস্ত শপ। কোনো সন্দেহ ছাড়াই যে কেউ কিনতে পারেন।"
+        tag: "দ্রুত ডেলিভারি",
+        title: "নিরাপদ ও ফাস্ট ডেলিভারি",
+        text: "অর্ডার করার খুব কম সময়ে ঢাকায় হোম ডেলিভারি পেয়েছি। বাবল র‍্যাপে মোড়ানো প্রিমিয়াম প্যাকেজিং ছিল। ধন্যবাদ ইউকে ব্র্যান্ড লাভার!"
     },
     {
-        title: "অসাধারণ রেজাল্ট",
-        text: "প্যাকেজিং খুবই প্রিমিয়াম ছিল এবং প্রোডাক্ট ১০০% আসল। ব্যবহার করে দারুণ রেজাল্ট পেয়েছি। বারবার এখান থেকেই নিব!"
+        tag: "বিশ্বস্ত শপ",
+        title: "সরাসরি ইউকে ইমপোর্ট কোয়ালিটি",
+        text: "বাংলাদেশে আসল ইউকে বিউটি প্রোডাক্টের সবচেয়ে বিশ্বস্ত ঠিকানা। ডুপ্লিকেট বা ফেক হওয়ার কোনো সুযোগ নেই, সম্পূর্ণ নিশ্চিন্তে নেওয়া যায়!"
     }
 ];
 
@@ -176,6 +184,13 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
 
         setIsSubmitting(true);
         try {
+            let activeUser = null;
+            if (typeof window !== 'undefined') {
+                try {
+                    activeUser = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null');
+                } catch {}
+            }
+
             const res = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -185,8 +200,11 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                     images,
                     videos,
                     productId: ratingModal.productId || ratingModal.product?.id,
+                    productName: productName,
                     orderId: ratingModal.orderId,
-                    userName: 'Verified Buyer',
+                    userName: activeUser?.name || 'Verified Buyer',
+                    userEmail: activeUser?.email,
+                    userId: activeUser?.id,
                 }),
             });
             const data = await res.json();
@@ -195,7 +213,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                 const published = {
                     ...data.rating,
                     orderId: ratingModal.orderId,
-                    productId: ratingModal.productId || ratingModal.product?.id,
+                    productId: data.rating.productId || ratingModal.productId || ratingModal.product?.id,
                 };
 
                 dispatch(addRating(published));
@@ -218,38 +236,14 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
             }
         } catch (error) {
             console.error('Error submitting review:', error);
-            const fallbackRating = {
-                id: `rat_${Date.now()}`,
-                rating,
-                review: review.trim(),
-                images,
-                videos,
-                orderId: ratingModal.orderId,
-                productId: ratingModal.productId || ratingModal.product?.id,
-                createdAt: new Date().toISOString(),
-                isVerifiedPurchase: true,
-                user: { name: 'Verified Buyer' },
-                product: ratingModal.product,
-            };
-
-            dispatch(addRating(fallbackRating));
-            if (typeof window !== 'undefined') {
-                const localReviews = JSON.parse(localStorage.getItem('ukbl_local_reviews') || '[]');
-                const filtered = localReviews.filter(r => r.productId !== fallbackRating.productId);
-                localStorage.setItem('ukbl_local_reviews', JSON.stringify([fallbackRating, ...filtered]));
-                window.dispatchEvent(new CustomEvent('review-published', { detail: fallbackRating }));
-            }
-
-            toast.success('Thank you! Your review has been published.');
-            if (onReviewSubmitted) onReviewSubmitted(fallbackRating);
-            setRatingModal(null);
+            toast.error('Network connection issue. Please check your connection and try again.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const ratingDescriptions = {
-        5: 'Exceptional (100% Authentic British Quality)',
+        5: 'Exceptional (100% Original UK Imported Quality)',
         4: 'Very Good (Satisfied with Quality & Delivery)',
         3: 'Average (Standard Product Experience)',
         2: 'Below Expectations',
@@ -340,9 +334,23 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                         </p>
                     </div>
 
-                    {/* Suggestions Header & Language Switcher */}
+                    {/* Review Text Area */}
+                    <div>
+                        <label className="block text-slate-700 font-bold mb-1.5">
+                            Your Personal Review Experience
+                        </label>
+                        <textarea
+                            rows={3}
+                            value={review}
+                            onChange={(e) => setReview(e.target.value)}
+                            placeholder="Share your authentic feedback about formulation, texture, batch code, scent, or delivery..."
+                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl p-3.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed"
+                        />
+                    </div>
+
+                    {/* 1-Click High-Trust Suggestions (Placed Directly Under Text Area) */}
                     <div className="pt-2 border-t border-[#EFE0EF]">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-2.5">
                             <span className="text-[11px] font-extrabold text-slate-700 flex items-center gap-1.5">
                                 <SparklesIcon size={13} color="#6C306E" />
                                 <span>1-Click High-Trust Suggestions:</span>
@@ -360,7 +368,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                                 <button
                                     type="button"
                                     onClick={() => setActiveLang('bn')}
-                                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer font-bengali ${
                                         activeLang === 'bn' ? 'bg-[#6C306E] text-white shadow-2xs' : 'text-slate-500 hover:text-[#6C306E]'
                                     }`}
                                 >
@@ -369,41 +377,34 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                             </div>
                         </div>
 
-                        {/* Suggestion Pills */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {/* 4 Clean Premium Suggestion Cards in 2x2 Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             {(activeLang === 'en' ? REVIEW_SUGGESTIONS_EN : REVIEW_SUGGESTIONS_BN).map((sugg, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
                                     onClick={() => handleApplySuggestion(sugg.text)}
-                                    className="p-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] hover:bg-[#F3E8F3] hover:border-[#6C306E]/40 text-left transition cursor-pointer group"
+                                    className="p-3 rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA]/80 hover:bg-[#F8EFF8] hover:border-[#6C306E] text-left transition-all cursor-pointer group shadow-2xs relative flex flex-col justify-between"
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="font-extrabold text-[11px] text-[#6C306E] group-hover:underline">
+                                    <div>
+                                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-white border border-[#EFE0EF] text-[#6C306E] uppercase tracking-wide">
+                                                {sugg.tag}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 group-hover:text-[#6C306E] font-bold flex items-center gap-0.5 transition-colors">
+                                                Apply <CheckIcon size={11} color="#6C306E" className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </span>
+                                        </div>
+                                        <h5 className={`font-bold text-[11px] text-[#241224] mb-1 group-hover:text-[#6C306E] transition-colors ${activeLang === 'bn' ? 'font-bengali' : ''}`}>
                                             {sugg.title}
-                                        </span>
-                                        <CheckIcon size={12} color="#6C306E" className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </h5>
+                                        <p className={`text-[10.5px] text-slate-600 line-clamp-2 leading-relaxed ${activeLang === 'bn' ? 'font-bengali' : ''}`}>
+                                            "{sugg.text}"
+                                        </p>
                                     </div>
-                                    <p className="text-[10px] text-slate-600 line-clamp-2 leading-relaxed">
-                                        "{sugg.text}"
-                                    </p>
                                 </button>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Review Text Area */}
-                    <div>
-                        <label className="block text-slate-700 font-bold mb-1.5">
-                            Your Personal Review Experience
-                        </label>
-                        <textarea
-                            rows={3}
-                            value={review}
-                            onChange={(e) => setReview(e.target.value)}
-                            placeholder="Share your authentic feedback about formulation, texture, batch code, scent, or delivery..."
-                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl p-3.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed"
-                        />
                     </div>
 
                     {/* Photo & Video Upload */}
