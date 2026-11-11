@@ -18,7 +18,8 @@ import {
     DownloadIcon, 
     MapPinIcon,
     PlusIcon,
-    EditIcon
+    EditIcon,
+    CloseIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import { clearCart } from '@/lib/features/cart/cartSlice'
@@ -726,20 +727,33 @@ export default function CheckoutPage() {
             {/* Order Confirmed Luxury Modal */}
             <AnimatePresence>
                 {confirmedOrder && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300">
+                    <div 
+                        onClick={(e) => { if (e.target === e.currentTarget) setConfirmedOrder(null); }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300"
+                    >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center border border-[#EFE0EF] shadow-2xl relative"
                         >
+                            {/* Close Button */}
+                            <button
+                                type="button"
+                                onClick={() => setConfirmedOrder(null)}
+                                className="absolute top-5 right-5 size-9 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] text-slate-400 hover:text-[#241224] transition flex items-center justify-center cursor-pointer border border-[#EFE0EF]"
+                                aria-label="Close popup"
+                            >
+                                <CloseIcon size={16} />
+                            </button>
+
                             <div className="size-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4 text-emerald-600">
                                 <CheckIcon size={32} color="#059669" strokeWidth={2.5} />
                             </div>
 
                             <h3 className="text-2xl font-extrabold text-[#241224]">Order Confirmed!</h3>
                             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                                Thank you for shopping with UK Brand Lover. Your authentic British cosmetics order is confirmed and is being packaged.
+                                Thank you for shopping with UK Brand Lover. Your 100% original UK imported cosmetics order is confirmed and is being packaged.
                             </p>
 
                             <div className="my-5 p-4 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-left space-y-2 text-xs">
