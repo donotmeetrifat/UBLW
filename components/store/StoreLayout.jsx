@@ -15,9 +15,35 @@ const StoreLayout = ({ children }) => {
     const [storeInfo, setStoreInfo] = useState(null)
 
     const fetchIsSeller = async () => {
-        setIsSeller(true)
-        setStoreInfo(dummyStoreData)
-        setLoading(false)
+        try {
+            if (typeof window !== 'undefined') {
+                const saved = localStorage.getItem('ukbl_current_user')
+                if (saved) {
+                    try {
+                        const user = JSON.parse(saved)
+                        if (user?.role === 'ADMIN' || user?.role === 'VENDOR') {
+                            setIsSeller(true)
+                            setStoreInfo(dummyStoreData)
+                            setLoading(false)
+                            return
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            const res = await fetch('/api/auth/me')
+            const data = await res.json()
+            if (data.success && (data.user?.role === 'ADMIN' || data.user?.role === 'VENDOR')) {
+                setIsSeller(true)
+                setStoreInfo(dummyStoreData)
+            } else {
+                setIsSeller(false)
+            }
+        } catch (error) {
+            setIsSeller(false)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

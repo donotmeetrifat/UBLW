@@ -274,23 +274,29 @@ const Navbar = () => {
                                                     <span>My Orders & Tracking</span>
                                                 </Link>
 
-                                                <Link
-                                                    href="/store/orders"
-                                                    onClick={() => setIsProfileOpen(false)}
-                                                    className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
-                                                >
-                                                    <StoreFrontIcon size={14} color="#6C306E" />
-                                                    <span>Store & Seller Orders</span>
-                                                </Link>
+                                                {/* Only show Store Management to Sellers or Admin */}
+                                                {(currentUser.role === 'ADMIN' || currentUser.role === 'VENDOR') && (
+                                                    <Link
+                                                        href="/store/orders"
+                                                        onClick={() => setIsProfileOpen(false)}
+                                                        className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
+                                                    >
+                                                        <StoreFrontIcon size={14} color="#6C306E" />
+                                                        <span>Store & Seller Orders</span>
+                                                    </Link>
+                                                )}
 
-                                                <Link
-                                                    href="/admin"
-                                                    onClick={() => setIsProfileOpen(false)}
-                                                    className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
-                                                >
-                                                    <DashboardIcon size={14} color="#6C306E" />
-                                                    <span>Admin Dashboard</span>
-                                                </Link>
+                                                {/* Only show Admin Dashboard to verified Admin */}
+                                                {currentUser.role === 'ADMIN' && (
+                                                    <Link
+                                                        href="/admin"
+                                                        onClick={() => setIsProfileOpen(false)}
+                                                        className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
+                                                    >
+                                                        <DashboardIcon size={14} color="#6C306E" />
+                                                        <span>Admin Dashboard</span>
+                                                    </Link>
+                                                )}
 
                                                 <div className="border-t border-[#EFE0EF] my-1" />
 

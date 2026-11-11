@@ -12,8 +12,33 @@ const AdminLayout = ({ children }) => {
     const [loading, setLoading] = useState(true)
 
     const fetchIsAdmin = async () => {
-        setIsAdmin(true)
-        setLoading(false)
+        try {
+            if (typeof window !== 'undefined') {
+                const saved = localStorage.getItem('ukbl_current_user')
+                if (saved) {
+                    try {
+                        const user = JSON.parse(saved)
+                        if (user?.role === 'ADMIN') {
+                            setIsAdmin(true)
+                            setLoading(false)
+                            return
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            const res = await fetch('/api/auth/me')
+            const data = await res.json()
+            if (data.success && data.user?.role === 'ADMIN') {
+                setIsAdmin(true)
+            } else {
+                setIsAdmin(false)
+            }
+        } catch (error) {
+            setIsAdmin(false)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {
