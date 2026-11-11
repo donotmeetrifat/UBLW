@@ -34,17 +34,17 @@ const Newsletter = () => {
 
                     {/* Small Eyebrow */}
                     <span className='inline-block text-[10px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
-                        DIRECT FROM LONDON • TO YOUR VANITY
+                        OFFICIAL FACEBOOK PAGE
                     </span>
 
                     {/* Main Headline */}
                     <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] mb-3 tracking-tight'>
-                        Never Miss Your Favorite UK Beauty Restock
+                        Follow Our Facebook Page
                     </h2>
 
-                    {/* Relatable Emotional Connection Description */}
+                    {/* Description */}
                     <p className='text-slate-600 text-xs sm:text-sm leading-relaxed mb-6 max-w-lg font-normal'>
-                        Because we bring 100% original British products in limited hand-picked batches, popular skincare and viral makeup sell out quickly. Follow our Facebook page to catch live London flight unboxings, authentic store purchase receipts, real shade swatches, and secret surprises we only share with our Facebook family!
+                        Connect with over 3,000+ beauty lovers in Bangladesh for authentic UK restock alerts, flash drops, reviews, and personalized skincare advice.
                     </p>
 
                     {/* Benefit Pills */}
@@ -59,7 +59,7 @@ const Newsletter = () => {
                             💄 Real Shade Swatches
                         </span>
                         <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            ⚡ Secret Page Deals
+                            ⚡ Secret Restock Alerts
                         </span>
                     </div>
 
