@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from "next/navigation"
-import { CouponTicketIcon, DashboardIcon, ShieldCheckIcon, StoreFrontIcon, WhatsAppIcon } from "@/components/icons"
+import { CouponTicketIcon, DashboardIcon, ShieldCheckIcon, StoreFrontIcon, WhatsAppIcon, TruckIcon } from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
 import { assets } from "@/assets/assets"
@@ -15,6 +15,7 @@ const AdminSidebar = () => {
         { name: 'Live Stores', href: '/admin/stores', icon: StoreFrontIcon },
         { name: 'Approve Stores', href: '/admin/approve', icon: ShieldCheckIcon },
         { name: 'Coupons', href: '/admin/coupons', icon: CouponTicketIcon },
+        { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
     ]
 
     return (

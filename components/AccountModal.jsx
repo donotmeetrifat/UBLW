@@ -209,3 +209,4 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
         </AnimatePresence>
     )
 }
+

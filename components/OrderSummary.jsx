@@ -1,27 +1,23 @@
 'use client'
 
 import {
-    CardPaymentIcon,
-    CashDeliveryIcon,
-    CloseIcon,
-    MobileBankingIcon,
     PlusIcon,
     TagIcon,
     TrashIcon,
-    CheckIcon,
-    ShieldCheckIcon,
+    CloseIcon,
     TruckIcon,
     ArrowRightIcon,
-    PrinterIcon
+    ShieldCheckIcon,
+    MapPinIcon
 } from '@/components/icons';
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AddressModal from './AddressModal';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { removeAddress } from '@/lib/features/address/addressSlice';
-import { clearCart } from '@/lib/features/cart/cartSlice';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } from '@/lib/settings';
 
 const OrderSummary = ({ totalPrice, items = [] }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
@@ -30,17 +26,40 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
 
     const addressList = useSelector(state => state.address.list);
 
-    const [paymentMethod, setPaymentMethod] = useState('cod');
-    const [transactionId, setTransactionId] = useState('');
-    const [senderNumber, setSenderNumber] = useState('');
     const [selectedAddress, setSelectedAddress] = useState(addressList[0] || null);
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [coupon, setCoupon] = useState(null);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [confirmedOrder, setConfirmedOrder] = useState(null);
+    const [deliverySettings, setDeliverySettings] = useState(DEFAULT_DELIVERY_SETTINGS);
+
+    // Fetch live delivery settings from admin
+    useEffect(() => {
+        const fetchDeliverySettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.success && data.delivery) {
+                    setDeliverySettings(data.delivery);
+                }
+            } catch (error) {
+                console.error('Error fetching delivery settings:', error);
+            }
+        };
+        fetchDeliverySettings();
+    }, []);
+
+    // Keep selected address in sync if address list updates
+    useEffect(() => {
+        if (addressList.length > 0) {
+            if (!selectedAddress || !addressList.some(a => a.id === selectedAddress.id)) {
+                setSelectedAddress(addressList[0]);
+            }
+        } else {
+            setSelectedAddress(null);
+        }
+    }, [addressList]);
 
     const handleCouponCode = async (event) => {
         event.preventDefault();
@@ -80,239 +99,142 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
     };
 
     const discountAmount = coupon ? Math.round((coupon.discount / 100) * totalPrice) : 0;
-    const finalTotal = Math.max(0, totalPrice - discountAmount);
+    
+    // Calculate live delivery charge
+    const deliveryCharge = selectedAddress 
+        ? calculateDeliveryCharge(selectedAddress, totalPrice, deliverySettings)
+        : (deliverySettings.insideDhaka || 80);
 
-    const handlePlaceOrder = async (e) => {
-        e.preventDefault();
+    const isDhaka = selectedAddress ? isInsideDhaka(selectedAddress) : true;
+    const finalTotal = Math.max(0, totalPrice - discountAmount + (selectedAddress ? deliveryCharge : 0));
+
+    const handleProceedToPayment = () => {
         if (!selectedAddress) {
-            toast.error('Please add and select a delivery address.');
+            toast.error('Please add and select your delivery address to proceed.');
+            setShowAddressModal(true);
             return;
         }
 
-        if ((paymentMethod === 'bkash' || paymentMethod === 'nagad') && !transactionId.trim()) {
-            toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Transaction ID (TrxID)`);
+        if (items.length === 0) {
+            toast.error('Your bag is empty.');
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            const payload = {
-                items: items.map(item => ({
-                    productId: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    image: item.images ? item.images[0] : (item.image || '/product_img1.png'),
-                })),
-                address: selectedAddress,
-                paymentMethod: paymentMethod.toUpperCase(),
-                transactionId: transactionId.trim() || null,
-                couponCode: coupon ? coupon.code : null,
-                senderNumber: senderNumber.trim() || null,
-            };
-
-            const res = await fetch('/api/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            const data = await res.json();
-
-            if (data.success && data.order) {
-                // Sync to localStorage
-                if (typeof window !== 'undefined') {
-                    const existing = JSON.parse(localStorage.getItem('ukbl_orders') || '[]');
-                    localStorage.setItem('ukbl_orders', JSON.stringify([data.order, ...existing]));
-                }
-
-                // Clear bag
-                dispatch(clearCart());
-                setConfirmedOrder(data.order);
-                toast.success('Order placed successfully! Thank you for choosing UK Brand Lover.');
-            } else {
-                toast.error(data.message || 'Failed to place order. Please try again.');
-            }
-        } catch (error) {
-            console.error('Order error:', error);
-            // Graceful fallback for offline
-            const fallbackOrder = {
-                id: `order_${Date.now()}`,
-                orderNumber: `UKBL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-                total: finalTotal,
-                status: 'ORDER_PLACED',
-                paymentMethod: paymentMethod.toUpperCase(),
-                createdAt: new Date().toISOString(),
-                orderItems: items.map(i => ({ product: i, quantity: i.quantity, price: i.price })),
-                address: selectedAddress,
-            };
-            if (typeof window !== 'undefined') {
-                const existing = JSON.parse(localStorage.getItem('ukbl_orders') || '[]');
-                localStorage.setItem('ukbl_orders', JSON.stringify([fallbackOrder, ...existing]));
-            }
-            dispatch(clearCart());
-            setConfirmedOrder(fallbackOrder);
-            toast.success('Order registered successfully!');
-        } finally {
-            setIsSubmitting(false);
+        // Store checkout state in localStorage so the payment page gets the exact selected address and coupon
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('ukbl_checkout_data', JSON.stringify({
+                selectedAddressId: selectedAddress.id,
+                selectedAddress,
+                coupon,
+                discountAmount,
+                deliveryCharge,
+                isDhaka,
+                subtotal: totalPrice,
+                finalTotal,
+            }));
         }
+
+        router.push('/checkout');
     };
 
-    const paymentMethods = [
-        { id: 'cod', label: 'Cash on Delivery', sub: 'Pay cash upon product inspection (Nationwide)', icon: CashDeliveryIcon },
-        { id: 'bkash', label: 'bKash Send Money', sub: '01959-524393 (Personal / Merchant)', icon: MobileBankingIcon },
-        { id: 'nagad', label: 'Nagad Wallet', sub: '01959-524393 (Personal Account)', icon: MobileBankingIcon },
-        { id: 'card', label: 'Debit / Credit Card', sub: 'Visa, Mastercard & online banking', icon: CardPaymentIcon },
-    ];
-
     return (
-        <div className='w-full max-w-lg lg:max-w-[370px] bg-white border border-[#EFE0EF] text-[#241224] text-sm rounded-3xl p-6 sm:p-7 shadow-[0_4px_24px_rgba(58,12,56,0.04)]'>
-            <h2 className='text-xl font-extrabold text-[#241224] tracking-tight'>Payment Summary</h2>
-
-            {/* Payment Method Selector */}
-            <div className="my-5">
-                <p className='text-[#241224] text-[11px] font-extrabold uppercase tracking-widest mb-3'>
-                    SELECT PAYMENT OPTION
-                </p>
-                <div className='flex flex-col gap-2.5'>
-                    {paymentMethods.map((method) => {
-                        const isSelected = paymentMethod === method.id;
-                        return (
-                            <motion.div
-                                key={method.id}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setPaymentMethod(method.id)}
-                                className={`p-3 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${isSelected
-                                    ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs'
-                                    : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className={`size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300 bg-white'
-                                        }`}>
-                                        {isSelected && <div className="size-1.5 rounded-full bg-white" />}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className={`font-bold text-xs truncate ${isSelected ? 'text-[#3A0C38]' : 'text-[#241224]'}`}>
-                                            {method.label}
-                                        </p>
-                                        <p className="text-[10px] text-slate-500 font-medium truncate">
-                                            {method.sub}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="shrink-0">
-                                    <method.icon size={20} color={isSelected ? '#6C306E' : '#7B667B'} />
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+        <div className='w-full max-w-lg lg:max-w-[380px] bg-white border border-[#EFE0EF] text-[#241224] text-sm rounded-3xl p-6 sm:p-7 shadow-[0_4px_24px_rgba(58,12,56,0.04)]'>
+            <div className="flex items-center justify-between pb-4 border-b border-[#EFE0EF]">
+                <div>
+                    <h2 className='text-xl font-extrabold text-[#241224] tracking-tight'>Order Summary</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Step 1: Address & Promotions</p>
                 </div>
-
-                {/* bKash / Nagad TrxID Input Drawer */}
-                {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-3.5 p-3.5 bg-[#FAF6FA] border border-[#6C306E]/30 rounded-2xl text-xs space-y-2.5"
-                    >
-                        <div className="flex items-center gap-2 text-[#6C306E] font-bold text-[11px]">
-                            <ShieldCheckIcon size={14} color="#6C306E" />
-                            <span>100% Free Transfer — No Gateway Charge</span>
-                        </div>
-                        <p className="text-[11px] text-[#503E50] leading-relaxed">
-                            Please Send Money <b>{currency}{finalTotal.toLocaleString()}</b> to <b>01959-524393</b> (Personal {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'}), then enter your Transaction ID below:
-                        </p>
-                        <div className="space-y-1.5">
-                            <input
-                                type="text"
-                                placeholder="Transaction ID (e.g. BK982310X)"
-                                value={transactionId}
-                                onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
-                                className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase tracking-wider outline-none text-[#241224]"
-                                required
-                            />
-                            <input
-                                type="tel"
-                                placeholder="Sender Mobile Number (01XXXXXXXXX)"
-                                value={senderNumber}
-                                onChange={(e) => setSenderNumber(e.target.value)}
-                                className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-2 text-xs outline-none text-[#241224]"
-                            />
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* Card Payment Notice */}
-                {paymentMethod === 'card' && (
-                    <div className="mt-3 p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-xs text-[#503E50]">
-                        <p className="text-[11px] font-medium leading-relaxed">
-                            Card payment & online banking support. Our beauty concierge will provide direct SSL secure checkout links upon order confirmation.
-                        </p>
-                    </div>
-                )}
+                <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-1 rounded-full uppercase">
+                    Bag Step
+                </span>
             </div>
 
             {/* Delivery Address Section */}
-            <div className='my-6 pt-5 border-t border-[#EFE0EF]'>
+            <div className='my-5'>
                 <div className='flex items-center justify-between mb-3'>
-                    <p className='text-[#241224] font-extrabold text-[11px] uppercase tracking-widest'>DELIVERY ADDRESS</p>
+                    <p className='text-[#241224] font-extrabold text-[11px] uppercase tracking-widest'>
+                        DELIVERY ADDRESS
+                    </p>
                     <button
                         type="button"
-                        className='group inline-flex items-center gap-1.5 text-[#6C306E] text-xs font-bold bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-3.5 py-1.5 rounded-full transition-all duration-200 border border-[#EFE0EF] hover:border-[#6C306E] shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
+                        className='group inline-flex items-center gap-1.5 text-[#6C306E] text-xs font-bold bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-3 py-1.5 rounded-full transition-all duration-200 border border-[#EFE0EF] hover:border-[#6C306E] shadow-2xs cursor-pointer'
                         onClick={() => { setEditingAddress(null); setShowAddressModal(true); }}
                     >
                         <PlusIcon size={12} color="currentColor" className="group-hover:rotate-90 transition-transform duration-200" />
-                        <span>Add New Address</span>
+                        <span>Add Address</span>
                     </button>
                 </div>
 
-                <div className='flex flex-col gap-2.5 max-h-[240px] overflow-y-auto pr-1'>
+                <div className='flex flex-col gap-2.5 max-h-[260px] overflow-y-auto pr-1'>
                     {addressList && addressList.length > 0 ? (
-                        addressList.map((address, idx) => (
-                            <div
-                                key={address.id || idx}
-                                onClick={() => setSelectedAddress(address)}
-                                className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedAddress?.id === address.id
-                                    ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs'
-                                    : 'border-[#EFE0EF] hover:border-[#6C306E]/30 bg-white'
+                        addressList.map((address, idx) => {
+                            const isSelected = selectedAddress?.id === address.id;
+                            const addrIsDhaka = isInsideDhaka(address);
+                            return (
+                                <div
+                                    key={address.id || idx}
+                                    onClick={() => setSelectedAddress(address)}
+                                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                                        isSelected
+                                            ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
+                                            : 'border-[#EFE0EF] hover:border-[#6C306E]/30 bg-white'
                                     }`}
-                            >
-                                <div className='flex justify-between items-start'>
-                                    <div className="flex items-center gap-2">
-                                        <div className={`size-3.5 rounded-full border flex items-center justify-center ${selectedAddress?.id === address.id ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300'}`}>
-                                            {selectedAddress?.id === address.id && <div className="size-1 rounded-full bg-white" />}
+                                >
+                                    <div className='flex justify-between items-start'>
+                                        <div className="flex items-center gap-2">
+                                            <div className={`size-4 rounded-full border flex items-center justify-center transition-colors ${
+                                                isSelected ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300'
+                                            }`}>
+                                                {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+                                            </div>
+                                            <p className='font-bold text-xs text-[#241224]'>{address.fullName || address.name}</p>
                                         </div>
-                                        <p className='font-bold text-xs text-[#241224]'>{address.fullName || address.name}</p>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                dispatch(removeAddress(address.id));
+                                            }}
+                                            className='p-1 text-slate-400 hover:text-red-500 transition-colors'
+                                            title="Delete address"
+                                        >
+                                            <TrashIcon size={13} color="currentColor" />
+                                        </button>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            dispatch(removeAddress(address.id));
-                                        }}
-                                        className='p-1 text-slate-400 hover:text-red-500 transition-colors'
-                                    >
-                                        <TrashIcon size={13} color="currentColor" />
-                                    </button>
+
+                                    <p className='text-slate-500 text-[11px] mt-1 pl-6 font-normal leading-relaxed line-clamp-2'>
+                                        {address.address || address.street}, {address.city}, {address.region || address.state}
+                                    </p>
+                                    
+                                    <div className="flex items-center justify-between pl-6 mt-2 pt-1 border-t border-[#EFE0EF]/60">
+                                        <span className='text-[#6C306E] text-[10px] font-bold'>
+                                            {address.phoneNumber || address.phone}
+                                        </span>
+                                        {/* Dynamic Delivery Location Badge */}
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
+                                            addrIsDhaka 
+                                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                                : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                                        }`}>
+                                            <span>{addrIsDhaka ? '📍' : '🚚'}</span>
+                                            <span>{addrIsDhaka ? 'Inside Dhaka' : 'Outside Dhaka'}</span>
+                                        </span>
+                                    </div>
                                 </div>
-                                <p className='text-slate-500 text-[11px] mt-1 pl-5 font-normal'>
-                                    {address.address || address.street}, {address.city}, {address.region || address.state}
-                                </p>
-                                <p className='text-[#6C306E] text-[11px] font-bold mt-1 pl-5'>
-                                    {address.phoneNumber || address.phone}
-                                </p>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <div className="text-center py-5 border border-dashed border-[#EFE0EF] rounded-2xl bg-[#FAF6FA]">
-                            <p className="text-xs text-slate-400">No delivery address saved</p>
+                            <MapPinIcon size={22} color="#6C306E" className="mx-auto mb-1.5 opacity-60" />
+                            <p className="text-xs font-bold text-slate-700">No delivery address saved</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Add an address to calculate exact delivery fee</p>
                             <button
                                 type="button"
                                 onClick={() => setShowAddressModal(true)}
-                                className="text-xs font-bold text-[#6C306E] mt-2 inline-block hover:underline"
+                                className="text-xs font-bold text-[#6C306E] mt-2.5 inline-flex items-center gap-1 bg-white border border-[#EFE0EF] px-3.5 py-1.5 rounded-full shadow-2xs hover:bg-[#FAF6FA]"
                             >
-                                + Add Delivery Address
+                                <PlusIcon size={11} color="#6C306E" />
+                                <span>Add Delivery Address</span>
                             </button>
                         </div>
                     )}
@@ -320,18 +242,37 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
             </div>
 
             {/* Calculations Breakdown */}
-            <div className='pt-5 border-t border-[#EFE0EF] space-y-2.5 text-xs'>
+            <div className='pt-4 border-t border-[#EFE0EF] space-y-2.5 text-xs'>
                 <div className='flex justify-between text-slate-600'>
                     <p>Subtotal ({items.length} items):</p>
                     <p className='font-bold text-[#241224]'>{currency}{totalPrice.toLocaleString()}</p>
                 </div>
-                <div className='flex justify-between text-slate-600'>
-                    <p className="flex items-center gap-1.5">
-                        <TruckIcon size={14} color="#047857" />
-                        <span>Nationwide Delivery:</span>
-                    </p>
-                    <p className='font-bold text-emerald-700 uppercase text-[11px] tracking-wider'>FREE</p>
+
+                {/* Delivery Calculation with 100% Precision */}
+                <div className='flex justify-between items-center text-slate-600'>
+                    <div className="flex items-center gap-1.5">
+                        <TruckIcon size={14} color="#6C306E" />
+                        <span>
+                            {selectedAddress 
+                                ? (isDhaka ? 'Delivery (Inside Dhaka):' : `Delivery (${selectedAddress.city || 'Outside Dhaka'}):`)
+                                : 'Courier Delivery:'}
+                        </span>
+                    </div>
+                    {deliveryCharge === 0 || deliverySettings.isFreeDeliveryEnabled ? (
+                        <span className='font-extrabold text-emerald-700 uppercase text-[11px] tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200'>
+                            FREE
+                        </span>
+                    ) : selectedAddress ? (
+                        <span className='font-bold text-[#241224]'>
+                            {currency}{deliveryCharge.toLocaleString()}
+                        </span>
+                    ) : (
+                        <span className='text-slate-400 text-[11px] italic'>
+                            Calculated with address
+                        </span>
+                    )}
                 </div>
+
                 {coupon && (
                     <div className='flex justify-between text-[#6C306E] font-bold'>
                         <p>Discount ({coupon.code}):</p>
@@ -339,7 +280,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                     </div>
                 )}
 
-                {/* Coupon form */}
+                {/* Coupon Code Input */}
                 {!coupon ? (
                     <form onSubmit={handleCouponCode} className='flex gap-2 mt-3 pt-2'>
                         <div className="relative flex-1">
@@ -355,9 +296,9 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                         <button
                             type="submit"
                             disabled={isApplyingCoupon}
-                            className='bg-slate-900 hover:bg-[#6C306E] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-[0_4px_14px_rgba(108,48,110,0.35)] active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-50'
+                            className='bg-slate-900 hover:bg-[#6C306E] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 shadow-xs active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-50'
                         >
-                            {isApplyingCoupon ? 'Verifying...' : 'Apply Coupon'}
+                            {isApplyingCoupon ? '...' : 'Apply'}
                         </button>
                     </form>
                 ) : (
@@ -366,7 +307,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                             <p className='font-bold text-[#6C306E]'>{coupon.code}</p>
                             <p className='text-[10px] text-[#7B667B]'>{coupon.description}</p>
                         </div>
-                        <button type="button" onClick={() => setCoupon(null)} className="p-1 hover:text-red-600 transition cursor-pointer">
+                        <button type="button" onClick={() => setCoupon(null)} className="p-1 hover:text-red-600 transition cursor-pointer" title="Remove coupon">
                             <CloseIcon size={14} color="currentColor" />
                         </button>
                     </div>
@@ -375,28 +316,33 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
 
             {/* Total Row */}
             <div className='flex justify-between py-4 text-base font-extrabold text-[#241224] border-t border-[#EFE0EF] mt-3'>
-                <p>Total Payable:</p>
-                <p className='text-[#3A0C38] text-lg'>{currency}{finalTotal.toLocaleString()}</p>
+                <p>Estimated Total:</p>
+                <p className='text-[#3A0C38] text-lg font-black'>
+                    {currency}{finalTotal.toLocaleString()}
+                </p>
             </div>
 
-            {/* Place Order CTA with Imperial Plum Glow & Light Sweep */}
+            {/* Proceed to Payment CTA */}
             <motion.button
                 type="button"
-                disabled={isSubmitting || items.length === 0}
+                disabled={items.length === 0}
                 whileHover={{ scale: items.length > 0 ? 1.025 : 1, y: items.length > 0 ? -1 : 0 }}
                 whileTap={{ scale: items.length > 0 ? 0.98 : 1 }}
-                onClick={handlePlaceOrder}
+                onClick={handleProceedToPayment}
                 className='group relative overflow-hidden w-full bg-gradient-to-r from-[#5E225C] via-[#7B2E79] to-[#3A0C38] hover:from-[#6E2A70] hover:to-[#451245] text-white py-4 rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_10px_28px_-4px_rgba(108,48,110,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_16px_36px_-2px_rgba(108,48,110,0.7)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shimmer-active flex items-center justify-center gap-2 border border-white/20'
             >
-                <span>{isSubmitting ? 'Placing Order...' : 'Confirm Order & Place Booking'}</span>
-                {!isSubmitting && (
-                    <ArrowRightIcon 
-                        size={14} 
-                        color="#FFFFFF" 
-                        className="group-hover:translate-x-1.5 transition-transform duration-300" 
-                    />
-                )}
+                <span>Proceed to Payment</span>
+                <ArrowRightIcon 
+                    size={14} 
+                    color="#FFFFFF" 
+                    className="group-hover:translate-x-1.5 transition-transform duration-300" 
+                />
             </motion.button>
+
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+                <ShieldCheckIcon size={14} color="#059669" />
+                <span>Next Step: Select Payment Option & Place Order</span>
+            </div>
 
             {showAddressModal && (
                 <AddressModal
@@ -404,74 +350,6 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                     editingAddress={editingAddress}
                 />
             )}
-
-            {/* Order Confirmation Modal */}
-            <AnimatePresence>
-                {confirmedOrder && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center border border-[#EFE0EF] shadow-2xl relative"
-                        >
-                            <div className="size-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4 text-emerald-600">
-                                <CheckIcon size={32} color="#059669" strokeWidth={2.5} />
-                            </div>
-
-                            <h3 className="text-xl font-extrabold text-[#241224]">Order Confirmed!</h3>
-                            <p className="text-xs text-slate-500 mt-1">
-                                Thank you for shopping with UK Brand Lover. Your authentic UK products are being prepared.
-                            </p>
-
-                            <div className="my-5 p-4 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-left space-y-2 text-xs">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Order Reference:</span>
-                                    <span className="font-mono font-bold text-[#6C306E]">{confirmedOrder.orderNumber}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Total Amount:</span>
-                                    <span className="font-extrabold text-[#3A0C38]">{currency}{confirmedOrder.total.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Payment Method:</span>
-                                    <span className="font-bold text-[#241224]">{confirmedOrder.paymentMethod}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Delivery:</span>
-                                    <span className="font-bold text-emerald-700">Free Express Delivery</span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2.5">
-                                <motion.button
-                                    whileHover={{ scale: 1.02, y: -1 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        setConfirmedOrder(null);
-                                        router.push('/orders');
-                                    }}
-                                    className="group relative overflow-hidden w-full bg-gradient-to-r from-[#6C306E] to-[#401242] hover:from-[#7E3780] hover:to-[#4A164C] text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_6px_20px_rgba(108,48,110,0.35)] cursor-pointer flex items-center justify-center gap-2 border border-white/20 shimmer-active"
-                                >
-                                    <TruckIcon size={16} color="#FFFFFF" className="group-hover:translate-x-1 transition-transform duration-300" />
-                                    <span>Track Your Order & Delivery</span>
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        if (typeof window !== 'undefined') window.print();
-                                    }}
-                                    className="w-full bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] hover:border-[#6C306E]/40 text-[#503E50] py-3 rounded-full font-bold text-xs transition duration-200 cursor-pointer shadow-2xs flex items-center justify-center gap-2"
-                                >
-                                    <PrinterIcon size={14} color="#6C306E" />
-                                    <span>Print Order Receipt</span>
-                                </motion.button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
         </div>
     )
 }

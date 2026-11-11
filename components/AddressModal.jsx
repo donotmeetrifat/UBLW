@@ -2,12 +2,13 @@
 
 import { bangladeshLocations } from '@/lib/constants/bangladeshLocations'
 import { addAddress, updateAddress } from '@/lib/features/address/addressSlice'
-import { CloseIcon, SparklesIcon } from '@/components/icons'
+import { CloseIcon, SparklesIcon, TruckIcon } from '@/components/icons'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useDispatch } from 'react-redux'
 import PremiumSelect from './PremiumSelect'
 import { motion, AnimatePresence } from 'framer-motion'
+import { isInsideDhaka } from '@/lib/settings'
 
 const REGIONS = Object.keys(bangladeshLocations)
 const DEFAULT_AREAS = ["City Center / Main Area", "Residential Area", "Commercial Zone", "Suburban Area", "Other"]
@@ -81,11 +82,16 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
             return
         }
 
+        const addressWithZone = {
+            ...address,
+            zone: isInsideDhaka(address) ? 'inside_dhaka' : 'outside_dhaka'
+        }
+
         if (editingAddress) {
-            dispatch(updateAddress(address))
+            dispatch(updateAddress(addressWithZone))
             toast.success("Address updated successfully!")
         } else {
-            dispatch(addAddress(address))
+            dispatch(addAddress(addressWithZone))
             toast.success("Address added successfully!")
         }
         setShowAddressModal(false)
@@ -171,6 +177,34 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                                 placeholder={address.region ? "Select City / District" : "Choose Division First"}
                             />
                         </div>
+
+                        {/* Automatic Dhaka / Outside Dhaka Detection Pill */}
+                        {address.city && (
+                            <div className="sm:col-span-2">
+                                <div className={`p-3 rounded-2xl border text-xs flex items-center justify-between ${
+                                    isInsideDhaka(address) 
+                                        ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800' 
+                                        : 'bg-indigo-50/70 border-indigo-200 text-indigo-800'
+                                }`}>
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="text-base">{isInsideDhaka(address) ? '📍' : '🚚'}</span>
+                                        <div>
+                                            <p className="font-bold">
+                                                {isInsideDhaka(address) ? 'Inside Dhaka City (Dhaka Metro)' : 'Outside Dhaka (Nationwide)'}
+                                            </p>
+                                            <p className="text-[10px] opacity-80">
+                                                {isInsideDhaka(address) 
+                                                    ? 'Direct courier delivery to Dhaka metropolitan address' 
+                                                    : 'Nationwide courier delivery across all 63 districts'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="font-extrabold px-2.5 py-1 rounded-full bg-white text-[10px] border border-current shadow-2xs">
+                                        {isInsideDhaka(address) ? 'Inside Dhaka' : 'Outside Dhaka'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex flex-col gap-1.5 sm:col-span-2">
                             <label className="font-bold text-[#241224] text-xs">Area / Thana (Optional)</label>

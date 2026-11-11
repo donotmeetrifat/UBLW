@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { getStoreSettings, calculateDeliveryCharge } from '@/lib/settings';
 
 export async function GET(request) {
     try {
@@ -97,7 +98,8 @@ export async function POST(request) {
             }
         }
 
-        const deliveryCharge = 0; // 100% Free Nationwide Delivery across Bangladesh
+        const settings = await getStoreSettings();
+        const deliveryCharge = calculateDeliveryCharge(address, subtotal, settings.delivery);
         const total = Math.max(0, subtotal - discount + deliveryCharge);
         const orderNumber = `UKBL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
