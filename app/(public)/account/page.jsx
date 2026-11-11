@@ -14,7 +14,9 @@ import {
     CheckIcon, 
     ShieldCheckIcon,
     PhoneIcon,
-    MailIcon
+    MailIcon,
+    EyeIcon,
+    EyeOffIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import AddressModal from '@/components/AddressModal'
@@ -38,6 +40,8 @@ export default function AccountPage() {
     // Password form state
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordSaving, setPasswordSaving] = useState(false)
     const [otpStep, setOtpStep] = useState(false) // false: enter password, true: verify OTP
     const [otp, setOtp] = useState('')
@@ -448,13 +452,21 @@ export default function AccountPage() {
                                     <div className="relative">
                                         <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         <input
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="Enter at least 6 characters"
-                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 py-3 outline-none text-[#241224] text-xs font-medium"
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -463,13 +475,21 @@ export default function AccountPage() {
                                     <div className="relative">
                                         <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         <input
-                                            type="password"
+                                            type={showConfirmPassword ? "text" : "password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="Re-enter new password"
-                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 py-3 outline-none text-[#241224] text-xs font-medium"
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showConfirmPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                        </button>
                                     </div>
                                 </div>
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CloseIcon, UserIcon, PhoneIcon, MailIcon, LockIcon, CheckIcon, RoyalCrownIcon, ShieldCheckIcon } from '@/components/icons'
+import { CloseIcon, UserIcon, PhoneIcon, MailIcon, LockIcon, CheckIcon, RoyalCrownIcon, ShieldCheckIcon, EyeIcon, EyeOffIcon } from '@/components/icons'
 import toast from 'react-hot-toast'
 
 export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
@@ -11,6 +11,8 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [otpStep, setOtpStep] = useState(false)
     const [otp, setOtp] = useState('')
@@ -240,20 +242,40 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                             </p>
                             {!otpStep ? (
                                 <div className="grid gap-2 sm:grid-cols-2">
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="New Password"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
-                                    />
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="Confirm Password"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="New Password"
+                                            className="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#6C306E] transition cursor-pointer p-0.5"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Confirm Password"
+                                            className="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#6C306E] transition cursor-pointer p-0.5"
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showConfirmPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl space-y-2">
