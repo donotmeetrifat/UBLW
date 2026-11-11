@@ -213,7 +213,10 @@ export const OfficialWhatsAppIcon = ({ size = 24, className = '', ...props }) =>
 // 15. Socials
 export const FacebookIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
-        <path d="M18 2H15C12.7909 2 11 3.79086 11 6V9H8V13H11V22H15V13H18L19 9H15V6C15 5.44772 15.4477 5 16 5H18V2Z" stroke={color} strokeWidth="1.75" strokeLinejoin="round" />
+        <path
+            d="M14 13.5h2.5l1-4H14V7.5c0-1.05.75-1.5 1.5-1.5h2V2.14c-.35-.05-1.55-.14-2.95-.14-3.1 0-5.05 1.89-5.05 5.2V9.5H6.5v4h3V23h4.5V13.5z"
+            fill={color}
+        />
     </svg>
 )
 

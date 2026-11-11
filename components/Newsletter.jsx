@@ -32,57 +32,60 @@ const Newsletter = () => {
                         />
                     </div>
 
-                    {/* Small Eyebrow */}
-                    <span className='inline-block text-[10px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
-                        OFFICIAL FACEBOOK PAGE
+                    {/* Warm Community Eyebrow */}
+                    <span className='inline-block text-[10px] sm:text-[11px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
+                        OVER 3,000+ BEAUTY LOVERS IN BANGLADESH
                     </span>
 
-                    {/* Main Headline */}
+                    {/* Emotional & Connecting Headline */}
                     <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] mb-3 tracking-tight'>
-                        Follow Our Facebook Page
+                        Be Part of Our Beauty Family
                     </h2>
 
                     {/* Description */}
-                    <p className='text-slate-600 text-xs sm:text-sm leading-relaxed mb-6 max-w-lg font-normal'>
+                    <p className='text-slate-600 text-xs sm:text-sm leading-relaxed mb-7 max-w-lg font-normal'>
                         Connect with over 3,000+ beauty lovers in Bangladesh for authentic UK restock alerts, flash drops, reviews, and personalized skincare advice.
                     </p>
 
-                    {/* Benefit Pills */}
-                    <div className='flex flex-wrap justify-center gap-2 mb-2'>
-                        <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            ✈️ London Flight Arrivals
-                        </span>
-                        <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            📦 Live Parcel Unboxings
-                        </span>
-                        <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            💄 Real Shade Swatches
-                        </span>
-                        <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            ⚡ Secret Restock Alerts
-                        </span>
+                    {/* 3 Premium Boxes (No Icons, High-End Minimalist UI) */}
+                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mb-7'>
+                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
+                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                                Direct From London
+                            </span>
+                        </div>
+                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
+                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                                VIP Restock Drops
+                            </span>
+                        </div>
+                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
+                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                                Personal Skincare Advice
+                            </span>
+                        </div>
                     </div>
 
-                    {/* Primary Facebook CTA Button */}
+                    {/* Primary Facebook CTA Button with Emotional Connection */}
                     <motion.a
                         href={SOCIAL_LINKS.facebook.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Follow UK Brand Lover on Facebook"
+                        aria-label="Join UK Brand Lover Family on Facebook"
                         whileHover={{ scale: 1.035, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                         transition={{ duration: 0.2 }}
-                        className='group relative overflow-hidden inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0E52B5] hover:from-[#1A82FF] hover:to-[#1264DA] text-white px-9 py-4 rounded-full text-xs font-bold border border-blue-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_-4px_rgba(24,119,242,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_14px_34px_-2px_rgba(24,119,242,0.7)] mx-auto mt-6 transition-all duration-300 shimmer-active cursor-pointer'
+                        className='group relative overflow-hidden inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0E52B5] hover:from-[#1A82FF] hover:to-[#1264DA] text-white px-9 py-4 rounded-full text-xs sm:text-sm font-bold border border-blue-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_-4px_rgba(24,119,242,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_14px_34px_-2px_rgba(24,119,242,0.7)] mx-auto transition-all duration-300 shimmer-active cursor-pointer'
                     >
-                        <div className="group-hover:scale-115 group-hover:-rotate-6 transition-transform duration-300">
-                            <FacebookIcon size={16} color="#FFFFFF" fill="#FFFFFF" />
+                        <div className="group-hover:scale-110 transition-transform duration-300 shrink-0">
+                            <FacebookIcon size={16} color="#FFFFFF" />
                         </div>
-                        <span className="tracking-wide">Follow Our Facebook Page</span>
+                        <span className="tracking-wide">Join Our Beauty Family</span>
                     </motion.a>
 
                     {/* Sub-label */}
                     <p className='text-slate-400 text-[11px] mt-4 font-medium'>
-                        Official Facebook Page • {SOCIAL_LINKS.facebook.handle} • 100% Original UK Imports
+                        Our Facebook Family • {SOCIAL_LINKS.facebook.handle} • 100% Original UK Imports
                     </p>
                 </div>
             </motion.div>
