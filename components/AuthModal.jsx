@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation'
 
 const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     const router = useRouter()
-    const [mode, setMode] = useState('login') // 'login', 'register', 'admin'
+    const [mode, setMode] = useState('login') // 'login', 'register'
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -36,35 +36,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         setLoading(true)
 
         try {
-            if (mode === 'admin') {
-                const identifier = formData.emailOrPhone || 'support@ukbrandlover.com'
-                const password = formData.password || 'admin123'
-
-                const res = await fetch('/api/auth/signin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier, password }),
-                })
-                const data = await res.json()
-
-                if (!res.ok || !data.success) {
-                    toast.error(data.message || 'Admin login failed.')
-                    setLoading(false)
-                    return
-                }
-
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
-                    window.dispatchEvent(new Event('auth-change'))
-                }
-
-                toast.success('Welcome back, Admin!')
-                if (onLoginSuccess) onLoginSuccess(data.user)
-                onClose()
-                router.push('/store/orders')
-                return
-            }
-
             if (mode === 'register') {
                 const rawWhatsApp = formData.whatsappNumber.replace(/[^0-9]/g, '')
                 if (!rawWhatsApp || rawWhatsApp.length < 11) {
@@ -147,11 +118,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         } finally {
             setLoading(false)
         }
-        } catch (error) {
-            toast.error('Authentication error. Please try again.')
-        } finally {
-            setLoading(false)
-        }
     }
 
     return (
@@ -177,13 +143,11 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                         <RoyalCrownIcon size={24} color="#6C306E" />
                     </div>
                     <h3 className="text-xl font-extrabold text-[#241224]">
-                        {mode === 'login' ? 'Customer Sign In' : mode === 'register' ? 'Join VIP Beauty Club' : 'Store & Admin Portal'}
+                        {mode === 'login' ? 'Customer Sign In' : 'Join VIP Beauty Club'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
                         {mode === 'register'
                             ? 'Provide your WhatsApp number to receive private secret discounts & priority parcel tracking'
-                            : mode === 'admin'
-                            ? 'Manage inventory, verify bKash payments, and run WhatsApp broadcasts'
                             : 'Sign in to view your bag, saved addresses, and live order tracking'}
                     </p>
                 </div>
@@ -221,22 +185,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                             />
                         )}
                         <span>Create VIP Account</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setMode('admin')}
-                        className={`relative z-10 flex-1 py-2 rounded-xl transition-colors cursor-pointer ${
-                            mode === 'admin' ? 'text-white' : 'text-slate-500 hover:text-[#3A0C38]'
-                        }`}
-                    >
-                        {mode === 'admin' && (
-                            <motion.div
-                                layoutId="authModalTab"
-                                className="absolute inset-0 bg-gradient-to-r from-[#3A0C38] to-[#250824] rounded-xl shadow-xs -z-10"
-                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                            />
-                        )}
-                        <span>Admin</span>
                     </button>
                 </div>
 
@@ -301,21 +249,17 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                     ) : (
                         <div>
                             <label className="block text-[#241224] font-bold mb-1">
-                                {mode === 'admin' ? 'Admin Email / Username' : 'WhatsApp Number or Email'}
+                                WhatsApp Number or Email
                             </label>
                             <div className="relative">
-                                {mode === 'admin' ? (
-                                    <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                ) : (
-                                    <WhatsAppIcon size={14} color="#059669" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                )}
+                                <WhatsAppIcon size={14} color="#059669" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
-                                    type={mode === 'admin' ? 'email' : 'text'}
-                                    placeholder={mode === 'admin' ? 'support@ukbrandlover.com' : '019XXXXXXXX or customer@email.com'}
+                                    type="text"
+                                    placeholder="019XXXXXXXX or customer@email.com"
                                     value={formData.emailOrPhone}
                                     onChange={e => setFormData({ ...formData, emailOrPhone: e.target.value })}
                                     className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
-                                    required={mode !== 'admin'}
+                                    required
                                 />
                             </div>
                         </div>
@@ -323,16 +267,17 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
                     <div>
                         <label className="block text-[#241224] font-bold mb-1">
-                            {mode === 'admin' ? 'Admin Master Key' : 'Account Password (Optional)'}
+                            Account Password
                         </label>
                         <div className="relative">
                             <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                                 type="password"
-                                placeholder={mode === 'admin' ? '••••••••' : 'Enter password or leave blank for OTP login'}
+                                placeholder="••••••••"
                                 value={formData.password}
                                 onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224]"
+                                required
                             />
                         </div>
                     </div>
@@ -344,7 +289,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                         disabled={loading}
                         className="group relative overflow-hidden w-full mt-2 bg-gradient-to-r from-[#5C235A] via-[#7B2E79] to-[#3A0C38] hover:from-[#6E2A70] hover:to-[#451245] text-white py-3.5 rounded-full font-bold uppercase tracking-wider text-xs transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_14px_34px_-2px_rgba(108,48,110,0.65)] cursor-pointer disabled:opacity-50 border border-white/20 shimmer-active flex items-center justify-center gap-2"
                     >
-                        <span>{loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : mode === 'register' ? 'Join VIP Club & Get Exclusive Offers' : 'Access Admin Portal'}</span>
+                        <span>{loading ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : 'Join VIP Club & Get Exclusive Offers'}</span>
                     </motion.button>
                 </form>
 

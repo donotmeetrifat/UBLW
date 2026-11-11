@@ -262,7 +262,7 @@ export default function CreateStore() {
                         <div>
                             <h2 className="text-2xl font-black text-[#241224]">Application Received!</h2>
                             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                                Thank you for applying to partner with UK Brand Lover. Our admin team will verify your business details and contact you via WhatsApp (<b>{storeInfo.contact}</b>) within 24 hours.
+                                Thank you for applying to partner with UK Brand Lover. Our verification team will review your business details and contact you via WhatsApp (<b>{storeInfo.contact}</b>) within 24 hours.
                             </p>
                         </div>
 
@@ -280,7 +280,7 @@ export default function CreateStore() {
                                 className="flex-1 py-3 px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
                             >
                                 <WhatsAppIcon size={14} color="#FFFFFF" />
-                                <span>WhatsApp Admin</span>
+                                <span>WhatsApp Concierge</span>
                             </a>
                         </div>
                     </motion.div>

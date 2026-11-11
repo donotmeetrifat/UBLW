@@ -7,8 +7,7 @@ import {
     UserIcon,
     ChevronDownIcon,
     TruckIcon,
-    StoreFrontIcon,
-    DashboardIcon,
+    SparklesIcon,
     RoyalCrownIcon,
     CloseIcon
 } from "@/components/icons";
@@ -20,6 +19,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { FlowButton } from "@/components/ui/flow-button";
+import AccountModal from "@/components/AccountModal";
 
 const Navbar = () => {
     const router = useRouter();
@@ -29,6 +29,7 @@ const Navbar = () => {
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isCartBumping, setIsCartBumping] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
 
     const cartCount = useSelector(state => state.cart.total);
@@ -253,58 +254,61 @@ const Navbar = () => {
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                                                 transition={{ duration: 0.15 }}
-                                                className="absolute right-0 mt-2 w-56 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl p-2 z-50 text-xs"
+                                                className="absolute right-0 mt-2 w-60 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl p-2.5 z-50 text-xs"
                                             >
-                                                <div className="p-2.5 bg-[#FAF6FA] rounded-xl mb-1.5">
-                                                    <p className="font-bold text-[#241224] truncate">{currentUser.name}</p>
-                                                    <p className="text-[10px] text-slate-400 truncate">{currentUser.email || currentUser.phone}</p>
-                                                    {currentUser.role === 'ADMIN' && (
-                                                        <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#6C306E]/10 text-[#6C306E]">
-                                                            Admin
-                                                        </span>
-                                                    )}
+                                                {/* Customer Header */}
+                                                <div className="p-3 bg-[#FAF6FA] rounded-xl mb-2">
+                                                    <p className="font-bold text-[#241224] truncate text-sm">{currentUser.name}</p>
+                                                    <p className="text-[11px] text-slate-500 truncate mt-0.5">{currentUser.email || currentUser.phone}</p>
                                                 </div>
 
-                                                <Link
-                                                    href="/orders"
-                                                    onClick={() => setIsProfileOpen(false)}
-                                                    className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
-                                                >
-                                                    <TruckIcon size={14} color="#6C306E" />
-                                                    <span>My Orders & Tracking</span>
-                                                </Link>
-
-                                                {/* Only show Store Management to Sellers or Admin */}
-                                                {(currentUser.role === 'ADMIN' || currentUser.role === 'VENDOR') && (
-                                                    <Link
-                                                        href="/store/orders"
-                                                        onClick={() => setIsProfileOpen(false)}
-                                                        className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
+                                                <div className="space-y-1">
+                                                    {/* 1. Manage My Account */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setIsProfileOpen(false);
+                                                            setIsAccountModalOpen(true);
+                                                        }}
+                                                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium cursor-pointer text-left"
                                                     >
-                                                        <StoreFrontIcon size={14} color="#6C306E" />
-                                                        <span>Store & Seller Orders</span>
-                                                    </Link>
-                                                )}
+                                                        <UserIcon size={15} color="#6C306E" />
+                                                        <span>Manage My Account</span>
+                                                    </button>
 
-                                                {/* Only show Admin Dashboard to verified Admin */}
-                                                {currentUser.role === 'ADMIN' && (
+                                                    {/* 2. My Orders */}
                                                     <Link
-                                                        href="/admin"
+                                                        href="/orders"
                                                         onClick={() => setIsProfileOpen(false)}
-                                                        className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
+                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
                                                     >
-                                                        <DashboardIcon size={14} color="#6C306E" />
-                                                        <span>Admin Dashboard</span>
+                                                        <TruckIcon size={15} color="#6C306E" />
+                                                        <span>My Orders</span>
                                                     </Link>
-                                                )}
 
-                                                <div className="border-t border-[#EFE0EF] my-1" />
+                                                    {/* 3. My Reviews */}
+                                                    <Link
+                                                        href="/orders"
+                                                        onClick={() => setIsProfileOpen(false)}
+                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
+                                                    >
+                                                        <SparklesIcon size={15} color="#D8B56D" />
+                                                        <span>My Reviews</span>
+                                                    </Link>
+                                                </div>
 
+                                                <div className="border-t border-[#EFE0EF] my-2" />
+
+                                                {/* 4. Logout */}
                                                 <button
+                                                    type="button"
                                                     onClick={handleSignOut}
-                                                    className="w-full text-left p-2 rounded-xl text-red-600 hover:bg-red-50 transition font-bold cursor-pointer flex items-center gap-2"
+                                                    className="w-full text-left p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition font-bold cursor-pointer flex items-center gap-2.5"
                                                 >
-                                                    <span>Sign Out</span>
+                                                    <svg className="w-4 h-4 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                    </svg>
+                                                    <span>Logout</span>
                                                 </button>
                                             </motion.div>
                                         )}
@@ -341,6 +345,14 @@ const Navbar = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Manage My Account Modal */}
+            <AccountModal
+                isOpen={isAccountModalOpen}
+                onClose={() => setIsAccountModalOpen(false)}
+                user={currentUser}
+                onUserUpdated={(updated) => setCurrentUser(updated)}
+            />
         </>
     );
 };
