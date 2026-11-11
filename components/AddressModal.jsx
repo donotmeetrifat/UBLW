@@ -112,7 +112,10 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-[#241224]/50 backdrop-blur-xs h-screen flex items-center justify-center p-4">
+        <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setShowAddressModal(false); }}
+            className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md h-screen flex items-center justify-center p-4 transition-all duration-300"
+        >
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}

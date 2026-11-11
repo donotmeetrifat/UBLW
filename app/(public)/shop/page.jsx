@@ -257,7 +257,7 @@ function ShopContent() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMobileFilterOpen(false)}
-                            className="absolute inset-0 bg-[#241224]/50 backdrop-blur-xs"
+                            className="absolute inset-0 bg-white/60 backdrop-blur-md transition-all duration-300"
                         />
                         {/* Drawer */}
                         <motion.div

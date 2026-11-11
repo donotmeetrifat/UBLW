@@ -121,7 +121,10 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+        <div 
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md overflow-y-auto transition-all duration-300"
+        >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}

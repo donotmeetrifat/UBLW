@@ -281,7 +281,7 @@ export default function StoreOrders() {
 
             {/* Order Details & Courier Fulfillment Modal */}
             {isModalOpen && selectedOrder && (
-                <div onClick={closeModal} className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 z-50">
+                <div onClick={closeModal} className="fixed inset-0 flex items-center justify-center bg-white/60 backdrop-blur-md p-4 z-50 transition-all duration-300">
                     <div onClick={e => e.stopPropagation()} className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 relative border border-[#EFE0EF] max-h-[90vh] overflow-y-auto">
                         <button onClick={closeModal} className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 text-slate-400">
                             <CloseIcon size={16} />
@@ -422,7 +422,7 @@ export default function StoreOrders() {
 
             {/* Daily Courier Dispatch Manifest Modal */}
             {showManifestModal && (
-                <div onClick={() => setShowManifestModal(false)} className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 z-50">
+                <div onClick={() => setShowManifestModal(false)} className="fixed inset-0 flex items-center justify-center bg-white/60 backdrop-blur-md p-4 z-50 transition-all duration-300">
                     <div onClick={e => e.stopPropagation()} className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 sm:p-8 relative border border-[#EFE0EF] max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between pb-4 border-b border-[#EFE0EF] mb-4">
                             <div>

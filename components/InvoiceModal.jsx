@@ -28,7 +28,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto">
+        <div 
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto transition-all duration-300"
+        >
             <style>{`
                 @page {
                     size: A4 portrait;

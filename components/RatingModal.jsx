@@ -128,7 +128,10 @@ const RatingModal = ({ ratingModal, setRatingModal }) => {
     }
 
     return (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-[#241224]/50 backdrop-blur-xs p-4 overflow-y-auto'>
+        <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setRatingModal(null); }}
+            className='fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-md p-4 overflow-y-auto transition-all duration-300'
+        >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
