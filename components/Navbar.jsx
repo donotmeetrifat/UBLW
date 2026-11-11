@@ -7,7 +7,7 @@ import {
     UserIcon,
     ChevronDownIcon,
     TruckIcon,
-    SparklesIcon,
+    ReviewBadgeIcon,
     RoyalCrownIcon,
     CloseIcon
 } from "@/components/icons";
@@ -292,7 +292,7 @@ const Navbar = () => {
                                                         onClick={() => setIsProfileOpen(false)}
                                                         className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
                                                     >
-                                                        <SparklesIcon size={15} color="#D8B56D" />
+                                                        <ReviewBadgeIcon size={15} color="#6C306E" />
                                                         <span>My Reviews</span>
                                                     </Link>
                                                 </div>
