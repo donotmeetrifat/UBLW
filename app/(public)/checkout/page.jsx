@@ -23,6 +23,7 @@ import {
 import toast from 'react-hot-toast'
 import { clearCart } from '@/lib/features/cart/cartSlice'
 import AddressModal from '@/components/AddressModal'
+import InvoiceModal from '@/components/InvoiceModal'
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [confirmedOrder, setConfirmedOrder] = useState(null)
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false)
 
     // 1. Fetch live admin settings
     useEffect(() => {
@@ -767,17 +769,26 @@ export default function CheckoutPage() {
 
                                 <button
                                     type="button"
-                                    onClick={() => { if (typeof window !== 'undefined') window.print(); }}
+                                    onClick={() => setShowInvoiceModal(true)}
                                     className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <PrinterIcon size={13} color="currentColor" />
-                                    <span>Print Order Receipt</span>
+                                    <span>Print Order Receipt / Invoice</span>
                                 </button>
                             </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Clean Minimal Modern Business Invoice Modal */}
+            {confirmedOrder && (
+                <InvoiceModal
+                    order={confirmedOrder}
+                    isOpen={showInvoiceModal}
+                    onClose={() => setShowInvoiceModal(false)}
+                />
+            )}
         </div>
     )
 }

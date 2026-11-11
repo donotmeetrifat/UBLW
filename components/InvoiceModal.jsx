@@ -4,6 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import { assets } from '@/assets/assets'
 import { CloseIcon, PrinterIcon } from '@/components/icons'
+import ThankYouSignature from '@/components/ThankYouSignature'
 import { isInsideDhaka } from '@/lib/settings'
 
 const InvoiceModal = ({ order, isOpen, onClose }) => {
@@ -12,14 +13,22 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
     const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
     const custName = order.address?.fullName || order.user?.name || order.address?.name || 'Valued Customer'
-    const custPhone = order.address?.phoneNumber || order.address?.phone || ''
-    const custAddr = `${order.address?.address || order.address?.street || ''}, ${order.address?.city || ''}, ${order.address?.region || order.address?.state || ''}`
+    const custPhone = order.address?.phoneNumber || order.address?.phone || '+880 1XXXXXXXXX'
+    const custEmail = order.address?.email || order.user?.email || 'customer@ukbrandlover.com'
+    const custAddr = `${order.address?.address || order.address?.street || 'Delivery Address'}, ${order.address?.city || ''}${order.address?.region ? `, ${order.address.region}` : ''}`
     const isDhaka = isInsideDhaka(order.address)
 
     const items = order.orderItems || []
     const deliveryFee = Number(order.deliveryCharge ?? (isDhaka ? 80 : 150))
     const discount = Number(order.discount || 0)
     const subtotal = Number(order.subtotal || (order.total - deliveryFee + discount))
+    const totalAmount = Number(order.total || (subtotal + deliveryFee - discount))
+
+    const formattedDate = new Date(order.createdAt || Date.now()).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    })
 
     const handlePrint = () => {
         if (typeof window !== 'undefined') {
@@ -27,44 +36,67 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         }
     }
 
+    const paymentLabel = (() => {
+        const pm = (order.paymentMethod || '').toLowerCase()
+        if (pm.includes('bkash')) return 'bKash Send Money'
+        if (pm.includes('nagad')) return 'Nagad Wallet'
+        if (pm.includes('card')) return 'Debit / Credit Card'
+        return 'Cash on Delivery'
+    })()
+
     return (
         <div 
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto transition-all duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/60 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto transition-all duration-300"
         >
             <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+                .clean-invoice-font {
+                    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+
                 @page {
                     size: A4 portrait;
-                    margin: 10mm 12mm;
+                    margin: 15mm 16mm;
                 }
+
                 @media print {
-                    body {
-                        background: white !important;
+                    html, body {
+                        background: #ffffff !important;
+                        color: #111827 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     body * {
-                        visibility: hidden;
+                        visibility: hidden !important;
                     }
                     #printable-invoice-content, #printable-invoice-content * {
-                        visibility: visible;
+                        visibility: visible !important;
                     }
                     #printable-invoice-content {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
                         width: 100% !important;
                         margin: 0 !important;
                         padding: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
                     }
                 }
             `}</style>
-            {/* Modal Screen Container */}
-            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-[#EFE0EF] shadow-2xl relative my-6 print:m-0 print:p-0 print:border-none print:shadow-none print:max-w-none">
+
+            {/* Modal Container */}
+            <div className="clean-invoice-font bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-10 border border-[#EFE0EF] shadow-2xl relative my-6 print:m-0 print:p-0 print:border-none print:shadow-none print:max-w-none">
                 
                 {/* Screen Action Bar (Hidden when printing on A4) */}
-                <div className="print:hidden flex items-center justify-between pb-4 mb-5 border-b border-[#EFE0EF]">
+                <div className="print:hidden flex items-center justify-between pb-4 mb-6 border-b border-[#EFE0EF]">
                     <div className="flex items-center gap-2">
                         <span className="text-[11px] font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF] uppercase tracking-wider">
-                            Official Commercial Invoice
+                            Clean Minimal Modern Invoice
                         </span>
                         <span className="font-mono text-xs font-bold text-slate-500">
                             #{orderNo}
@@ -91,140 +123,185 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Printable Invoice (Strict A4 Layout) */}
-                <div id="printable-invoice-content" className="text-[#241224] text-xs font-sans print:w-[100%] print:text-black">
-                    {/* Invoice Header */}
-                    <div className="flex items-start justify-between pb-4 border-b-2 border-[#6C306E] mb-5">
-                        <div>
+                {/* Printable Invoice (Exact Match to Clean Minimal Modern Business Invoice Template) */}
+                <div id="printable-invoice-content" className="clean-invoice-font text-neutral-900 print:w-full print:text-black">
+                    
+                    {/* 1. Header Centered Logo & Brand Name */}
+                    <div className="text-center pt-2 pb-10">
+                        <div className="flex flex-col items-center justify-center">
                             <Image
                                 src={assets.webLogo}
                                 alt="UK Brand Lover Logo"
-                                width={150}
-                                height={45}
-                                className="h-9 w-auto object-contain mb-1.5"
+                                width={180}
+                                height={50}
+                                className="h-10 sm:h-11 w-auto object-contain mx-auto"
+                                priority
                             />
-                            <p className="font-bold text-[#3A0C38] text-xs">UK Brand Lover Bangladesh</p>
-                            <p className="text-[10px] text-slate-500">100% Authentic British Skincare & Cosmetics</p>
-                            <p className="text-[10px] text-slate-500">Mirpur, Dhaka, Bangladesh • +880 1959-524393</p>
-                        </div>
-
-                        <div className="text-right">
-                            <h1 className="text-lg font-black tracking-tight text-[#6C306E]">INVOICE</h1>
-                            <p className="font-mono font-bold text-xs text-[#241224] mt-0.5">{orderNo}</p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                                Date: {new Date(order.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            <p className="text-[10px] text-neutral-400 font-semibold tracking-widest uppercase mt-2">
+                                100% Authentic British Skincare & Cosmetics
                             </p>
-                            <span className={`inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
-                                order.paymentStatus === 'PAID'
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                    : 'bg-amber-50 text-amber-800 border-amber-200'
-                            }`}>
-                                {order.paymentStatus === 'PAID' ? 'PAID IN FULL' : 'PAYMENT DUE (COD)'}
-                            </span>
                         </div>
                     </div>
 
-                    {/* Billed To & Shipping Logistics */}
-                    <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] mb-5 print:bg-slate-50">
+                    {/* 2. Top Two-Column Info Row (INVOICE TO on left, INVOICE metadata on right) */}
+                    <div className="grid grid-cols-2 gap-6 pb-6 pt-2 items-start">
+                        {/* Left: INVOICE TO */}
                         <div>
-                            <p className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider mb-1">
-                                Delivery Address:
+                            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">
+                                INVOICE TO :
                             </p>
-                            <p className="font-bold text-xs text-[#241224]">{custName}</p>
-                            <p className="font-mono text-[11px] text-[#6C306E] font-bold">{custPhone}</p>
-                            <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">{custAddr}</p>
+                            <h3 className="text-base sm:text-lg font-medium text-neutral-900 leading-snug">
+                                {custName}
+                            </h3>
+                            <div className="text-xs text-neutral-500 space-y-0.5 mt-1 leading-relaxed">
+                                <p>{custPhone}</p>
+                                {custEmail && <p>{custEmail}</p>}
+                                <p className="max-w-xs">{custAddr}</p>
+                            </div>
                         </div>
 
+                        {/* Right: INVOICE Title & Metadata */}
                         <div className="text-right">
-                            <p className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider mb-1">
-                                Order Details:
-                            </p>
-                            <p className="text-slate-700 font-medium">
-                                Payment: <b>{order.paymentMethod || 'Cash on Delivery'}</b>
-                            </p>
-                            {order.consignmentId && (
-                                <p className="font-mono text-purple-800 text-[11px] font-bold mt-0.5">
-                                    Courier: {order.consignmentId}
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mb-2">
+                                INVOICE
+                            </h1>
+                            <div className="text-xs text-neutral-600 space-y-1">
+                                <p>
+                                    <span className="text-neutral-500">Invoice no : </span>
+                                    <span className="font-semibold text-neutral-900 font-mono">{orderNo}</span>
                                 </p>
-                            )}
+                                <p>
+                                    <span className="text-neutral-500">Invoice Date : </span>
+                                    <span className="font-medium text-neutral-900">{formattedDate}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 3. Line Items Table with Exact Border Style from Template */}
+                    <div className="mt-2 mb-6">
+                        <table className="w-full text-xs">
+                            <thead>
+                                <tr className="border-t-2 border-b border-neutral-900 text-neutral-900 font-bold uppercase tracking-wider text-[11px]">
+                                    <th className="py-3 text-left font-bold">SERVICE</th>
+                                    <th className="py-3 text-center font-bold w-16">QTY</th>
+                                    <th className="py-3 text-right font-bold w-24 sm:w-28">PRICE</th>
+                                    <th className="py-3 text-right font-bold w-24 sm:w-28">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {items.length > 0 ? (
+                                    items.map((item, idx) => {
+                                        const prodName = item.name || item.product?.name || 'UK Beauty Product'
+                                        const price = Number(item.price || 0)
+                                        const qty = Number(item.quantity || 1)
+                                        const lineTotal = price * qty
+
+                                        return (
+                                            <tr key={idx} className="text-neutral-800">
+                                                <td className="py-3.5 pr-2 font-normal text-neutral-900">
+                                                    {prodName}
+                                                </td>
+                                                <td className="py-3.5 px-2 text-center text-neutral-700 font-normal">
+                                                    {qty}
+                                                </td>
+                                                <td className="py-3.5 px-2 text-right text-neutral-700">
+                                                    {currency}{price.toLocaleString()}
+                                                </td>
+                                                <td className="py-3.5 pl-2 text-right font-normal text-neutral-900">
+                                                    {currency}{lineTotal.toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        )
+                                    })
+                                ) : (
+                                    <tr className="text-neutral-800">
+                                        <td className="py-3.5 font-normal text-neutral-900">Authentic UK Cosmetics Order</td>
+                                        <td className="py-3.5 text-center text-neutral-700 font-normal">1</td>
+                                        <td className="py-3.5 text-right text-neutral-700">{currency}{subtotal.toLocaleString()}</td>
+                                        <td className="py-3.5 text-right font-normal text-neutral-900">{currency}{subtotal.toLocaleString()}</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan={4} className="border-b border-neutral-900 pt-1"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {/* 4. Lower Two-Column Section (Contact on Left, Calculation on Right) */}
+                    <div className="grid grid-cols-2 gap-6 pt-3 pb-6 items-start text-xs">
+                        {/* Left: Contact Information */}
+                        <div className="space-y-1 text-neutral-600">
+                            <h4 className="font-bold text-neutral-900 text-xs mb-1.5">
+                                Contact :
+                            </h4>
+                            <p>
+                                <span className="text-neutral-500">Hotline : </span>
+                                <span className="font-medium text-neutral-900">+880 1959-524393</span>
+                            </p>
+                            <p>
+                                <span className="text-neutral-500">Email : </span>
+                                <span className="font-medium text-neutral-900">support@ukbrandlover.com</span>
+                            </p>
+                            <p>
+                                <span className="text-neutral-500">Payment : </span>
+                                <span className="font-medium text-neutral-900">{paymentLabel}</span>
+                            </p>
                             {order.transactionId && (
-                                <p className="font-mono text-emerald-800 text-[11px] font-bold mt-0.5">
-                                    TrxID: {order.transactionId}
+                                <p>
+                                    <span className="text-neutral-500">TrxID : </span>
+                                    <span className="font-mono font-medium text-neutral-900">{order.transactionId}</span>
                                 </p>
                             )}
                             {order.senderNumber && (
-                                <p className="font-mono text-slate-700 text-[11px] font-medium mt-0.5">
-                                    Sender: {order.senderNumber}
+                                <p>
+                                    <span className="text-neutral-500">Sender : </span>
+                                    <span className="font-mono font-medium text-neutral-900">{order.senderNumber}</span>
                                 </p>
                             )}
                         </div>
-                    </div>
 
-                    {/* Line Items Table */}
-                    <table className="w-full text-left text-xs mb-5 border border-[#EFE0EF] rounded-xl overflow-hidden">
-                        <thead className="bg-[#FAF6FA] text-[#241224] font-bold uppercase text-[10px] border-b border-[#EFE0EF] print:bg-slate-100">
-                            <tr>
-                                <th className="p-2.5">Item Description</th>
-                                <th className="p-2.5 text-center">Qty</th>
-                                <th className="p-2.5 text-right">Price</th>
-                                <th className="p-2.5 text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#EFE0EF]">
-                            {items.map((item, idx) => {
-                                const prodName = item.name || item.product?.name || 'UK Beauty Product'
-                                const price = Number(item.price || 0)
-                                const qty = Number(item.quantity || 1)
-                                return (
-                                    <tr key={idx}>
-                                        <td className="p-2.5 font-medium text-[#241224]">{prodName}</td>
-                                        <td className="p-2.5 text-center font-bold">{qty}</td>
-                                        <td className="p-2.5 text-right font-medium">{currency}{price.toLocaleString()}</td>
-                                        <td className="p-2.5 text-right font-extrabold text-[#3A0C38]">
-                                            {currency}{(price * qty).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-
-                    {/* Totals Breakdown */}
-                    <div className="flex justify-end mb-6">
-                        <div className="w-56 space-y-1.5 text-xs">
-                            <div className="flex justify-between text-slate-600">
-                                <span>Subtotal:</span>
-                                <span className="font-bold text-[#241224]">{currency}{subtotal.toLocaleString()}</span>
-                            </div>
-
-                            {discount > 0 && (
-                                <div className="flex justify-between text-[#6C306E] font-bold">
-                                    <span>Discount:</span>
-                                    <span>-{currency}{discount.toLocaleString()}</span>
+                        {/* Right: Sub-total, Delivery Fee, Discount, and Total */}
+                        <div className="flex flex-col items-end">
+                            <div className="w-full max-w-[210px] space-y-1.5 text-right">
+                                <div className="flex justify-between text-neutral-600">
+                                    <span className="text-neutral-500">Sub-total :</span>
+                                    <span className="font-medium text-neutral-900">{currency}{subtotal.toLocaleString()}</span>
                                 </div>
-                            )}
 
-                            <div className="flex justify-between text-slate-600">
-                                <span>Delivery Fee:</span>
-                                <span className="font-bold text-[#241224]">
-                                    {deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}
-                                </span>
-                            </div>
+                                {discount > 0 && (
+                                    <div className="flex justify-between text-neutral-600">
+                                        <span className="text-neutral-500">Discount :</span>
+                                        <span className="font-medium text-neutral-900">-{currency}{discount.toLocaleString()}</span>
+                                    </div>
+                                )}
 
-                            <div className="flex justify-between text-sm font-black text-[#3A0C38] pt-2 border-t border-[#EFE0EF]">
-                                <span>Total Payable:</span>
-                                <span>{currency}{Number(order.total || (subtotal + deliveryFee - discount)).toLocaleString()}</span>
+                                <div className="flex justify-between text-neutral-600">
+                                    <span className="text-neutral-500">Delivery :</span>
+                                    <span className="font-medium text-neutral-900">
+                                        {deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}
+                                    </span>
+                                </div>
+
+                                {/* Divider Line Above Total (Exact Match to PDF) */}
+                                <div className="border-t border-neutral-900 pt-2.5 mt-2 flex justify-between items-baseline">
+                                    <span className="font-bold text-neutral-900 text-xs">Total :</span>
+                                    <span className="font-bold text-neutral-900 text-base">
+                                        {currency}{totalAmount.toLocaleString()}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Invoice Footer */}
-                    <div className="pt-4 border-t border-dashed border-[#EFE0EF] text-[10px] text-slate-400 text-center space-y-1">
-                        <p className="font-bold text-slate-600">
-                            100% Authentic British Stock Guaranteed • UK Brand Lover
-                        </p>
-                        <p>Thank you for shopping with UK Brand Lover. For any queries, contact hotline +880 1959-524393.</p>
+                    {/* 5. Elegant Signature Script: "Thank You" (Exact Halimun Vector Outline from Template) */}
+                    <div className="pt-10 pb-4 text-center">
+                        <ThankYouSignature className="w-56 sm:w-64 mx-auto text-[#242424]" />
                     </div>
+
                 </div>
             </div>
         </div>
