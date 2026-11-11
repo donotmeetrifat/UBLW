@@ -258,9 +258,11 @@ const Navbar = () => {
                                                 <div className="p-2.5 bg-[#FAF6FA] rounded-xl mb-1.5">
                                                     <p className="font-bold text-[#241224] truncate">{currentUser.name}</p>
                                                     <p className="text-[10px] text-slate-400 truncate">{currentUser.email || currentUser.phone}</p>
-                                                    <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#6C306E]/10 text-[#6C306E]">
-                                                        {currentUser.role || 'Customer'}
-                                                    </span>
+                                                    {currentUser.role === 'ADMIN' && (
+                                                        <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#6C306E]/10 text-[#6C306E]">
+                                                            Admin
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 <Link
