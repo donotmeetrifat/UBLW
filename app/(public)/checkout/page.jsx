@@ -174,6 +174,19 @@ export default function CheckoutPage() {
         setIsSubmitting(true)
 
         try {
+            const normalizedAddress = {
+                ...selectedAddress,
+                fullName: (selectedAddress.fullName || selectedAddress.name || 'Valued Customer').trim(),
+                name: (selectedAddress.fullName || selectedAddress.name || 'Valued Customer').trim(),
+                phoneNumber: (selectedAddress.phoneNumber || selectedAddress.phone || '').trim(),
+                phone: (selectedAddress.phoneNumber || selectedAddress.phone || '').trim(),
+                address: (selectedAddress.address || selectedAddress.street || 'Address not specified').trim(),
+                street: (selectedAddress.address || selectedAddress.street || 'Address not specified').trim(),
+                city: (selectedAddress.city || 'Dhaka').trim(),
+                region: (selectedAddress.region || selectedAddress.state || 'Dhaka').trim(),
+                state: (selectedAddress.region || selectedAddress.state || 'Dhaka').trim(),
+            };
+
             const payload = {
                 items: items.map(item => ({
                     productId: item.id,
@@ -182,7 +195,7 @@ export default function CheckoutPage() {
                     quantity: item.quantity,
                     image: Array.isArray(item.images) ? item.images[0] : (item.image || '/product_img1.png'),
                 })),
-                address: selectedAddress,
+                address: normalizedAddress,
                 paymentMethod: paymentMethod.toUpperCase(),
                 transactionId: transactionId.trim() || null,
                 senderNumber: senderNumber.trim() || null,

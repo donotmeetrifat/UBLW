@@ -28,7 +28,13 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
 
     useEffect(() => {
         if (editingAddress) {
-            setAddress(editingAddress)
+            setAddress({
+                ...editingAddress,
+                fullName: editingAddress.fullName || editingAddress.name || '',
+                phoneNumber: editingAddress.phoneNumber || editingAddress.phone || '',
+                address: editingAddress.address || editingAddress.street || '',
+                region: editingAddress.region || editingAddress.state || '',
+            })
         }
     }, [editingAddress])
 
@@ -84,6 +90,14 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
 
         const addressWithZone = {
             ...address,
+            fullName: (address.fullName || address.name || '').trim(),
+            name: (address.fullName || address.name || '').trim(),
+            phoneNumber: (address.phoneNumber || address.phone || '').trim(),
+            phone: (address.phoneNumber || address.phone || '').trim(),
+            address: (address.address || address.street || '').trim(),
+            street: (address.address || address.street || '').trim(),
+            region: address.region || address.state || 'Dhaka',
+            state: address.region || address.state || 'Dhaka',
             zone: isInsideDhaka(address) ? 'inside_dhaka' : 'outside_dhaka'
         }
 

@@ -292,13 +292,17 @@ export const addressDummyData = {
     id: "addr_1",
     userId: "user_1",
     name: "Ayesha Rahman",
+    fullName: "Ayesha Rahman",
     email: "ayesha@example.com",
     street: "House 12, Road 5, Block B",
+    address: "House 12, Road 5, Block B",
     city: "Dhaka - North",
     state: "Dhaka",
+    region: "Dhaka",
     zip: "1216",
     country: "Bangladesh",
     phone: "01959524393",
+    phoneNumber: "01959524393",
     createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)',
 }
 

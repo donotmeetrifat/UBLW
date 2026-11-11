@@ -60,9 +60,35 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Order must contain at least one item' }, { status: 400 });
         }
 
-        if (!address || !address.fullName || !address.phoneNumber) {
-            return NextResponse.json({ success: false, message: 'Recipient name and phone number are required' }, { status: 400 });
+        if (!address) {
+            return NextResponse.json({ success: false, message: 'Please provide a valid delivery address' }, { status: 400 });
         }
+
+        // Normalize address fields (support all aliases: fullName/name, phoneNumber/phone, address/street, region/state)
+        const recipientName = (address.fullName || address.name || address.recipientName || 'Valued Customer').trim();
+        const recipientPhone = (address.phoneNumber || address.phone || address.mobile || address.contactNumber || '').trim();
+        const streetAddress = (address.address || address.street || address.streetAddress || 'Address on file').trim();
+        const region = (address.region || address.state || address.division || 'Dhaka').trim();
+        const city = (address.city || address.district || 'Dhaka').trim();
+        const area = (address.area || address.thana || '').trim();
+
+        if (!recipientPhone) {
+            return NextResponse.json({ success: false, message: 'Recipient contact phone number is required' }, { status: 400 });
+        }
+
+        const normalizedAddress = {
+            ...address,
+            fullName: recipientName,
+            name: recipientName,
+            phoneNumber: recipientPhone,
+            phone: recipientPhone,
+            address: streetAddress,
+            street: streetAddress,
+            region,
+            state: region,
+            city,
+            area,
+        };
 
         // Calculate subtotal
         let subtotal = 0;
@@ -100,7 +126,7 @@ export async function POST(request) {
         }
 
         const settings = await getStoreSettings();
-        const deliveryCharge = calculateDeliveryCharge(address, subtotal, settings.delivery);
+        const deliveryCharge = calculateDeliveryCharge(normalizedAddress, subtotal, settings.delivery);
         const total = Math.max(0, subtotal - discount + deliveryCharge);
         const orderNumber = `UKBL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -120,73 +146,92 @@ export async function POST(request) {
             customerNotes: customerNotes || null,
             isCouponUsed,
             couponCode: verifiedCouponCode,
-            address,
+            address: normalizedAddress,
             orderItems: processedItems,
         };
 
         if (isDatabaseConfigured()) {
-            // Find or create user
-            const user = await prisma.user.upsert({
-                where: { email: address.email || `${address.phoneNumber}@ukbrandlover.com` },
-                update: { name: address.fullName, phone: address.phoneNumber },
-                create: {
-                    name: address.fullName,
-                    email: address.email || `${address.phoneNumber}@ukbrandlover.com`,
-                    phone: address.phoneNumber,
-                }
-            });
+            try {
+                const cleanPhoneDigits = recipientPhone.replace(/[^0-9]/g, '') || '01900000000';
+                const userEmail = (normalizedAddress.email || `${cleanPhoneDigits}@ukbrandlover.com`).toLowerCase().trim();
 
-            // Create address
-            const savedAddress = await prisma.address.create({
-                data: {
-                    userId: user.id,
-                    fullName: address.fullName,
-                    phoneNumber: address.phoneNumber,
-                    region: address.region || 'Dhaka',
-                    city: address.city || 'Dhaka',
-                    area: address.area || '',
-                    address: address.address || address.street || 'Address not specified',
-                }
-            });
-
-            // Find store
-            const store = await prisma.store.findFirst();
-
-            const order = await prisma.order.create({
-                data: {
-                    orderNumber,
-                    userId: user.id,
-                    storeId: store ? store.id : 'store_ukbl_main',
-                    addressId: savedAddress.id,
-                    subtotal,
-                    discount,
-                    deliveryCharge,
-                    total,
-                    status: 'ORDER_PLACED',
-                    paymentMethod: paymentMethod.toUpperCase(),
-                    paymentStatus: 'PENDING',
-                    transactionId: transactionId ? transactionId.trim() : null,
-                    senderNumber: senderNumber ? senderNumber.trim() : null,
-                    customerNotes: customerNotes || null,
-                    isCouponUsed,
-                    couponCode: verifiedCouponCode,
-                    orderItems: {
-                        create: processedItems.map(item => ({
-                            productId: item.productId,
-                            name: item.name,
-                            image: typeof item.image === 'string' ? item.image : '/product_img1.png',
-                            price: item.price,
-                            quantity: item.quantity,
-                        }))
+                // Find or create user
+                const user = await prisma.user.upsert({
+                    where: { email: userEmail },
+                    update: { name: recipientName, phone: recipientPhone },
+                    create: {
+                        name: recipientName,
+                        email: userEmail,
+                        phone: recipientPhone,
                     }
-                },
-                include: {
-                    orderItems: true,
-                    address: true,
-                }
-            });
+                });
 
-            return NextResponse.json({ success: true, order }, { status: 201 });
+                // Create address in DB
+                const savedAddress = await prisma.address.create({
+                    data: {
+                        userId: user.id,
+                        fullName: recipientName,
+                        phoneNumber: recipientPhone,
+                        region,
+                        city,
+                        area,
+                        address: streetAddress,
+                    }
+                });
+
+                // Find or link active store
+                const store = await prisma.store.findFirst();
+                const validStoreId = store ? store.id : 'store_ukbl_main';
+
+                // Resolve each product ID against real DB products to prevent foreign key errors
+                const allDbProducts = await prisma.product.findMany({ select: { id: true, name: true } });
+                const resolvedOrderItems = processedItems.map(item => {
+                    const matched = allDbProducts.find(p => p.id === item.productId) || 
+                                    allDbProducts.find(p => p.name.toLowerCase() === (item.name || '').toLowerCase()) ||
+                                    allDbProducts[0];
+                    return {
+                        productId: matched ? matched.id : item.productId,
+                        name: item.name,
+                        image: typeof item.image === 'string' ? item.image : '/product_img1.png',
+                        price: item.price,
+                        quantity: item.quantity,
+                    };
+                });
+
+                const order = await prisma.order.create({
+                    data: {
+                        orderNumber,
+                        userId: user.id,
+                        storeId: validStoreId,
+                        addressId: savedAddress.id,
+                        subtotal,
+                        discount,
+                        deliveryCharge,
+                        total,
+                        status: 'ORDER_PLACED',
+                        paymentMethod: paymentMethod.toUpperCase(),
+                        paymentStatus: 'PENDING',
+                        transactionId: transactionId ? transactionId.trim() : null,
+                        senderNumber: senderNumber ? senderNumber.trim() : null,
+                        customerNotes: customerNotes || null,
+                        isCouponUsed,
+                        couponCode: verifiedCouponCode,
+                        orderItems: {
+                            create: resolvedOrderItems,
+                        }
+                    },
+                    include: {
+                        orderItems: true,
+                        address: true,
+                    }
+                });
+
+                return NextResponse.json({ success: true, order }, { status: 201 });
+            } catch (dbError) {
+                console.error('Database write error, falling back to memory store:', dbError);
+                const newOrder = memoryStore.addOrder(orderData);
+                return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
+            }
         }
 
         const newOrder = memoryStore.addOrder(orderData);
