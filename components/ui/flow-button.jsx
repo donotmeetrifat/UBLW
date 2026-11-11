@@ -6,6 +6,8 @@ import { ArrowRight } from 'lucide-react';
 
 export function FlowButton({ 
   text = "Sign In", 
+  badge,
+  icon: Icon,
   href, 
   onClick, 
   className = "",
@@ -25,9 +27,15 @@ export function FlowButton({
         className="absolute w-3.5 h-3.5 left-[-25%] stroke-[#6C306E] fill-none z-[9] group-hover/flow:left-4 group-hover/flow:stroke-white transition-all duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]" 
       />
 
-      {/* Text */}
-      <span className="relative z-[1] -translate-x-2.5 group-hover/flow:translate-x-2.5 transition-all duration-[800ms] ease-out leading-none select-none">
-        {text}
+      {/* Text & Content */}
+      <span className="relative z-[1] -translate-x-2.5 group-hover/flow:translate-x-2.5 transition-all duration-[800ms] ease-out leading-none select-none inline-flex items-center gap-1.5">
+        {Icon && <Icon size={14} className="shrink-0 transition-colors" />}
+        <span>{text}</span>
+        {badge !== undefined && badge !== null && (
+          <span className="text-[10px] font-extrabold text-white size-4.5 rounded-full flex items-center justify-center leading-none bg-gradient-to-r from-[#6C306E] to-[#401242] group-hover/flow:bg-white group-hover/flow:text-[#6C306E] transition-all duration-300 shadow-2xs shrink-0">
+            {badge}
+          </span>
+        )}
       </span>
 
       {/* Expanding Brand Circle */}
