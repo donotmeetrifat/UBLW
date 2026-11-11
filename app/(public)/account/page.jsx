@@ -315,13 +315,6 @@ export default function AccountPage() {
                                         <div>
                                             <div className="flex items-center justify-between pb-2 border-b border-[#EFE0EF]">
                                                 <p className="font-bold text-xs text-[#241224]">{address.fullName || address.name}</p>
-                                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                                                    addrIsDhaka 
-                                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                                }`}>
-                                                    {addrIsDhaka ? '📍 Inside Dhaka' : '🚚 Outside Dhaka'}
-                                                </span>
                                             </div>
 
                                             <p className="text-[11px] font-mono font-bold text-[#6C306E] mt-2">

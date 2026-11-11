@@ -222,17 +222,8 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                                     </p>
                                     
                                     <div className="flex items-center justify-between pl-6 mt-2 pt-1 border-t border-[#EFE0EF]/60">
-                                        <span className='text-[#6C306E] text-[10px] font-bold'>
+                                        <span className='text-[#6C306E] text-[10px] font-bold font-mono'>
                                             {address.phoneNumber || address.phone}
-                                        </span>
-                                        {/* Dynamic Delivery Location Badge */}
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
-                                            addrIsDhaka 
-                                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                                : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                        }`}>
-                                            <span>{addrIsDhaka ? '📍' : '🚚'}</span>
-                                            <span>{addrIsDhaka ? 'Inside Dhaka' : 'Outside Dhaka'}</span>
                                         </span>
                                     </div>
                                 </div>
@@ -267,11 +258,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                 <div className='flex justify-between items-center text-slate-600'>
                     <div className="flex items-center gap-1.5">
                         <TruckIcon size={14} color="#6C306E" />
-                        <span>
-                            {selectedAddress 
-                                ? (isDhaka ? 'Delivery (Inside Dhaka):' : `Delivery (${selectedAddress.city || 'Outside Dhaka'}):`)
-                                : 'Courier Delivery:'}
-                        </span>
+                        <span>Delivery Fee:</span>
                     </div>
                     {deliveryCharge === 0 || deliverySettings.isFreeDeliveryEnabled ? (
                         <span className='font-extrabold text-emerald-700 uppercase text-[11px] tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200'>

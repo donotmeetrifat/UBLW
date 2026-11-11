@@ -139,9 +139,6 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             <p className="text-slate-700 font-medium">
                                 Payment: <b>{order.paymentMethod || 'Cash on Delivery'}</b>
                             </p>
-                            <p className="text-slate-700 font-medium mt-0.5">
-                                Delivery Zone: <b>{isDhaka ? 'Inside Dhaka' : 'Outside Dhaka'}</b>
-                            </p>
                             {order.consignmentId && (
                                 <p className="font-mono text-purple-800 text-[11px] font-bold mt-0.5">
                                     Courier: {order.consignmentId}
@@ -200,7 +197,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             )}
 
                             <div className="flex justify-between text-slate-600">
-                                <span>Delivery Fee ({isDhaka ? 'Inside Dhaka' : 'Outside Dhaka'}):</span>
+                                <span>Delivery Fee:</span>
                                 <span className="font-bold text-[#241224]">
                                     {deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}
                                 </span>

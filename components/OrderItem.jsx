@@ -160,13 +160,6 @@ const OrderItem = ({ order }) => {
                                         <MapPinIcon size={14} color="#6C306E" />
                                         <span>Delivery Address Information</span>
                                     </div>
-                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                                        isDhaka 
-                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                            : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                    }`}>
-                                        {isDhaka ? 'Inside Dhaka City' : 'Outside Dhaka (Nationwide)'}
-                                    </span>
                                 </div>
 
                                 <div className="text-xs space-y-1">

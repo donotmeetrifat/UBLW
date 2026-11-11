@@ -324,14 +324,6 @@ export default function CheckoutPage() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 self-start sm:self-center">
-                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border shrink-0 ${
-                                        isDhaka 
-                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                            : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                    }`}>
-                                        <span>{isDhaka ? '📍' : '🚚'}</span>
-                                        <span>{isDhaka ? `Inside Dhaka (৳${deliveryCharge})` : `Outside Dhaka (৳${deliveryCharge})`}</span>
-                                    </span>
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -606,11 +598,7 @@ export default function CheckoutPage() {
                             <div className="flex justify-between items-center text-slate-600">
                                 <span className="flex items-center gap-1.5">
                                     <TruckIcon size={14} color="#6C306E" />
-                                    <span>
-                                        {selectedAddress 
-                                            ? (isDhaka ? 'Delivery (Inside Dhaka):' : `Delivery (${selectedAddress.city || 'Outside Dhaka'}):`)
-                                            : 'Courier Delivery:'}
-                                    </span>
+                                    <span>Delivery Fee:</span>
                                 </span>
                                 {deliveryCharge === 0 || settings.delivery.isFreeDeliveryEnabled ? (
                                     <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-[10px]">
@@ -707,9 +695,9 @@ export default function CheckoutPage() {
                                     <span className="font-bold text-[#241224]">{confirmedOrder.paymentMethod}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500">Delivery Area:</span>
+                                    <span className="text-slate-500">Delivery Address:</span>
                                     <span className="font-bold text-[#241224]">
-                                        {confirmedOrder.address?.city || 'Bangladesh'} ({isInsideDhaka(confirmedOrder.address) ? 'Inside Dhaka' : 'Outside Dhaka'})
+                                        {confirmedOrder.address?.city || 'Bangladesh'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">

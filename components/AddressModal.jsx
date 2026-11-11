@@ -178,34 +178,6 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                             />
                         </div>
 
-                        {/* Automatic Dhaka / Outside Dhaka Detection Pill */}
-                        {address.city && (
-                            <div className="sm:col-span-2">
-                                <div className={`p-3 rounded-2xl border text-xs flex items-center justify-between ${
-                                    isInsideDhaka(address) 
-                                        ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800' 
-                                        : 'bg-indigo-50/70 border-indigo-200 text-indigo-800'
-                                }`}>
-                                    <div className="flex items-center gap-2.5">
-                                        <span className="text-base">{isInsideDhaka(address) ? '📍' : '🚚'}</span>
-                                        <div>
-                                            <p className="font-bold">
-                                                {isInsideDhaka(address) ? 'Inside Dhaka City (Dhaka Metro)' : 'Outside Dhaka (Nationwide)'}
-                                            </p>
-                                            <p className="text-[10px] opacity-80">
-                                                {isInsideDhaka(address) 
-                                                    ? 'Direct courier delivery to Dhaka metropolitan address' 
-                                                    : 'Nationwide courier delivery across all 63 districts'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className="font-extrabold px-2.5 py-1 rounded-full bg-white text-[10px] border border-current shadow-2xs">
-                                        {isInsideDhaka(address) ? 'Inside Dhaka' : 'Outside Dhaka'}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
                         <div className="flex flex-col gap-1.5 sm:col-span-2">
                             <label className="font-bold text-[#241224] text-xs">Area / Thana (Optional)</label>
                             <PremiumSelect
