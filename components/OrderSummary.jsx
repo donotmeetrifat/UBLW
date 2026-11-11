@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { removeAddress } from '@/lib/features/address/addressSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } from '@/lib/settings';
+import { FlowButton } from '@/components/ui/flow-button';
 
 const OrderSummary = ({ totalPrice, items = [] }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
@@ -284,24 +285,23 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
 
                 {/* Coupon Code Input */}
                 {!coupon ? (
-                    <form onSubmit={handleCouponCode} className='flex gap-2 mt-3 pt-2'>
+                    <form onSubmit={handleCouponCode} className='flex items-center gap-2 mt-3 pt-2'>
                         <div className="relative flex-1">
-                            <TagIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <TagIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                                 onChange={(e) => setCouponCodeInput(e.target.value)}
                                 value={couponCodeInput}
                                 type="text"
                                 placeholder='Coupon (NEW20, OFF10)'
-                                className='border border-[#EFE0EF] pl-8 pr-3 py-2 rounded-xl text-xs w-full outline-none focus:border-[#6C306E] bg-[#FAF6FA]'
+                                className='h-10 border border-[#EFE0EF] pl-9 pr-3 rounded-full text-xs w-full outline-none focus:border-[#6C306E] bg-[#FAF6FA] placeholder-[#8A758A] text-[#241224] font-medium transition-colors'
                             />
                         </div>
-                        <button
+                        <FlowButton
                             type="submit"
                             disabled={isApplyingCoupon}
-                            className='bg-slate-900 hover:bg-[#6C306E] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 shadow-xs active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-50'
-                        >
-                            {isApplyingCoupon ? '...' : 'Apply'}
-                        </button>
+                            text={isApplyingCoupon ? '...' : 'Apply'}
+                            className="!h-10 !px-5 shrink-0"
+                        />
                     </form>
                 ) : (
                     <div className='flex items-center justify-between bg-[#FAF6FA] border border-[#EFE0EF] p-2.5 rounded-2xl text-xs mt-2'>

@@ -200,31 +200,34 @@ const Navbar = () => {
                                 />
                             </form>
 
-                            {/* 2. Luxury Cart Button (h-10) */}
+                            {/* 2. Luxury Cart / Bag Button (Exact FlowButton Design) */}
                             <Link
                                 id="navbar-cart-icon"
                                 href="/cart"
-                                className={`relative flex items-center justify-center gap-2 px-4 h-10 rounded-full border transition-all duration-300 select-none cursor-pointer ${isCartBumping
-                                        ? 'bg-[#FAF6FA] border-[#6C306E] scale-105 shadow-sm'
-                                        : 'bg-white border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA]/80 shadow-2xs hover:shadow-xs'
-                                    }`}
+                                className={`group/flow relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-[100px] border-[1.5px] border-[#6C306E]/40 bg-transparent px-4 h-10 text-xs font-bold text-[#6C306E] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:rounded-[12px] hover:shadow-[0_8px_24px_rgba(108,48,110,0.35)] active:scale-[0.95] select-none ${
+                                    isCartBumping ? 'border-[#6C306E] scale-105 shadow-sm' : ''
+                                }`}
                             >
+                                {/* Expanding Brand Circle matching Sign In button */}
+                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] rounded-full opacity-0 group-hover/flow:w-[380px] group-hover/flow:h-[380px] group-hover/flow:opacity-100 transition-all duration-[800ms] ease-[cubic-bezier(0.19,1,0.22,1)] pointer-events-none" />
+
                                 <motion.div
                                     animate={isCartBumping ? { rotate: [0, -12, 12, -6, 0], scale: [1, 1.18, 1] } : {}}
                                     transition={{ duration: 0.4 }}
-                                    className="flex items-center justify-center"
+                                    className="relative z-[1] flex items-center justify-center group-hover/flow:text-white transition-colors duration-300"
                                 >
-                                    <BagIcon size={16} color="#6C306E" />
+                                    <BagIcon size={16} color="currentColor" />
                                 </motion.div>
-                                <span className="hidden sm:inline text-xs font-bold text-[#241224] leading-none">Bag</span>
+                                <span className="relative z-[1] hidden sm:inline text-xs font-bold leading-none select-none group-hover/flow:text-white transition-colors duration-300">
+                                    Bag
+                                </span>
 
                                 {/* Counter Badge */}
                                 <motion.span
                                     key={cartCount}
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
-                                    className={`text-[10px] font-extrabold text-white size-5 rounded-full flex items-center justify-center transition-colors duration-200 leading-none shadow-2xs shrink-0 ${isCartBumping ? 'bg-[#3A0C38]' : 'bg-gradient-to-r from-[#6C306E] to-[#401242]'
-                                        }`}
+                                    className="relative z-[1] text-[10px] font-extrabold text-white size-5 rounded-full flex items-center justify-center leading-none shadow-2xs shrink-0 bg-gradient-to-r from-[#6C306E] to-[#401242] group-hover/flow:bg-white group-hover/flow:text-[#6C306E] transition-all duration-300"
                                 >
                                     {cartCount}
                                 </motion.span>

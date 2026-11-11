@@ -40,7 +40,7 @@ export function FlowButton({
     </>
   );
 
-  const baseClasses = `group/flow relative inline-flex items-center justify-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#6C306E]/40 bg-transparent px-7 h-11 text-xs font-bold text-[#6C306E] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:rounded-[12px] hover:shadow-[0_8px_24px_rgba(108,48,110,0.35)] active:scale-[0.95] select-none ${className}`;
+  const baseClasses = `group/flow relative inline-flex items-center justify-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#6C306E]/40 bg-transparent px-7 h-11 text-xs font-bold text-[#6C306E] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:rounded-[12px] hover:shadow-[0_8px_24px_rgba(108,48,110,0.35)] active:scale-[0.95] select-none disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed ${className}`;
 
   if (href) {
     return (
