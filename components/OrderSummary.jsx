@@ -4,6 +4,7 @@ import {
     PlusIcon,
     TagIcon,
     TrashIcon,
+    EditIcon,
     CloseIcon,
     TruckIcon,
     ArrowRightIcon,
@@ -189,17 +190,31 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                                             </div>
                                             <p className='font-bold text-xs text-[#241224]'>{address.fullName || address.name}</p>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                dispatch(removeAddress(address.id));
-                                            }}
-                                            className='p-1 text-slate-400 hover:text-red-500 transition-colors'
-                                            title="Delete address"
-                                        >
-                                            <TrashIcon size={13} color="currentColor" />
-                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingAddress(address);
+                                                    setShowAddressModal(true);
+                                                }}
+                                                className='p-1 text-slate-400 hover:text-[#6C306E] transition-colors rounded-lg hover:bg-white'
+                                                title="Edit address"
+                                            >
+                                                <EditIcon size={13} color="currentColor" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    dispatch(removeAddress(address.id));
+                                                }}
+                                                className='p-1 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white'
+                                                title="Delete address"
+                                            >
+                                                <TrashIcon size={13} color="currentColor" />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <p className='text-slate-500 text-[11px] mt-1 pl-6 font-normal leading-relaxed line-clamp-2'>

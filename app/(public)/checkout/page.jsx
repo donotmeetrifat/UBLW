@@ -18,7 +18,8 @@ import {
     PrinterIcon, 
     WhatsAppIcon,
     MapPinIcon,
-    PlusIcon
+    PlusIcon,
+    EditIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import { clearCart } from '@/lib/features/cart/cartSlice'
@@ -286,19 +287,34 @@ export default function CheckoutPage() {
                                     <p className="text-[11px] text-slate-400">Where we will dispatch your parcel</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => { setEditingAddress(null); setShowAddressModal(true); }}
-                                className="text-xs font-bold text-[#6C306E] hover:underline cursor-pointer flex items-center gap-1"
-                            >
-                                <PlusIcon size={12} color="#6C306E" />
-                                <span>Change Address</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {selectedAddress && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingAddress(selectedAddress);
+                                            setShowAddressModal(true);
+                                        }}
+                                        className="text-xs font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white border border-[#EFE0EF] hover:border-[#6C306E] px-3 py-1.5 rounded-full transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                                    >
+                                        <EditIcon size={12} color="currentColor" />
+                                        <span>Edit Address</span>
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => { setEditingAddress(null); setShowAddressModal(true); }}
+                                    className="text-xs font-bold text-slate-600 hover:text-[#6C306E] bg-[#FAF6FA] hover:bg-white border border-[#EFE0EF] px-3 py-1.5 rounded-full transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                                >
+                                    <PlusIcon size={12} color="currentColor" />
+                                    <span>New Address</span>
+                                </button>
+                            </div>
                         </div>
 
                         {selectedAddress ? (
                             <div className="mt-4 p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div>
+                                <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <p className="font-bold text-xs text-[#241224]">{selectedAddress.fullName || selectedAddress.name}</p>
                                         <span className="text-[10px] text-slate-500 font-mono">({selectedAddress.phoneNumber || selectedAddress.phone})</span>
@@ -307,14 +323,27 @@ export default function CheckoutPage() {
                                         {selectedAddress.address || selectedAddress.street}, {selectedAddress.city}, {selectedAddress.region || selectedAddress.state}
                                     </p>
                                 </div>
-                                <span className={`self-start sm:self-center text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border shrink-0 ${
-                                    isDhaka 
-                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                }`}>
-                                    <span>{isDhaka ? '📍' : '🚚'}</span>
-                                    <span>{isDhaka ? `Inside Dhaka (৳${deliveryCharge})` : `Outside Dhaka (৳${deliveryCharge})`}</span>
-                                </span>
+                                <div className="flex items-center gap-2 self-start sm:self-center">
+                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border shrink-0 ${
+                                        isDhaka 
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                            : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                                    }`}>
+                                        <span>{isDhaka ? '📍' : '🚚'}</span>
+                                        <span>{isDhaka ? `Inside Dhaka (৳${deliveryCharge})` : `Outside Dhaka (৳${deliveryCharge})`}</span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingAddress(selectedAddress);
+                                            setShowAddressModal(true);
+                                        }}
+                                        className="p-1.5 text-slate-400 hover:text-[#6C306E] hover:bg-white rounded-lg transition"
+                                        title="Edit this delivery address"
+                                    >
+                                        <EditIcon size={14} color="currentColor" />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="mt-4 p-4 text-center border border-dashed border-[#EFE0EF] rounded-2xl bg-[#FAF6FA]">
@@ -728,3 +757,4 @@ export default function CheckoutPage() {
         </div>
     )
 }
+
