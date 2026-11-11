@@ -1,21 +1,55 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { assets } from '@/assets/assets'
-import { CloseIcon, PrinterIcon } from '@/components/icons'
+import { CloseIcon, DownloadIcon } from '@/components/icons'
 import ThankYouSignature from '@/components/ThankYouSignature'
 import { isInsideDhaka } from '@/lib/settings'
+import toast from 'react-hot-toast'
 
 const InvoiceModal = ({ order, isOpen, onClose }) => {
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [accountUser, setAccountUser] = useState(null)
+
+    // Load actual registered account user from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null')
+                if (saved) setAccountUser(saved)
+            } catch {}
+        }
+    }, [])
+
     if (!isOpen || !order) return null
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
     const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
-    const custName = order.address?.fullName || order.user?.name || order.address?.name || 'Valued Customer'
-    const custPhone = order.address?.phoneNumber || order.address?.phone || '+880 1XXXXXXXXX'
-    const custEmail = order.address?.email || order.user?.email || 'customer@ukbrandlover.com'
-    const custAddr = `${order.address?.address || order.address?.street || 'Delivery Address'}, ${order.address?.city || ''}${order.address?.region ? `, ${order.address.region}` : ''}`
+
+    // Customer Name: prioritize authenticated account name, then order address name
+    const custName = order.user?.name || 
+        (accountUser?.name && accountUser.name !== 'Valued Customer' ? accountUser.name : '') || 
+        (order.address?.fullName && order.address.fullName !== 'Customer' ? order.address.fullName : '') || 
+        (order.address?.name && order.address.name !== 'Customer' ? order.address.name : '') || 
+        'Valued Customer'
+
+    // Customer Phone: prioritize order address phone, then account phone
+    const custPhone = order.address?.phoneNumber || 
+        order.address?.phone || 
+        accountUser?.phone || 
+        accountUser?.whatsapp || 
+        '+880 1959-524393'
+
+    // Customer Email: strictly prioritize the email used to create the account
+    const custEmail = order.user?.email || 
+        order.email || 
+        accountUser?.email || 
+        (order.address?.email && !order.address.email.includes('example.com') ? order.address.email : '') || 
+        accountUser?.email || 
+        ''
+
+    const custAddr = `${order.address?.address || order.address?.street || 'Delivery Address'}, ${order.address?.city || 'Dhaka'}${order.address?.region ? `, ${order.address.region}` : ''}`
     const isDhaka = isInsideDhaka(order.address)
 
     const items = order.orderItems || []
@@ -30,12 +64,6 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         year: 'numeric'
     })
 
-    const handlePrint = () => {
-        if (typeof window !== 'undefined') {
-            window.print()
-        }
-    }
-
     const paymentLabel = (() => {
         const pm = (order.paymentMethod || '').toLowerCase()
         if (pm.includes('bkash')) return 'bKash Send Money'
@@ -44,10 +72,51 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         return 'Cash on Delivery'
     })()
 
+    // 100% Reliable Client-Side A4 PDF Download
+    const handleDownloadInvoice = async () => {
+        try {
+            setIsDownloading(true)
+            const element = document.getElementById('printable-invoice-content')
+            if (!element) {
+                toast.error('Invoice content could not be found')
+                return
+            }
+
+            const html2canvas = (await import('html2canvas')).default
+            const { jsPDF } = await import('jspdf')
+
+            const canvas = await html2canvas(element, {
+                scale: 2.5, // 300 DPI high resolution
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+            })
+
+            const imgData = canvas.toDataURL('image/png')
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            const pdfWidth = pdf.internal.pageSize.getWidth()
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+
+            // Center vertically if shorter than full A4 page, otherwise pin to top
+            const topMargin = pdfHeight < 280 ? Math.max(0, (297 - pdfHeight) / 4) : 0
+            pdf.addImage(imgData, 'PNG', 0, topMargin, pdfWidth, Math.min(pdfHeight, 297))
+
+            pdf.save(`UKBL_Invoice_${orderNo}.pdf`)
+            toast.success('Invoice downloaded successfully!')
+        } catch (error) {
+            console.error('Error generating PDF invoice:', error)
+            toast.error('Could not generate PDF. Opening print dialog as fallback...')
+            window.print()
+        } finally {
+            setIsDownloading(false)
+        }
+    }
+
     return (
         <div 
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/60 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto transition-all duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/60 backdrop-blur-md overflow-y-auto transition-all duration-300"
         >
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
@@ -58,47 +127,27 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
                 @page {
                     size: A4 portrait;
-                    margin: 15mm 16mm;
+                    margin: 12mm 15mm;
                 }
 
                 @media print {
-                    html, body {
+                    body {
                         background: #ffffff !important;
                         color: #111827 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
                     }
-                    body * {
-                        visibility: hidden !important;
-                    }
-                    #printable-invoice-content, #printable-invoice-content * {
-                        visibility: visible !important;
-                    }
-                    #printable-invoice-content {
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        box-shadow: none !important;
-                        border: none !important;
+                    .print-hidden-bar {
+                        display: none !important;
                     }
                 }
             `}</style>
 
             {/* Modal Container */}
-            <div className="clean-invoice-font bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-10 border border-[#EFE0EF] shadow-2xl relative my-6 print:m-0 print:p-0 print:border-none print:shadow-none print:max-w-none">
+            <div className="clean-invoice-font bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-10 border border-[#EFE0EF] shadow-2xl relative my-6">
                 
-                {/* Screen Action Bar (Hidden when printing on A4) */}
-                <div className="print:hidden flex items-center justify-between pb-4 mb-6 border-b border-[#EFE0EF]">
+                {/* Screen Action Bar (Clean Header: Invoice # on Left, Download Button on Right) */}
+                <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-[#EFE0EF]">
                     <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF] uppercase tracking-wider">
-                            Clean Minimal Modern Invoice
-                        </span>
-                        <span className="font-mono text-xs font-bold text-slate-500">
+                        <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF]">
                             #{orderNo}
                         </span>
                     </div>
@@ -106,11 +155,16 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={handlePrint}
-                            className="bg-[#6C306E] hover:bg-[#3A0C38] text-white px-4 py-2 rounded-full text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                            disabled={isDownloading}
+                            onClick={handleDownloadInvoice}
+                            className="bg-[#6C306E] hover:bg-[#3A0C38] disabled:opacity-70 text-white px-5 py-2.5 rounded-full text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                         >
-                            <PrinterIcon size={14} color="#FFFFFF" />
-                            <span>Print A4 Invoice</span>
+                            {isDownloading ? (
+                                <div className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <DownloadIcon size={14} color="#FFFFFF" />
+                            )}
+                            <span>{isDownloading ? 'Downloading...' : 'Download Invoice'}</span>
                         </button>
                         <button
                             type="button"
@@ -124,9 +178,9 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 </div>
 
                 {/* Printable Invoice (Exact Match to Clean Minimal Modern Business Invoice Template) */}
-                <div id="printable-invoice-content" className="clean-invoice-font text-neutral-900 print:w-full print:text-black">
+                <div id="printable-invoice-content" className="clean-invoice-font bg-white text-neutral-900 p-2 sm:p-4">
                     
-                    {/* 1. Header Centered Logo & Brand Name */}
+                    {/* 1. Header Centered Logo & Subtitle */}
                     <div className="text-center pt-2 pb-10">
                         <div className="flex flex-col items-center justify-center">
                             <Image
@@ -138,7 +192,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                 priority
                             />
                             <p className="text-[10px] text-neutral-400 font-semibold tracking-widest uppercase mt-2">
-                                100% Authentic British Skincare & Cosmetics
+                                100% ORIGINAL UK IMPORTED PRODUCTS
                             </p>
                         </div>
                     </div>
@@ -216,7 +270,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                     })
                                 ) : (
                                     <tr className="text-neutral-800">
-                                        <td className="py-3.5 font-normal text-neutral-900">Authentic UK Cosmetics Order</td>
+                                        <td className="py-3.5 font-normal text-neutral-900">100% Original UK Imported Cosmetics Order</td>
                                         <td className="py-3.5 text-center text-neutral-700 font-normal">1</td>
                                         <td className="py-3.5 text-right text-neutral-700">{currency}{subtotal.toLocaleString()}</td>
                                         <td className="py-3.5 text-right font-normal text-neutral-900">{currency}{subtotal.toLocaleString()}</td>

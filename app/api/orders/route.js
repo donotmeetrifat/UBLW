@@ -221,8 +221,13 @@ export async function POST(request) {
                         }
                     },
                     include: {
-                        orderItems: true,
+                        orderItems: {
+                            include: { product: true }
+                        },
                         address: true,
+                        user: {
+                            select: { id: true, name: true, email: true, phone: true }
+                        }
                     }
                 });
 

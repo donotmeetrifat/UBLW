@@ -136,3 +136,4 @@ export async function DELETE(request) {
         return NextResponse.json({ success: false, message: 'Failed to delete address' }, { status: 500 });
     }
 }
+

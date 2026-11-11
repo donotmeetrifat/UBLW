@@ -15,7 +15,7 @@ import {
     ShieldCheckIcon, 
     CheckIcon, 
     ArrowRightIcon, 
-    PrinterIcon, 
+    DownloadIcon, 
     MapPinIcon,
     PlusIcon,
     EditIcon
@@ -230,6 +230,14 @@ export default function CheckoutPage() {
             }
         } catch (error) {
             console.error('Checkout error:', error)
+            // Retrieve current authenticated user for exact invoice customer data
+            let activeUser = null;
+            if (typeof window !== 'undefined') {
+                try {
+                    activeUser = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null');
+                } catch {}
+            }
+
             // Offline resilient fallback
             const fallbackOrder = {
                 id: `order_${Date.now()}`,
@@ -245,6 +253,8 @@ export default function CheckoutPage() {
                 createdAt: new Date().toISOString(),
                 orderItems: items.map(i => ({ product: i, quantity: i.quantity, price: i.price })),
                 address: selectedAddress,
+                user: activeUser,
+                email: activeUser?.email || selectedAddress?.email,
             }
 
             if (typeof window !== 'undefined') {
@@ -773,10 +783,10 @@ export default function CheckoutPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowInvoiceModal(true)}
-                                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 cursor-pointer font-medium"
                                 >
-                                    <PrinterIcon size={13} color="currentColor" />
-                                    <span>Print Order Receipt / Invoice</span>
+                                    <DownloadIcon size={14} color="currentColor" />
+                                    <span>Download Order Invoice</span>
                                 </button>
                             </div>
                         </motion.div>

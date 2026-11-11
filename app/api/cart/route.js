@@ -86,3 +86,4 @@ export async function POST(request) {
         return NextResponse.json({ success: false, message: 'Failed to sync cart' }, { status: 500 });
     }
 }
+

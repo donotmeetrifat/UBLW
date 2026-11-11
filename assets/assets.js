@@ -291,9 +291,9 @@ export const ourSpecsData = [
 export const addressDummyData = {
     id: "addr_1",
     userId: "user_1",
-    name: "Ayesha Rahman",
-    fullName: "Ayesha Rahman",
-    email: "ayesha@example.com",
+    name: "Customer",
+    fullName: "Customer",
+    email: "",
     street: "House 12, Road 5, Block B",
     address: "House 12, Road 5, Block B",
     city: "Dhaka - North",
