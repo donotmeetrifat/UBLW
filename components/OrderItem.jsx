@@ -240,7 +240,13 @@ const OrderItem = ({ order }) => {
                                                     ) : currentStatus === 'DELIVERED' ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => setRatingModal({ orderId: order.id, productId: prodId })}
+                                                            onClick={() => setRatingModal({ 
+                                                                orderId: order.id, 
+                                                                productId: prodId,
+                                                                productName: prodName,
+                                                                productImage: prodImage,
+                                                                product: productObj
+                                                            })}
                                                             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#6C306E] text-[#6C306E] hover:text-white border border-[#EFE0EF] hover:border-[#6C306E] text-xs font-bold transition shadow-2xs cursor-pointer"
                                                         >
                                                             <ReviewBadgeIcon size={14} color="currentColor" />

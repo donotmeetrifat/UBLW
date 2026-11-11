@@ -190,6 +190,7 @@ model Rating {
     rating             Int      @default(5)
     review             String
     images             String[] @default([])
+    videos             String[] @default([])
     userId             String
     productId          String
     orderId            String?

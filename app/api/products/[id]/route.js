@@ -9,7 +9,17 @@ export async function GET(request, { params }) {
         if (isDatabaseConfigured()) {
             const product = await prisma.product.findUnique({
                 where: { id },
-                include: { ratings: true, store: true },
+                include: {
+                    ratings: {
+                        include: {
+                            user: {
+                                select: { id: true, name: true, image: true }
+                            }
+                        },
+                        orderBy: { createdAt: 'desc' }
+                    },
+                    store: true
+                },
             });
             if (!product) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });

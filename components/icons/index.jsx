@@ -410,3 +410,21 @@ export const EyeOffIcon = ({ size = 18, className = '', color = 'currentColor', 
         <line x1="3" y1="3" x2="21" y2="21" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
     </svg>
 )
+
+// 37. Bespoke 2D Clean Luxury Video Icon
+export const VideoIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <rect x="2.5" y="6" width="13.5" height="12" rx="2.5" stroke={color} strokeWidth="1.6" />
+        <path d="M16 10L21 7V17L16 14" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="8" cy="12" r="1.5" fill={color} />
+    </svg>
+)
+
+// 38. Bespoke 2D Clean Luxury Camera Icon
+export const CameraIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M4 8H7L8.5 5.5H15.5L17 8H20C21.1 8 22 8.9 22 10V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V10C2 8.9 2.9 8 4 8Z" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
+        <circle cx="12" cy="14" r="3.5" stroke={color} strokeWidth="1.6" />
+        <circle cx="12" cy="14" r="1.25" fill={color} />
+    </svg>
+)

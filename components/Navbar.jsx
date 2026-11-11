@@ -264,7 +264,7 @@ const Navbar = () => {
 
                                                     {/* 3. My Reviews */}
                                                     <Link
-                                                        href="/orders"
+                                                        href="/reviews"
                                                         onClick={() => setIsProfileOpen(false)}
                                                         className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium"
                                                     >
