@@ -18,3 +18,4 @@ export default function ThankYouSignature({ className = "w-64 sm:w-72 mx-auto te
         </div>
     )
 }
+

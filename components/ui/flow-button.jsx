@@ -32,7 +32,7 @@ export function FlowButton({
         {Icon && <Icon size={14} className="shrink-0 transition-colors" />}
         <span>{text}</span>
         {badge !== undefined && badge !== null && (
-          <span className="text-[10px] font-extrabold text-white size-4.5 rounded-full flex items-center justify-center leading-none bg-gradient-to-r from-[#6C306E] to-[#401242] group-hover/flow:bg-white group-hover/flow:text-[#6C306E] transition-all duration-300 shadow-2xs shrink-0">
+          <span className="text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center leading-none bg-[#6C306E] text-white group-hover/flow:bg-white group-hover/flow:text-[#3A0C38] transition-colors duration-300 shadow-2xs shrink-0 select-none">
             {badge}
           </span>
         )}
