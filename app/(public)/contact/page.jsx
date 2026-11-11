@@ -13,13 +13,14 @@ import {
 import { FlowButton } from '@/components/ui/flow-button'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { SOCIAL_LINKS } from '@/lib/constants/social'
 
 const contactChannels = [
     {
         title: 'WhatsApp',
         description: 'Direct chat for order assistance and shade advice.',
         buttonText: 'Chat on WhatsApp',
-        href: 'https://wa.me/8801959524393',
+        href: SOCIAL_LINKS.whatsapp.url,
         icon: OfficialWhatsAppIcon,
         ariaLabel: 'Chat with UK Brand Lover on WhatsApp',
     },
@@ -27,7 +28,7 @@ const contactChannels = [
         title: 'Facebook',
         description: 'Latest UK beauty arrivals, community, and offers.',
         buttonText: 'Visit Facebook',
-        href: 'https://www.facebook.com/ukbrandlover',
+        href: SOCIAL_LINKS.facebook.url,
         icon: OfficialFacebookIcon,
         ariaLabel: 'Message UK Brand Lover on Facebook',
     },
@@ -35,17 +36,17 @@ const contactChannels = [
         title: 'Instagram',
         description: 'Product swatches, London hauls, and tutorials.',
         buttonText: 'Follow on Instagram',
-        href: 'http://instagram.com/ukbrandlover',
+        href: SOCIAL_LINKS.instagram.url,
         icon: OfficialInstagramIcon,
         ariaLabel: 'Follow UK Brand Lover on Instagram',
     },
 ]
 
 const businessDetails = [
-    ['LOCATION', 'Mirpur, Dhaka, Bangladesh'],
-    ['HOTLINE', '+880 1959-524393'],
-    ['EMAIL', 'support@ukbrandlover.com'],
-    ['HOURS', '10:00 AM – 10:00 PM (Daily)'],
+    ['LOCATION', SOCIAL_LINKS.contact.location],
+    ['HOTLINE', SOCIAL_LINKS.contact.phone],
+    ['EMAIL', SOCIAL_LINKS.contact.email],
+    ['HOURS', SOCIAL_LINKS.contact.hours],
 ]
 
 export default function ContactPage() {

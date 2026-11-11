@@ -2,9 +2,10 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { FacebookIcon, SparklesIcon } from '@/components/icons'
+import { FacebookIcon, InstagramIcon, WhatsAppIcon, SparklesIcon } from '@/components/icons'
 import { assets } from '@/assets/assets'
 import { motion } from 'framer-motion'
+import { SOCIAL_LINKS } from '@/lib/constants/social'
 
 const Newsletter = () => {
     return (
@@ -61,7 +62,7 @@ const Newsletter = () => {
 
                     {/* Primary Facebook CTA Button with Distinct Royal Sapphire Aesthetic */}
                     <motion.a
-                        href="https://www.facebook.com/tuhinatopa"
+                        href={SOCIAL_LINKS.facebook.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Follow UK Brand Lover on Facebook"
@@ -76,9 +77,32 @@ const Newsletter = () => {
                         <span className="tracking-wide">Join 10k+ Community on Facebook</span>
                     </motion.a>
 
+                    {/* Quick Social Badges for Instagram & WhatsApp */}
+                    <div className="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-slate-500 font-medium">
+                        <a 
+                            href={SOCIAL_LINKS.instagram.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 hover:text-[#6C306E] transition font-semibold"
+                        >
+                            <InstagramIcon size={14} color="#6C306E" />
+                            <span>Instagram {SOCIAL_LINKS.instagram.handle}</span>
+                        </a>
+                        <span className="text-slate-300">•</span>
+                        <a 
+                            href={SOCIAL_LINKS.whatsapp.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 hover:text-emerald-600 transition font-semibold"
+                        >
+                            <WhatsAppIcon size={14} color="#059669" />
+                            <span>WhatsApp {SOCIAL_LINKS.whatsapp.formatted}</span>
+                        </a>
+                    </div>
+
                     {/* Sub-label */}
                     <p className='text-slate-400 text-[11px] mt-4 font-medium'>
-                        Official Community • @tuhinatopa • 100% Authentic UK Beauty in Bangladesh
+                        Official Community • {SOCIAL_LINKS.facebook.handle} • 100% Authentic UK Beauty in Bangladesh
                     </p>
                 </div>
             </motion.div>

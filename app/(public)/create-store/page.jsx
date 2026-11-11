@@ -13,6 +13,7 @@ import {
     ArrowRightIcon,
     UploadIcon
 } from "@/components/icons"
+import { SOCIAL_LINKS } from "@/lib/constants/social"
 
 export default function CreateStore() {
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
@@ -273,7 +274,7 @@ export default function CreateStore() {
                                 Back to Home
                             </Link>
                             <a
-                                href={`https://wa.me/8801959524393?text=${encodeURIComponent(`Assalamu Alaikum! I just submitted a store application for "${storeInfo.name}". Please review my verification.`)}`}
+                                href={`https://wa.me/${SOCIAL_LINKS.whatsapp.raw}?text=${encodeURIComponent(`Assalamu Alaikum! I just submitted a store application for "${storeInfo.name}". Please review my verification.`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex-1 py-3 px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"

@@ -12,6 +12,7 @@ import {
     MapPinIcon,
     RoyalCrownIcon
 } from "@/components/icons";
+import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
 
 const Footer = () => {
@@ -39,17 +40,17 @@ const Footer = () => {
         {
             title: "DIRECT CONTACT",
             links: [
-                { text: "+880 1959-524393", path: 'tel:+8801959524393', icon: PhoneIcon },
-                { text: "support@ukbrandlover.com", path: 'mailto:support@ukbrandlover.com', icon: MailIcon },
-                { text: "Mirpur, Dhaka, Bangladesh", path: '/contact', icon: MapPinIcon }
+                { text: SOCIAL_LINKS.contact.phone, path: `tel:${SOCIAL_LINKS.whatsapp.raw}`, icon: PhoneIcon },
+                { text: SOCIAL_LINKS.contact.email, path: `mailto:${SOCIAL_LINKS.contact.email}`, icon: MailIcon },
+                { text: SOCIAL_LINKS.contact.location, path: '/contact', icon: MapPinIcon }
             ]
         }
     ];
 
     const socialLinks = [
-        { icon: FacebookIcon, link: "https://www.facebook.com/ukbrandlover", label: "Facebook" },
-        { icon: InstagramIcon, link: "http://instagram.com/ukbrandlover", label: "Instagram" },
-        { icon: WhatsAppIcon, link: "https://wa.me/8801959524393", label: "WhatsApp" },
+        { icon: FacebookIcon, link: SOCIAL_LINKS.facebook.url, label: "Facebook" },
+        { icon: InstagramIcon, link: SOCIAL_LINKS.instagram.url, label: "Instagram" },
+        { icon: WhatsAppIcon, link: SOCIAL_LINKS.whatsapp.url, label: "WhatsApp" },
     ];
 
     return (

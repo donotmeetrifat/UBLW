@@ -11,9 +11,10 @@ import {
     ShieldCheckIcon,
     ArrowRightIcon
 } from "@/components/icons"
+import { SOCIAL_LINKS } from "@/lib/constants/social"
 
 export default function PricingPage() {
-    const officialWhatsApp = "8801959524393"
+    const officialWhatsApp = SOCIAL_LINKS.whatsapp.raw
 
     const plans = [
         {

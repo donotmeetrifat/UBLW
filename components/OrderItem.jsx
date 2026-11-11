@@ -16,6 +16,7 @@ import {
     MobileBankingIcon,
     WhatsAppIcon
 } from "@/components/icons";
+import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
 
 const STAGES = [
@@ -233,7 +234,7 @@ const OrderItem = ({ order }) => {
                 </div>
 
                 <a
-                    href={`https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20inquiring%20about%20Order%20${orderNumber}`}
+                    href={`https://wa.me/${SOCIAL_LINKS.whatsapp.raw}?text=Hi%20UK%20Brand%20Lover,%20inquiring%20about%20Order%20${orderNumber}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-white border border-emerald-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 transition"

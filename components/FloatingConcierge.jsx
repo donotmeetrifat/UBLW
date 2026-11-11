@@ -10,6 +10,7 @@ import {
     ShieldCheckIcon,
     RoyalCrownIcon
 } from '@/components/icons'
+import { SOCIAL_LINKS } from '@/lib/constants/social'
 
 const FloatingConcierge = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -53,7 +54,7 @@ const FloatingConcierge = () => {
 
                         <div className="space-y-2">
                             <a
-                                href="https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20I%20have%20an%20inquiry%20about%20UK%20beauty%20products"
+                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20have%20an%20inquiry%20about%20UK%20beauty%20products`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
@@ -66,7 +67,7 @@ const FloatingConcierge = () => {
                             </a>
 
                             <a
-                                href="https://wa.me/8801959524393?text=Hi,%20can%20you%20help%20me%20track%20my%20parcel%20delivery?"
+                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi,%20can%20you%20help%20me%20track%20my%20parcel%20delivery?`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
@@ -79,7 +80,7 @@ const FloatingConcierge = () => {
                             </a>
 
                             <a
-                                href="https://wa.me/8801959524393?text=Hi%20UK%20Brand%20Lover,%20I%20would%20like%20a%20free%20skincare%20consultation"
+                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20would%20like%20a%20free%20skincare%20consultation`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
