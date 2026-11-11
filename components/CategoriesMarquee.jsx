@@ -33,7 +33,7 @@ const CategoriesMarqueeContent = () => {
     return (
         <section aria-label="Product categories navigation" className="w-full max-w-7xl mx-auto mt-6 sm:mt-8 mb-6 sm:mb-8">
             <div 
-                className="overflow-hidden w-full relative select-none group/marquee py-1"
+                className="overflow-hidden w-full relative select-none group/marquee py-2.5 sm:py-3.5"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 onTouchStart={() => setIsPaused(true)}
@@ -43,9 +43,9 @@ const CategoriesMarqueeContent = () => {
                 <div className="absolute left-0 top-0 h-full w-10 sm:w-16 z-10 pointer-events-none bg-gradient-to-r from-white via-white/80 to-transparent" />
                 <div className="absolute right-0 top-0 h-full w-10 sm:w-16 z-10 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent" />
 
-                {/* Horizontal Navigation Track */}
+                {/* Horizontal Navigation Track with Ample Vertical Padding */}
                 <div 
-                    className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar sm:min-w-[200%] sm:animate-[marqueeScroll_38s_linear_infinite] group-hover/marquee:[animation-play-state:paused]"
+                    className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar sm:min-w-[200%] sm:animate-[marqueeScroll_38s_linear_infinite] group-hover/marquee:[animation-play-state:paused] py-2 sm:py-3 px-2"
                     style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
                 >
                     {[...categoryNames, ...categoryNames, ...categoryNames].map((catName, index) => {
