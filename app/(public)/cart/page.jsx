@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { productDummyData } from "@/assets/assets";
 
 export default function Cart() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
@@ -25,8 +26,10 @@ export default function Cart() {
     const createCartArray = () => {
         let computedTotal = 0;
         const cartArray = [];
-        for (const [key, value] of Object.entries(cartItems)) {
-            const product = products.find(p => p.id === key);
+        const allProducts = Array.isArray(products) && products.length > 0 ? products : productDummyData;
+
+        for (const [key, value] of Object.entries(cartItems || {})) {
+            const product = allProducts.find(p => p.id === key) || productDummyData.find(p => p.id === key);
             if (product && value > 0) {
                 cartArray.push({
                     ...product,
@@ -44,9 +47,7 @@ export default function Cart() {
     }
 
     useEffect(() => {
-        if (products.length > 0) {
-            createCartArray();
-        }
+        createCartArray();
     }, [cartItems, products]);
 
     return cartArray.length > 0 ? (

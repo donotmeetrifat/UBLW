@@ -23,6 +23,7 @@ import {
 import toast from 'react-hot-toast'
 import { clearCart } from '@/lib/features/cart/cartSlice'
 import AddressModal from '@/components/AddressModal'
+import { productDummyData } from '@/assets/assets'
 import InvoiceModal from '@/components/InvoiceModal'
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
@@ -76,12 +77,14 @@ export default function CheckoutPage() {
         fetchSettings()
     }, [])
 
-    // 2. Build item list from Redux cart
+    // 2. Build item list from Redux cart with resilient fallback
     useEffect(() => {
         let computedSubtotal = 0
         const itemList = []
-        for (const [productId, qty] of Object.entries(cartItems)) {
-            const product = products.find(p => p.id === productId)
+        const allProducts = Array.isArray(products) && products.length > 0 ? products : productDummyData
+
+        for (const [productId, qty] of Object.entries(cartItems || {})) {
+            const product = allProducts.find(p => p.id === productId) || productDummyData.find(p => p.id === productId)
             if (product && qty > 0) {
                 itemList.push({
                     ...product,

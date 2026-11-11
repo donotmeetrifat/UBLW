@@ -1,5 +1,6 @@
 import { Toaster } from "react-hot-toast";
 import StoreProvider from "@/app/StoreProvider";
+import DataSyncProvider from "@/components/DataSyncProvider";
 import "./globals.css";
 
 export const metadata = {
@@ -46,8 +47,10 @@ export default function RootLayout({ children }) {
         <html lang="en">
             <body className="antialiased text-[#241224] bg-white">
                 <StoreProvider>
-                    <Toaster />
-                    {children}
+                    <DataSyncProvider>
+                        <Toaster />
+                        {children}
+                    </DataSyncProvider>
                 </StoreProvider>
             </body>
         </html>
