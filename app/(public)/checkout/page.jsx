@@ -16,7 +16,6 @@ import {
     CheckIcon, 
     ArrowRightIcon, 
     PrinterIcon, 
-    WhatsAppIcon,
     MapPinIcon,
     PlusIcon,
     EditIcon
@@ -766,20 +765,10 @@ export default function CheckoutPage() {
                                     <span>Track Order & Delivery Status</span>
                                 </motion.button>
 
-                                <a
-                                    href={`https://wa.me/${SOCIAL_LINKS.whatsapp.raw}?text=${encodeURIComponent(`Assalamu Alaikum! I just placed order ${confirmedOrder.orderNumber} for ${currency}${confirmedOrder.total}. Please confirm my parcel dispatch.`)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-full font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-2xs"
-                                >
-                                    <WhatsAppIcon size={14} color="#FFFFFF" />
-                                    <span>Chat with Concierge on WhatsApp</span>
-                                </a>
-
                                 <button
                                     type="button"
                                     onClick={() => { if (typeof window !== 'undefined') window.print(); }}
-                                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5"
+                                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <PrinterIcon size={13} color="currentColor" />
                                     <span>Print Order Receipt</span>
