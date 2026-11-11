@@ -52,15 +52,28 @@ export default function AuthSection({ initialMode = 'signin' }) {
     // MODE: FORGOT PASSWORD
     if (mode === 'forgot') {
       const rawEmail = email.trim()
-      if (!rawEmail) {
+      if (!rawEmail || !rawEmail.includes('@')) {
         setErrorMsg('Please enter your registered email address.')
         return
       }
       setLoading(true)
-      setTimeout(() => {
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: rawEmail }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setSuccessMsg(data.message || 'Password recovery link dispatched! Check your inbox.')
+        } else {
+          setErrorMsg(data.message || 'Unable to process request.')
+        }
+      } catch (err) {
+        setErrorMsg('Network error. Please check your internet connection.')
+      } finally {
         setLoading(false)
-        setSuccessMsg('Password recovery link sent! Check your inbox to choose a new password.')
-      }, 700)
+      }
       return
     }
 
@@ -100,27 +113,28 @@ export default function AuthSection({ initialMode = 'signin' }) {
       setLoading(true)
 
       try {
-        const newUser = {
-          id: `user_${Date.now()}`,
-          name: fullName || 'Valued Shopper',
-          email: rawEmail,
-          phone: rawPhone,
-          whatsapp: rawPhone,
-          role: 'CUSTOMER',
-          cart: {},
-          joinedDate: new Date().toISOString()
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: fullName,
+            email: rawEmail,
+            phone: rawPhone,
+            password,
+            confirmPassword,
+          }),
+        })
+
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          setErrorMsg(data.message || 'Unable to create account. Please try again.')
+          return
         }
 
-        try {
-          await fetch('/api/marketing/customers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newUser)
-          })
-        } catch (err) {}
-
         if (typeof window !== 'undefined') {
-          localStorage.setItem('ukbl_current_user', JSON.stringify(newUser))
+          localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+          window.dispatchEvent(new Event('auth-change'))
         }
 
         toast.success('Welcome to UK Brand Lover!')
@@ -131,7 +145,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
           router.refresh()
         }, 700)
       } catch (err) {
-        setErrorMsg('Unable to create account right now. Please try again.')
+        setErrorMsg('Unable to connect to authentication server. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -154,29 +168,41 @@ export default function AuthSection({ initialMode = 'signin' }) {
       setLoading(true)
 
       try {
-        const cleanPhone = rawInput.replace(/[^0-9]/g, '')
-        const user = {
-          id: `user_${Date.now()}`,
-          name: rawInput.includes('@') ? rawInput.split('@')[0] : 'Valued Customer',
-          email: rawInput.includes('@') ? rawInput : `${cleanPhone || 'customer'}@ukbrandlover.com`,
-          phone: cleanPhone || '01959524393',
-          whatsapp: cleanPhone || '01959524393',
-          role: 'CUSTOMER'
+        const res = await fetch('/api/auth/signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            identifier: rawInput,
+            password,
+          }),
+        })
+
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          setErrorMsg(data.message || 'Invalid login credentials. Please try again.')
+          return
         }
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem('ukbl_current_user', JSON.stringify(user))
+          localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+          window.dispatchEvent(new Event('auth-change'))
         }
 
-        toast.success('Welcome back to UK Brand Lover!')
+        const firstNameDisplay = (data.user?.name || 'Valued Customer').split(' ')[0]
+        toast.success(`Welcome back, ${firstNameDisplay}!`)
         setSuccessMsg('Signed in successfully! Redirecting...')
 
         setTimeout(() => {
-          router.push(redirectUrl)
+          if (data.user?.role === 'ADMIN' && redirectUrl === '/') {
+            router.push('/store/orders')
+          } else {
+            router.push(redirectUrl)
+          }
           router.refresh()
         }, 600)
       } catch (err) {
-        setErrorMsg('Invalid login credentials. Please try again.')
+        setErrorMsg('Unable to connect to authentication server. Please try again.')
       } finally {
         setLoading(false)
       }

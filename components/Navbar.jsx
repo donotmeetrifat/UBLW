@@ -33,16 +33,44 @@ const Navbar = () => {
 
     const cartCount = useSelector(state => state.cart.total);
 
-    // Load user from localStorage
+    // Load user from localStorage & verify session
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('ukbl_current_user');
-            if (saved) {
-                try {
-                    setCurrentUser(JSON.parse(saved));
-                } catch (e) { }
+        const syncUser = () => {
+            if (typeof window !== 'undefined') {
+                const saved = localStorage.getItem('ukbl_current_user');
+                if (saved) {
+                    try {
+                        setCurrentUser(JSON.parse(saved));
+                    } catch (e) {
+                        setCurrentUser(null);
+                    }
+                } else {
+                    setCurrentUser(null);
+                }
             }
+        };
+
+        syncUser();
+
+        // Restore session from cookie if localStorage was cleared
+        if (typeof window !== 'undefined' && !localStorage.getItem('ukbl_current_user')) {
+            fetch('/api/auth/me')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        localStorage.setItem('ukbl_current_user', JSON.stringify(data.user));
+                        setCurrentUser(data.user);
+                    }
+                })
+                .catch(() => {});
         }
+
+        window.addEventListener('auth-change', syncUser);
+        window.addEventListener('storage', syncUser);
+        return () => {
+            window.removeEventListener('auth-change', syncUser);
+            window.removeEventListener('storage', syncUser);
+        };
     }, []);
 
     // Close profile dropdown on outside click
@@ -92,13 +120,19 @@ const Navbar = () => {
         }
     };
 
-    const handleSignOut = () => {
+    const handleSignOut = async () => {
+        try {
+            await fetch('/api/auth/signout', { method: 'POST' });
+        } catch (e) {}
+
         if (typeof window !== 'undefined') {
             localStorage.removeItem('ukbl_current_user');
+            window.dispatchEvent(new Event('auth-change'));
         }
         setCurrentUser(null);
         setIsProfileOpen(false);
         toast.success('Signed out successfully.');
+        router.refresh();
     };
 
     return (

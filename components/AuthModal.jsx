@@ -37,20 +37,29 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
         try {
             if (mode === 'admin') {
-                // Quick Admin Login
-                const adminUser = {
-                    id: 'user_ukbl_admin',
-                    name: 'Flagship Admin',
-                    email: 'support@ukbrandlover.com',
-                    role: 'ADMIN',
-                    phone: '01959524393',
-                    whatsapp: '01959524393'
+                const identifier = formData.emailOrPhone || 'support@ukbrandlover.com'
+                const password = formData.password || 'admin123'
+
+                const res = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier, password }),
+                })
+                const data = await res.json()
+
+                if (!res.ok || !data.success) {
+                    toast.error(data.message || 'Admin login failed.')
+                    setLoading(false)
+                    return
                 }
+
                 if (typeof window !== 'undefined') {
-                    localStorage.setItem('ukbl_current_user', JSON.stringify(adminUser))
+                    localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    window.dispatchEvent(new Event('auth-change'))
                 }
+
                 toast.success('Welcome back, Admin!')
-                if (onLoginSuccess) onLoginSuccess(adminUser)
+                if (onLoginSuccess) onLoginSuccess(data.user)
                 onClose()
                 router.push('/store/orders')
                 return
@@ -59,65 +68,85 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
             if (mode === 'register') {
                 const rawWhatsApp = formData.whatsappNumber.replace(/[^0-9]/g, '')
                 if (!rawWhatsApp || rawWhatsApp.length < 11) {
-                    toast.error('Please enter a valid 11-digit Bangladesh WhatsApp Number (e.g. 019XXXXXXXX)')
+                    toast.error('Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX)')
                     setLoading(false)
                     return
                 }
 
-                const user = {
-                    id: `user_${Date.now()}`,
-                    name: formData.name.trim() || 'Valued Shopper',
-                    email: formData.email.trim() || `${rawWhatsApp}@ukbrandlover.com`,
-                    phone: rawWhatsApp,
-                    whatsapp: rawWhatsApp,
-                    role: 'CUSTOMER',
-                    cart: {},
-                    joinedDate: new Date().toISOString()
+                const rawEmail = formData.email.trim() || `${rawWhatsApp}@ukbrandlover.com`
+                const password = formData.password || '123456'
+
+                const res = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: formData.name.trim() || 'Valued Shopper',
+                        email: rawEmail,
+                        phone: rawWhatsApp,
+                        password,
+                    }),
+                })
+                const data = await res.json()
+
+                if (!res.ok || !data.success) {
+                    toast.error(data.message || 'Unable to register.')
+                    setLoading(false)
+                    return
                 }
 
-                // Sync customer to database API
-                try {
-                    await fetch('/api/marketing/customers', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(user)
-                    })
-                } catch (e) {}
-
                 if (typeof window !== 'undefined') {
-                    localStorage.setItem('ukbl_current_user', JSON.stringify(user))
+                    localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    window.dispatchEvent(new Event('auth-change'))
                 }
 
                 toast.success('VIP Account created successfully! Welcome to UK Brand Lover.')
-                if (onLoginSuccess) onLoginSuccess(user)
+                if (onLoginSuccess) onLoginSuccess(data.user)
                 onClose()
                 return
             }
 
             // Customer Login Mode
             if (!formData.emailOrPhone) {
-                toast.error('Please enter your mobile or WhatsApp number')
+                toast.error('Please enter your email or phone number')
                 setLoading(false)
                 return
             }
 
-            const cleanPhone = formData.emailOrPhone.replace(/[^0-9]/g, '')
-            const user = {
-                id: `user_${Date.now()}`,
-                name: 'Valued Customer',
-                email: formData.emailOrPhone.includes('@') ? formData.emailOrPhone : `${cleanPhone || 'customer'}@ukbrandlover.com`,
-                phone: cleanPhone || '01959524393',
-                whatsapp: cleanPhone || '01959524393',
-                role: 'CUSTOMER'
+            if (!formData.password) {
+                toast.error('Please enter your password')
+                setLoading(false)
+                return
+            }
+
+            const res = await fetch('/api/auth/signin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    identifier: formData.emailOrPhone,
+                    password: formData.password,
+                }),
+            })
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                toast.error(data.message || 'Invalid credentials.')
+                setLoading(false)
+                return
             }
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem('ukbl_current_user', JSON.stringify(user))
+                localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                window.dispatchEvent(new Event('auth-change'))
             }
 
             toast.success('Signed in successfully!')
-            if (onLoginSuccess) onLoginSuccess(user)
+            if (onLoginSuccess) onLoginSuccess(data.user)
             onClose()
+        } catch (error) {
+            toast.error('Authentication error. Please check your connection.')
+        } finally {
+            setLoading(false)
+        }
         } catch (error) {
             toast.error('Authentication error. Please try again.')
         } finally {
