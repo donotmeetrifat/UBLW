@@ -50,6 +50,7 @@ export async function POST(request) {
             address,
             paymentMethod = 'COD',
             transactionId = null,
+            senderNumber = null,
             couponCode = null,
             customerNotes = '',
             userId = 'guest_customer'
@@ -115,6 +116,7 @@ export async function POST(request) {
             paymentMethod: paymentMethod.toUpperCase(),
             paymentStatus: paymentMethod.toUpperCase() === 'COD' ? 'PENDING' : (transactionId ? 'PENDING' : 'PENDING'),
             transactionId: transactionId ? transactionId.trim() : null,
+            senderNumber: senderNumber ? senderNumber.trim() : null,
             customerNotes: customerNotes || null,
             isCouponUsed,
             couponCode: verifiedCouponCode,
@@ -164,6 +166,7 @@ export async function POST(request) {
                     paymentMethod: paymentMethod.toUpperCase(),
                     paymentStatus: 'PENDING',
                     transactionId: transactionId ? transactionId.trim() : null,
+                    senderNumber: senderNumber ? senderNumber.trim() : null,
                     customerNotes: customerNotes || null,
                     isCouponUsed,
                     couponCode: verifiedCouponCode,

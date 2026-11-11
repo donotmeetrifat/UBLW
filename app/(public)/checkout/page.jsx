@@ -160,9 +160,15 @@ export default function CheckoutPage() {
             return
         }
 
-        if ((paymentMethod === 'bkash' || paymentMethod === 'nagad') && !transactionId.trim()) {
-            toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Transaction ID (TrxID)`)
-            return
+        if (paymentMethod === 'bkash' || paymentMethod === 'nagad') {
+            if (!transactionId.trim()) {
+                toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Transaction ID (TrxID)`)
+                return
+            }
+            if (!senderNumber.trim() || senderNumber.trim().length < 11) {
+                toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} sender mobile number (at least 11 digits)`)
+                return
+            }
         }
 
         setIsSubmitting(true)
@@ -218,6 +224,7 @@ export default function CheckoutPage() {
                 status: 'ORDER_PLACED',
                 paymentMethod: paymentMethod.toUpperCase(),
                 transactionId: transactionId.trim() || null,
+                senderNumber: senderNumber.trim() || null,
                 createdAt: new Date().toISOString(),
                 orderItems: items.map(i => ({ product: i, quantity: i.quantity, price: i.price })),
                 address: selectedAddress,
@@ -516,14 +523,15 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-bold text-[#241224] mb-1">
-                                            Sender Mobile Number (Optional)
+                                            Sender Mobile Number <span className="text-rose-600">*</span>
                                         </label>
                                         <input
                                             type="tel"
-                                            placeholder="01XXXXXXXXX"
+                                            placeholder="e.g. 01959524393 or 017XXXXXXXX"
                                             value={senderNumber}
                                             onChange={(e) => setSenderNumber(e.target.value)}
-                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2.5 text-xs outline-none text-[#241224]"
+                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold outline-none text-[#241224]"
+                                            required
                                         />
                                     </div>
                                 </div>

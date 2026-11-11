@@ -149,6 +149,11 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                     TrxID: {order.transactionId}
                                 </p>
                             )}
+                            {order.senderNumber && (
+                                <p className="font-mono text-slate-700 text-[11px] font-medium mt-0.5">
+                                    Sender: {order.senderNumber}
+                                </p>
+                            )}
                         </div>
                     </div>
 

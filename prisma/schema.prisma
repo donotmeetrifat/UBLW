@@ -154,6 +154,7 @@ model Order {
     paymentMethod  PaymentMethod @default(COD)
     paymentStatus  PaymentStatus @default(PENDING)
     transactionId  String?       // bKash / Nagad TrxID
+    senderNumber   String?       // bKash / Nagad Sender Mobile Number
     courierName    String?       // Steadfast / Pathao
     consignmentId  String?       // Courier tracking number
     customerNotes  String?
