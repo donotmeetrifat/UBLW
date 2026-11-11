@@ -47,20 +47,20 @@ const Newsletter = () => {
                         Connect with over 3,000+ beauty lovers in Bangladesh for authentic UK restock alerts, flash drops, reviews, and personalized skincare advice.
                     </p>
 
-                    {/* 3 Premium Boxes (No Icons, High-End Minimalist UI) */}
-                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mb-7'>
-                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
-                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                    {/* 3 Organized Luxury Tags (Small, Balanced & Clean) */}
+                    <div className='flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 max-w-lg mx-auto mb-7'>
+                        <div className='inline-flex items-center justify-center bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
                                 Direct From London
                             </span>
                         </div>
-                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
-                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                        <div className='inline-flex items-center justify-center bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
                                 VIP Restock Drops
                             </span>
                         </div>
-                        <div className='bg-white/90 backdrop-blur-xs border border-[#EFE0EF] hover:border-[#6C306E]/40 py-3 px-4 rounded-2xl shadow-[0_2px_10px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_16px_rgba(108,48,110,0.08)] transition-all duration-300 flex items-center justify-center text-center'>
-                            <span className='text-[11px] sm:text-xs font-bold text-[#3A0C38] tracking-wide'>
+                        <div className='inline-flex items-center justify-center bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
                                 Personal Skincare Advice
                             </span>
                         </div>
