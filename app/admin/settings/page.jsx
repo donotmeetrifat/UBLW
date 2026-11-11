@@ -9,7 +9,9 @@ import {
     CashDeliveryIcon, 
     CheckIcon, 
     SparklesIcon, 
-    ShieldCheckIcon 
+    ShieldCheckIcon,
+    UploadIcon,
+    TrashIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
@@ -19,6 +21,56 @@ export default function AdminSettingsPage() {
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [uploadingQr, setUploadingQr] = useState(null) // 'bkash' | 'nagad' | null
+
+    const handleQrUpload = async (provider, file) => {
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select an image file (PNG, JPG, WEBP)')
+            return
+        }
+
+        setUploadingQr(provider)
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+            if (data.success && data.url) {
+                setPayments(prev => ({
+                    ...prev,
+                    [provider]: { ...prev[provider], qrCode: data.url }
+                }))
+                toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+            } else {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                    setPayments(prev => ({
+                        ...prev,
+                        [provider]: { ...prev[provider], qrCode: e.target.result }
+                    }))
+                    toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+                }
+                reader.readAsDataURL(file)
+            }
+        } catch (err) {
+            console.error('Error uploading QR code:', err)
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                setPayments(prev => ({
+                    ...prev,
+                    [provider]: { ...prev[provider], qrCode: e.target.result }
+                }))
+                toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+            }
+            reader.readAsDataURL(file)
+        } finally {
+            setUploadingQr(null)
+        }
+    }
 
     const [delivery, setDelivery] = useState({
         insideDhaka: 80,
@@ -296,6 +348,66 @@ export default function AdminSettingsPage() {
                                     />
                                 </div>
                             </div>
+
+                            {/* bKash QR Code Upload */}
+                            <div className="pt-2 border-t border-pink-200/60">
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                                    bKash QR Code (Optional)
+                                </label>
+                                {payments.bkash?.qrCode ? (
+                                    <div className="flex items-center gap-3 p-3 bg-white border border-pink-200 rounded-xl">
+                                        <div className="size-14 rounded-lg bg-pink-50 border border-pink-100 p-1 shrink-0 overflow-hidden flex items-center justify-center">
+                                            <img
+                                                src={payments.bkash.qrCode}
+                                                alt="bKash QR"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-[#241224] truncate">Active bKash QR Code</p>
+                                            <p className="text-[10px] text-slate-500">Customers can scan this directly to pay</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPayments({
+                                                ...payments,
+                                                bkash: { ...payments.bkash, qrCode: '' }
+                                            })}
+                                            className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <TrashIcon size={12} color="currentColor" />
+                                            <span>Remove</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            id="bkash-qr-file"
+                                            className="hidden"
+                                            onChange={(e) => handleQrUpload('bkash', e.target.files?.[0])}
+                                        />
+                                        <label
+                                            htmlFor="bkash-qr-file"
+                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-pink-300 hover:border-pink-500 text-pink-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                        >
+                                            <UploadIcon size={13} color="currentColor" />
+                                            <span>{uploadingQr === 'bkash' ? 'Uploading...' : 'Upload bKash QR'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Or paste QR Code image URL..."
+                                            value={payments.bkash?.qrCode || ''}
+                                            onChange={(e) => setPayments({
+                                                ...payments,
+                                                bkash: { ...payments.bkash, qrCode: e.target.value }
+                                            })}
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* 2. Nagad Settings */}
@@ -351,6 +463,66 @@ export default function AdminSettingsPage() {
                                         placeholder="Personal / Merchant"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Nagad QR Code Upload */}
+                            <div className="pt-2 border-t border-orange-200/60">
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                                    Nagad QR Code (Optional)
+                                </label>
+                                {payments.nagad?.qrCode ? (
+                                    <div className="flex items-center gap-3 p-3 bg-white border border-orange-200 rounded-xl">
+                                        <div className="size-14 rounded-lg bg-orange-50 border border-orange-100 p-1 shrink-0 overflow-hidden flex items-center justify-center">
+                                            <img
+                                                src={payments.nagad.qrCode}
+                                                alt="Nagad QR"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-[#241224] truncate">Active Nagad QR Code</p>
+                                            <p className="text-[10px] text-slate-500">Customers can scan this directly to pay</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPayments({
+                                                ...payments,
+                                                nagad: { ...payments.nagad, qrCode: '' }
+                                            })}
+                                            className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <TrashIcon size={12} color="currentColor" />
+                                            <span>Remove</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            id="nagad-qr-file"
+                                            className="hidden"
+                                            onChange={(e) => handleQrUpload('nagad', e.target.files?.[0])}
+                                        />
+                                        <label
+                                            htmlFor="nagad-qr-file"
+                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-orange-300 hover:border-orange-500 text-orange-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                        >
+                                            <UploadIcon size={13} color="currentColor" />
+                                            <span>{uploadingQr === 'nagad' ? 'Uploading...' : 'Upload Nagad QR'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Or paste QR Code image URL..."
+                                            value={payments.nagad?.qrCode || ''}
+                                            onChange={(e) => setPayments({
+                                                ...payments,
+                                                nagad: { ...payments.nagad, qrCode: e.target.value }
+                                            })}
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

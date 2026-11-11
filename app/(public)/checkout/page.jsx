@@ -503,6 +503,32 @@ export default function CheckoutPage() {
                                     </b>
                                 </div>
 
+                                {/* Dynamic Official QR Code Card - Rendered ONLY if Admin has configured a QR Code */}
+                                {settings.payments[paymentMethod]?.qrCode && (
+                                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EFE0EF] shadow-2xs flex flex-col sm:flex-row items-center gap-3.5">
+                                        <div className="size-28 sm:size-32 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                                            <Image
+                                                src={settings.payments[paymentMethod].qrCode}
+                                                alt={`${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} QR Code`}
+                                                width={128}
+                                                height={128}
+                                                className="w-full h-full object-contain rounded-lg"
+                                            />
+                                        </div>
+                                        <div className="space-y-1 text-center sm:text-left">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-0.5 rounded-full inline-block">
+                                                Instant Scan & Pay
+                                            </span>
+                                            <p className="font-extrabold text-xs text-[#241224]">
+                                                Scan with your {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} App
+                                            </p>
+                                            <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
+                                                Scan this official QR code using the {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} mobile app to send <b>{currency}{finalTotal.toLocaleString()}</b> quickly and accurately.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <p className="text-[11px] text-slate-500 leading-relaxed">
                                     Please Send Money <b>{currency}{finalTotal.toLocaleString()}</b> to our official {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} number above, then enter your Transaction ID (TrxID) below:
                                 </p>
