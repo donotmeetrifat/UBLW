@@ -2,14 +2,14 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { FacebookIcon, InstagramIcon, WhatsAppIcon, SparklesIcon } from '@/components/icons'
+import { FacebookIcon } from '@/components/icons'
 import { assets } from '@/assets/assets'
 import { motion } from 'framer-motion'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 
 const Newsletter = () => {
     return (
-        <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32 mb-16 sm:mb-24' aria-label="UK Brand Lover Facebook Community">
+        <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32 mb-16 sm:mb-24' aria-label="UK Brand Lover Facebook Page">
             <motion.div 
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -34,33 +34,36 @@ const Newsletter = () => {
 
                     {/* Small Eyebrow */}
                     <span className='inline-block text-[10px] font-bold text-[#6C306E] tracking-widest uppercase mb-2'>
-                        THE UK BRAND LOVER COMMUNITY
+                        DIRECT FROM LONDON • TO YOUR VANITY
                     </span>
 
                     {/* Main Headline */}
                     <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] mb-3 tracking-tight'>
-                        Join Our Facebook Community
+                        Never Miss Your Favorite UK Beauty Restock
                     </h2>
 
-                    {/* Description */}
-                    <p className='text-slate-500 text-xs sm:text-sm leading-relaxed mb-6 max-w-md font-normal'>
-                        Connect with over 10,000+ beauty lovers in Bangladesh for authentic UK restock alerts, flash drops, reviews, and personalized skincare advice.
+                    {/* Relatable Emotional Connection Description */}
+                    <p className='text-slate-600 text-xs sm:text-sm leading-relaxed mb-6 max-w-lg font-normal'>
+                        Because we bring 100% original British products in limited hand-picked batches, popular skincare and viral makeup sell out quickly. Follow our Facebook page to catch live London flight unboxings, authentic store purchase receipts, real shade swatches, and secret surprises we only share with our Facebook family!
                     </p>
 
                     {/* Benefit Pills */}
                     <div className='flex flex-wrap justify-center gap-2 mb-2'>
                         <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            NEW ARRIVALS
+                            ✈️ London Flight Arrivals
                         </span>
                         <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            EXCLUSIVE UK DROPS
+                            📦 Live Parcel Unboxings
                         </span>
                         <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
-                            RESTOCK ALERTS
+                            💄 Real Shade Swatches
+                        </span>
+                        <span className='inline-flex items-center px-3.5 py-1.5 rounded-full bg-white border border-[#EFE0EF] text-[#3A0C38] text-[10px] font-bold tracking-wider uppercase shadow-2xs'>
+                            ⚡ Secret Page Deals
                         </span>
                     </div>
 
-                    {/* Primary Facebook CTA Button with Distinct Royal Sapphire Aesthetic */}
+                    {/* Primary Facebook CTA Button */}
                     <motion.a
                         href={SOCIAL_LINKS.facebook.url}
                         target="_blank"
@@ -69,40 +72,17 @@ const Newsletter = () => {
                         whileHover={{ scale: 1.035, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                         transition={{ duration: 0.2 }}
-                        className='group relative overflow-hidden inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0E52B5] hover:from-[#1A82FF] hover:to-[#1264DA] text-white px-9 py-4 rounded-full text-xs font-bold border border-blue-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_-4px_rgba(24,119,242,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_14px_34px_-2px_rgba(24,119,242,0.7)] mx-auto mt-7 transition-all duration-300 shimmer-active cursor-pointer'
+                        className='group relative overflow-hidden inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0E52B5] hover:from-[#1A82FF] hover:to-[#1264DA] text-white px-9 py-4 rounded-full text-xs font-bold border border-blue-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_-4px_rgba(24,119,242,0.45)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_14px_34px_-2px_rgba(24,119,242,0.7)] mx-auto mt-6 transition-all duration-300 shimmer-active cursor-pointer'
                     >
                         <div className="group-hover:scale-115 group-hover:-rotate-6 transition-transform duration-300">
                             <FacebookIcon size={16} color="#FFFFFF" fill="#FFFFFF" />
                         </div>
-                        <span className="tracking-wide">Join 10k+ Community on Facebook</span>
+                        <span className="tracking-wide">Follow Our Facebook Page</span>
                     </motion.a>
-
-                    {/* Quick Social Badges for Instagram & WhatsApp */}
-                    <div className="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-slate-500 font-medium">
-                        <a 
-                            href={SOCIAL_LINKS.instagram.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 hover:text-[#6C306E] transition font-semibold"
-                        >
-                            <InstagramIcon size={14} color="#6C306E" />
-                            <span>Instagram {SOCIAL_LINKS.instagram.handle}</span>
-                        </a>
-                        <span className="text-slate-300">•</span>
-                        <a 
-                            href={SOCIAL_LINKS.whatsapp.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 hover:text-emerald-600 transition font-semibold"
-                        >
-                            <WhatsAppIcon size={14} color="#059669" />
-                            <span>WhatsApp {SOCIAL_LINKS.whatsapp.formatted}</span>
-                        </a>
-                    </div>
 
                     {/* Sub-label */}
                     <p className='text-slate-400 text-[11px] mt-4 font-medium'>
-                        Official Community • {SOCIAL_LINKS.facebook.handle} • 100% Authentic UK Beauty in Bangladesh
+                        Official Facebook Page • {SOCIAL_LINKS.facebook.handle} • 100% Original UK Imports
                     </p>
                 </div>
             </motion.div>
