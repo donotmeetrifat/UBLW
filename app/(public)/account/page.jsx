@@ -315,17 +315,28 @@ export default function AccountPage() {
                         </div>
 
                         <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">Email Address</label>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-slate-700 font-bold">Email Address</label>
+                                <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
+                                    <LockIcon size={10} color="#94A3B8" />
+                                    <span>Permanent Account ID</span>
+                                </span>
+                            </div>
                             <div className="relative">
-                                <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
                                 <input
                                     type="email"
+                                    readOnly
+                                    disabled
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="customer@email.com"
-                                    className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                    className="w-full bg-slate-100/70 border border-[#EFE0EF] rounded-xl pl-9 pr-9 py-3 outline-none text-slate-500 text-xs font-medium cursor-not-allowed select-none"
                                 />
+                                <LockIcon size={13} color="#94A3B8" className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
+                            <p className="text-[10px] text-slate-400 mt-1">
+                                Registered email is permanently linked to your account for security and cannot be changed.
+                            </p>
                         </div>
 
                         <div className="pt-3">
