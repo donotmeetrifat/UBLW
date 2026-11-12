@@ -20,7 +20,7 @@ export default function AdminSettingsPage() {
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [uploadingQr, setUploadingQr] = useState(null) // 'bkash' | 'nagad' | null
+    const [uploadingQr, setUploadingQr] = useState(null) // 'bkash' | 'nagad' | 'rocket' | null
 
     const handleQrUpload = async (provider, file) => {
         if (!file) return
@@ -28,6 +28,8 @@ export default function AdminSettingsPage() {
             toast.error('Please select an image file (PNG, JPG, WEBP)')
             return
         }
+
+        const providerLabel = provider === 'bkash' ? 'bKash' : provider === 'nagad' ? 'Nagad' : 'Rocket'
 
         setUploadingQr(provider)
         try {
@@ -43,7 +45,7 @@ export default function AdminSettingsPage() {
                     ...prev,
                     [provider]: { ...prev[provider], qrCode: data.url }
                 }))
-                toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+                toast.success(`${providerLabel} QR code attached! Click Save to apply.`)
             } else {
                 const reader = new FileReader()
                 reader.onload = (e) => {
@@ -51,7 +53,7 @@ export default function AdminSettingsPage() {
                         ...prev,
                         [provider]: { ...prev[provider], qrCode: e.target.result }
                     }))
-                    toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+                    toast.success(`${providerLabel} QR code attached! Click Save to apply.`)
                 }
                 reader.readAsDataURL(file)
             }
@@ -63,7 +65,7 @@ export default function AdminSettingsPage() {
                     ...prev,
                     [provider]: { ...prev[provider], qrCode: e.target.result }
                 }))
-                toast.success(`${provider === 'bkash' ? 'bKash' : 'Nagad'} QR code attached! Click Save to apply.`)
+                toast.success(`${providerLabel} QR code attached! Click Save to apply.`)
             }
             reader.readAsDataURL(file)
         } finally {
@@ -99,6 +101,14 @@ export default function AdminSettingsPage() {
             type: 'Personal',
             sub: '01959-524393 (Personal Account)',
             instructions: 'Please Send Money to our official Nagad Personal account. Enter your Transaction ID (TrxID) below for instant verification.',
+        },
+        rocket: {
+            enabled: true,
+            label: 'Rocket App',
+            number: '01959-524393',
+            type: 'Personal',
+            sub: '01959-524393 (Personal Account)',
+            instructions: 'Please Send Money to our official Rocket Personal account. Enter your Transaction ID (TrxID) below for instant verification.',
         },
         card: {
             enabled: true,
@@ -525,7 +535,123 @@ export default function AdminSettingsPage() {
                             </div>
                         </div>
 
-                        {/* 3. Cash on Delivery */}
+                        {/* 3. Rocket App Settings */}
+                        <div className="p-4 rounded-2xl border border-purple-100 bg-purple-50/20 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="size-7 rounded-lg bg-[#8C3494] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                                        R
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-xs text-[#241224]">Rocket App</p>
+                                        <p className="text-[10px] text-slate-500">Official DBBL Rocket mobile banking channel</p>
+                                    </div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={payments.rocket?.enabled ?? true}
+                                        onChange={(e) => setPayments({
+                                            ...payments,
+                                            rocket: { ...payments.rocket, enabled: e.target.checked }
+                                        })}
+                                        className="sr-only peer" 
+                                    />
+                                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#8C3494]"></div>
+                                </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Rocket Mobile Number</label>
+                                    <input
+                                        type="text"
+                                        value={payments.rocket?.number || ''}
+                                        onChange={(e) => setPayments({
+                                            ...payments,
+                                            rocket: { ...payments.rocket, number: e.target.value }
+                                        })}
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#241224]"
+                                        placeholder="01959-524393"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Account Type</label>
+                                    <input
+                                        type="text"
+                                        value={payments.rocket?.type || 'Personal'}
+                                        onChange={(e) => setPayments({
+                                            ...payments,
+                                            rocket: { ...payments.rocket, type: e.target.value }
+                                        })}
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        placeholder="Personal / Merchant"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Rocket QR Code Upload */}
+                            <div className="pt-2 border-t border-purple-200/60">
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                                    Rocket QR Code (Optional)
+                                </label>
+                                {payments.rocket?.qrCode ? (
+                                    <div className="flex items-center gap-3 p-3 bg-white border border-purple-200 rounded-xl">
+                                        <div className="size-14 rounded-lg bg-purple-50 border border-purple-100 p-1 shrink-0 overflow-hidden flex items-center justify-center">
+                                            <img
+                                                src={payments.rocket.qrCode}
+                                                alt="Rocket QR"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-[#241224] truncate">Active Rocket QR Code</p>
+                                            <p className="text-[10px] text-slate-500">Customers can scan this directly to pay</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPayments({
+                                                ...payments,
+                                                rocket: { ...payments.rocket, qrCode: '' }
+                                            })}
+                                            className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <TrashIcon size={12} color="currentColor" />
+                                            <span>Remove</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            id="rocket-qr-file"
+                                            className="hidden"
+                                            onChange={(e) => handleQrUpload('rocket', e.target.files?.[0])}
+                                        />
+                                        <label
+                                            htmlFor="rocket-qr-file"
+                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-purple-300 hover:border-purple-500 text-purple-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                        >
+                                            <UploadIcon size={13} color="currentColor" />
+                                            <span>{uploadingQr === 'rocket' ? 'Uploading...' : 'Upload Rocket QR'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Or paste QR Code image URL..."
+                                            value={payments.rocket?.qrCode || ''}
+                                            onChange={(e) => setPayments({
+                                                ...payments,
+                                                rocket: { ...payments.rocket, qrCode: e.target.value }
+                                            })}
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 4. Cash on Delivery */}
                         <div className="p-4 rounded-2xl border border-[#EFE0EF] bg-white flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <CashDeliveryIcon size={20} color="#059669" />

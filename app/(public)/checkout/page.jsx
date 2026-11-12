@@ -11,6 +11,7 @@ import {
     TruckIcon, 
     CashDeliveryIcon, 
     MobileBankingIcon, 
+    RocketIcon,
     CardPaymentIcon, 
     ShieldCheckIcon, 
     CheckIcon, 
@@ -199,13 +200,14 @@ export default function CheckoutPage() {
             return
         }
 
-        if (paymentMethod === 'bkash' || paymentMethod === 'nagad') {
+        if (paymentMethod === 'bkash' || paymentMethod === 'nagad' || paymentMethod === 'rocket') {
+            const providerName = paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'
             if (!transactionId.trim()) {
-                toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Transaction ID (TrxID)`)
+                toast.error(`Please enter your ${providerName} Transaction ID (TrxID)`)
                 return
             }
             if (!senderNumber.trim() || senderNumber.trim().length < 11) {
-                toast.error(`Please enter your ${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} sender mobile number (at least 11 digits)`)
+                toast.error(`Please enter your ${providerName} sender mobile number (at least 11 digits)`)
                 return
             }
         }
@@ -513,7 +515,34 @@ export default function CheckoutPage() {
                                 </div>
                             )}
 
-                            {/* Option 4: Debit / Credit Card */}
+                            {/* Option 4: Rocket App */}
+                            {settings.payments.rocket?.enabled !== false && (
+                                <div
+                                    onClick={() => setPaymentMethod('rocket')}
+                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                        paymentMethod === 'rocket'
+                                            ? 'border-[#8C3494] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#8C3494]/30'
+                                            : 'border-[#EFE0EF] bg-white hover:border-[#8C3494]/40'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                            paymentMethod === 'rocket' ? 'border-[#8C3494] bg-[#8C3494]' : 'border-slate-300 bg-white'
+                                        }`}>
+                                            {paymentMethod === 'rocket' && <div className="size-1.5 rounded-full bg-white" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.rocket?.label || 'Rocket App'}</p>
+                                            <p className="text-[10px] text-slate-500 font-mono">
+                                                {settings.payments.rocket?.number || '01959-524393'} ({settings.payments.rocket?.type || 'Personal'})
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <RocketIcon size={22} color={paymentMethod === 'rocket' ? '#8C3494' : '#7B667B'} />
+                                </div>
+                            )}
+
+                            {/* Option 5: Debit / Credit Card */}
                             {settings.payments.card?.enabled !== false && (
                                 <div
                                     onClick={() => setPaymentMethod('card')}
@@ -539,8 +568,8 @@ export default function CheckoutPage() {
                             )}
                         </div>
 
-                        {/* bKash / Nagad Transaction ID Input Drawer */}
-                        {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
+                        {/* bKash / Nagad / Rocket Transaction ID Input Drawer */}
+                        {(paymentMethod === 'bkash' || paymentMethod === 'nagad' || paymentMethod === 'rocket') && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
@@ -550,7 +579,7 @@ export default function CheckoutPage() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-[#6C306E] font-bold text-xs">
                                         <ShieldCheckIcon size={16} color="#6C306E" />
-                                        <span>Official {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Account</span>
+                                        <span>Official {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} Account</span>
                                     </div>
                                     <button
                                         type="button"
@@ -574,7 +603,7 @@ export default function CheckoutPage() {
                                         <div className="size-28 sm:size-32 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                                             <Image
                                                 src={settings.payments[paymentMethod].qrCode}
-                                                alt={`${paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} QR Code`}
+                                                alt={`${paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code`}
                                                 width={128}
                                                 height={128}
                                                 className="w-full h-full object-contain rounded-lg"
@@ -585,17 +614,17 @@ export default function CheckoutPage() {
                                                 Instant Scan & Pay
                                             </span>
                                             <p className="font-extrabold text-xs text-[#241224]">
-                                                Scan with your {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} App
+                                                Scan with your {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} App
                                             </p>
                                             <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
-                                                Scan this official QR code using the {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} mobile app to send <b>{currency}{finalTotal.toLocaleString()}</b> quickly and accurately.
+                                                Scan this official QR code using the {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} mobile app to send <b>{currency}{finalTotal.toLocaleString()}</b> quickly and accurately.
                                             </p>
                                         </div>
                                     </div>
                                 )}
 
                                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                                    Please Send Money <b>{currency}{finalTotal.toLocaleString()}</b> to our official {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} number above, then enter your Transaction ID (TrxID) below:
+                                    Please Send Money <b>{currency}{finalTotal.toLocaleString()}</b> to our official {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} number above, then enter your Transaction ID (TrxID) below:
                                 </p>
 
                                 <div className="space-y-2">

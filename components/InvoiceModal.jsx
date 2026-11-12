@@ -68,6 +68,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         const pm = (order.paymentMethod || '').toLowerCase()
         if (pm.includes('bkash')) return 'bKash Send Money'
         if (pm.includes('nagad')) return 'Nagad Wallet'
+        if (pm.includes('rocket')) return 'Rocket App'
         if (pm.includes('card')) return 'Debit / Credit Card'
         return 'Cash on Delivery'
     })()

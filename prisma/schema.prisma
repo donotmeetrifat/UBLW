@@ -27,6 +27,7 @@ enum PaymentMethod {
     COD
     BKASH
     NAGAD
+    ROCKET
     CARD
 }
 

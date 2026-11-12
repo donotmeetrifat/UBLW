@@ -299,6 +299,15 @@ export const MobileBankingIcon = ({ size = 20, className = '', color = 'currentC
     </svg>
 )
 
+export const RocketIcon = ({ size = 20, className = '', color = 'currentColor', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M4.5 16.5C3 18 3 21 3 21C3 21 6 21 7.5 19.5L6 18L4.5 16.5Z" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14.5 4C11.5 5 9 7.5 7.5 10.5C6 13.5 6 15 6 15L9 18C9 18 10.5 18 13.5 16.5C16.5 15 19 12.5 20 9.5C21 6.5 20 4 20 4C20 4 17.5 3 14.5 4Z" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="15" cy="9" r="1.5" fill={color} />
+        <path d="M9 18L7.5 19.5" stroke={color} strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+)
+
 export const CardPaymentIcon = ({ size = 20, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
         <rect x="2" y="5" width="20" height="14" rx="2" stroke={color} strokeWidth="1.75" />

@@ -27,7 +27,7 @@ export default function PricingPage() {
             description: "Direct access to our ready-stock authentic UK cosmetics, skincare, and fragrances in Bangladesh.",
             features: [
                 "100% Authentic UK Imported Guarantee",
-                "Cash on Delivery & bKash / Nagad",
+                "Cash on Delivery, bKash, Nagad & Rocket",
                 "Live Steadfast Courier Tracking (5-Stage)",
                 "24-48 Hour Dhaka Express Dispatch",
                 "Original UK Batch Codes & Expiry Dates",
