@@ -149,11 +149,8 @@ export default function AdminDashboard() {
                         className="block bg-white border border-[#EFE0EF] p-4.5 rounded-2xl shadow-2xs hover:border-[#6C306E]/40 hover:shadow-xs transition"
                     >
                         <div className="flex items-center justify-between mb-2.5">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                <span>{card.title}</span>
-                                {card.isPulse && (
-                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                )}
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {card.title}
                             </span>
                             <div className={`size-8 rounded-xl ${card.bg} border border-[#EFE0EF] flex items-center justify-center shrink-0`}>
                                 <card.icon size={15} color={card.color} />
@@ -295,10 +292,9 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 shrink-0 ml-2">
-                                            <EyeIcon size={11} color="#059669" />
-                                            <span className="font-black text-[11px] text-emerald-800">
-                                                {Number(p.views || 0).toLocaleString()}
+                                        <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 shrink-0 ml-2">
+                                            <span className="font-bold text-[11px] text-emerald-800">
+                                                {Number(p.views || 0).toLocaleString()} views
                                             </span>
                                         </div>
                                     </div>

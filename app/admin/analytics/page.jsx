@@ -14,6 +14,7 @@ import {
     CheckIcon
 } from "@/components/icons"
 import Link from "next/link"
+import AdminDropdown from "@/components/admin/AdminDropdown"
 
 export default function AdminAnalyticsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -83,8 +84,7 @@ export default function AdminAnalyticsPage() {
                     </p>
                 </div>
 
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 self-start sm:self-auto">
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 self-start sm:self-auto">
                     <span className="text-[11px] font-extrabold text-emerald-800">
                         100% True Traffic Verified
                     </span>
@@ -95,9 +95,8 @@ export default function AdminAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* #1 TOP VIEWED PRODUCT */}
                 <div className="bg-gradient-to-b from-[#FAF6FA] to-white border-2 border-[#D8B56D] p-5 rounded-3xl shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-[#D8B56D] text-[#241224] text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                    <div className="absolute top-0 right-0 bg-[#D8B56D] text-[#241224] text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider shadow-xs">
                         <span>Rank #1 Top Views</span>
-                        <span>🥇</span>
                     </div>
 
                     <div className="flex items-center gap-3.5 mb-4">
@@ -143,9 +142,8 @@ export default function AdminAnalyticsPage() {
 
                 {/* #2 SECOND TOP VIEWED PRODUCT */}
                 <div className="bg-gradient-to-b from-[#FAF6FA]/60 to-white border border-[#EFE0EF] p-5 rounded-3xl shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-slate-200 text-slate-700 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
+                    <div className="absolute top-0 right-0 bg-slate-200 text-slate-700 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
                         <span>Rank #2 Second Views</span>
-                        <span>🥈</span>
                     </div>
 
                     <div className="flex items-center gap-3.5 mb-4">
@@ -191,9 +189,8 @@ export default function AdminAnalyticsPage() {
 
                 {/* #3 THIRD TOP VIEWED PRODUCT */}
                 <div className="bg-gradient-to-b from-[#FAF6FA]/60 to-white border border-[#EFE0EF] p-5 rounded-3xl shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
+                    <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
                         <span>Rank #3 Third Views</span>
-                        <span>🥉</span>
                     </div>
 
                     <div className="flex items-center gap-3.5 mb-4">
@@ -324,15 +321,12 @@ export default function AdminAnalyticsPage() {
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs font-bold text-slate-500 hidden sm:inline">Category:</span>
-                    <select
+                    <AdminDropdown
                         value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full sm:w-48 bg-[#FAF6FA]/50 border border-[#EFE0EF] rounded-full px-4 py-2 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-                    >
-                        {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
+                        onChange={setCategoryFilter}
+                        options={categories.map(cat => ({ value: cat, label: cat }))}
+                        className="w-full sm:w-52"
+                    />
                 </div>
             </div>
 
@@ -359,12 +353,7 @@ export default function AdminAnalyticsPage() {
                                 <th className="px-5 py-4 text-center">Rank</th>
                                 <th className="px-4 py-4">Product</th>
                                 <th className="px-4 py-4">Category</th>
-                                <th className="px-4 py-4 text-center">
-                                    <span className="inline-flex items-center gap-1 text-emerald-800">
-                                        <EyeIcon size={14} color="#059669" />
-                                        <span>True Views</span>
-                                    </span>
-                                </th>
+                                <th className="px-4 py-4 text-center">True Views</th>
                                 <th className="px-4 py-4 text-center">In Bag / Cart</th>
                                 <th className="px-4 py-4 text-center">Units Sold</th>
                                 <th className="px-4 py-4 text-center">Conversion</th>
@@ -380,13 +369,7 @@ export default function AdminAnalyticsPage() {
                                 </tr>
                             ) : (
                                 filteredProducts.map((prod) => {
-                                    const rankBadge = prod.rank === 1
-                                        ? '🥇 #1'
-                                        : prod.rank === 2
-                                        ? '🥈 #2'
-                                        : prod.rank === 3
-                                        ? '🥉 #3'
-                                        : `#${prod.rank}`
+                                    const rankBadge = `#${prod.rank}`
 
                                     return (
                                         <tr key={prod.id} className="hover:bg-[#FAF6FA]/70 transition-colors">
@@ -435,14 +418,11 @@ export default function AdminAnalyticsPage() {
                                                 </span>
                                             </td>
 
-                                            {/* True Verified Views */}
+                                            {/* True Verified Views (Clean Text Only) */}
                                             <td className="px-4 py-3.5 text-center">
-                                                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200">
-                                                    <EyeIcon size={12} color="#059669" />
-                                                    <span className="font-black text-xs text-emerald-800">
-                                                        {Number(prod.views || 0).toLocaleString()}
-                                                    </span>
-                                                </div>
+                                                <span className="font-bold text-xs text-slate-800">
+                                                    {Number(prod.views || 0).toLocaleString()}
+                                                </span>
                                             </td>
 
                                             {/* In Cart Additions */}

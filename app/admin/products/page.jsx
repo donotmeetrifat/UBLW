@@ -22,6 +22,7 @@ import {
     TruckIcon,
     ChevronRightIcon
 } from "@/components/icons"
+import AdminDropdown from "@/components/admin/AdminDropdown"
 
 const CATEGORIES = [
     'All',
@@ -38,6 +39,21 @@ const FORM_CATEGORIES = [
     'Haircare',
     'Fragrance',
     'Body & Wellness'
+]
+
+const STOCK_OPTIONS = [
+    { value: 'all', label: 'All Stock Status' },
+    { value: 'in_stock', label: 'In Stock Only' },
+    { value: 'low_stock', label: 'Low Stock (≤10)' },
+    { value: 'out_of_stock', label: 'Out of Stock' }
+]
+
+const SORT_OPTIONS = [
+    { value: 'views', label: 'Most Viewed' },
+    { value: 'newest', label: 'Newest Listed' },
+    { value: 'price-high', label: 'Price: High to Low' },
+    { value: 'price-low', label: 'Price: Low to High' },
+    { value: 'stock', label: 'Stock Count' }
 ]
 
 const DEFAULT_BENEFITS = [
@@ -474,9 +490,8 @@ export default function AdminProductsPage() {
 
                 <div className="bg-white border border-[#EFE0EF] p-4 sm:p-5 rounded-2xl shadow-2xs flex items-center justify-between">
                     <div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <span>True Page Views</span>
-                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            True Page Views
                         </div>
                         <div className="text-2xl font-black text-emerald-700 mt-1">
                             {Number(stats.totalViews || 0).toLocaleString()}
@@ -542,41 +557,32 @@ export default function AdminProductsPage() {
                         />
                     </div>
 
-                    {/* Category Filter */}
-                    <select
+                    {/* Category Filter Dropdown (Clean, Text-only, No Dots/Icons) */}
+                    <AdminDropdown
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full md:w-48 bg-[#FAF6FA]/50 border border-[#EFE0EF] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-                    >
-                        {CATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat} Products</option>
-                        ))}
-                    </select>
+                        onChange={setSelectedCategory}
+                        options={CATEGORIES.map(cat => ({
+                            value: cat,
+                            label: cat === 'All' ? 'All Categories' : `${cat} Products`
+                        }))}
+                        className="w-full md:w-52"
+                    />
 
-                    {/* Stock Filter */}
-                    <select
+                    {/* Stock Filter Dropdown */}
+                    <AdminDropdown
                         value={stockFilter}
-                        onChange={(e) => setStockFilter(e.target.value)}
-                        className="w-full md:w-40 bg-[#FAF6FA]/50 border border-[#EFE0EF] rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-                    >
-                        <option value="all">All Stock Status</option>
-                        <option value="in_stock">In Stock Only</option>
-                        <option value="low_stock">Low Stock (≤10)</option>
-                        <option value="out_of_stock">Out of Stock</option>
-                    </select>
+                        onChange={setStockFilter}
+                        options={STOCK_OPTIONS}
+                        className="w-full md:w-44"
+                    />
 
-                    {/* Sort */}
-                    <select
+                    {/* Sort Dropdown */}
+                    <AdminDropdown
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="w-full md:w-48 bg-[#FAF6FA]/50 border border-[#EFE0EF] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#6C306E] outline-none cursor-pointer"
-                    >
-                        <option value="views">🔥 Sort: Most Viewed</option>
-                        <option value="newest">✨ Sort: Newest Listed</option>
-                        <option value="price-high">💰 Sort: Price (High → Low)</option>
-                        <option value="price-low">🏷️ Sort: Price (Low → High)</option>
-                        <option value="stock">📦 Sort: Stock Count</option>
-                    </select>
+                        onChange={setSortBy}
+                        options={SORT_OPTIONS}
+                        className="w-full md:w-52"
+                    />
                 </div>
             </div>
 
@@ -590,12 +596,7 @@ export default function AdminProductsPage() {
                                 <th className="px-4 py-3.5">Category</th>
                                 <th className="px-4 py-3.5">Price / MRP</th>
                                 <th className="px-4 py-3.5 text-center">Stock</th>
-                                <th className="px-4 py-3.5 text-center">
-                                    <span className="inline-flex items-center gap-1 text-emerald-800">
-                                        <EyeIcon size={13} color="#059669" />
-                                        <span>True Views</span>
-                                    </span>
-                                </th>
+                                <th className="px-4 py-3.5 text-center">True Views</th>
                                 <th className="px-4 py-3.5 text-center">Units Sold</th>
                                 <th className="px-5 py-3.5 text-right">Actions</th>
                             </tr>
@@ -637,8 +638,8 @@ export default function AdminProductsPage() {
                                                                 {prod.brand || 'Authentic UK'}
                                                             </span>
                                                             {prod.ratingScore && (
-                                                                <span className="text-[10px] text-[#D8B56D] font-bold flex items-center gap-0.5">
-                                                                    ★ {prod.ratingScore}
+                                                                <span className="text-[10px] text-slate-500 font-semibold">
+                                                                    Rating: {prod.ratingScore}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -688,14 +689,11 @@ export default function AdminProductsPage() {
                                                 </div>
                                             </td>
 
-                                            {/* True Verified Views */}
+                                            {/* True Verified Views (Clean Text Only) */}
                                             <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">
-                                                    <EyeIcon size={12} color="#059669" />
-                                                    <span className="font-black text-[11px] text-emerald-800">
-                                                        {Number(prod.views || 0).toLocaleString()}
-                                                    </span>
-                                                </div>
+                                                <span className="font-bold text-xs text-slate-800">
+                                                    {Number(prod.views || 0).toLocaleString()}
+                                                </span>
                                             </td>
 
                                             {/* Units Sold */}
@@ -786,15 +784,12 @@ export default function AdminProductsPage() {
                                             <label className="block text-xs font-bold text-[#241224] mb-1.5">
                                                 Category <span className="text-red-500">*</span>
                                             </label>
-                                            <select
+                                            <AdminDropdown
                                                 value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none cursor-pointer"
-                                            >
-                                                {FORM_CATEGORIES.map(cat => (
-                                                    <option key={cat} value={cat}>{cat}</option>
-                                                ))}
-                                            </select>
+                                                onChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
+                                                options={FORM_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                                                fullWidth
+                                            />
                                         </div>
 
                                         <div>
@@ -1078,7 +1073,6 @@ export default function AdminProductsPage() {
                             <div className="lg:col-span-6 bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto">
                                 <div className="sticky top-0 z-10 flex items-center justify-between pb-3 mb-4 border-b border-[#EFE0EF] bg-white/80 backdrop-blur-xs p-2 rounded-xl shadow-2xs">
                                     <div className="flex items-center gap-2">
-                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                         <span className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-wider">
                                             Live Website Preview
                                         </span>

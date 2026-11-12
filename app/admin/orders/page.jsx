@@ -15,6 +15,7 @@ import {
     SparklesIcon
 } from "@/components/icons"
 import InvoiceModal from "@/components/InvoiceModal"
+import AdminDropdown from "@/components/admin/AdminDropdown"
 
 const STATUSES = [
     { key: 'ALL', label: 'All Orders' },
@@ -24,6 +25,15 @@ const STATUSES = [
     { key: 'SHIPPED', label: 'Shipped' },
     { key: 'DELIVERED', label: 'Delivered' },
     { key: 'CANCELLED', label: 'Cancelled' },
+]
+
+const ORDER_STATUS_OPTIONS = [
+    { value: 'ORDER_PLACED', label: 'Order Placed' },
+    { value: 'CONFIRMED', label: 'Confirmed' },
+    { value: 'PROCESSING', label: 'Processing' },
+    { value: 'SHIPPED', label: 'Shipped' },
+    { value: 'DELIVERED', label: 'Delivered' },
+    { value: 'CANCELLED', label: 'Cancelled' }
 ]
 
 export default function AdminOrdersPage() {
@@ -341,27 +351,21 @@ export default function AdminOrdersPage() {
                                                     </button>
                                                 </div>
                                                 {order.consignmentId && (
-                                                    <div className="text-[10px] text-emerald-700 font-bold mt-0.5 flex items-center gap-1">
-                                                        <CheckIcon size={10} color="#059669" />
+                                                    <div className="text-[10px] text-emerald-700 font-bold mt-0.5">
                                                         <span>Steadfast Linked</span>
                                                     </div>
                                                 )}
                                             </td>
 
-                                            {/* Status Dropdown */}
+                                            {/* Status Dropdown (Custom Premium Text-only Dropdown) */}
                                             <td className="py-3.5 px-4 whitespace-nowrap">
-                                                <select
+                                                <AdminDropdown
                                                     value={order.status}
-                                                    onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition ${getStatusStyle(order.status)}`}
-                                                >
-                                                    <option value="ORDER_PLACED">ORDER PLACED</option>
-                                                    <option value="CONFIRMED">CONFIRMED</option>
-                                                    <option value="PROCESSING">PROCESSING</option>
-                                                    <option value="SHIPPED">SHIPPED</option>
-                                                    <option value="DELIVERED">DELIVERED</option>
-                                                    <option value="CANCELLED">CANCELLED</option>
-                                                </select>
+                                                    onChange={(newStatus) => handleUpdateStatus(order.id, newStatus)}
+                                                    options={ORDER_STATUS_OPTIONS}
+                                                    buttonClassName={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition ${getStatusStyle(order.status)}`}
+                                                    align="right"
+                                                />
                                             </td>
 
                                             {/* Actions */}
