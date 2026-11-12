@@ -315,13 +315,7 @@ export default function AccountPage() {
                         </div>
 
                         <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                                <label className="block text-slate-700 font-bold">Email Address</label>
-                                <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
-                                    <LockIcon size={10} color="#94A3B8" />
-                                    <span>Permanent Account ID</span>
-                                </span>
-                            </div>
+                            <label className="block text-slate-700 font-bold mb-1.5">Email Address</label>
                             <div className="relative">
                                 <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
                                 <input
