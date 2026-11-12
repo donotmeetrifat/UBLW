@@ -20,7 +20,7 @@ const navSections = [
         section: 'Overview',
         items: [
             { name: 'Dashboard', href: '/admin', icon: DashboardIcon },
-            { name: 'Views & Analytics', href: '/admin/analytics', icon: TrendIcon, badge: 'Live Views' },
+            { name: 'Views & Analytics', href: '/admin/analytics', icon: TrendIcon },
         ]
     },
     {
@@ -72,15 +72,9 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {} })
                             className="object-contain"
                         />
                     </div>
-                    <div>
-                        <div className="font-extrabold text-xs text-[#241224] tracking-tight flex items-center gap-1">
-                            <span>UK Brand Lover</span>
-                            <span className="text-[#D8B56D]">★</span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">
-                            Admin Command
-                        </div>
-                    </div>
+                    <span className="font-extrabold text-sm text-[#241224] tracking-tight">
+                        UK Brand Lover
+                    </span>
                 </Link>
 
                 <button
