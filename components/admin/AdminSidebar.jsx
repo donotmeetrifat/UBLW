@@ -5,10 +5,7 @@ import {
     DashboardIcon,
     TrendIcon,
     BagIcon,
-    StoreFrontIcon,
-    ShieldCheckIcon,
     TagIcon,
-    CouponTicketIcon,
     TruckIcon,
     UserIcon,
     CloseIcon
@@ -22,32 +19,29 @@ const navSections = [
         section: 'Overview',
         items: [
             { name: 'Dashboard', href: '/admin', icon: DashboardIcon },
-            { name: 'Product Analytics & Views', href: '/admin/analytics', icon: TrendIcon, badge: 'Live Views' },
+            { name: 'Views & Analytics', href: '/admin/analytics', icon: TrendIcon, badge: 'Live Views' },
         ]
     },
     {
-        section: 'Catalog & Inventory',
+        section: 'Catalog',
         items: [
             { name: 'Products & Stock', href: '/admin/products', icon: BagIcon },
-            { name: 'Categories & Brands', href: '/admin/stores', icon: StoreFrontIcon },
-            { name: 'Approve Stores', href: '/admin/approve', icon: ShieldCheckIcon },
         ]
     },
     {
-        section: 'Sales & Orders',
+        section: 'Orders & Sales',
         items: [
             { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon },
         ]
     },
     {
-        section: 'CRM & Marketing',
+        section: 'Customer Intelligence',
         items: [
             { name: 'Customers & Purchases', href: '/admin/customers', icon: UserIcon },
-            { name: 'Exclusive Coupons', href: '/admin/coupons', icon: CouponTicketIcon },
         ]
     },
     {
-        section: 'System',
+        section: 'Store Settings',
         items: [
             { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
         ]

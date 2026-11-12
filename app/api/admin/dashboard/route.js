@@ -5,18 +5,31 @@ import { memoryStore } from '@/lib/db/initialData';
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
-            const [productsCount, orders, storesCount, totalViewsAgg, topProducts] = await Promise.all([
+            const [productsCount, orders, customersCount, totalViewsAgg, topProducts] = await Promise.all([
                 prisma.product.count(),
                 prisma.order.findMany({
-                    select: { total: true, createdAt: true, status: true },
+                    select: {
+                        id: true,
+                        orderNumber: true,
+                        total: true,
+                        createdAt: true,
+                        status: true,
+                        paymentMethod: true,
+                        user: {
+                            select: { name: true, email: true, phone: true }
+                        },
+                        orderItems: {
+                            select: { quantity: true, name: true }
+                        }
+                    },
                     orderBy: { createdAt: 'desc' }
                 }),
-                prisma.store.count(),
+                prisma.user.count({ where: { role: 'CUSTOMER' } }),
                 prisma.product.aggregate({ _sum: { views: true } }),
                 prisma.product.findMany({
                     take: 5,
                     orderBy: { views: 'desc' },
-                    select: { id: true, name: true, category: true, price: true, views: true, images: true }
+                    select: { id: true, name: true, category: true, price: true, views: true, images: true, stockCount: true }
                 })
             ]);
 
@@ -30,13 +43,13 @@ export async function GET() {
                     products: productsCount,
                     revenue: revenue.toFixed(2),
                     orders: orders.length,
-                    stores: storesCount || 1,
+                    customers: customersCount,
                     totalViews: totalViewsAgg._sum.views || 0,
                     topProducts: topProducts.map(p => ({
                         ...p,
                         image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/product_img1.png'
                     })),
-                    allOrders: orders.slice(0, 10),
+                    recentOrders: orders.slice(0, 8),
                 }
             });
         }
@@ -54,10 +67,10 @@ export async function GET() {
                 products: products.length,
                 revenue: revenue.toFixed(2),
                 orders: orders.length,
-                stores: 1,
+                customers: 1,
                 totalViews,
                 topProducts: products.slice(0, 5),
-                allOrders: orders,
+                recentOrders: orders.slice(0, 8),
             }
         });
     } catch (error) {
