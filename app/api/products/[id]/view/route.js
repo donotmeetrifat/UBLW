@@ -30,3 +30,4 @@ export async function POST(request, { params }) {
         return NextResponse.json({ success: false, message: 'Failed to record view' }, { status: 500 });
     }
 }
+

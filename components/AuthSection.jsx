@@ -1,649 +1,550 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-
-// Dynamically import GrainGradient to guarantee 100% WebGL SSR safety on Vercel
-const GrainGradient = dynamic(
-  () =>
-    import('@paper-design/shaders-react').then((mod) => mod.GrainGradient),
-  {
-    ssr: false,
-    loading: () => <div className="absolute inset-0 bg-[#060B1A]" />,
-  }
-)
+import { assets } from '@/assets/assets'
+import {
+    MailIcon,
+    LockIcon,
+    UserIcon,
+    PhoneIcon,
+    EyeIcon,
+    EyeOffIcon,
+    ShieldCheckIcon,
+    SparklesIcon,
+    ArrowRightIcon,
+    CheckIcon,
+    BagIcon
+} from '@/components/icons'
 
 export default function AuthSection({ initialMode = 'signin' }) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectUrl = searchParams?.get('redirect') || '/'
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const redirectUrl = searchParams?.get('redirect') || '/'
 
-  const [mode, setMode] = useState(initialMode) // 'signin' | 'signup' | 'forgot'
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState(null)
-  const [successMsg, setSuccessMsg] = useState(null)
+    const [mode, setMode] = useState(initialMode) // 'signin' | 'signup' | 'forgot'
+    const [name, setName] = useState('')
+    const [email, setEmail] = useState('')
+    const [phone, setPhone] = useState('')
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  useEffect(() => {
-    const modeParam = searchParams?.get('mode')
-    if (modeParam === 'forgot') {
-      setMode('forgot')
-    } else if (modeParam === 'signin') {
-      setMode('signin')
-    } else if (modeParam === 'signup') {
-      setMode('signup')
+    const [loading, setLoading] = useState(false)
+    const [errorMsg, setErrorMsg] = useState(null)
+    const [successMsg, setSuccessMsg] = useState(null)
+
+    useEffect(() => {
+        const modeParam = searchParams?.get('mode')
+        if (modeParam === 'forgot') {
+            setMode('forgot')
+        } else if (modeParam === 'signin') {
+            setMode('signin')
+        } else if (modeParam === 'signup') {
+            setMode('signup')
+        }
+    }, [searchParams])
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setErrorMsg(null)
+        setSuccessMsg(null)
+
+        // 1. FORGOT PASSWORD
+        if (mode === 'forgot') {
+            const rawEmail = email.trim().toLowerCase()
+            if (!rawEmail || !rawEmail.includes('@')) {
+                setErrorMsg('Please enter your registered email address.')
+                return
+            }
+            setLoading(true)
+            try {
+                const res = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: rawEmail }),
+                })
+                const data = await res.json()
+                if (data.success) {
+                    setSuccessMsg(data.message || 'Password recovery instructions sent! Check your inbox.')
+                } else {
+                    setErrorMsg(data.message || 'Unable to process password reset.')
+                }
+            } catch (err) {
+                setErrorMsg('Network error. Please check your connection.')
+            } finally {
+                setLoading(false)
+            }
+            return
+        }
+
+        // 2. SIGN UP (Name, Email, Phone, Password)
+        if (mode === 'signup') {
+            const trimmedName = name.trim()
+            const rawEmail = email.trim().toLowerCase()
+            const cleanPhone = phone.replace(/[^0-9]/g, '')
+
+            if (!trimmedName || trimmedName.length < 2) {
+                setErrorMsg('Please enter your full name (at least 2 characters).')
+                return
+            }
+
+            if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
+                setErrorMsg('Please enter a valid email address.')
+                return
+            }
+
+            if (!cleanPhone || cleanPhone.length < 11) {
+                setErrorMsg('Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX) for product tracking.')
+                return
+            }
+
+            if (!password || password.length < 6) {
+                setErrorMsg('Password must be at least 6 characters.')
+                return
+            }
+
+            if (password !== confirmPassword) {
+                setErrorMsg('Passwords do not match. Please verify and re-enter.')
+                return
+            }
+
+            setLoading(true)
+
+            try {
+                const res = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: trimmedName,
+                        email: rawEmail,
+                        phone: cleanPhone,
+                        password,
+                        confirmPassword,
+                    }),
+                })
+
+                const data = await res.json()
+
+                if (!res.ok || !data.success) {
+                    setErrorMsg(data.message || 'Unable to create account. Please try again.')
+                    return
+                }
+
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    window.dispatchEvent(new Event('auth-change'))
+                }
+
+                toast.success('Account created successfully! Welcome to UK Brand Lover.')
+                setSuccessMsg('Account created successfully! Redirecting...')
+
+                setTimeout(() => {
+                    router.push(redirectUrl)
+                    router.refresh()
+                }, 600)
+            } catch (err) {
+                setErrorMsg('Unable to connect to authentication server. Please try again.')
+            } finally {
+                setLoading(false)
+            }
+            return
+        }
+
+        // 3. SIGN IN (Email & Password strictly)
+        if (mode === 'signin') {
+            const rawEmail = email.trim().toLowerCase()
+            if (!rawEmail) {
+                setErrorMsg('Please enter your email address.')
+                return
+            }
+
+            if (!password) {
+                setErrorMsg('Please enter your password.')
+                return
+            }
+
+            setLoading(true)
+
+            try {
+                const res = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        identifier: rawEmail,
+                        email: rawEmail,
+                        password,
+                    }),
+                })
+
+                const data = await res.json()
+
+                if (!res.ok || !data.success) {
+                    setErrorMsg(data.message || 'Invalid email or password. Please verify and try again.')
+                    return
+                }
+
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    window.dispatchEvent(new Event('auth-change'))
+                }
+
+                const firstName = (data.user?.name || 'Customer').split(' ')[0]
+                toast.success(`Welcome back, ${firstName}!`)
+                setSuccessMsg('Signed in successfully! Redirecting...')
+
+                setTimeout(() => {
+                    if (data.user?.role === 'ADMIN' && redirectUrl === '/') {
+                        router.push('/admin')
+                    } else {
+                        router.push(redirectUrl)
+                    }
+                    router.refresh()
+                }, 500)
+            } catch (err) {
+                setErrorMsg('Unable to connect to authentication server. Please try again.')
+            } finally {
+                setLoading(false)
+            }
+        }
     }
-  }, [searchParams])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
+    return (
+        <section className="min-h-screen bg-[#FAF6FA]/70 text-[#241224] flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">
+            {/* Subtle Ambient Luxury Glow */}
+            <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(108,48,110,0.08),transparent_70%)] blur-3xl" />
+            <div className="pointer-events-none absolute bottom-0 right-0 w-[400px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(216,181,109,0.08),transparent_70%)] blur-3xl" />
 
-    // MODE: FORGOT PASSWORD
-    if (mode === 'forgot') {
-      const rawEmail = email.trim()
-      if (!rawEmail || !rawEmail.includes('@')) {
-        setErrorMsg('Please enter your registered email address.')
-        return
-      }
-      setLoading(true)
-      try {
-        const res = await fetch('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: rawEmail }),
-        })
-        const data = await res.json()
-        if (data.success) {
-          setSuccessMsg(data.message || 'Password recovery link dispatched! Check your inbox.')
-        } else {
-          setErrorMsg(data.message || 'Unable to process request.')
-        }
-      } catch (err) {
-        setErrorMsg('Network error. Please check your internet connection.')
-      } finally {
-        setLoading(false)
-      }
-      return
-    }
+            {/* Main Auth Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-xl bg-white border border-[#EFE0EF] rounded-3xl shadow-[0_16px_48px_-8px_rgba(36,18,36,0.08)] p-6 sm:p-10 my-6"
+            >
+                {/* Brand Header */}
+                <div className="text-center mb-6">
+                    <Link href="/" className="inline-flex items-center gap-2 mb-3">
+                        <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 flex items-center justify-center shadow-xs">
+                            <Image
+                                src={assets.webLogo}
+                                alt="UK Brand Lover Logo"
+                                width={36}
+                                height={36}
+                                className="object-contain"
+                            />
+                        </div>
+                    </Link>
 
-    // MODE: SIGN UP
-    if (mode === 'signup') {
-      const trimmedFirst = firstName.trim()
-      const trimmedLast = lastName.trim()
-      const fullName = trimmedLast ? `${trimmedFirst} ${trimmedLast}` : trimmedFirst
-      const rawEmail = email.trim()
-      const rawPhone = phone.replace(/[^0-9]/g, '')
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[10px] font-bold text-[#6C306E] uppercase tracking-wider mb-2">
+                        <SparklesIcon size={12} color="#D8B56D" />
+                        <span>100% Original UK Imported Beauty</span>
+                    </div>
 
-      if (!trimmedFirst) {
-        setErrorMsg('Please enter your first name.')
-        return
-      }
+                    <h1 className="text-2xl sm:text-3xl font-black text-[#241224] tracking-tight">
+                        {mode === 'signup'
+                            ? 'Create Your Account'
+                            : mode === 'signin'
+                            ? 'Welcome Back'
+                            : 'Reset Your Password'}
+                    </h1>
 
-      if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
-        setErrorMsg('Please enter a valid email address.')
-        return
-      }
-
-      if (!rawPhone || rawPhone.length < 11) {
-        setErrorMsg('Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX).')
-        return
-      }
-
-      if (!password || password.length < 6) {
-        setErrorMsg('Password must be at least 6 characters.')
-        return
-      }
-
-      if (password !== confirmPassword) {
-        setErrorMsg('Passwords do not match. Please verify and try again.')
-        return
-      }
-
-      setLoading(true)
-
-      try {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: fullName,
-            email: rawEmail,
-            phone: rawPhone,
-            password,
-            confirmPassword,
-          }),
-        })
-
-        const data = await res.json()
-
-        if (!res.ok || !data.success) {
-          setErrorMsg(data.message || 'Unable to create account. Please try again.')
-          return
-        }
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
-          window.dispatchEvent(new Event('auth-change'))
-        }
-
-        toast.success('Welcome to UK Brand Lover!')
-        setSuccessMsg('Account created successfully! Redirecting...')
-
-        setTimeout(() => {
-          router.push(redirectUrl)
-          router.refresh()
-        }, 700)
-      } catch (err) {
-        setErrorMsg('Unable to connect to authentication server. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-      return
-    }
-
-    // MODE: SIGN IN
-    if (mode === 'signin') {
-      const rawInput = email.trim()
-      if (!rawInput) {
-        setErrorMsg('Please enter your email address or phone number.')
-        return
-      }
-
-      if (!password) {
-        setErrorMsg('Please enter your password.')
-        return
-      }
-
-      setLoading(true)
-
-      try {
-        const res = await fetch('/api/auth/signin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            identifier: rawInput,
-            password,
-          }),
-        })
-
-        const data = await res.json()
-
-        if (!res.ok || !data.success) {
-          setErrorMsg(data.message || 'Invalid login credentials. Please try again.')
-          return
-        }
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
-          window.dispatchEvent(new Event('auth-change'))
-        }
-
-        const firstNameDisplay = (data.user?.name || 'Valued Customer').split(' ')[0]
-        toast.success(`Welcome back, ${firstNameDisplay}!`)
-        setSuccessMsg('Signed in successfully! Redirecting...')
-
-        setTimeout(() => {
-          if (data.user?.role === 'ADMIN' && redirectUrl === '/') {
-            router.push('/store/orders')
-          } else {
-            router.push(redirectUrl)
-          }
-          router.refresh()
-        }, 600)
-      } catch (err) {
-        setErrorMsg('Unable to connect to authentication server. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
-  }
-
-  return (
-    <section className="min-h-screen bg-[#F8FAFF] text-slate-900 antialiased flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden font-poppins selection:bg-[#6C306E] selection:text-white">
-      {/* Ambient Sheen Backdrop */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.12),transparent_70%)] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 right-10 w-[500px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(108,48,110,0.10),transparent_70%)] blur-3xl" />
-
-      {/* Main Auth Container - Balanced 85% Screen Proportions with Smooth Entrance */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          duration: 0.5,
-          ease: [0.16, 1, 0.3, 1],
-        }}
-        className="relative z-10 w-[92%] sm:w-[88%] lg:w-[85%] max-w-[1680px] min-h-[82vh] lg:min-h-[85vh] rounded-3xl border border-slate-200/90 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] overflow-hidden grid lg:grid-cols-[1.12fr_0.88fr]"
-      >
-        {/* Left Form Column */}
-        <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-white text-slate-900">
-          <div className="max-w-[400px] w-full mx-auto">
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between mb-6 sm:mb-7">
-              <Link
-                href="/"
-                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-              >
-                <svg
-                  className="w-3.5 h-3.5 stroke-[2.2] group-hover:-translate-x-0.5 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                <span>Back to Home</span>
-              </Link>
-
-              {/* Mode Switcher */}
-              <div className="flex items-center gap-1 text-xs">
-                {mode === 'forgot' ? (
-                  <>
-                    <span className="text-slate-400">Remember password?</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode('signin')
-                        setErrorMsg(null)
-                        setSuccessMsg(null)
-                      }}
-                      className="font-bold text-[#6C306E] hover:text-[#521C54] underline underline-offset-2 transition-colors cursor-pointer ml-1"
-                    >
-                      Sign in
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-slate-400">
-                      {mode === 'signup' ? 'Have an account?' : 'No account?'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode(mode === 'signup' ? 'signin' : 'signup')
-                        setErrorMsg(null)
-                        setSuccessMsg(null)
-                        setConfirmPassword('')
-                      }}
-                      className="font-bold text-[#6C306E] hover:text-[#521C54] underline underline-offset-2 transition-colors cursor-pointer ml-1"
-                    >
-                      {mode === 'signup' ? 'Sign in' : 'Create one'}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Title & Subtitle with Smooth Animated Switch */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={mode}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-6 sm:mb-7"
-              >
-                <h1 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight leading-tight">
-                  {mode === 'signup'
-                    ? 'Create an account'
-                    : mode === 'signin'
-                    ? 'Welcome back'
-                    : 'Reset your password'}
-                </h1>
-                <p className="mt-1 text-xs sm:text-sm text-slate-500">
-                  {mode === 'signup'
-                    ? 'Join us to discover authentic UK beauty, delivered across Bangladesh.'
-                    : mode === 'signin'
-                    ? 'Sign in to access your bag, orders, and personalized beauty care.'
-                    : "Enter your registered email and we'll send you a password recovery link."}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Error & Success Feedback Banners */}
-            {errorMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"
-              >
-                <div className="flex items-start gap-2">
-                  <svg
-                    className="w-4 h-4 text-rose-500 shrink-0 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div className="flex-1">
-                    <span>{errorMsg}</span>
-                  </div>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                        {mode === 'signup'
+                            ? 'Register to track orders, save authentic UK favorites, and access fast checkout.'
+                            : mode === 'signin'
+                            ? 'Sign in with your email address to access your shopping bag and orders.'
+                            : 'Enter your registered email and we will send you a password recovery link.'}
+                    </p>
                 </div>
-              </motion.div>
-            )}
 
-            {successMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium space-y-1.5 shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4 text-emerald-600 shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="font-semibold">{successMsg}</span>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Form Fields */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* First Name & Last Name (Sign Up only) */}
-              <AnimatePresence initial={false}>
-                {mode === 'signup' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="grid gap-3 sm:grid-cols-2 overflow-hidden"
-                  >
-                    <FieldBox
-                      label="First Name"
-                      value={firstName}
-                      onChange={(val) => setFirstName(val)}
-                    />
-                    <FieldBox
-                      label="Last Name"
-                      placeholder="Optional"
-                      value={lastName}
-                      onChange={(val) => setLastName(val)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Email (Always visible) */}
-              <FieldBox
-                label="Email"
-                type="email"
-                placeholder={mode === 'signin' ? 'name@example.com or phone' : 'name@example.com'}
-                value={email}
-                onChange={(val) => setEmail(val)}
-              />
-
-              {/* Number (Sign Up only) */}
-              <AnimatePresence initial={false}>
-                {mode === 'signup' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <FieldBox
-                      label="Number"
-                      type="tel"
-                      placeholder="01XXXXXXXXX"
-                      value={phone}
-                      onChange={(val) => setPhone(val)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Password (Sign In & Sign Up) */}
-              <AnimatePresence initial={false}>
+                {/* Segmented Mode Switcher (Sign In vs Create Account) */}
                 {mode !== 'forgot' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden space-y-2"
-                  >
-                    <FieldBox
-                      label="Password"
-                      type="password"
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(val) => setPassword(val)}
-                    />
-
-                    {/* Forgot Password Link in Sign In mode */}
-                    {mode === 'signin' && (
-                      <div className="flex justify-end pt-0.5">
+                    <div className="flex bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 rounded-2xl mb-6 relative">
                         <button
-                          type="button"
-                          onClick={() => {
-                            setMode('forgot')
-                            setErrorMsg(null)
-                            setSuccessMsg(null)
-                          }}
-                          className="text-[11px] sm:text-xs font-semibold text-[#6C306E] hover:text-[#521C54] underline underline-offset-2 transition-colors cursor-pointer"
+                            type="button"
+                            onClick={() => {
+                                setMode('signin')
+                                setErrorMsg(null)
+                                setSuccessMsg(null)
+                            }}
+                            className={`relative z-10 flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center ${
+                                mode === 'signin' ? 'text-white' : 'text-slate-600 hover:text-[#6C306E]'
+                            }`}
                         >
-                          Forgot password?
+                            {mode === 'signin' && (
+                                <motion.div
+                                    layoutId="authTabIndicator"
+                                    className="absolute inset-0 bg-[#6C306E] rounded-xl shadow-xs -z-10"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                />
+                            )}
+                            <span>Sign In</span>
                         </button>
-                      </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMode('signup')
+                                setErrorMsg(null)
+                                setSuccessMsg(null)
+                            }}
+                            className={`relative z-10 flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center ${
+                                mode === 'signup' ? 'text-white' : 'text-slate-600 hover:text-[#6C306E]'
+                            }`}
+                        >
+                            {mode === 'signup' && (
+                                <motion.div
+                                    layoutId="authTabIndicator"
+                                    className="absolute inset-0 bg-[#6C306E] rounded-xl shadow-xs -z-10"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                />
+                            )}
+                            <span>Create Account</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Inline Error & Success Banners */}
+                <AnimatePresence>
+                    {errorMsg && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold flex items-center gap-2"
+                        >
+                            <span className="size-1.5 rounded-full bg-red-500 shrink-0" />
+                            <span>{errorMsg}</span>
+                        </motion.div>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
-              {/* Confirm Password (Sign Up only) */}
-              <AnimatePresence initial={false}>
-                {mode === 'signup' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <FieldBox
-                      label="Confirm Password"
-                      type="password"
-                      placeholder="••••••••••••"
-                      value={confirmPassword}
-                      onChange={(val) => setConfirmPassword(val)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {successMsg && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            className="mb-4 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2"
+                        >
+                            <CheckIcon size={14} color="#059669" />
+                            <span>{successMsg}</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-              {/* Submit Button */}
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                type="submit"
-                disabled={loading}
-                className="w-full h-11 sm:h-12 mt-3 rounded-xl bg-[#6C306E] hover:bg-[#521C54] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
+                {/* Form Fields */}
+                <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                    {/* FULL NAME (Sign Up only) */}
+                    {mode === 'signup' && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <label className="block text-[#241224] font-bold mb-1.5">
+                                Full Name <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <UserIcon size={16} color="#6C306E" />
+                                </div>
+                                <input
+                                    type="text"
+                                    required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="e.g. Ayesha Rahman"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* EMAIL ADDRESS (Strictly required for both Sign In and Sign Up) */}
+                    <div>
+                        <label className="block text-[#241224] font-bold mb-1.5">
+                            Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <MailIcon size={16} color="#6C306E" />
+                            </div>
+                            <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="name@example.com"
+                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                            />
+                        </div>
+                    </div>
+
+                    {/* PHONE NUMBER (Sign Up only - Mandatory for product tracking & notifications) */}
+                    {mode === 'signup' && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-[#241224] font-bold">
+                                    Phone Number <span className="text-red-500">*</span>
+                                </label>
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    For Order Tracking
+                                </span>
+                            </div>
+                            <div className="relative">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <PhoneIcon size={16} color="#059669" />
+                                </div>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    placeholder="01XXXXXXXXX"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-mono font-bold text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                                Used for parcel tracking SMS, courier dispatch notifications, and authentic product delivery updates.
+                            </p>
+                        </motion.div>
+                    )}
+
+                    {/* PASSWORD (Sign In & Sign Up) */}
+                    {mode !== 'forgot' && (
+                        <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-[#241224] font-bold">
+                                    Password <span className="text-red-500">*</span>
+                                </label>
+                                {mode === 'signin' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMode('forgot')
+                                            setErrorMsg(null)
+                                            setSuccessMsg(null)
+                                        }}
+                                        className="text-[11px] font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                )}
+                            </div>
+                            <div className="relative">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <LockIcon size={16} color="#6C306E" />
+                                </div>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-10 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CONFIRM PASSWORD (Sign Up only) */}
+                    {mode === 'signup' && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <label className="block text-[#241224] font-bold mb-1.5">
+                                Confirm Password <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <LockIcon size={16} color="#6C306E" />
+                                </div>
+                                <input
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-10 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showConfirmPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* SUBMIT BUTTON */}
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        type="submit"
+                        disabled={loading}
+                        className="w-full mt-2 bg-[#6C306E] hover:bg-[#521C54] text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    <span>
-                      {mode === 'signup'
-                        ? 'Joining...'
-                        : mode === 'signin'
-                        ? 'Signing In...'
-                        : 'Sending Recovery Link...'}
-                    </span>
-                  </div>
-                ) : (
-                  <span>
-                    {mode === 'signup'
-                      ? 'Join Us'
-                      : mode === 'signin'
-                      ? 'Sign In to UK Brand Lover'
-                      : 'Send Recovery Link'}
-                  </span>
+                        <span>
+                            {loading
+                                ? 'Processing...'
+                                : mode === 'signup'
+                                ? 'Create Account'
+                                : mode === 'signin'
+                                ? 'Sign In'
+                                : 'Send Recovery Link'}
+                        </span>
+                        {!loading && <ArrowRightIcon size={14} />}
+                    </motion.button>
+                </form>
+
+                {/* Back Link for Forgot Password */}
+                {mode === 'forgot' && (
+                    <div className="text-center mt-5">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMode('signin')
+                                setErrorMsg(null)
+                                setSuccessMsg(null)
+                            }}
+                            className="text-xs font-bold text-[#6C306E] hover:underline cursor-pointer"
+                        >
+                            ← Back to Sign In
+                        </button>
+                    </div>
                 )}
-              </motion.button>
-            </form>
-          </div>
-        </div>
 
-        {/* Right Animated Shader Column */}
-        <div className="relative flex min-h-[420px] lg:min-h-full overflow-hidden bg-[#060B1A] p-8 sm:p-12 lg:p-16 text-white flex-col justify-end">
-          {/* Blue Silk GrainGradient Shader matching Exframer Website Theme */}
-          <GrainGradient
-            speed={0.8}
-            scale={1.2}
-            rotation={0}
-            offsetX={0}
-            offsetY={0}
-            softness={0.55}
-            intensity={0.65}
-            noise={0.22}
-            shape="corners"
-            frame={2854.5}
-            colors={['#FFFFFF', '#0066FF', '#38BDF8', '#0052CC']}
-            colorBack="#060B1A"
-            className="absolute inset-0 bg-[#060B1A]"
-          />
-
-          {/* Clean, Iconic Minimalist Headline */}
-          <div className="relative z-10 max-w-md">
-            <h2 className="text-4xl sm:text-5xl lg:text-[66px] font-bold tracking-[-0.04em] text-white leading-[1.02]">
-              Think fast,
-              <br />
-              Build faster
-            </h2>
-          </div>
-        </div>
-      </motion.div>
-    </section>
-  )
-}
-
-/**
- * Clean, compact input field box tailored to Xframer's design
- * with right-aligned uppercase label and visibility toggle for password fields.
- */
-function FieldBox({
-  label,
-  value,
-  type = 'text',
-  placeholder,
-  onChange,
-}) {
-  const [showPassword, setShowPassword] = useState(false)
-  const isPassword = type === 'password'
-  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
-
-  return (
-    <label className="flex h-11 sm:h-12 items-center justify-between gap-2.5 rounded-xl border border-slate-200/90 bg-white px-3.5 sm:px-4 text-xs sm:text-sm text-slate-900 transition-all focus-within:border-[#6C306E] focus-within:ring-2 focus-within:ring-[#6C306E]/20 cursor-text shadow-sm hover:border-slate-300">
-      <input
-        type={inputType}
-        value={value}
-        placeholder={placeholder}
-        aria-label={label}
-        onChange={(e) => onChange?.(e.target.value)}
-        className="min-w-0 flex-1 truncate bg-transparent text-slate-900 outline-none placeholder:text-slate-400 text-xs sm:text-sm font-normal"
-      />
-      <div className="flex items-center gap-1.5 shrink-0">
-        {isPassword && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setShowPassword(!showPassword)
-            }}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            title={showPassword ? 'Hide password' : 'Show password'}
-            className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer rounded-md hover:bg-slate-100 flex items-center justify-center"
-          >
-            {showPassword ? (
-              <svg
-                className="w-4 h-4 stroke-[2]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="w-4 h-4 stroke-[2]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-            )}
-          </button>
-        )}
-        <span className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider select-none">
-          {label}
-        </span>
-      </div>
-    </label>
-  )
+                {/* Bottom Trust Badge */}
+                <div className="mt-8 pt-5 border-t border-[#EFE0EF] flex items-center justify-center gap-2 text-[11px] text-slate-500">
+                    <ShieldCheckIcon size={15} color="#059669" />
+                    <span>100% Genuine UK Imported Products Guaranteed</span>
+                </div>
+            </motion.div>
+        </section>
+    )
 }
