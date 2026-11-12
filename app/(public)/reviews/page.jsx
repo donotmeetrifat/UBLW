@@ -175,8 +175,8 @@ export default function ReviewsPage() {
         <div className="min-h-[75vh] mx-4 sm:mx-6 text-slate-800">
             <div className="my-10 max-w-7xl mx-auto">
                 <PageTitle
-                    heading="Customer Reviews & Ratings"
-                    text="Real, verified customer experiences from beauty lovers who ordered authentic UK imports in Bangladesh"
+                    heading="My Reviews & Ratings"
+                    text="Share authentic feedback and view reviews for your genuine UK imported beauty purchases"
                     linkText="My Orders"
                     linkHref="/orders"
                 />
@@ -184,17 +184,17 @@ export default function ReviewsPage() {
                 {/* Search & Tabs Row */}
                 <div className="mt-8 mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     {/* Tab Switcher Pills */}
-                    <div className="flex items-center gap-2 bg-[#FAF6FA] p-1.5 rounded-2xl border border-[#EFE0EF] max-w-md shadow-2xs">
+                    <div className="inline-flex items-center shrink-0 gap-2 bg-[#FAF6FA] p-1.5 rounded-2xl border border-[#EFE0EF] shadow-2xs self-start md:self-auto">
                         <button
                             type="button"
                             onClick={() => setActiveTab('to-review')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                            className={`flex items-center justify-center gap-2.5 py-2.5 px-5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                 activeTab === 'to-review'
                                     ? 'bg-white text-[#6C306E] shadow-sm border border-[#EFE0EF]'
                                     : 'text-slate-500 hover:text-[#6C306E]'
                             }`}
                         >
-                            <span>To Review</span>
+                            <span className="whitespace-nowrap font-bold">To Review</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
                                 activeTab === 'to-review' ? 'bg-[#6C306E] text-white' : 'bg-[#EFE0EF] text-slate-600'
                             }`}>
@@ -205,13 +205,13 @@ export default function ReviewsPage() {
                         <button
                             type="button"
                             onClick={() => setActiveTab('my-reviews')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                            className={`flex items-center justify-center gap-2.5 py-2.5 px-5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                 activeTab === 'my-reviews'
                                     ? 'bg-white text-[#6C306E] shadow-sm border border-[#EFE0EF]'
                                     : 'text-slate-500 hover:text-[#6C306E]'
                             }`}
                         >
-                            <span>My Reviews</span>
+                            <span className="whitespace-nowrap font-bold">My Reviews</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
                                 activeTab === 'my-reviews' ? 'bg-[#6C306E] text-white' : 'bg-[#EFE0EF] text-slate-600'
                             }`}>
