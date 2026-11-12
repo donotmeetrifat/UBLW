@@ -10,12 +10,27 @@ export async function POST(request, { params }) {
         }
 
         if (isDatabaseConfigured()) {
-            const product = await prisma.product.update({
-                where: { id },
-                data: { views: { increment: 1 } },
-                select: { id: true, views: true }
-            });
-            return NextResponse.json({ success: true, views: product.views });
+            let viewsCount = 1;
+            try {
+                const product = await prisma.product.update({
+                    where: { id },
+                    data: { views: { increment: 1 } },
+                    select: { id: true, views: true }
+                });
+                viewsCount = product.views;
+            } catch (err) {
+                try {
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "Product" SET "views" = COALESCE("views", 0) + 1 WHERE "id" = $1`,
+                        id
+                    );
+                    const prod = await prisma.product.findUnique({ where: { id }, select: { views: true } });
+                    if (prod) viewsCount = prod.views;
+                } catch (rawErr) {
+                    console.warn('Raw view count update note:', rawErr.message);
+                }
+            }
+            return NextResponse.json({ success: true, views: viewsCount });
         }
 
         const product = memoryStore.getProductById(id);

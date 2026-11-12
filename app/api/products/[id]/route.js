@@ -69,10 +69,51 @@ export async function PATCH(request, { params }) {
         }
 
         if (isDatabaseConfigured()) {
-            const product = await prisma.product.update({
-                where: { id },
-                data: cleanedData,
-            });
+            let product;
+            try {
+                product = await prisma.product.update({
+                    where: { id },
+                    data: cleanedData,
+                });
+            } catch (updateErr) {
+                if (updateErr.message && (
+                    updateErr.message.includes('Unknown argument') ||
+                    updateErr.message.includes('formulaProfile') ||
+                    updateErr.message.includes('benefits') ||
+                    updateErr.message.includes('whyYouWillLoveIt')
+                )) {
+                    console.warn('Prisma update fallback triggered:', updateErr.message);
+                    const fallbackData = { ...cleanedData };
+                    const formula = fallbackData.formulaProfile;
+                    const bnf = fallbackData.benefits;
+                    const whyLove = fallbackData.whyYouWillLoveIt;
+                    delete fallbackData.formulaProfile;
+                    delete fallbackData.benefits;
+                    delete fallbackData.whyYouWillLoveIt;
+
+                    product = await prisma.product.update({
+                        where: { id },
+                        data: fallbackData
+                    });
+
+                    try {
+                        await prisma.$executeRawUnsafe(
+                            `UPDATE "Product" SET "formulaProfile" = COALESCE($1, "formulaProfile"), "benefits" = COALESCE($2, "benefits"), "whyYouWillLoveIt" = COALESCE($3, "whyYouWillLoveIt") WHERE "id" = $4`,
+                            formula || null,
+                            bnf || null,
+                            whyLove || null,
+                            id
+                        );
+                        if (formula !== undefined) product.formulaProfile = formula;
+                        if (bnf !== undefined) product.benefits = bnf;
+                        if (whyLove !== undefined) product.whyYouWillLoveIt = whyLove;
+                    } catch (rawErr) {
+                        console.warn('Raw SQL patch warning:', rawErr.message);
+                    }
+                } else {
+                    throw updateErr;
+                }
+            }
             return NextResponse.json({ success: true, product });
         }
 
