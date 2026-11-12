@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import Rating from "./Rating";
 import RatingModal from "./RatingModal";
 import InvoiceModal from "./InvoiceModal";
+import toast from "react-hot-toast";
 import {
     ReviewBadgeIcon,
     CheckIcon,
@@ -171,43 +172,121 @@ const OrderItem = ({ order }) => {
                                 </div>
                             </div>
 
-                            {/* 2. Parcel Delivery Progress Stepper */}
-                            <div>
-                                <p className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest mb-3">
-                                    DELIVERY PROGRESS TIMELINE
-                                </p>
-                                <div className="grid grid-cols-5 gap-1 text-center relative">
-                                    {STAGES.map((stage, idx) => {
-                                        const isCompleted = idx <= activeIndex;
-                                        const isCurrent = idx === activeIndex;
+                            {/* 2. Parcel Delivery Progress Stepper (Clean, Premium Luxury Design) */}
+                            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EFE0EF] shadow-2xs space-y-4">
+                                {/* Header Strip */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EFE0EF]/70">
+                                    <div className="flex items-center gap-2">
+                                        <div className="size-6 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E]">
+                                            <TruckIcon size={13} color="#6C306E" />
+                                        </div>
+                                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#6C306E]">
+                                            Delivery Progress Timeline
+                                        </span>
+                                    </div>
 
-                                        return (
-                                            <div key={stage.key} className="flex flex-col items-center">
-                                                <div className={`size-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
-                                                    isCompleted 
-                                                        ? 'bg-[#6C306E] text-white shadow-xs' 
-                                                        : 'bg-white border-2 border-slate-200 text-slate-400'
-                                                }`}>
-                                                    {idx < activeIndex ? (
-                                                        <CheckIcon size={12} color="#FFFFFF" strokeWidth={3} />
-                                                    ) : (
-                                                        <span>{idx + 1}</span>
-                                                    )}
-                                                </div>
-                                                <p className={`text-[10px] font-bold mt-1.5 truncate w-full ${
-                                                    isCurrent ? 'text-[#3A0C38]' : isCompleted ? 'text-[#6C306E]' : 'text-slate-400'
-                                                }`}>
-                                                    {stage.label}
-                                                </p>
-                                            </div>
-                                        );
-                                    })}
+                                    {currentStatus === 'DELIVERED' ? (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            <CheckIcon size={10} color="#047857" strokeWidth={3} />
+                                            <span>Safely Delivered</span>
+                                        </span>
+                                    ) : currentStatus === 'SHIPPED' ? (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-[#6C306E] border border-purple-200">
+                                            <span className="relative flex size-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full size-2 bg-[#6C306E]"></span>
+                                            </span>
+                                            <span>In Transit With Courier</span>
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF]">
+                                            <span>Stage {activeIndex + 1} of 5 • {STAGES[activeIndex]?.label}</span>
+                                        </span>
+                                    )}
                                 </div>
 
+                                {/* Stepper with Mathematical Precision Horizontal Progress Rail */}
+                                <div className="relative py-2">
+                                    {/* Background Progress Rail */}
+                                    <div className="absolute top-[16px] left-[10%] right-[10%] h-1 bg-[#F0E6F0] rounded-full -translate-y-1/2 z-0" />
+
+                                    {/* Active Animated Gradient Progress Rail */}
+                                    <div
+                                        className="absolute top-[16px] left-[10%] h-1 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full -translate-y-1/2 z-0 transition-all duration-700 ease-out shadow-xs"
+                                        style={{ width: `${(activeIndex / 4) * 80}%` }}
+                                    />
+
+                                    {/* Stepper Nodes */}
+                                    <div className="grid grid-cols-5 text-center relative z-10">
+                                        {STAGES.map((stage, idx) => {
+                                            const isStepDone = idx < activeIndex || (idx === activeIndex && currentStatus === 'DELIVERED');
+                                            const isStepCurrent = idx === activeIndex && currentStatus !== 'DELIVERED';
+
+                                            return (
+                                                <div key={stage.key} className="flex flex-col items-center">
+                                                    {/* Node Circle */}
+                                                    <div className={`size-8 rounded-full flex items-center justify-center transition-all duration-300 ring-4 ring-white ${
+                                                        isStepDone
+                                                            ? 'bg-gradient-to-tr from-[#6C306E] to-[#9956A1] text-white shadow-xs'
+                                                            : isStepCurrent
+                                                            ? 'bg-white border-2 border-[#6C306E] ring-[#6C306E]/20 shadow-sm'
+                                                            : 'bg-white border-2 border-[#E9DFE9] text-slate-300'
+                                                    }`}>
+                                                        {isStepDone ? (
+                                                            <CheckIcon size={13} color="#FFFFFF" strokeWidth={2.75} />
+                                                        ) : isStepCurrent ? (
+                                                            <span className="size-2.5 rounded-full bg-gradient-to-tr from-[#6C306E] to-[#9956A1] animate-pulse" />
+                                                        ) : (
+                                                            <span className="size-1.5 rounded-full bg-slate-300" />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Label & Description */}
+                                                    <p className={`text-[11px] font-extrabold mt-2.5 truncate w-full transition-colors ${
+                                                        isStepCurrent
+                                                            ? 'text-[#3A0C38]'
+                                                            : isStepDone
+                                                            ? 'text-[#6C306E]'
+                                                            : 'text-slate-400'
+                                                    }`}>
+                                                        {stage.label}
+                                                    </p>
+                                                    <span className="text-[9.5px] font-medium text-slate-400 hidden sm:block mt-0.5">
+                                                        {stage.desc}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Courier & Consignment Tracking Strip */}
                                 {order.consignmentId && (
-                                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-[11px] text-purple-900 font-medium">
-                                        <TruckIcon size={13} color="#6C306E" />
-                                        <span>Courier Tracking: <b>{order.consignmentId}</b></span>
+                                    <div className="pt-3 border-t border-[#EFE0EF]/70 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                                Courier Tracking:
+                                            </span>
+                                            <span className="font-mono text-xs font-black text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-0.5 rounded-lg">
+                                                {order.consignmentId}
+                                            </span>
+                                            <span className="text-[11px] text-slate-500 font-medium">
+                                                ({order.courierName || 'Steadfast Courier'})
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (typeof navigator !== 'undefined') {
+                                                    navigator.clipboard.writeText(order.consignmentId);
+                                                    toast.success(`Tracking code "${order.consignmentId}" copied!`);
+                                                }
+                                            }}
+                                            className="text-[11px] font-bold text-[#6C306E] hover:text-[#531E55] bg-[#FAF6FA] hover:bg-[#F5EAF5] border border-[#EFE0EF] px-3 py-1 rounded-full transition cursor-pointer shadow-2xs"
+                                        >
+                                            Copy Tracking Code
+                                        </button>
                                     </div>
                                 )}
                             </div>
