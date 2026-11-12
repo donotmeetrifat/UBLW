@@ -111,7 +111,7 @@ export default function AdminSettingsPage() {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('/api/admin/settings')
+            const res = await fetch('/api/admin/settings', { cache: 'no-store' })
             const data = await res.json()
             if (data.success) {
                 if (data.delivery) setDelivery(prev => ({ ...prev, ...data.delivery }))

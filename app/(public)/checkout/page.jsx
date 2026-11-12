@@ -73,7 +73,7 @@ export default function CheckoutPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await fetch('/api/settings')
+                const res = await fetch('/api/settings', { cache: 'no-store' })
                 const data = await res.json()
                 if (data.success) {
                     setSettings({

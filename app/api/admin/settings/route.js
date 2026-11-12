@@ -11,6 +11,10 @@ export async function GET() {
             success: true,
             delivery: settings.delivery,
             payments: settings.payments,
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
         });
     } catch (error) {
         return NextResponse.json(
@@ -31,6 +35,10 @@ export async function POST(request) {
             success: true,
             message: 'Store settings updated successfully! All changes are live.',
             settings: updatedSettings,
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
         });
     } catch (error) {
         console.error('Error saving store settings:', error);
