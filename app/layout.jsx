@@ -1,4 +1,4 @@
-import { Toaster } from "react-hot-toast";
+import CustomToaster from "@/components/CustomToaster";
 import StoreProvider from "@/app/StoreProvider";
 import DataSyncProvider from "@/components/DataSyncProvider";
 import "./globals.css";
@@ -49,7 +49,7 @@ export default function RootLayout({ children }) {
             <body className="antialiased text-[#241224] bg-white">
                 <StoreProvider>
                     <DataSyncProvider>
-                        <Toaster />
+                        <CustomToaster />
                         {children}
                     </DataSyncProvider>
                 </StoreProvider>
