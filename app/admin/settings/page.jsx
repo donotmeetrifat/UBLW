@@ -9,7 +9,6 @@ import {
     CashDeliveryIcon, 
     CheckIcon, 
     SparklesIcon, 
-    ShieldCheckIcon,
     UploadIcon,
     TrashIcon
 } from '@/components/icons'
@@ -613,16 +612,6 @@ export default function AdminSettingsPage() {
                                         : 'None'}
                                 </span>
                             </div>
-                        </div>
-
-                        <div className="mt-5 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-[11px] text-emerald-800 space-y-1">
-                            <div className="flex items-center gap-1.5 font-bold">
-                                <ShieldCheckIcon size={14} color="#059669" />
-                                <span>Zero-Mistake Auto Detection</span>
-                            </div>
-                            <p className="leading-relaxed opacity-90">
-                                When a customer enters their delivery address, the system checks whether the city is inside Dhaka or outside Dhaka and applies the exact rate automatically.
-                            </p>
                         </div>
 
                         <motion.button
