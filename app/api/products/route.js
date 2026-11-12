@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -13,7 +16,7 @@ export async function GET(request) {
         if (isDatabaseConfigured()) {
             const where = {};
             if (category && category !== 'All' && category !== 'all') {
-                where.category = { equals: category, mode: 'insensitive' };
+                where.category = { contains: category, mode: 'insensitive' };
             }
             if (search) {
                 where.OR = [
@@ -31,13 +34,32 @@ export async function GET(request) {
             if (sortBy === 'price-high-low' || sortBy === 'price_desc') orderBy = { price: 'desc' };
             if (sortBy === 'rating') orderBy = { createdAt: 'desc' };
 
-            const products = await prisma.product.findMany({
-                where,
-                orderBy,
-                include: { ratings: true },
-            });
+            let products;
+            try {
+                products = await prisma.product.findMany({
+                    where,
+                    orderBy,
+                    include: { ratings: true },
+                });
+            } catch (queryErr) {
+                console.warn('Prisma findMany query note, using direct SQL fallback:', queryErr.message);
+                products = await prisma.$queryRawUnsafe(`
+                    SELECT p.*,
+                        COALESCE(p.views, 0)::int as "views",
+                        COALESCE(p."formulaProfile", p.description) as "formulaProfile",
+                        COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
+                        COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
+                        COALESCE(p."isActive", true) as "isActive"
+                    FROM "Product" p
+                    ORDER BY p."createdAt" DESC
+                `);
+            }
 
-            return NextResponse.json({ success: true, products });
+            return NextResponse.json({ success: true, products }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
+            });
         }
 
         // Graceful In-Memory fallback

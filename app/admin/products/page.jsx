@@ -111,11 +111,19 @@ export default function AdminProductsPage() {
     const fetchProducts = async () => {
         try {
             setLoading(true)
-            const res = await fetch(`/api/admin/products?sort=${sortBy}&category=${selectedCategory}`)
+            const res = await fetch(`/api/admin/products?sort=${sortBy}&category=${encodeURIComponent(selectedCategory)}&_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            })
             const data = await res.json()
             if (data.success && Array.isArray(data.products)) {
                 setProducts(data.products)
                 if (data.stats) setStats(data.stats)
+            } else if (data.message) {
+                console.warn('Admin products fetch returned message:', data.message)
             }
         } catch (error) {
             console.error('Error fetching admin products:', error)

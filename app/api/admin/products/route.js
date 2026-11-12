@@ -3,67 +3,142 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { randomUUID } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const search = searchParams.get('search') || '';
-        const category = searchParams.get('category') || '';
-        const sort = searchParams.get('sort') || 'views'; // 'views', 'newest', 'price-high', 'price-low', 'stock'
+        const search = (searchParams.get('search') || '').trim();
+        const category = (searchParams.get('category') || '').trim();
+        const sort = searchParams.get('sort') || 'views';
 
         if (isDatabaseConfigured()) {
-            const where = {};
-            if (search) {
-                where.OR = [
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { brand: { contains: search, mode: 'insensitive' } },
-                    { category: { contains: search, mode: 'insensitive' } },
-                ];
-            }
-            if (category && category !== 'All') {
-                where.category = { equals: category, mode: 'insensitive' };
-            }
+            let enriched = [];
+            let globalStats = { totalProducts: 0, totalViews: 0, lowStockCount: 0, inStockCount: 0 };
 
-            let orderBy = { views: 'desc' };
-            if (sort === 'newest') orderBy = { createdAt: 'desc' };
-            if (sort === 'price-high') orderBy = { price: 'desc' };
-            if (sort === 'price-low') orderBy = { price: 'asc' };
-            if (sort === 'stock') orderBy = { stockCount: 'asc' };
+            // Direct PostgreSQL query immune to Prisma Client in-memory model caching
+            try {
+                const whereClauses = [];
+                const params = [];
+                let paramIndex = 1;
 
-            const [products, totalCount, totalViewsAgg, lowStockCount] = await Promise.all([
-                prisma.product.findMany({
+                if (search) {
+                    whereClauses.push(`(p.name ILIKE $${paramIndex} OR p.brand ILIKE $${paramIndex} OR p.category ILIKE $${paramIndex})`);
+                    params.push(`%${search}%`);
+                    paramIndex++;
+                }
+
+                if (category && category !== 'All' && category !== 'all') {
+                    let catFilter = category;
+                    const catLower = category.toLowerCase();
+                    if (catLower.includes('makeup')) catFilter = 'Makeup';
+                    else if (catLower.includes('body') || catLower.includes('wellness')) catFilter = 'Body';
+                    else if (catLower.includes('skin')) catFilter = 'Skin';
+                    else if (catLower.includes('hair')) catFilter = 'Hair';
+                    else if (catLower.includes('fragrance')) catFilter = 'Fragrance';
+
+                    whereClauses.push(`p.category ILIKE $${paramIndex}`);
+                    params.push(`%${catFilter}%`);
+                    paramIndex++;
+                }
+
+                const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+                let orderSql = 'ORDER BY COALESCE(p.views, 0) DESC, p."createdAt" DESC';
+                if (sort === 'newest') orderSql = 'ORDER BY p."createdAt" DESC';
+                if (sort === 'price-high') orderSql = 'ORDER BY p.price DESC';
+                if (sort === 'price-low') orderSql = 'ORDER BY p.price ASC';
+                if (sort === 'stock') orderSql = 'ORDER BY p."stockCount" ASC';
+
+                const sql = `
+                    SELECT 
+                        p.*,
+                        COALESCE(p.views, 0)::int as "views",
+                        COALESCE(p."formulaProfile", p.description) as "formulaProfile",
+                        COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
+                        COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
+                        COALESCE(p."isActive", true) as "isActive",
+                        COALESCE((SELECT SUM(oi.quantity)::int FROM "OrderItem" oi WHERE oi."productId" = p.id), 0) as "unitsSold",
+                        COALESCE((SELECT AVG(r.rating) FROM "Rating" r WHERE r."productId" = p.id), 5.0)::float as "ratingScore",
+                        COALESCE((SELECT COUNT(*)::int FROM "Rating" r WHERE r."productId" = p.id), 0) as "reviewsCount"
+                    FROM "Product" p
+                    ${whereSql}
+                    ${orderSql}
+                `;
+
+                const rawProducts = await prisma.$queryRawUnsafe(sql, ...params);
+                enriched = Array.isArray(rawProducts) ? rawProducts : [];
+
+                // Store-wide live catalog KPI stats
+                const statsRows = await prisma.$queryRawUnsafe(`
+                    SELECT 
+                        COUNT(*)::int as "totalProducts",
+                        COALESCE(SUM(views), 0)::int as "totalViews",
+                        COUNT(CASE WHEN "stockCount" <= 10 THEN 1 END)::int as "lowStockCount",
+                        COUNT(CASE WHEN "inStock" = true AND "stockCount" > 0 THEN 1 END)::int as "inStockCount"
+                    FROM "Product"
+                `);
+                if (statsRows && statsRows[0]) {
+                    globalStats = {
+                        totalProducts: Number(statsRows[0].totalProducts) || 0,
+                        totalViews: Number(statsRows[0].totalViews) || 0,
+                        lowStockCount: Number(statsRows[0].lowStockCount) || 0,
+                        inStockCount: Number(statsRows[0].inStockCount) || 0
+                    };
+                }
+            } catch (sqlErr) {
+                console.warn('Direct SQL query fallback triggered:', sqlErr.message);
+
+                const where = {};
+                if (search) {
+                    where.OR = [
+                        { name: { contains: search, mode: 'insensitive' } },
+                        { brand: { contains: search, mode: 'insensitive' } },
+                        { category: { contains: search, mode: 'insensitive' } },
+                    ];
+                }
+                if (category && category !== 'All' && category !== 'all') {
+                    where.category = { contains: category, mode: 'insensitive' };
+                }
+
+                const products = await prisma.product.findMany({
                     where,
-                    orderBy,
+                    orderBy: { createdAt: 'desc' },
                     include: {
                         ratings: { select: { id: true, rating: true } },
                         orderItems: { select: { quantity: true } }
                     }
-                }),
-                prisma.product.count(),
-                prisma.product.aggregate({ _sum: { views: true } }),
-                prisma.product.count({ where: { stockCount: { lte: 10 } } })
-            ]);
+                });
 
-            const enriched = products.map(p => {
-                const totalUnitsSold = (p.orderItems || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
-                const avgRating = p.ratings && p.ratings.length > 0
-                    ? (p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length).toFixed(1)
-                    : 5.0;
-                return {
-                    ...p,
-                    unitsSold: totalUnitsSold,
-                    ratingScore: Number(avgRating),
-                    reviewsCount: p.ratings?.length || 0
+                enriched = products.map(p => {
+                    const totalUnitsSold = (p.orderItems || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+                    const avgRating = p.ratings && p.ratings.length > 0
+                        ? (p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length).toFixed(1)
+                        : 5.0;
+                    return {
+                        ...p,
+                        unitsSold: totalUnitsSold,
+                        ratingScore: Number(avgRating),
+                        reviewsCount: p.ratings?.length || 0
+                    };
+                });
+
+                globalStats = {
+                    totalProducts: enriched.length,
+                    totalViews: enriched.reduce((sum, p) => sum + (Number(p.views) || 0), 0),
+                    lowStockCount: enriched.filter(p => (Number(p.stockCount) || 0) <= 10).length,
+                    inStockCount: enriched.filter(p => p.inStock && (p.stockCount || 50) > 0).length
                 };
-            });
+            }
 
             return NextResponse.json({
                 success: true,
                 products: enriched,
-                stats: {
-                    totalProducts: totalCount,
-                    totalViews: totalViewsAgg._sum.views || 0,
-                    lowStockCount,
-                    inStockCount: products.filter(p => p.inStock && p.stockCount > 0).length
+                stats: globalStats
+            }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
                 }
             });
         }
