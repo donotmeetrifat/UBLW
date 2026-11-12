@@ -46,12 +46,27 @@ export async function PATCH(request, { params }) {
         const { id } = await params;
         const updates = await request.json();
 
-        // Sanitize numeric fields if provided
+        // Sanitize fields before database update
         const cleanedData = { ...updates };
+        delete cleanedData.id;
+        delete cleanedData.store;
+        delete cleanedData.ratings;
+        delete cleanedData.rating;
+        delete cleanedData.orderItems;
+        delete cleanedData.categoryRel;
+        delete cleanedData.ratingScore;
+        delete cleanedData.reviewsCount;
+        delete cleanedData.unitsSold;
+        delete cleanedData.createdAt;
+        delete cleanedData.updatedAt;
+
         if (cleanedData.price !== undefined) cleanedData.price = parseFloat(cleanedData.price);
         if (cleanedData.mrp !== undefined) cleanedData.mrp = parseFloat(cleanedData.mrp);
         if (cleanedData.stockCount !== undefined) cleanedData.stockCount = parseInt(cleanedData.stockCount, 10);
         if (cleanedData.inStock !== undefined) cleanedData.inStock = Boolean(cleanedData.inStock);
+        if (Array.isArray(cleanedData.benefits)) {
+            cleanedData.benefits = cleanedData.benefits.map(b => String(b).trim()).filter(Boolean);
+        }
 
         if (isDatabaseConfigured()) {
             const product = await prisma.product.update({

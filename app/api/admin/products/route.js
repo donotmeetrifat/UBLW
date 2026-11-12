@@ -99,7 +99,20 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { name, description, mrp, price, category, brand, stockCount, inStock, images } = body;
+        const {
+            name,
+            description,
+            formulaProfile,
+            benefits,
+            whyYouWillLoveIt,
+            mrp,
+            price,
+            category,
+            brand,
+            stockCount,
+            inStock,
+            images
+        } = body;
 
         if (!name || !price || !category) {
             return NextResponse.json({ success: false, message: 'Name, price, and category are required' }, { status: 400 });
@@ -111,6 +124,7 @@ export async function POST(request) {
         const imageList = Array.isArray(images) && images.length > 0
             ? images.filter(Boolean)
             : ['/product_img1.png'];
+        const cleanBenefits = Array.isArray(benefits) ? benefits.map(b => String(b).trim()).filter(Boolean) : [];
 
         if (isDatabaseConfigured()) {
             let store = await prisma.store.findFirst();
@@ -142,7 +156,10 @@ export async function POST(request) {
             const created = await prisma.product.create({
                 data: {
                     name: name.trim(),
-                    description: description ? description.trim() : '',
+                    description: description ? description.trim() : (formulaProfile ? formulaProfile.trim() : ''),
+                    formulaProfile: formulaProfile ? formulaProfile.trim() : (description ? description.trim() : ''),
+                    benefits: cleanBenefits,
+                    whyYouWillLoveIt: whyYouWillLoveIt ? whyYouWillLoveIt.trim() : null,
                     price: parsedPrice,
                     mrp: parsedMrp,
                     category: category.trim(),
@@ -161,7 +178,10 @@ export async function POST(request) {
 
         const memProduct = memoryStore.addProduct({
             name,
-            description,
+            description: description || formulaProfile || '',
+            formulaProfile,
+            benefits: cleanBenefits,
+            whyYouWillLoveIt,
             price: parsedPrice,
             mrp: parsedMrp,
             category,

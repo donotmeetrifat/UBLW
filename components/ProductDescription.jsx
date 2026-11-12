@@ -96,8 +96,8 @@ const ProductDescription = ({ product }) => {
                             <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest">
                                 Formulation & Profile
                             </h4>
-                            <p className="text-sm sm:text-base leading-relaxed text-slate-700">
-                                {product.description}
+                            <p className="text-sm sm:text-base leading-relaxed text-slate-700 whitespace-pre-line">
+                                {product.formulaProfile || product.description}
                             </p>
                         </div>
 
@@ -108,7 +108,7 @@ const ProductDescription = ({ product }) => {
                                 Key Proven Benefits
                             </h4>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 text-xs sm:text-sm">
-                                {defaultBenefits.map((benefit, idx) => (
+                                {(product.benefits && product.benefits.length > 0 ? product.benefits : defaultBenefits).map((benefit, idx) => (
                                     <li key={idx} className="flex items-start gap-3 text-slate-700">
                                         <div className="size-5 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 mt-0.5 shadow-2xs">
                                             <CheckIcon size={12} color="#6C306E" strokeWidth={2.5} />
@@ -124,8 +124,8 @@ const ProductDescription = ({ product }) => {
                             <h4 className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-widest">
                                 Why You'll Love It
                             </h4>
-                            <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
-                                Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation.
+                            <p className="text-xs sm:text-sm leading-relaxed text-slate-600 whitespace-pre-line">
+                                {product.whyYouWillLoveIt || "Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation."}
                             </p>
                         </div>
 

@@ -476,3 +476,24 @@ export const MenuIcon = ({ size = 20, className = '', color = 'currentColor', st
         <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
 )
+
+// 42. Drag Reorder Grip Handle Icon (2D Clean Precision)
+export const GripVerticalIcon = ({ size = 16, className = '', color = 'currentColor', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="9" cy="5" r="1.5" fill={color} />
+        <circle cx="9" cy="12" r="1.5" fill={color} />
+        <circle cx="9" cy="19" r="1.5" fill={color} />
+        <circle cx="15" cy="5" r="1.5" fill={color} />
+        <circle cx="15" cy="12" r="1.5" fill={color} />
+        <circle cx="15" cy="19" r="1.5" fill={color} />
+    </svg>
+)
+
+// 43. Clean 2D High-Res Cloud Upload Icon
+export const UploadCloudIcon = ({ size = 20, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M16 16L12 12L8 16" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 12V21" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20.39 18.39A5 5 0 0 0 18 9H16.74A8 8 0 1 0 4.26 15.65" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+)

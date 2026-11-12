@@ -96,25 +96,28 @@ model Category {
 }
 
 model Product {
-    id           String   @id @default(cuid())
-    name         String
-    description  String
-    mrp          Float
-    price        Float
-    costPrice    Float?
-    images       String[]
-    category     String
-    categoryId   String?
-    brand        String   @default("UK Import")
-    inStock      Boolean  @default(true)
-    stockCount   Int      @default(50)
-    isFeatured   Boolean  @default(false)
-    isBestSeller Boolean  @default(false)
-    views        Int      @default(0)
-    isActive     Boolean  @default(true)
-    storeId      String
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id               String   @id @default(cuid())
+    name             String
+    description      String
+    formulaProfile   String?
+    benefits         String[] @default([])
+    whyYouWillLoveIt String?
+    mrp              Float
+    price            Float
+    costPrice        Float?
+    images           String[]
+    category         String
+    categoryId       String?
+    brand            String   @default("UK Import")
+    inStock          Boolean  @default(true)
+    stockCount       Int      @default(50)
+    isFeatured       Boolean  @default(false)
+    isBestSeller     Boolean  @default(false)
+    views            Int      @default(0)
+    isActive         Boolean  @default(true)
+    storeId          String
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
 
     store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
     categoryRel Category?    @relation(fields: [categoryId], references: [id])
