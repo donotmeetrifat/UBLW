@@ -28,6 +28,7 @@ import { productDummyData } from '@/assets/assets'
 import InvoiceModal from '@/components/InvoiceModal'
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 
 export default function CheckoutPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -58,6 +59,15 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [confirmedOrder, setConfirmedOrder] = useState(null)
     const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+
+    // 0. Strict authentication check: visitors cannot proceed to checkout without signing in
+    useEffect(() => {
+        if (!isClientSignedIn()) {
+            toast.error('You must be signed in to access checkout.')
+            requireSignIn('Please sign in to place and confirm your order.')
+            router.push('/cart')
+        }
+    }, [router])
 
     // 1. Fetch live admin settings
     useEffect(() => {
@@ -151,7 +161,13 @@ export default function CheckoutPage() {
 
     // 5. Submit Order
     const handlePlaceOrder = async (e) => {
-        e.preventDefault()
+        if (e && e.preventDefault) e.preventDefault()
+
+        if (!isClientSignedIn()) {
+            toast.error('You must be signed in to confirm your order.')
+            requireSignIn('Please sign in to place and confirm your order.')
+            return
+        }
 
         if (items.length === 0) {
             toast.error('Your cart is empty. Please add products to checkout.')

@@ -172,35 +172,31 @@ export async function POST(request) {
         const cleanImages = Array.isArray(images) ? images.filter(url => typeof url === 'string' && url.length > 0) : [];
         const cleanVideos = Array.isArray(videos) ? videos.filter(url => typeof url === 'string' && url.length > 0) : [];
 
+        // Strict backend verification: user MUST be authenticated
+        if (!payload?.id) {
+            return NextResponse.json({
+                success: false,
+                error: 'UNAUTHORIZED',
+                message: 'You must be signed in to submit a verified product review.'
+            }, { status: 401 });
+        }
+
         if (isDatabaseConfigured()) {
-            // 1. Resolve User
-            let userId = payload?.id || clientUserId;
-            const targetEmail = userEmail || payload?.email;
+            // 1. Resolve & Verify User strictly from database
+            const verifiedUser = await prisma.user.findUnique({
+                where: { id: payload.id },
+                select: { id: true, name: true, email: true, isActive: true }
+            });
 
-            if (!userId && targetEmail) {
-                const userByEmail = await prisma.user.findUnique({ where: { email: targetEmail } });
-                if (userByEmail) userId = userByEmail.id;
-            }
-
-            if (!userId) {
-                const customerUser = await prisma.user.findFirst({
-                    where: { role: 'CUSTOMER' },
-                    orderBy: { createdAt: 'desc' }
-                });
-                userId = customerUser?.id;
-            }
-
-            if (!userId) {
-                const anyUser = await prisma.user.findFirst({ orderBy: { createdAt: 'desc' } });
-                userId = anyUser?.id;
-            }
-
-            if (!userId) {
+            if (!verifiedUser || verifiedUser.isActive === false) {
                 return NextResponse.json({
                     success: false,
-                    message: 'Please sign in to submit a verified product review.'
+                    error: 'UNAUTHORIZED',
+                    message: 'User account not found or deactivated. Please sign in again.'
                 }, { status: 401 });
             }
+
+            const userId = verifiedUser.id;
 
             // 2. Resolve Product in Database
             let dbProduct = null;

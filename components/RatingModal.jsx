@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { addRating } from '@/lib/features/rating/ratingSlice';
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
 
 export const REVIEW_SUGGESTIONS_EN = [
     {
@@ -175,6 +176,12 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
     };
 
     const handleSubmit = async () => {
+        if (!isClientSignedIn()) {
+            toast.error('You must be signed in to submit a review.');
+            requireSignIn('Please sign in to submit a verified product review.');
+            return;
+        }
+
         if (rating < 1 || rating > 5) {
             return toast.error('Please select a star rating');
         }

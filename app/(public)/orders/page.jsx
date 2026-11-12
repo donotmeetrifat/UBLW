@@ -4,7 +4,8 @@ import PageTitle from "@/components/PageTitle"
 import { useEffect, useState } from "react";
 import OrderItem from "@/components/OrderItem";
 import { orderDummyData } from "@/assets/assets";
-import { BagIcon, SearchIcon, SparklesIcon, TruckIcon } from "@/components/icons";
+import { BagIcon, SearchIcon, SparklesIcon, TruckIcon, LockIcon } from "@/components/icons";
+import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -12,8 +13,16 @@ export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isSignedIn, setIsSignedIn] = useState(true);
 
     const fetchOrders = async () => {
+        if (!isClientSignedIn()) {
+            setIsSignedIn(false);
+            setLoading(false);
+            return;
+        }
+        setIsSignedIn(true);
+
         try {
             const res = await fetch('/api/orders');
             const data = await res.json();
@@ -28,17 +37,15 @@ export default function Orders() {
                 const uniqueOrders = Array.from(
                     new Map(combined.map(item => [item.orderNumber || item.id, item])).values()
                 );
-                setOrders(uniqueOrders.length > 0 ? uniqueOrders : orderDummyData);
+                setOrders(uniqueOrders);
             } else {
-                setOrders(fetchedOrders.length > 0 ? fetchedOrders : orderDummyData);
+                setOrders(fetchedOrders);
             }
         } catch (error) {
             console.error("Error loading orders:", error);
             if (typeof window !== 'undefined') {
                 const localOrders = JSON.parse(localStorage.getItem('ukbl_orders') || '[]');
-                setOrders(localOrders.length > 0 ? localOrders : orderDummyData);
-            } else {
-                setOrders(orderDummyData);
+                setOrders(localOrders);
             }
         } finally {
             setLoading(false);
@@ -47,6 +54,9 @@ export default function Orders() {
 
     useEffect(() => {
         fetchOrders();
+        const handleAuth = () => fetchOrders();
+        window.addEventListener('auth-change', handleAuth);
+        return () => window.removeEventListener('auth-change', handleAuth);
     }, []);
 
     const filteredOrders = orders.filter(order => {
@@ -57,6 +67,41 @@ export default function Orders() {
         const customerPhone = (order.address?.phoneNumber || order.address?.phone || "").toLowerCase();
         return orderNum.includes(q) || customerName.includes(q) || customerPhone.includes(q);
     });
+
+    if (!isSignedIn) {
+        return (
+            <div className="min-h-[75vh] mx-4 sm:mx-6 flex items-center justify-center py-16">
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="py-12 text-center border border-[#EFE0EF] bg-white rounded-3xl p-8 max-w-md w-full mx-auto shadow-xl"
+                >
+                    <div className="size-16 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E] mb-4 shadow-2xs">
+                        <LockIcon size={28} color="#6C306E" />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-[#241224]">Sign In Required</h3>
+                    <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
+                        Please sign in to view your authentic UK beauty purchases and live courier parcel tracking.
+                    </p>
+                    <div className="flex flex-col gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => requireSignIn('Please sign in to view your orders.')}
+                            className="w-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white py-3.5 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg cursor-pointer"
+                        >
+                            Sign In / Register
+                        </button>
+                        <Link
+                            href="/shop"
+                            className="text-xs font-bold text-[#6C306E] hover:underline"
+                        >
+                            Browse UK Collections ➔
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[75vh] mx-4 sm:mx-6 text-slate-800">

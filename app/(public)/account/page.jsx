@@ -22,6 +22,8 @@ import toast from 'react-hot-toast'
 import AddressModal from '@/components/AddressModal'
 import { removeAddress } from '@/lib/features/address/addressSlice'
 import { isInsideDhaka } from '@/lib/settings'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import Link from 'next/link'
 
 export default function AccountPage() {
     const router = useRouter()
@@ -232,6 +234,41 @@ export default function AccountPage() {
         { id: 'addresses', label: 'Delivery Addresses', icon: MapPinIcon },
         { id: 'security', label: 'Password & Security', icon: LockIcon },
     ]
+
+    if (!currentUser) {
+        return (
+            <div className="min-h-[75vh] flex items-center justify-center px-4 py-16">
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="py-12 text-center border border-[#EFE0EF] bg-white rounded-3xl p-8 max-w-md w-full mx-auto shadow-xl"
+                >
+                    <div className="size-16 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E] mb-4 shadow-2xs">
+                        <LockIcon size={28} color="#6C306E" />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-[#241224]">Sign In Required</h3>
+                    <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
+                        Please sign in to manage your contact details, saved addresses, and account security.
+                    </p>
+                    <div className="flex flex-col gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => requireSignIn('Please sign in to manage your account.')}
+                            className="w-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white py-3.5 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg cursor-pointer"
+                        >
+                            Sign In / Register
+                        </button>
+                        <Link
+                            href="/shop"
+                            className="text-xs font-bold text-[#6C306E] hover:underline"
+                        >
+                            Browse UK Collections ➔
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[80vh] max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-slate-800">

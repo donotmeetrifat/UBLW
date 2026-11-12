@@ -20,6 +20,7 @@ import { removeAddress } from '@/lib/features/address/addressSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } from '@/lib/settings';
 import { FlowButton } from '@/components/ui/flow-button';
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
 
 const OrderSummary = ({ totalPrice, items = [] }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
@@ -111,6 +112,11 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
     const finalTotal = Math.max(0, totalPrice - discountAmount + (selectedAddress ? deliveryCharge : 0));
 
     const handleProceedToPayment = () => {
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to proceed with your order.');
+            return;
+        }
+
         if (!selectedAddress) {
             toast.error('Please add and select your delivery address to proceed.');
             setShowAddressModal(true);

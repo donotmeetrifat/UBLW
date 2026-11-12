@@ -2,15 +2,23 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getStoreSettings, calculateDeliveryCharge } from '@/lib/settings';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request) {
     try {
+        const payload = getUserFromRequest(request);
+        if (!payload?.id) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to view orders.' },
+                { status: 401 }
+            );
+        }
+
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
 
         if (isDatabaseConfigured()) {
-            const where = {};
-            if (userId) where.userId = userId;
+            const where = payload.role === 'ADMIN' ? (userId ? { userId } : {}) : { userId: payload.id };
 
             const orders = await prisma.order.findMany({
                 where,
@@ -28,9 +36,7 @@ export async function GET(request) {
         }
 
         let orders = memoryStore.getOrders();
-        if (userId) {
-            orders = orders.filter(o => o.userId === userId);
-        }
+        orders = orders.filter(o => o.userId === payload.id);
 
         return NextResponse.json({ success: true, orders });
     } catch (error) {
@@ -44,6 +50,29 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const payload = getUserFromRequest(request);
+        if (!payload?.id) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to confirm and place an order.' },
+                { status: 401 }
+            );
+        }
+
+        let verifiedUser = null;
+        if (isDatabaseConfigured()) {
+            verifiedUser = await prisma.user.findUnique({
+                where: { id: payload.id },
+                select: { id: true, email: true, name: true, phone: true, isActive: true }
+            });
+
+            if (!verifiedUser || verifiedUser.isActive === false) {
+                return NextResponse.json(
+                    { success: false, error: 'UNAUTHORIZED', message: 'User account not found or deactivated. Please sign in again.' },
+                    { status: 401 }
+                );
+            }
+        }
+
         const body = await request.json();
         const {
             items,
@@ -53,8 +82,9 @@ export async function POST(request) {
             senderNumber = null,
             couponCode = null,
             customerNotes = '',
-            userId = 'guest_customer'
         } = body;
+
+        const userId = verifiedUser?.id || payload.id;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return NextResponse.json({ success: false, message: 'Order must contain at least one item' }, { status: 400 });
@@ -152,19 +182,8 @@ export async function POST(request) {
 
         if (isDatabaseConfigured()) {
             try {
-                const cleanPhoneDigits = recipientPhone.replace(/[^0-9]/g, '') || '01900000000';
-                const userEmail = (normalizedAddress.email || `${cleanPhoneDigits}@ukbrandlover.com`).toLowerCase().trim();
-
-                // Find or create user
-                const user = await prisma.user.upsert({
-                    where: { email: userEmail },
-                    update: { name: recipientName, phone: recipientPhone },
-                    create: {
-                        name: recipientName,
-                        email: userEmail,
-                        phone: recipientPhone,
-                    }
-                });
+                // Attach order strictly to the verified customer account
+                const user = verifiedUser;
 
                 // Create address in DB
                 const savedAddress = await prisma.address.create({
@@ -230,6 +249,12 @@ export async function POST(request) {
                         }
                     }
                 });
+
+                // Clear user's bag in database upon successful order
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { cart: {}, abandonedCartAt: null }
+                }).catch(() => {});
 
                 return NextResponse.json({ success: true, order }, { status: 201 });
             } catch (dbError) {

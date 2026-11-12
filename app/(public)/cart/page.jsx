@@ -4,7 +4,8 @@ import Counter from "@/components/Counter";
 import OrderSummary from "@/components/OrderSummary";
 import PageTitle from "@/components/PageTitle";
 import { deleteItemFromCart } from "@/lib/features/cart/cartSlice";
-import { BagIcon, TrashIcon, SparklesIcon, ArrowRightIcon } from "@/components/icons";
+import { BagIcon, TrashIcon, SparklesIcon, ArrowRightIcon, LockIcon } from "@/components/icons";
+import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +23,23 @@ export default function Cart() {
 
     const [cartArray, setCartArray] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
+    const [isSignedIn, setIsSignedIn] = useState(true);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        const verifyAuth = () => {
+            const signedIn = isClientSignedIn();
+            setIsSignedIn(signedIn);
+            setIsCheckingAuth(false);
+            if (!signedIn) {
+                requireSignIn('Please sign in to access your shopping bag.');
+            }
+        };
+
+        verifyAuth();
+        window.addEventListener('auth-change', verifyAuth);
+        return () => window.removeEventListener('auth-change', verifyAuth);
+    }, []);
 
     const createCartArray = () => {
         let computedTotal = 0;
@@ -49,6 +67,42 @@ export default function Cart() {
     useEffect(() => {
         createCartArray();
     }, [cartItems, products]);
+
+    // Unauthenticated visitors must sign in before managing bag
+    if (!isCheckingAuth && !isSignedIn) {
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="min-h-[70vh] mx-6 flex flex-col items-center justify-center text-center py-16"
+            >
+                <div className="size-20 bg-[#FAF6FA] border border-[#EFE0EF] rounded-full flex items-center justify-center text-[#6C306E] mb-4 shadow-2xs">
+                    <LockIcon size={32} color="#6C306E" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224]">Sign In Required</h1>
+                <p className="text-slate-500 text-xs sm:text-sm mt-2 max-w-sm font-normal">
+                    You must be signed in to add products to your shopping bag, save your selections, and complete orders.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
+                    <button
+                        type="button"
+                        onClick={() => requireSignIn('Please sign in to access your shopping bag.')}
+                        className="group relative overflow-hidden inline-flex items-center gap-2.5 bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white px-8 py-3.5 rounded-full text-xs font-bold transition-all duration-300 shadow-[0_8px_24px_-4px_rgba(108,48,110,0.45)] hover:shadow-[0_14px_34px_-2px_rgba(108,48,110,0.65)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shimmer-active border border-white/20"
+                    >
+                        <span className="tracking-wide">Sign In to Continue</span>
+                        <ArrowRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                    </button>
+                    <Link 
+                        href="/shop" 
+                        className="inline-flex items-center gap-2 text-xs font-bold text-[#6C306E] hover:underline px-4 py-3"
+                    >
+                        <span>Explore UK Products</span>
+                    </Link>
+                </div>
+            </motion.div>
+        );
+    }
 
     return cartArray.length > 0 ? (
         <div className="min-h-screen mx-4 sm:mx-6 text-slate-800">

@@ -19,6 +19,7 @@ import {
     BagIcon
 } from '@/components/icons';
 import { dummyRatingsData } from '@/assets/assets';
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
 
 export default function ReviewsPage() {
     const [activeTab, setActiveTab] = useState('to-review'); // 'to-review' | 'my-reviews'
@@ -287,13 +288,19 @@ export default function ReviewsPage() {
                                             </span>
                                             <button
                                                 type="button"
-                                                onClick={() => setSelectedReviewModal({
-                                                    productId: prod.id,
-                                                    productName: prod.name,
-                                                    productImage: prodImg,
-                                                    orderId: item.orderId,
-                                                    product: prod,
-                                                })}
+                                                onClick={() => {
+                                                    if (!isClientSignedIn()) {
+                                                        requireSignIn('Please sign in to write a product review.');
+                                                        return;
+                                                    }
+                                                    setSelectedReviewModal({
+                                                        productId: prod.id,
+                                                        productName: prod.name,
+                                                        productImage: prodImg,
+                                                        orderId: item.orderId,
+                                                        product: prod,
+                                                    });
+                                                }}
                                                 className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs uppercase tracking-wider transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                                             >
                                                 <ReviewBadgeIcon size={14} color="#FFFFFF" />
@@ -389,14 +396,20 @@ export default function ReviewsPage() {
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSelectedReviewModal({
-                                                        productId: prod.id || rev.productId,
-                                                        productName: prod.name,
-                                                        productImage: prodImg,
-                                                        orderId: rev.orderId,
-                                                        product: prod,
-                                                        existingRating: rev,
-                                                    })}
+                                                    onClick={() => {
+                                                        if (!isClientSignedIn()) {
+                                                            requireSignIn('Please sign in to manage your reviews.');
+                                                            return;
+                                                        }
+                                                        setSelectedReviewModal({
+                                                            productId: prod.id || rev.productId,
+                                                            productName: prod.name,
+                                                            productImage: prodImg,
+                                                            orderId: rev.orderId,
+                                                            product: prod,
+                                                            existingRating: rev,
+                                                        });
+                                                    }}
                                                     className="p-2 rounded-full hover:bg-[#FAF6FA] text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
                                                     aria-label="Edit review"
                                                     title="Edit review"

@@ -24,45 +24,55 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const payload = getUserFromRequest(request);
+
+        // Strict backend verification: unauthenticated visitors cannot create or modify addresses
+        if (!payload?.id) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to manage delivery addresses.' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
 
-        if (!payload?.id || !isDatabaseConfigured()) {
-            // Guest mode: return normalized object
-            const normalized = {
-                id: body.id || `addr_${Date.now()}`,
-                fullName: body.fullName || body.name || 'Customer',
-                phoneNumber: body.phoneNumber || body.phone || '',
-                region: body.region || body.state || 'Dhaka',
-                city: body.city || 'Dhaka',
-                area: body.area || '',
-                address: body.address || body.street || '',
-                isDefault: !!body.isDefault,
-            };
-            return NextResponse.json({ success: true, address: normalized });
-        }
-
-        const isDefault = !!body.isDefault;
-        if (isDefault) {
-            await prisma.address.updateMany({
-                where: { userId: payload.id },
-                data: { isDefault: false }
+        if (isDatabaseConfigured()) {
+            const user = await prisma.user.findUnique({
+                where: { id: payload.id },
+                select: { id: true, isActive: true }
             });
+
+            if (!user || user.isActive === false) {
+                return NextResponse.json(
+                    { success: false, error: 'UNAUTHORIZED', message: 'User account not found or deactivated.' },
+                    { status: 401 }
+                );
+            }
+
+            const isDefault = !!body.isDefault;
+            if (isDefault) {
+                await prisma.address.updateMany({
+                    where: { userId: payload.id },
+                    data: { isDefault: false }
+                });
+            }
+
+            const newAddress = await prisma.address.create({
+                data: {
+                    userId: payload.id,
+                    fullName: (body.fullName || body.name || 'Customer').trim(),
+                    phoneNumber: (body.phoneNumber || body.phone || '').trim(),
+                    region: (body.region || body.state || 'Dhaka').trim(),
+                    city: (body.city || 'Dhaka').trim(),
+                    area: (body.area || '').trim(),
+                    address: (body.address || body.street || '').trim(),
+                    isDefault,
+                }
+            });
+
+            return NextResponse.json({ success: true, address: newAddress });
         }
 
-        const newAddress = await prisma.address.create({
-            data: {
-                userId: payload.id,
-                fullName: (body.fullName || body.name || 'Customer').trim(),
-                phoneNumber: (body.phoneNumber || body.phone || '').trim(),
-                region: (body.region || body.state || 'Dhaka').trim(),
-                city: (body.city || 'Dhaka').trim(),
-                area: (body.area || '').trim(),
-                address: (body.address || body.street || '').trim(),
-                isDefault,
-            }
-        });
-
-        return NextResponse.json({ success: true, address: newAddress });
+        return NextResponse.json({ success: true, address: body });
     } catch (error) {
         console.error('Error creating address:', error);
         return NextResponse.json({ success: false, message: 'Failed to save address' }, { status: 500 });

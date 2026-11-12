@@ -2,6 +2,7 @@
 
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import { BagIcon, CheckIcon, StarIcon } from '@/components/icons'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -36,6 +37,12 @@ const ProductCard = ({ product }) => {
     const handleAddToCart = (e) => {
         e.preventDefault()
         e.stopPropagation()
+
+        // Strict sign-in enforcement: only authenticated users can add to bag
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add products to your shopping bag.')
+            return
+        }
 
         // 1. Button Press Feedback
         setIsPressed(true)

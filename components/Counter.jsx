@@ -1,6 +1,7 @@
 'use client'
 
 import { addToCart, removeFromCart } from "@/lib/features/cart/cartSlice";
+import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,12 +13,20 @@ const Counter = ({ productId, className = "" }) => {
 
     const addToCartHandler = (e) => {
         e?.stopPropagation();
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to modify products in your shopping bag.');
+            return;
+        }
         dispatch(addToCart({ productId }));
         window.dispatchEvent(new CustomEvent('cart-bump'));
     };
 
     const removeFromCartHandler = (e) => {
         e?.stopPropagation();
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to modify products in your shopping bag.');
+            return;
+        }
         dispatch(removeFromCart({ productId }));
         window.dispatchEvent(new CustomEvent('cart-bump'));
     };

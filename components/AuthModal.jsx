@@ -17,9 +17,9 @@ import {
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
-const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
+const AuthModal = ({ isOpen, onClose, onLoginSuccess, initialMode = 'login', promptMessage = '' }) => {
     const router = useRouter()
-    const [mode, setMode] = useState('login') // 'login', 'register'
+    const [mode, setMode] = useState(initialMode) // 'login', 'register'
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -28,6 +28,11 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         password: '',
     })
     const [loading, setLoading] = useState(false)
+
+    // Sync mode when initialMode changes
+    React.useEffect(() => {
+        if (initialMode) setMode(initialMode)
+    }, [initialMode, isOpen])
 
     if (!isOpen) return null
 
@@ -153,6 +158,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                             : 'Sign in to view your bag, saved addresses, and live order tracking'}
                     </p>
                 </div>
+
+                {/* Prompt Message Banner */}
+                {promptMessage && (
+                    <div className="mb-5 py-2.5 px-3.5 bg-[#FAF6FA] border border-[#6C306E]/20 rounded-2xl text-center text-xs font-semibold text-[#6C306E] flex items-center justify-center gap-2 shadow-2xs">
+                        <LockIcon size={14} color="#6C306E" className="shrink-0" />
+                        <span>{promptMessage}</span>
+                    </div>
+                )}
 
                 {/* Mode Selector Tabs with Spring Pill */}
                 <div className="flex bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 rounded-2xl mb-6 text-xs font-bold relative">

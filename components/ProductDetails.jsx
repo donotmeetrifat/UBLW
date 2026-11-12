@@ -1,6 +1,7 @@
 'use client'
 
 import { addToCart } from "@/lib/features/cart/cartSlice";
+import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
 import { 
     BagIcon, 
     CheckIcon, 
@@ -31,6 +32,10 @@ const ProductDetails = ({ product }) => {
     const [isAdded, setIsAdded] = useState(false);
 
     const addToCartHandler = () => {
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add products to your shopping bag.');
+            return;
+        }
         dispatch(addToCart({ productId }));
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 1400);
@@ -39,6 +44,10 @@ const ProductDetails = ({ product }) => {
     };
 
     const buyNowHandler = () => {
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to order products.');
+            return;
+        }
         if (!cart[productId]) {
             dispatch(addToCart({ productId }));
             window.dispatchEvent(new CustomEvent('cart-bump'));

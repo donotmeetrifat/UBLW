@@ -1,39 +1,68 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
 import { setProduct } from '@/lib/features/product/productSlice'
+import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
     const dispatch = useDispatch()
     const hasInitializedRef = useRef(false)
+    const [authModal, setAuthModal] = useState({
+        isOpen: false,
+        mode: 'login',
+        message: '',
+    })
+
+    // Global listener to trigger Auth Modal from any component
+    useEffect(() => {
+        const handleOpenAuth = (e) => {
+            const detail = e?.detail || {}
+            setAuthModal({
+                isOpen: true,
+                mode: detail.mode || 'login',
+                message: detail.message || '',
+            })
+        }
+
+        window.addEventListener('open-auth-modal', handleOpenAuth)
+        return () => window.removeEventListener('open-auth-modal', handleOpenAuth)
+    }, [])
 
     useEffect(() => {
         // Prevent duplicate execution on fast dev re-renders
         if (hasInitializedRef.current) return
         hasInitializedRef.current = true
 
-        // 1. INSTANT 0ms HYDRATION FROM LOCALSTORAGE
+        // 1. INSTANT 0ms HYDRATION FROM LOCALSTORAGE (STRICTLY FOR AUTHENTICATED USERS)
         if (typeof window !== 'undefined') {
             try {
-                // Hydrate Cart
-                const storedCart = localStorage.getItem('ukbl_cart')
-                if (storedCart) {
-                    const parsedCart = JSON.parse(storedCart)
-                    if (parsedCart && parsedCart.cartItems) {
-                        dispatch(setCart(parsedCart))
-                    }
-                }
+                const currentUser = localStorage.getItem('ukbl_current_user')
 
-                // Hydrate Addresses
-                const storedAddresses = localStorage.getItem('savedAddresses')
-                if (storedAddresses) {
-                    const parsedAddr = JSON.parse(storedAddresses)
-                    if (Array.isArray(parsedAddr) && parsedAddr.length > 0) {
-                        dispatch(setAddresses(parsedAddr))
+                if (currentUser) {
+                    // Hydrate Cart for signed-in user
+                    const storedCart = localStorage.getItem('ukbl_cart')
+                    if (storedCart) {
+                        const parsedCart = JSON.parse(storedCart)
+                        if (parsedCart && parsedCart.cartItems) {
+                            dispatch(setCart(parsedCart))
+                        }
                     }
+
+                    // Hydrate Addresses
+                    const storedAddresses = localStorage.getItem('savedAddresses')
+                    if (storedAddresses) {
+                        const parsedAddr = JSON.parse(storedAddresses)
+                        if (Array.isArray(parsedAddr) && parsedAddr.length > 0) {
+                            dispatch(setAddresses(parsedAddr))
+                        }
+                    }
+                } else {
+                    // Unauthenticated visitors CANNOT have items in shopping bag
+                    localStorage.removeItem('ukbl_cart')
+                    dispatch(setCart({ cartItems: {}, total: 0 }))
                 }
             } catch (e) {
                 console.error('Initial storage hydration error:', e)
@@ -175,6 +204,19 @@ export default function DataSyncProvider({ children }) {
         }
     }, [dispatch])
 
-    return children
+    return (
+        <>
+            {children}
+            <AuthModal
+                isOpen={authModal.isOpen}
+                onClose={() => setAuthModal(prev => ({ ...prev, isOpen: false }))}
+                initialMode={authModal.mode}
+                promptMessage={authModal.message}
+                onLoginSuccess={() => {
+                    setAuthModal(prev => ({ ...prev, isOpen: false }))
+                }}
+            />
+        </>
+    )
 }
 

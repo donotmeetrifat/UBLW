@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { FlowButton } from "@/components/ui/flow-button";
 import AccountModal from "@/components/AccountModal";
+import { requireSignIn } from "@/lib/clientAuth";
 
 const Navbar = () => {
     const router = useRouter();
@@ -204,8 +205,14 @@ const Navbar = () => {
                             <FlowButton
                                 id="navbar-cart-icon"
                                 text="Bag"
-                                badge={cartCount}
-                                href="/cart"
+                                badge={currentUser ? cartCount : 0}
+                                href={currentUser ? "/cart" : undefined}
+                                onClick={(e) => {
+                                    if (!currentUser) {
+                                        if (e && e.preventDefault) e.preventDefault();
+                                        requireSignIn('Please sign in to access your shopping bag.');
+                                    }
+                                }}
                                 className={isCartBumping ? '!scale-105 !border-[#6C306E]' : ''}
                             />
 
