@@ -395,6 +395,7 @@ export default function AdminProductsPage() {
                         dispatch(updateReduxProduct([data.product]))
                     }
                     if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
                     }
@@ -417,6 +418,7 @@ export default function AdminProductsPage() {
                         dispatch(updateReduxProduct([data.product]))
                     }
                     if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
                     }
@@ -444,6 +446,10 @@ export default function AdminProductsPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success(data.message || 'Product removed successfully')
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_products_synced', Date.now().toString())
+                    window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                }
                 setDeletingProduct(null)
                 fetchProducts()
             } else {
@@ -468,6 +474,10 @@ export default function AdminProductsPage() {
             const data = await res.json()
             if (data.success) {
                 setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, inStock: nextState } : p))
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_products_synced', Date.now().toString())
+                    window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                }
                 toast.success(nextState ? 'Marked In Stock' : 'Marked Out of Stock')
             }
         } catch (error) {

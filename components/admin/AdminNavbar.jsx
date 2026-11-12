@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { MenuIcon, BagIcon, MailIcon, ArrowRightIcon } from "@/components/icons"
+import { MenuIcon, BagIcon, ArrowRightIcon } from "@/components/icons"
 
 export default function AdminNavbar({ onToggleSidebar = () => {} }) {
     return (
@@ -30,16 +30,6 @@ export default function AdminNavbar({ onToggleSidebar = () => {} }) {
 
             {/* Right section */}
             <div className="flex items-center gap-2.5 sm:gap-3">
-                {/* Inquiries Shortcut */}
-                <Link
-                    href="/admin/inquiries"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#6C306E] bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full transition shadow-2xs"
-                    title="Customer Inquiries"
-                >
-                    <MailIcon size={14} color="#6C306E" />
-                    <span className="hidden sm:inline">Inquiries</span>
-                </Link>
-
                 {/* Storefront Link */}
                 <Link
                     href="/"

@@ -44,6 +44,36 @@ const ProductDescription = ({ product }) => {
         "Direct London shipments with verified batch codes and authentic UK store packaging."
     ]
 
+    const resolvedBenefits = (() => {
+        let raw = product?.benefits
+        if (typeof raw === 'string') {
+            try {
+                raw = JSON.parse(raw)
+            } catch (e) {
+                if (raw.startsWith('{') && raw.endsWith('}')) {
+                    raw = raw.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim())
+                } else if (raw.includes('\n')) {
+                    raw = raw.split('\n').map(s => s.trim())
+                } else {
+                    raw = [raw.trim()]
+                }
+            }
+        }
+        if (Array.isArray(raw)) {
+            const list = raw.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
+            if (list.length > 0) return list
+        }
+        return defaultBenefits
+    })()
+
+    const resolvedWhyYouLoveIt = (product?.whyYouWillLoveIt && String(product.whyYouWillLoveIt).trim().length > 0)
+        ? String(product.whyYouWillLoveIt).trim()
+        : "Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation."
+
+    const resolvedFormulaProfile = (product?.formulaProfile && String(product.formulaProfile).trim().length > 0)
+        ? String(product.formulaProfile).trim()
+        : (product?.description || '')
+
     return (
         <div className="mt-16 sm:mt-20 mb-16 sm:mb-20 pt-10 sm:pt-14 border-t border-[#EFE0EF] text-sm text-slate-600">
             {/* Navigation Tabs with Spring Animated Indicator */}
@@ -97,7 +127,7 @@ const ProductDescription = ({ product }) => {
                                 Formulation & Profile
                             </h4>
                             <p className="text-sm sm:text-base leading-relaxed text-slate-700 whitespace-pre-line">
-                                {product.formulaProfile || product.description}
+                                {resolvedFormulaProfile}
                             </p>
                         </div>
 
@@ -108,7 +138,7 @@ const ProductDescription = ({ product }) => {
                                 Key Proven Benefits
                             </h4>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 text-xs sm:text-sm">
-                                {(product.benefits && product.benefits.length > 0 ? product.benefits : defaultBenefits).map((benefit, idx) => (
+                                {resolvedBenefits.map((benefit, idx) => (
                                     <li key={idx} className="flex items-start gap-3 text-slate-700">
                                         <div className="size-5 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 mt-0.5 shadow-2xs">
                                             <CheckIcon size={12} color="#6C306E" strokeWidth={2.5} />
@@ -125,7 +155,7 @@ const ProductDescription = ({ product }) => {
                                 Why You'll Love It
                             </h4>
                             <p className="text-xs sm:text-sm leading-relaxed text-slate-600 whitespace-pre-line">
-                                {product.whyYouWillLoveIt || "Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation."}
+                                {resolvedWhyYouLoveIt}
                             </p>
                         </div>
 

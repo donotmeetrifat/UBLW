@@ -59,8 +59,15 @@ export default function Product() {
             }
         };
 
+        const handleStorageUpdate = (e) => {
+            if (e.key === 'ukbl_products_synced') {
+                fetchProduct();
+            }
+        };
+
         window.addEventListener('product-updated', handleLiveUpdate);
         window.addEventListener('product-catalog-updated', fetchProduct);
+        window.addEventListener('storage', handleStorageUpdate);
 
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -76,6 +83,7 @@ export default function Product() {
         return () => {
             window.removeEventListener('product-updated', handleLiveUpdate);
             window.removeEventListener('product-catalog-updated', fetchProduct);
+            window.removeEventListener('storage', handleStorageUpdate);
         };
     }, [productId]);
 
