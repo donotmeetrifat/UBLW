@@ -9,6 +9,7 @@ import {
     TruckIcon,
     UserIcon,
     MailIcon,
+    CouponTicketIcon,
     CloseIcon
 } from "@/components/icons"
 import Image from "next/image"
@@ -34,6 +35,7 @@ const navSections = [
         section: 'Orders & Sales',
         items: [
             { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon },
+            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon },
         ]
     },
     {

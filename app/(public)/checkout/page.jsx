@@ -168,7 +168,13 @@ export default function CheckoutPage() {
         ? calculateDeliveryCharge(selectedAddress, subtotal, settings.delivery)
         : (settings.delivery.insideDhaka || 80)
 
-    const discountAmount = coupon ? Math.round((coupon.discount / 100) * subtotal) : 0
+    const discountAmount = coupon 
+        ? (coupon.discountType === 'FIXED'
+            ? Math.min(coupon.discount, subtotal)
+            : (coupon.maxDiscount
+                ? Math.min(Math.round((coupon.discount / 100) * subtotal), coupon.maxDiscount)
+                : Math.round((coupon.discount / 100) * subtotal)))
+        : 0
     const finalTotal = Math.max(0, subtotal - discountAmount + deliveryCharge)
 
     const handleCopyNumber = (num) => {

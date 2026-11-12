@@ -120,6 +120,9 @@ export default function DataSyncProvider({ children }) {
             window.addEventListener('storage', (e) => {
                 if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
                 if (e.key === 'ukbl_products_synced') syncProductCatalog()
+                if (e.key === 'ukbl_coupons_synced') {
+                    window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
+                }
             })
         }
 

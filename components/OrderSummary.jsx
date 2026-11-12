@@ -64,6 +64,36 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
         }
     }, [addressList]);
 
+    // Live sync currently applied coupon if coupon definitions change anywhere
+    useEffect(() => {
+        const handleCouponSync = async () => {
+            if (!coupon?.code) return;
+            try {
+                const currentUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('ukbl_current_user') || 'null') : null;
+                const res = await fetch('/api/coupons/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        code: coupon.code, 
+                        subtotal: totalPrice,
+                        userEmail: currentUser?.email || null,
+                        userId: currentUser?.id || null
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.coupon) {
+                    setCoupon(data.coupon);
+                } else {
+                    setCoupon(null);
+                    toast.error(`Coupon ${coupon.code} is no longer active.`);
+                }
+            } catch (e) {}
+        };
+
+        window.addEventListener('coupon-catalog-updated', handleCouponSync);
+        return () => window.removeEventListener('coupon-catalog-updated', handleCouponSync);
+    }, [coupon, totalPrice]);
+
     const handleCouponCode = async (event) => {
         event.preventDefault();
         const code = couponCodeInput.trim().toUpperCase();
@@ -76,37 +106,43 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
 
         setIsApplyingCoupon(true);
         try {
+            const currentUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('ukbl_current_user') || 'null') : null;
             const res = await fetch('/api/coupons/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, subtotal: totalPrice })
+                body: JSON.stringify({ 
+                    code, 
+                    subtotal: totalPrice,
+                    userEmail: currentUser?.email || null,
+                    userId: currentUser?.id || null
+                })
             });
             const data = await res.json();
 
             if (data.success && data.coupon) {
                 setCoupon(data.coupon);
-                toast.success(`Coupon ${data.coupon.code} applied! ${data.coupon.discount}% discount added.`);
+                const discountText = data.coupon.discountType === 'FIXED'
+                    ? `${currency}${data.coupon.discount} off`
+                    : `${data.coupon.discount}% off`;
+                toast.success(`Coupon ${data.coupon.code} applied! (${discountText})`);
                 setCouponCodeInput('');
             } else {
-                toast.error(data.message || 'Invalid coupon code. Try NEW20 or OFF10');
+                toast.error(data.message || 'Invalid or ineligible coupon code.');
             }
         } catch (error) {
-            // Local fallback
-            if (code === 'NEW20') {
-                setCoupon({ code: 'NEW20', description: '20% Off New Customer Welcome', discount: 20 });
-                toast.success('Coupon NEW20 applied! 20% discount.');
-            } else if (code === 'OFF10') {
-                setCoupon({ code: 'OFF10', description: '10% Off Privilege Reward', discount: 10 });
-                toast.success('Coupon OFF10 applied! 10% discount.');
-            } else {
-                toast.error('Could not validate coupon. Try NEW20 or OFF10');
-            }
+            toast.error('Could not validate coupon. Please try again.');
         } finally {
             setIsApplyingCoupon(false);
         }
     };
 
-    const discountAmount = coupon && items.length > 0 ? Math.round((coupon.discount / 100) * totalPrice) : 0;
+    const discountAmount = coupon && items.length > 0
+        ? (coupon.discountType === 'FIXED'
+            ? Math.min(coupon.discount, totalPrice)
+            : (coupon.maxDiscount 
+                ? Math.min(Math.round((coupon.discount / 100) * totalPrice), coupon.maxDiscount)
+                : Math.round((coupon.discount / 100) * totalPrice)))
+        : 0;
     
     // Calculate live delivery charge
     const deliveryCharge = items.length === 0 

@@ -214,16 +214,24 @@ model Rating {
 }
 
 model Coupon {
-    id             String   @id @default(cuid())
-    code           String   @unique
-    description    String
-    discount       Float    // Percentage (e.g. 20 for 20%)
-    forNewUserOnly Boolean  @default(false)
-    minOrderAmount Float    @default(0)
-    maxDiscount    Float?
-    isActive       Boolean  @default(true)
-    expiresAt      DateTime
-    createdAt      DateTime @default(now())
+    id                String    @id @default(cuid())
+    code              String    @unique
+    description       String
+    discountType      String    @default("PERCENTAGE") // "PERCENTAGE" or "FIXED"
+    discount          Float     // Value (e.g. 20 for 20% or 200 for 200 BDT)
+    forNewUserOnly    Boolean   @default(false)
+    minOrderAmount    Float     @default(0)
+    maxDiscount       Float?
+    isLifetime        Boolean   @default(false)
+    startsAt          DateTime?
+    expiresAt         DateTime?
+    usageLimit        Int?      // Global usage limit (e.g. first 5, first 10, or null for unlimited)
+    usedCount         Int       @default(0)
+    perUserLimit      Int       @default(1)
+    allowedUserEmails String[]  @default([]) // If empty, public to all. If populated, restricted strictly to these emails
+    isActive          Boolean   @default(true)
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @default(now()) @updatedAt
 }
 
 model Setting {

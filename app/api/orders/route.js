@@ -139,19 +139,41 @@ export async function POST(request) {
         let discount = 0;
         let isCouponUsed = false;
         let verifiedCouponCode = null;
+        let appliedCouponId = null;
 
         if (couponCode) {
+            const normalizedCode = couponCode.trim().toUpperCase();
             const coupon = isDatabaseConfigured()
-                ? await prisma.coupon.findUnique({ where: { code: couponCode.trim().toUpperCase() } })
-                : memoryStore.getCouponByCode(couponCode);
+                ? await prisma.coupon.findUnique({ where: { code: normalizedCode } })
+                : memoryStore.getCouponByCode(normalizedCode);
 
-            if (coupon && coupon.isActive && (!coupon.minOrderAmount || subtotal >= coupon.minOrderAmount)) {
-                discount = Math.round((subtotal * coupon.discount) / 100);
-                if (coupon.maxDiscount && discount > coupon.maxDiscount) {
-                    discount = coupon.maxDiscount;
+            if (coupon && coupon.isActive) {
+                const now = new Date();
+                const startsValid = !coupon.startsAt || new Date(coupon.startsAt) <= now;
+                const expiryValid = coupon.isLifetime || !coupon.expiresAt || new Date(coupon.expiresAt) >= now;
+                const usageValid = !coupon.usageLimit || (coupon.usedCount || 0) < coupon.usageLimit;
+                
+                let userValid = true;
+                if (Array.isArray(coupon.allowedUserEmails) && coupon.allowedUserEmails.length > 0) {
+                    const customerEmail = (verifiedUser?.email || payload.email || '').toLowerCase().trim();
+                    userValid = coupon.allowedUserEmails.some(e => String(e).toLowerCase().trim() === customerEmail);
                 }
-                isCouponUsed = true;
-                verifiedCouponCode = coupon.code;
+
+                const minOrderValid = !coupon.minOrderAmount || subtotal >= coupon.minOrderAmount;
+
+                if (startsValid && expiryValid && usageValid && userValid && minOrderValid) {
+                    if (coupon.discountType === 'FIXED') {
+                        discount = Math.min(coupon.discount, subtotal);
+                    } else {
+                        discount = Math.round((subtotal * coupon.discount) / 100);
+                        if (coupon.maxDiscount && discount > coupon.maxDiscount) {
+                            discount = coupon.maxDiscount;
+                        }
+                    }
+                    isCouponUsed = true;
+                    verifiedCouponCode = coupon.code;
+                    appliedCouponId = coupon.id;
+                }
             }
         }
 
@@ -249,6 +271,18 @@ export async function POST(request) {
                         }
                     }
                 });
+
+                // If a coupon was successfully redeemed, increment its usage counter
+                if (isCouponUsed && appliedCouponId) {
+                    try {
+                        await prisma.coupon.update({
+                            where: { id: appliedCouponId },
+                            data: { usedCount: { increment: 1 } }
+                        });
+                    } catch (coupErr) {
+                        console.warn('Coupon counter increment note:', coupErr.message);
+                    }
+                }
 
                 // Remove purchased items from user's bag in database
                 try {
