@@ -2,36 +2,64 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request, { params }) {
     try {
         const { id } = await params;
 
         if (isDatabaseConfigured()) {
-            const product = await prisma.product.findUnique({
-                where: { id },
-                include: {
-                    ratings: {
-                        include: {
-                            user: {
-                                select: { id: true, name: true, image: true }
-                            }
+            let product;
+            try {
+                product = await prisma.product.findUnique({
+                    where: { id },
+                    include: {
+                        ratings: {
+                            include: {
+                                user: {
+                                    select: { id: true, name: true, image: true }
+                                }
+                            },
+                            orderBy: { createdAt: 'desc' }
                         },
-                        orderBy: { createdAt: 'desc' }
+                        store: true
                     },
-                    store: true
-                },
-            });
+                });
+            } catch (findErr) {
+                console.warn('Prisma findUnique fallback to raw SQL:', findErr.message);
+                const rows = await prisma.$queryRawUnsafe(`
+                    SELECT p.*,
+                        COALESCE(p.views, 0)::int as "views",
+                        COALESCE(p."formulaProfile", p.description) as "formulaProfile",
+                        COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
+                        COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
+                        COALESCE(p."isActive", true) as "isActive"
+                    FROM "Product" p
+                    WHERE p.id = $1
+                `, id);
+                product = rows && rows[0] ? rows[0] : null;
+            }
+
             if (!product) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
             }
-            return NextResponse.json({ success: true, product });
+            return NextResponse.json({ success: true, product }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
+            });
         }
 
         const product = memoryStore.getProductById(id);
         if (!product) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
-        return NextResponse.json({ success: true, product });
+        return NextResponse.json({ success: true, product }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+        });
     } catch (error) {
         console.error('Error fetching product:', error);
         return NextResponse.json(
@@ -107,14 +135,22 @@ export async function PATCH(request, { params }) {
                     product = await prisma.product.findUnique({ where: { id } });
                 }
             }
-            return NextResponse.json({ success: true, product });
+            return NextResponse.json({ success: true, product }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
+            });
         }
 
         const product = memoryStore.updateProduct(id, cleanedData);
         if (!product) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
-        return NextResponse.json({ success: true, product });
+        return NextResponse.json({ success: true, product }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+        });
     } catch (error) {
         console.error('Error updating product:', error);
         return NextResponse.json(

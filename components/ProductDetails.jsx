@@ -179,9 +179,9 @@ const ProductDetails = ({ product }) => {
                     </div>
                 )}
 
-                {/* Product Description */}
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-8 max-w-xl font-normal">
-                    {product.description}
+                {/* Product Formulation & Profile Overview Description */}
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-8 max-w-xl font-normal whitespace-pre-line">
+                    {product.formulaProfile || product.description}
                 </p>
 
                 {/* Action Buttons Row */}

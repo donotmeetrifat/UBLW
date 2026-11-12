@@ -6,6 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { setProduct as updateReduxProduct } from "@/lib/features/product/productSlice";
 import { SparklesIcon, ChevronRightIcon, BagIcon } from "@/components/icons";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -13,28 +14,36 @@ import { motion } from "framer-motion";
 export default function Product() {
     const { productId } = useParams();
     const router = useRouter();
+    const dispatch = useDispatch();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const products = useSelector(state => state.product.list);
 
     const fetchProduct = async () => {
-        // 1. Try finding in Redux
+        // 1. Optimistic instant render from Redux cache if available
         const found = products.find((p) => p.id === productId);
-        if (found) {
+        if (found && !product) {
             setProduct(found);
             setLoading(false);
-            return;
         }
 
-        // 2. Fetch from API
+        // 2. ALWAYS fetch fresh, live product from database via API with cache-busting
         try {
-            const res = await fetch(`/api/products/${productId}`);
+            const res = await fetch(`/api/products/${productId}?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            });
             const data = await res.json();
             if (data.success && data.product) {
                 setProduct(data.product);
+                // Synchronize latest database fields into Redux store
+                dispatch(updateReduxProduct([data.product]));
             }
         } catch (error) {
-            console.error('Error fetching product:', error);
+            console.error('Error fetching fresh product:', error);
         } finally {
             setLoading(false);
         }
@@ -42,6 +51,17 @@ export default function Product() {
 
     useEffect(() => {
         fetchProduct();
+
+        // Listen for live updates dispatched from Admin panel
+        const handleLiveUpdate = (e) => {
+            if (!e?.detail?.product?.id || e.detail.product.id === productId) {
+                fetchProduct();
+            }
+        };
+
+        window.addEventListener('product-updated', handleLiveUpdate);
+        window.addEventListener('product-catalog-updated', fetchProduct);
+
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -52,7 +72,12 @@ export default function Product() {
                 fetch(`/api/products/${productId}/view`, { method: 'POST' }).catch(() => {});
             }
         }
-    }, [productId, products]);
+
+        return () => {
+            window.removeEventListener('product-updated', handleLiveUpdate);
+            window.removeEventListener('product-catalog-updated', fetchProduct);
+        };
+    }, [productId]);
 
     // Related products in the same category
     const relatedProducts = products

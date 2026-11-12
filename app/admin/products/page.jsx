@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { useDispatch } from "react-redux"
+import { setProduct as updateReduxProduct } from "@/lib/features/product/productSlice"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 import {
@@ -64,6 +66,7 @@ const DEFAULT_BENEFITS = [
 ]
 
 export default function AdminProductsPage() {
+    const dispatch = useDispatch()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
     const [products, setProducts] = useState([])
@@ -359,6 +362,13 @@ export default function AdminProductsPage() {
                 const data = await res.json()
                 if (data.success) {
                     toast.success('Product updated successfully!', { id: toastId })
+                    if (data.product) {
+                        dispatch(updateReduxProduct([data.product]))
+                    }
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
+                        window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    }
                     setIsEditorOpen(false)
                     setEditingProduct(null)
                     fetchProducts()
@@ -374,6 +384,13 @@ export default function AdminProductsPage() {
                 const data = await res.json()
                 if (data.success) {
                     toast.success('New product listed successfully in catalog!', { id: toastId })
+                    if (data.product) {
+                        dispatch(updateReduxProduct([data.product]))
+                    }
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
+                        window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    }
                     setIsEditorOpen(false)
                     fetchProducts()
                 } else {

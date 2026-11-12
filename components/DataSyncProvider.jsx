@@ -72,7 +72,13 @@ export default function DataSyncProvider({ children }) {
         // 2. FETCH LIVE PRODUCT CATALOG
         const syncProductCatalog = async () => {
             try {
-                const res = await fetch('/api/products')
+                const res = await fetch(`/api/products?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
                 const data = await res.json()
                 if (data.success && Array.isArray(data.products) && data.products.length > 0) {
                     dispatch(setProduct(data.products))
@@ -82,6 +88,10 @@ export default function DataSyncProvider({ children }) {
             }
         }
         syncProductCatalog()
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('product-catalog-updated', syncProductCatalog)
+        }
 
         // 3. SYNCHRONIZE USER ACCOUNT, DATABASE CART & ADDRESSES
         const syncUserData = async () => {
