@@ -38,9 +38,9 @@ async function main() {
     // 2. Categories
     const categories = [
         { name: 'Skincare', slug: 'skincare', description: 'Dermatologist-recommended UK skincare essentials' },
-        { name: 'Makeup', slug: 'makeup', description: 'Cult-favourite British cosmetics and formulations' },
+        { name: 'Makeup', slug: 'makeup', description: 'Cult-favourite UK cosmetics and formulations' },
         { name: 'Haircare', slug: 'haircare', description: 'Salon-grade bond building and hair repair treatments' },
-        { name: 'Fragrance', slug: 'fragrance', description: 'Iconic British colognes and luxury perfumes' },
+        { name: 'Fragrance', slug: 'fragrance', description: 'Iconic UK colognes and luxury perfumes' },
         { name: 'Body Care', slug: 'body-care', description: 'Hydrating body butters, washes and exfoliators' },
         { name: 'Beauty Tools', slug: 'beauty-tools', description: 'Precision applicators, brushes and rollers' },
     ];
@@ -70,7 +70,7 @@ async function main() {
         });
     }
 
-    // 4. Authentic British Products
+    // 4. Authentic UK Products
     const products = [
         {
             name: "CeraVe Foaming Cleanser for Normal to Oily Skin 473ml",

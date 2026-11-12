@@ -95,7 +95,7 @@ const FloatingConcierge = () => {
 
                         <div className="mt-4 pt-3 border-t border-[#EFE0EF] flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
                             <ShieldCheckIcon size={12} color="#059669" />
-                            <span>100% Authentic British Stock Guaranteed</span>
+                            <span>100% Original UK Imported Stock Guaranteed</span>
                         </div>
                     </motion.div>
                 )}

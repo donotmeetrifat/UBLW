@@ -298,7 +298,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 {/* Footer Security Badge */}
                 <div className="mt-5 pt-4 border-t border-[#EFE0EF] flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
                     <ShieldCheckIcon size={14} color="#059669" />
-                    <span>100% Authentic British Stock Guaranteed</span>
+                    <span>100% Original UK Imported Stock Guaranteed</span>
                 </div>
             </motion.div>
         </div>

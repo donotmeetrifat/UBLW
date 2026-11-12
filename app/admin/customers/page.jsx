@@ -51,7 +51,7 @@ export default function AdminCustomerMarketingHub() {
     })
 
     const templates = {
-        eid_sale: "Assalamu Alaikum {name} আপু! 🌙 Exclusive UK Brand Lover Eid Festival Privilege: Enjoy a flat 25% OFF on all 100% authentic UK imported skincare & cosmetics with secret code *EID25* + Free Express Delivery in Dhaka! Claim your authentic beauty picks before British stock sells out: https://ukbrandlover.vercel.app/shop?coupon=EID25 — UK Brand Lover",
+        eid_sale: "Assalamu Alaikum {name} আপু! 🌙 Exclusive UK Brand Lover Eid Festival Privilege: Enjoy a flat 25% OFF on all 100% authentic UK imported skincare & cosmetics with secret code *EID25* + Free Express Delivery in Dhaka! Claim your authentic beauty picks before authentic UK stock sells out: https://ukbrandlover.vercel.app/shop?coupon=EID25 — UK Brand Lover",
         heathrow_restock: "Hello {name} আপু! ✈️ Fresh batch just landed from Heathrow, London! We have just restocked authentic CeraVe, The Ordinary, Charlotte Tilbury, and Olaplex. As an existing VIP customer, you get early access before public announcement. Check available stock now: https://ukbrandlover.vercel.app/shop — UK Brand Lover",
         vip_exclusive: "Dearest {name} আপু! 👑 You are one of our top valued customers this season! To thank you for trusting UK Brand Lover, here is a personal ৳500 luxury gift voucher: *VIPGIFT500* (Valid on any authentic UK order above ৳2500). Shop your routine here: https://ukbrandlover.vercel.app/shop?coupon=VIPGIFT500 — UK Brand Lover"
     }

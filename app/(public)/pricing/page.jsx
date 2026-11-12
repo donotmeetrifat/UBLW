@@ -24,13 +24,13 @@ export default function PricingPage() {
             period: "Forever Free",
             badge: null,
             featured: false,
-            description: "Direct access to our ready-stock authentic British cosmetics, skincare, and fragrances in Bangladesh.",
+            description: "Direct access to our ready-stock authentic UK cosmetics, skincare, and fragrances in Bangladesh.",
             features: [
                 "100% Authentic UK Imported Guarantee",
                 "Cash on Delivery & bKash / Nagad",
                 "Live Steadfast Courier Tracking (5-Stage)",
                 "24-48 Hour Dhaka Express Dispatch",
-                "Original British Batch Codes & Expiry Dates",
+                "Original UK Batch Codes & Expiry Dates",
                 "Standard WhatsApp Customer Support"
             ],
             ctaText: "Start Shopping",
@@ -92,11 +92,11 @@ export default function PricingPage() {
                         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#6C306E]/10 border border-[#6C306E]/20 text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-4"
                     >
                         <CrownIcon size={14} color="#6C306E" />
-                        <span>British Beauty Privileges & Sourcing</span>
+                        <span>UK Beauty Privileges & Sourcing</span>
                     </motion.div>
                     
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#241224] tracking-tight mb-4">
-                        Authentic British Luxury, <span className="text-[#6C306E]">Your Way</span>
+                        Authentic UK Luxury, <span className="text-[#6C306E]">Your Way</span>
                     </h1>
                     <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                         Whether shopping our ready Dhaka stock or commissioning a rare item straight from London Heathrow, experience unmatched authenticity and royal customer care.

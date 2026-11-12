@@ -111,7 +111,7 @@ export default function Product() {
                         <div className="flex items-center justify-between mb-8 sm:mb-10">
                             <div>
                                 <div className="text-[#6C306E] text-xs font-bold uppercase tracking-wider mb-1.5">
-                                    <span>Curated British Collection</span>
+                                    <span>Curated UK Collection</span>
                                 </div>
                                 <h3 className="text-xl sm:text-2xl font-extrabold text-[#241224]">
                                     More in {product.category}

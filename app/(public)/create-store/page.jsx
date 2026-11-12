@@ -93,7 +93,7 @@ export default function CreateStore() {
                                 Become an Approved <span className="text-[#6C306E]">UK Brand Partner</span>
                             </h1>
                             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                                Join Bangladesh's most trusted authentic British beauty network. All stores are verified to ensure 100% genuine UK imports.
+                                Join Bangladesh's most trusted authentic UK beauty network. All stores are verified to ensure 100% genuine UK imports.
                             </p>
                         </div>
 
@@ -234,7 +234,7 @@ export default function CreateStore() {
                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-start gap-3">
                                 <ShieldCheckIcon size={20} color="#059669" />
                                 <div className="text-xs text-emerald-900 leading-relaxed">
-                                    <span className="font-bold">Authenticity Commitment:</span> By submitting, you certify that all items listed in your store are 100% original British products with verified batch codes.
+                                    <span className="font-bold">Authenticity Commitment:</span> By submitting, you certify that all items listed in your store are 100% original UK imported products with verified batch codes.
                                 </div>
                             </div>
 

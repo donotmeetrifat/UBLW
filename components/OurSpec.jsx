@@ -32,7 +32,7 @@ const OurSpecs = () => {
             <Title 
                 visibleButton={false} 
                 title='Why Choose UK Brand Lover' 
-                description="We bridge the gap between world-class British beauty houses and Bangladesh with absolute authenticity and dedicated care." 
+                description="We bridge the gap between world-class UK beauty houses and Bangladesh with absolute authenticity and dedicated care." 
             />
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mt-12 sm:mt-16'>

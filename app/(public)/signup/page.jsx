@@ -2,7 +2,7 @@ import React, { Suspense } from 'react'
 import AuthSection from '@/components/AuthSection'
 
 export const metadata = {
-    title: 'Join UK Brand Lover | Authentic British Beauty',
+    title: 'Join UK Brand Lover | 100% Original UK Imported Beauty',
     description: 'Join the UK Brand Lover family for 100% authentic UK imported beauty, personalised skincare guidance, and fast delivery across Bangladesh.'
 }
 

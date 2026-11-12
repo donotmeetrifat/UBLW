@@ -45,7 +45,7 @@ export async function GET() {
                 suggestedCoupon: "LUXE15",
                 discountPercent: 15,
                 discountedPrice: 3697,
-                message: "Hello Farhana আপু! 💄 The iconic *Charlotte Tilbury Pillow Talk* in your UK Brand Lover bag is waiting for you! \n\nOriginal British stock of this cult shade is extremely rare in Bangladesh right now. We have reserved one authentic piece under your name at our Dhaka hub with an exclusive 15% secret voucher: *LUXE15* (Save ৳653!).\n\nClaim yours now with Free Doorstep Delivery: https://ukbrandlover.vercel.app/cart?coupon=LUXE15 \n\nLet us know if you would like us to pack your parcel today! 💖 — UK Brand Lover"
+                message: "Hello Farhana আপু! 💄 The iconic *Charlotte Tilbury Pillow Talk* in your UK Brand Lover bag is waiting for you! \n\nOriginal UK stock of this cult shade is extremely rare in Bangladesh right now. We have reserved one authentic piece under your name at our Dhaka hub with an exclusive 15% secret voucher: *LUXE15* (Save ৳653!).\n\nClaim yours now with Free Doorstep Delivery: https://ukbrandlover.vercel.app/cart?coupon=LUXE15 \n\nLet us know if you would like us to pack your parcel today! 💖 — UK Brand Lover"
             }
         ];
 
