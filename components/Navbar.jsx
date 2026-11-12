@@ -9,7 +9,8 @@ import {
     TruckIcon,
     ReviewBadgeIcon,
     RoyalCrownIcon,
-    CloseIcon
+    CloseIcon,
+    ShieldCheckIcon
 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -244,11 +245,33 @@ const Navbar = () => {
                                             >
                                                 {/* Customer Header */}
                                                 <div className="p-3 bg-[#FAF6FA] rounded-xl mb-2">
-                                                    <p className="font-bold text-[#241224] truncate text-sm">{currentUser.name}</p>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="font-bold text-[#241224] truncate text-sm">{currentUser.name}</p>
+                                                        {currentUser.role === 'ADMIN' && (
+                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[#6C306E] text-white shrink-0">
+                                                                Admin
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[11px] text-slate-500 truncate mt-0.5">{currentUser.email || currentUser.phone}</p>
                                                 </div>
 
                                                 <div className="space-y-1">
+                                                    {/* Admin Portal Quick Link for Admins */}
+                                                    {currentUser.role === 'ADMIN' && (
+                                                        <Link
+                                                            href="/admin"
+                                                            onClick={() => setIsProfileOpen(false)}
+                                                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6FA] text-[#6C306E] hover:bg-[#EFE0EF] transition font-bold cursor-pointer border border-[#EFE0EF] mb-2"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <ShieldCheckIcon size={15} color="#6C306E" />
+                                                                <span>Admin Command Portal</span>
+                                                            </div>
+                                                            <span className="text-xs">↗</span>
+                                                        </Link>
+                                                    )}
+
                                                     {/* 1. Manage My Account */}
                                                     <Link
                                                         href="/account"
