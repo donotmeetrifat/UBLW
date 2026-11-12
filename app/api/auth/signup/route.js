@@ -66,19 +66,7 @@ export async function POST(request) {
                 );
             }
 
-            // Check if phone number already registered
-            const existingPhone = await prisma.user.findFirst({
-                where: { phone: cleanPhone },
-            });
-
-            if (existingPhone) {
-                return NextResponse.json(
-                    { success: false, message: 'An account with this phone number already exists. Please sign in instead.' },
-                    { status: 409 }
-                );
-            }
-
-            // 3. Create user in database
+            // 3. Create user in database (Phone is customer contact/tracking data and does not restrict multiple accounts)
             const passwordHash = hashPassword(password);
             const user = await prisma.user.create({
                 data: {
