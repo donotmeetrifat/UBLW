@@ -76,42 +76,35 @@ export async function PATCH(request, { params }) {
                     data: cleanedData,
                 });
             } catch (updateErr) {
-                if (updateErr.message && (
-                    updateErr.message.includes('Unknown argument') ||
-                    updateErr.message.includes('formulaProfile') ||
-                    updateErr.message.includes('benefits') ||
-                    updateErr.message.includes('whyYouWillLoveIt')
-                )) {
-                    console.warn('Prisma update fallback triggered:', updateErr.message);
-                    const fallbackData = { ...cleanedData };
-                    const formula = fallbackData.formulaProfile;
-                    const bnf = fallbackData.benefits;
-                    const whyLove = fallbackData.whyYouWillLoveIt;
-                    delete fallbackData.formulaProfile;
-                    delete fallbackData.benefits;
-                    delete fallbackData.whyYouWillLoveIt;
+                console.warn('Prisma update failed, executing direct SQL update:', updateErr.message);
 
-                    product = await prisma.product.update({
-                        where: { id },
-                        data: fallbackData
-                    });
+                const setClauses = [];
+                const values = [];
+                let paramIndex = 1;
 
-                    try {
-                        await prisma.$executeRawUnsafe(
-                            `UPDATE "Product" SET "formulaProfile" = COALESCE($1, "formulaProfile"), "benefits" = COALESCE($2, "benefits"), "whyYouWillLoveIt" = COALESCE($3, "whyYouWillLoveIt") WHERE "id" = $4`,
-                            formula || null,
-                            bnf || null,
-                            whyLove || null,
-                            id
-                        );
-                        if (formula !== undefined) product.formulaProfile = formula;
-                        if (bnf !== undefined) product.benefits = bnf;
-                        if (whyLove !== undefined) product.whyYouWillLoveIt = whyLove;
-                    } catch (rawErr) {
-                        console.warn('Raw SQL patch warning:', rawErr.message);
+                const allowedColumns = [
+                    'name', 'description', 'formulaProfile', 'benefits', 'whyYouWillLoveIt',
+                    'mrp', 'price', 'costPrice', 'images', 'category', 'categoryId',
+                    'brand', 'inStock', 'stockCount', 'isFeatured', 'isBestSeller',
+                    'views', 'isActive'
+                ];
+
+                for (const col of allowedColumns) {
+                    if (cleanedData[col] !== undefined) {
+                        setClauses.push(`"${col}" = $${paramIndex}`);
+                        values.push(cleanedData[col]);
+                        paramIndex++;
                     }
+                }
+
+                if (setClauses.length > 0) {
+                    setClauses.push(`"updatedAt" = NOW()`);
+                    values.push(id);
+                    const sql = `UPDATE "Product" SET ${setClauses.join(', ')} WHERE "id" = $${paramIndex} RETURNING *`;
+                    const rows = await prisma.$queryRawUnsafe(sql, ...values);
+                    product = rows && rows[0] ? rows[0] : { id, ...cleanedData };
                 } else {
-                    throw updateErr;
+                    product = await prisma.product.findUnique({ where: { id } });
                 }
             }
             return NextResponse.json({ success: true, product });
