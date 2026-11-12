@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getUserFromRequest } from '@/lib/auth';
+import { updateCategoryWithOrder, deleteCategoryWithOrder } from '@/lib/db/categoryOrdering';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -63,46 +64,22 @@ export async function PUT(request, { params }) {
                     { status: 409 }
                 );
             }
-
-            // Update category
-            const updated = await prisma.category.update({
-                where: { id },
-                data: {
-                    name: trimmedName,
-                    slug: finalSlug,
-                    description: description !== undefined ? (description?.trim() || null) : existing.description,
-                    image: image !== undefined ? image : existing.image,
-                    displayOrder: displayOrder !== undefined ? Number(displayOrder) : existing.displayOrder,
-                    isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
-                }
-            });
-
-            // If the category name changed, update all products using the old name so they stay linked!
-            if (existing.name !== trimmedName) {
-                await prisma.product.updateMany({
-                    where: { category: existing.name },
-                    data: { category: trimmedName }
-                });
-            }
-
-            return NextResponse.json({
-                success: true,
-                message: `Category "${trimmedName}" updated successfully!`,
-                category: updated
-            });
         }
 
-        const updated = memoryStore.updateCategory(id, {
+        const updated = await updateCategoryWithOrder(id, {
             name: trimmedName,
             slug: finalSlug,
-            description: (description || '').trim() || null,
-            image: image || null,
-            displayOrder: Number(displayOrder) || 0,
-            isActive: isActive !== undefined ? Boolean(isActive) : true,
+            description: description !== undefined ? (description?.trim() || null) : undefined,
+            image: image !== undefined ? image : undefined,
+            targetOrder: displayOrder !== undefined ? Number(displayOrder) : undefined,
+            isActive: isActive !== undefined ? Boolean(isActive) : undefined,
         });
 
         if (!updated) {
-            return NextResponse.json({ success: false, message: 'Category not found' }, { status: 404 });
+            return NextResponse.json(
+                { success: false, message: 'Category not found.' },
+                { status: 404 }
+            );
         }
 
         return NextResponse.json({
@@ -133,35 +110,14 @@ export async function DELETE(request, { params }) {
         const resolvedParams = await params;
         const id = resolvedParams.id;
 
-        if (isDatabaseConfigured()) {
-            const existing = await prisma.category.findUnique({
-                where: { id }
-            });
-
-            if (!existing) {
-                return NextResponse.json({ success: false, message: 'Category not found' }, { status: 404 });
-            }
-
-            // Reassign any products linked to this category to 'General' so they don't break
-            await prisma.product.updateMany({
-                where: { category: existing.name },
-                data: { category: 'General' }
-            });
-
-            await prisma.category.delete({
-                where: { id }
-            });
-
-            return NextResponse.json({
-                success: true,
-                message: `Category "${existing.name}" removed successfully!`
-            });
+        const deleted = await deleteCategoryWithOrder(id);
+        if (!deleted) {
+            return NextResponse.json({ success: false, message: 'Category not found' }, { status: 404 });
         }
 
-        memoryStore.deleteCategory(id);
         return NextResponse.json({
             success: true,
-            message: 'Category removed successfully!'
+            message: `Category removed successfully!`
         });
 
     } catch (error) {

@@ -14,18 +14,22 @@ import {
 } from "@/components/icons";
 import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
 
 const Footer = () => {
+    const reduxCategories = useSelector(state => state.product?.categories);
+    const beautyCategoryLinks = (Array.isArray(reduxCategories) && reduxCategories.length > 0
+        ? reduxCategories
+        : ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools']
+    ).slice(0, 6).map(name => ({
+        text: name,
+        path: `/shop?category=${encodeURIComponent(name)}`
+    }));
+
     const linkSections = [
         {
             title: "BEAUTY CATEGORIES",
-            links: [
-                { text: "Skincare Essentials", path: '/shop?category=Skincare' },
-                { text: "Cult Cosmetics", path: '/shop?category=Makeup' },
-                { text: "Hair Repair & Care", path: '/shop?category=Haircare' },
-                { text: "Luxury Fragrances", path: '/shop?category=Fragrance' },
-                { text: "Body & Wellness", path: '/shop?category=Body Care' },
-            ]
+            links: beautyCategoryLinks
         },
         {
             title: "CUSTOMER CARE",

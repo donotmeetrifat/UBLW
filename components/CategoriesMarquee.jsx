@@ -3,6 +3,7 @@
 import { SparklesIcon } from "@/components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
 const DEFAULT_CATEGORIES = [
@@ -19,10 +20,11 @@ const CategoriesMarqueeContent = () => {
     const searchParams = useSearchParams();
     const activeCategory = searchParams?.get('category') || '';
     const [isPaused, setIsPaused] = useState(false);
-    const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+    const reduxCategories = useSelector(state => state.product?.categories);
+    const [categories, setCategories] = useState(reduxCategories || DEFAULT_CATEGORIES);
 
-    useEffect(() => {
-        fetch('/api/categories?_t=' + Date.now())
+    const loadLiveCategories = () => {
+        fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
@@ -33,6 +35,21 @@ const CategoriesMarqueeContent = () => {
                 }
             })
             .catch(() => {});
+    };
+
+    useEffect(() => {
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
+            setCategories(reduxCategories);
+        } else {
+            loadLiveCategories();
+        }
+    }, [reduxCategories]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('category-catalog-updated', loadLiveCategories);
+            return () => window.removeEventListener('category-catalog-updated', loadLiveCategories);
+        }
     }, []);
 
     const handleCategoryClick = (catName) => {

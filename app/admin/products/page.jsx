@@ -122,14 +122,22 @@ export default function AdminProductsPage() {
 
     // Load live categories from catalog
     useEffect(() => {
-        fetch('/api/categories?all=true&_t=' + Date.now())
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-                    setDbCategories(data.categories.map(c => c.name))
-                }
-            })
-            .catch(() => {})
+        const loadCategories = () => {
+            fetch('/api/categories?all=true&_t=' + Date.now(), { cache: 'no-store' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                        setDbCategories(data.categories.map(c => c.name))
+                    }
+                })
+                .catch(() => {})
+        }
+        loadCategories()
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('category-catalog-updated', loadCategories)
+            return () => window.removeEventListener('category-catalog-updated', loadCategories)
+        }
     }, [])
 
     const fetchProducts = async () => {

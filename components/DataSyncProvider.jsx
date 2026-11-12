@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
-import { setProduct } from '@/lib/features/product/productSlice'
+import { setProduct, setCategories } from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
@@ -89,8 +89,37 @@ export default function DataSyncProvider({ children }) {
         }
         syncProductCatalog()
 
+        // 2b. FETCH LIVE CATEGORY CATALOG SITE-WIDE
+        const syncCategoryCatalog = async () => {
+            try {
+                const res = await fetch(`/api/categories?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                const data = await res.json()
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    const activeNames = data.categories
+                        .filter(c => c.isActive !== false)
+                        .map(c => c.name)
+                    if (activeNames.length > 0) {
+                        dispatch(setCategories(activeNames))
+                    }
+                }
+            } catch (e) {
+                // Silent fallback
+            }
+        }
+        syncCategoryCatalog()
+
         if (typeof window !== 'undefined') {
             window.addEventListener('product-catalog-updated', syncProductCatalog)
+            window.addEventListener('category-catalog-updated', syncCategoryCatalog)
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
+            })
         }
 
         // 3. SYNCHRONIZE USER ACCOUNT, DATABASE CART & ADDRESSES

@@ -50,7 +50,8 @@ function ShopContent() {
     }))
     const [sortBy, setSortBy] = useState('default')
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
-    const [shopCategories, setShopCategories] = useState([
+    const reduxCategories = useSelector(state => state.product?.categories)
+    const [shopCategories, setShopCategories] = useState(reduxCategories || [
         'Skincare',
         'Makeup',
         'Haircare',
@@ -60,7 +61,12 @@ function ShopContent() {
     ])
 
     useEffect(() => {
-        fetch('/api/categories?_t=' + Date.now())
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
+            setShopCategories(reduxCategories)
+            return
+        }
+
+        fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
@@ -69,7 +75,7 @@ function ShopContent() {
                 }
             })
             .catch(() => {})
-    }, [])
+    }, [reduxCategories])
 
     // Sync URL ?category= param into filter state whenever it changes
     useEffect(() => {

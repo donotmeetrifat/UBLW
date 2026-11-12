@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { initialCategories, memoryStore } from '@/lib/db/initialData';
+import { memoryStore } from '@/lib/db/initialData';
 import { getUserFromRequest } from '@/lib/auth';
+import { insertCategoryWithOrder } from '@/lib/db/categoryOrdering';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,7 +22,10 @@ export async function GET(request) {
                         select: { products: true }
                     }
                 },
-                orderBy: { displayOrder: 'asc' }
+                orderBy: [
+                    { displayOrder: 'asc' },
+                    { createdAt: 'desc' }
+                ]
             });
 
             // Map and count matching products
@@ -54,8 +58,9 @@ export async function GET(request) {
         }
 
         const products = memoryStore.getProducts();
-        const cats = memoryStore.getCategories();
-        const formatted = cats.map(cat => ({
+        const cats = memoryStore.getCategories().sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+        const filteredCats = includeAll ? cats : cats.filter(c => c.isActive !== false);
+        const formatted = filteredCats.map(cat => ({
             ...cat,
             count: products.filter(p => (p.category || '').toLowerCase() === cat.name.toLowerCase()).length
         }));
@@ -122,41 +127,21 @@ export async function POST(request) {
                     { status: 409 }
                 );
             }
-
-            const currentCount = await prisma.category.count();
-            const orderNum = typeof displayOrder === 'number' ? displayOrder : currentCount;
-
-            const category = await prisma.category.create({
-                data: {
-                    name: trimmedName,
-                    slug: finalSlug,
-                    description: (description || '').trim() || null,
-                    image: image || null,
-                    displayOrder: orderNum,
-                    isActive: isActive !== undefined ? Boolean(isActive) : true,
-                }
-            });
-
-            return NextResponse.json({
-                success: true,
-                message: `Category "${trimmedName}" created successfully!`,
-                category
-            }, { status: 201 });
         }
 
-        const newCat = memoryStore.addCategory({
+        const category = await insertCategoryWithOrder({
             name: trimmedName,
             slug: finalSlug,
             description: (description || '').trim() || null,
             image: image || null,
-            displayOrder: Number(displayOrder) || 0,
-            isActive: isActive !== undefined ? Boolean(isActive) : true,
+            targetOrder: typeof displayOrder === 'number' ? displayOrder : 1,
+            isActive: isActive !== undefined ? Boolean(isActive) : true
         });
 
         return NextResponse.json({
             success: true,
             message: `Category "${trimmedName}" created successfully!`,
-            category: newCat
+            category
         }, { status: 201 });
 
     } catch (error) {

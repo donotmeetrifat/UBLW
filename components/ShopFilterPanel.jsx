@@ -3,6 +3,7 @@
 import { ChevronDownIcon, CloseIcon, FilterIcon } from '@/components/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 
 export const filterOptions = {
     categories: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools'],
@@ -129,17 +130,16 @@ const ShopFilterPanel = ({
     categories = []
 }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
+    const reduxCategories = useSelector(state => state.product?.categories)
 
-    const [liveCategories, setLiveCategories] = useState(
-        categories && categories.length > 0 ? categories : filterOptions.categories
-    )
+    const [liveCategories, setLiveCategories] = useState(() => {
+        if (categories && categories.length > 0) return categories
+        if (reduxCategories && reduxCategories.length > 0) return reduxCategories
+        return filterOptions.categories
+    })
 
-    useEffect(() => {
-        if (categories && categories.length > 0) {
-            setLiveCategories(categories)
-            return
-        }
-        fetch('/api/categories?_t=' + Date.now())
+    const fetchFreshCategories = () => {
+        fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
@@ -150,7 +150,24 @@ const ShopFilterPanel = ({
                 }
             })
             .catch(() => {})
-    }, [categories])
+    }
+
+    useEffect(() => {
+        if (categories && categories.length > 0) {
+            setLiveCategories(categories)
+        } else if (reduxCategories && reduxCategories.length > 0) {
+            setLiveCategories(reduxCategories)
+        } else {
+            fetchFreshCategories()
+        }
+    }, [categories, reduxCategories])
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('category-catalog-updated', fetchFreshCategories)
+            return () => window.removeEventListener('category-catalog-updated', fetchFreshCategories)
+        }
+    }, [])
 
     const activeCategoryGroup = {
         title: 'Category',

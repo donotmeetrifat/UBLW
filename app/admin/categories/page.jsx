@@ -37,7 +37,7 @@ export default function AdminCategoriesPage() {
     const fetchCategories = async () => {
         try {
             setLoading(true)
-            const res = await fetch('/api/categories?all=true&_t=' + Date.now())
+            const res = await fetch('/api/categories?all=true&_t=' + Date.now(), { cache: 'no-store' })
             const data = await res.json()
             if (data.success && Array.isArray(data.categories)) {
                 setCategories(data.categories)
@@ -124,6 +124,11 @@ export default function AdminCategoriesPage() {
             setIsAddModalOpen(false)
             setEditingCategory(null)
             fetchCategories()
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('category-catalog-updated'))
+                localStorage.setItem('ukbl_categories_synced', Date.now().toString())
+            }
         } catch (error) {
             console.error('Error saving category:', error)
             toast.error('Network error saving category.')
@@ -149,6 +154,11 @@ export default function AdminCategoriesPage() {
 
             toast.success(data.message || 'Category deleted successfully')
             fetchCategories()
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('category-catalog-updated'))
+                localStorage.setItem('ukbl_categories_synced', Date.now().toString())
+            }
         } catch (error) {
             toast.error('Failed to delete category')
         }
@@ -308,8 +318,8 @@ export default function AdminCategoriesPage() {
                                     <tr key={cat.id || idx} className="hover:bg-[#FAF6FA]/60 transition-colors">
                                         {/* Display Order */}
                                         <td className="py-4 px-4 align-middle">
-                                            <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                                                #{cat.displayOrder || idx + 1}
+                                            <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-1 rounded-lg">
+                                                #{cat.displayOrder ?? (idx + 1)}
                                             </span>
                                         </td>
 
