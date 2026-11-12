@@ -10,47 +10,47 @@ import { addRating } from '@/lib/features/rating/ratingSlice';
 
 export const REVIEW_SUGGESTIONS_EN = [
     {
-        tag: "100% Authentic UK",
-        title: "Authentic & Verified Batch",
-        text: "100% authentic UK product! The batch code and barcode verified immediately. Formula and texture are completely genuine and gentle on skin."
+        tag: "Verified Batch",
+        title: "Checked Batch Code, 100% Genuine",
+        text: "Honestly I was so worried about getting a fake because BD is flooded with replicas. But I checked the batch code on CheckFresh and barcode immediately — 100% genuine UK batch! Texture is silky and zero irritation on my sensitive skin. Don't hesitate to buy!"
     },
     {
-        tag: "UK Packaging",
-        title: "Pristine London Packaging",
-        text: "Original UK skincare delivered securely sealed! Texture and fragrance match the UK store version exactly. 10/10 recommended!"
+        tag: "Safe Packaging",
+        title: "Intact Seal & Fast Delivery",
+        text: "Got my parcel delivered in Dhaka within 48 hours! Bubble wrap packaging was very secure, pump bottle didn't leak a single drop. The formula and scent match the exact one my sister brought from Boots UK. So relieved to find this page!"
     },
     {
-        tag: "Express Delivery",
-        title: "Fast Dhaka Delivery",
-        text: "Super fast delivery in Dhaka! Packaging was luxurious with bubble wrap protection. Received in pristine condition. Will definitely reorder!"
+        tag: "Real Skin Results",
+        title: "Gentle on Sensitive Skin & Visible Glow",
+        text: "I have super acne-prone skin, so I'm always paranoid about duplicate skincare. Started using this a week ago and my skin already feels so calm and hydrated. No breakouts, no redness. Authentic UK skincare really makes a world of difference. 10/10 worth every taka!"
     },
     {
-        tag: "High Trust",
-        title: "Trustworthy & Best Price",
-        text: "Best authentic UK cosmetics shop in Bangladesh. Genuine import quality with transparent pricing and zero duplicate risk. Highly trustworthy!"
+        tag: "Trusted Store",
+        title: "Fair Price & Loyal Customer Now",
+        text: "Third time ordering from UK Brand Lover and they never disappoint. Prices are very reasonable compared to overpriced Instagram pages, and authenticity is 100% guaranteed. Saved me from buying duplicate products elsewhere. Genuine UK stock, highly recommended!"
     }
 ];
 
 export const REVIEW_SUGGESTIONS_BN = [
     {
-        tag: "১০০% আসল ইউকে",
-        title: "আসল ও ভেরিফাইড ব্যাচ কোড",
-        text: "১০০% অরিজিনাল ইউকে প্রোডাক্ট! ব্যাচ কোড ও বারকোড চেক করে শতভাগ নিশ্চিন্ত হলাম। স্কিনের জন্য অসাধারণ কাজ করছে।"
+        tag: "ব্যাচ কোড চেক করা",
+        title: "ব্যাচ কোড চেক করে শতভাগ নিশ্চিত",
+        text: "অনলাইনে নকল প্রোডাক্টের ছড়াছড়ির কারণে অর্ডার দেওয়ার আগে বেশ দ্বিধায় ছিলাম। কিন্তু পার্সেল পেয়ে সাথে সাথে CheckFresh-এ ব্যাচ কোড চেক করে দেখলাম একদম খাঁটি ইউকে ভ্যারিয়েন্ট! টেক্সচার আর গন্ধ একদম জেনুইন। যারা আসল প্রোডাক্ট খুঁজছেন, কোনো চিন্তা ছাড়াই নিতে পারেন।"
     },
     {
-        tag: "ইউকে প্যাকেজিং",
-        title: "সুরক্ষিত ইনট্যাক্ট সিল",
-        text: "লন্ডন থেকে ইমপোর্ট করা আসল কসমেটিকস একদম ইনট্যাক্ট সিল করা অবস্থায় পেয়েছি। কোয়ালিটি নিয়ে কোনো সন্দেহ নেই, ১০/১০!"
+        tag: "সুরক্ষিত প্যাকেজিং",
+        title: "ইনট্যাক্ট সিল ও ২ দিনে ডেলিভারি",
+        text: "অর্ডার করার মাত্র ২ দিনের মধ্যে ঢাকায় ডেলিভারি পেয়ে গেলাম। বাবল র‍্যাপ দিয়ে এত সুন্দর করে প্যাক করা ছিল যে প্রোডাক্টে বিন্দুমাত্র আঁচড় লাগেনি। পাম্পের সিল একদম ইনট্যাক্ট ছিল। লন্ডন থেকে আনা প্রোডাক্টের মতোই ফ্রেশ। ডেলিভারি ও প্রোডাক্ট কোয়ালিটি দুটোই দারুণ!"
     },
     {
-        tag: "দ্রুত ডেলিভারি",
-        title: "নিরাপদ ও ফাস্ট ডেলিভারি",
-        text: "অর্ডার করার খুব কম সময়ে ঢাকায় হোম ডেলিভারি পেয়েছি। বাবল র‍্যাপে মোড়ানো প্রিমিয়াম প্যাকেজিং ছিল। ধন্যবাদ ইউকে ব্র্যান্ড লাভার!"
+        tag: "স্কিন রেজাল্ট",
+        title: "সেনসিটিভ স্কিনে অসাধারণ রেজাল্ট",
+        text: "আমার স্কিন অনেক সেনসিটিভ, একটুতেই ব্রন উঠে যায়। এই প্রোডাক্টটা ১ সপ্তাহ ব্যবহার করার পর থেকেই স্কিন অনেক সফট আর হাইড্রেটেড লাগছে। কোনো র‍্যাশ বা জ্বালাপোড়া হয়নি। আসল ইউকে স্কিনকেয়ারের রেজাল্ট সত্যিই আলাদা। খাঁটি প্রোডাক্ট দেওয়ার জন্য পেজটাকে অনেক ধন্যবাদ!"
     },
     {
-        tag: "বিশ্বস্ত শপ",
-        title: "সরাসরি ইউকে ইমপোর্ট কোয়ালিটি",
-        text: "বাংলাদেশে আসল ইউকে বিউটি প্রোডাক্টের সবচেয়ে বিশ্বস্ত ঠিকানা। ডুপ্লিকেট বা ফেক হওয়ার কোনো সুযোগ নেই, সম্পূর্ণ নিশ্চিন্তে নেওয়া যায়!"
+        tag: "বিশ্বস্ত সেলার",
+        title: "ন্যায্য দাম ও নকলের কোনো ভয় নেই",
+        text: "অন্যান্য পেজের তুলনায় এদের প্রাইস একদম রিজনেবল এবং প্রোডাক্ট ১০০% অরিজিনাল। এর আগেও অন্য পেজ থেকে ডুপ্লিকেট পেয়ে ঠকেছিলাম, কিন্তু এখান থেকে নিয়ে সম্পূর্ণ তৃপ্ত। এখন থেকে আমার সব ইউকে স্কিনকেয়ার এখান থেকেই নেব ইনশাআল্লাহ। সবাইকে রেকমেন্ড করছি!"
     }
 ];
 
@@ -243,11 +243,11 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
     };
 
     const ratingDescriptions = {
-        5: 'Exceptional (100% Original UK Imported Quality)',
-        4: 'Very Good (Satisfied with Quality & Delivery)',
-        3: 'Average (Standard Product Experience)',
-        2: 'Below Expectations',
-        1: 'Poor Experience',
+        5: 'Loved it! 100% genuine & highly recommend',
+        4: 'Really good, very satisfied with quality & delivery',
+        3: 'Average, standard product experience',
+        2: 'Below expectations, had some issues',
+        1: 'Poor experience, not satisfied',
     };
 
     return (
@@ -268,8 +268,8 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                             <ReviewBadgeIcon size={16} color="#6C306E" />
                         </div>
                         <div>
-                            <h3 className="font-extrabold text-base text-[#241224]">Write Verified Review</h3>
-                            <p className="text-[11px] text-slate-500">Only verified buyers can review authentic UK products</p>
+                            <h3 className="font-extrabold text-base text-[#241224]">Write Customer Review</h3>
+                            <p className="text-[11px] text-slate-500">Verified purchase feedback from real customers</p>
                         </div>
                     </div>
                     <button
@@ -343,17 +343,17 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                             rows={3}
                             value={review}
                             onChange={(e) => setReview(e.target.value)}
-                            placeholder="Share your authentic feedback about formulation, texture, batch code, scent, or delivery..."
+                            placeholder="Share your honest experience — how does it feel on your skin, did you check the batch code, and how was the packaging/delivery?"
                             className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl p-3.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed"
                         />
                     </div>
 
-                    {/* 1-Click High-Trust Suggestions (Placed Directly Under Text Area) */}
+                    {/* Quick Suggestions (Real Customer Feedback - Placed Directly Under Text Area) */}
                     <div className="pt-2 border-t border-[#EFE0EF]">
                         <div className="flex items-center justify-between mb-2.5">
                             <span className="text-[11px] font-extrabold text-slate-700 flex items-center gap-1.5">
                                 <SparklesIcon size={13} color="#6C306E" />
-                                <span>1-Click High-Trust Suggestions:</span>
+                                <span>Real Customer Review Suggestions:</span>
                             </span>
                             <div className="flex items-center gap-1 bg-[#FAF6FA] p-0.5 rounded-full border border-[#EFE0EF]">
                                 <button

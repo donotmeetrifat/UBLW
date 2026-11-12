@@ -48,13 +48,67 @@ export const categories = [
 ];
 
 export const dummyRatingsData = [
-    { id: "rat_1", rating: 5.0, review: "100% authentic UK import! My skin feels hydrated and glowing after using this cleanser. Truly premium quality.", user: { name: 'Ayesha Rahman', image: profile_pic1 }, productId: "prod_1", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'CeraVe Foaming Facial Cleanser', category:'Skincare', id:'prod_1'} },
-    { id: "rat_2", rating: 4.8, review: "Fast delivery in Dhaka and original product guaranteed. Highly recommended shop for genuine cosmetics!", user: { name: 'Nusrat Jahan', image: profile_pic2 }, productId: "prod_2", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'The Ordinary Niacinamide 10% + Zinc 1%', category:'Skincare', id:'prod_2'} },
-    { id: "rat_3", rating: 4.9, review: "Amazing hair transformation. Solved my dry ends in just two weeks. Excellent customer support!", user: { name: 'Tania Akter', image: profile_pic3 }, productId: "prod_3", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'Olaplex No.3 Hair Perfector', category:'Haircare', id:'prod_3'} },
-    { id: "rat_4", rating: 5.0, review: "The scent is heavenly and long-lasting! So glad to find authentic UK fragrance imported directly to Bangladesh.", user: { name: 'Sabrina Islam', image: profile_pic1 }, productId: "prod_4", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'Jo Malone English Pear Cologne', category:'Fragrance', id:'prod_4'} },
-    { id: "rat_5", rating: 4.7, review: "Smooth texture and beautiful shade. Great packaging and authentic UK stock.", user: { name: 'Farhana Ahmed', image: profile_pic2 }, productId: "prod_5", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'Charlotte Tilbury Matte Revolution', category:'Makeup', id:'prod_5'} },
-    { id: "rat_6", rating: 5.0, review: "Super fast shipping and top notch customer care. UK Brand Lover is my go-to shop for skincare!", user: { name: 'Meherun Nesa', image: profile_pic3 }, productId: "prod_6", createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', product: { name: 'Paula\'s Choice 2% BHA Exfoliant', category:'Skincare', id:'prod_6'} },
-]
+    { 
+        id: "rat_1", 
+        rating: 5.0, 
+        review: "অনলাইনে নকলের এত ভয় ছিল যে অর্ডার করার আগে সেলার আপুর সাথে কথা বলে নিশ্চিত হয়েছিলাম। পার্সেল পাওয়ার পর CheckFresh-এ ব্যাচ কোড মিলিয়ে দেখলাম একদম খাঁটি ইউকে ভ্যারিয়েন্ট। ক্লিনজারটা ব্যবহারে স্কিন কোনো ড্রাই হয় না, একদম সফট থাকে। যারা অরিজিনাল স্কিনকেয়ার চান, নিশ্চিন্তে নিতে পারেন!", 
+        user: { name: 'Ayesha Rahman', image: profile_pic1 }, 
+        productId: "prod_1", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'CeraVe Foaming Facial Cleanser', category:'Skincare', id:'prod_1'} 
+    },
+    { 
+        id: "rat_2", 
+        rating: 5.0, 
+        review: "Honestly I was super skeptical at first because I received fake The Ordinary serums from two other Facebook pages. But this one from UK Brand Lover is 100% real. The dropper, texture, and cloudiness are identical to the authentic UK bottle. After 2 weeks my skin texture and oiliness have visibly improved. Don't hesitate to buy!", 
+        user: { name: 'Nusrat Jahan', image: profile_pic2 }, 
+        productId: "prod_2", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'The Ordinary Niacinamide 10% + Zinc 1%', category:'Skincare', id:'prod_2'} 
+    },
+    { 
+        id: "rat_3", 
+        rating: 5.0, 
+        review: "অরিজিনাল ওলাপ্লেক্স ৩ বাংলাদেশে খুঁজে পাওয়া সত্যিই ভাগ্যের ব্যাপার। পার্সেলটা খুব সুন্দর বাবল র‍্যাপে মোড়ানো ছিল, সিল একদম ইনট্যাক্ট। ২ বার ইউজ করেই ড্যামেজ হেয়ারে চেঞ্জ বুঝতে পারছি। টাকাটা একদম উসুল হয়েছে। ধন্যবাদ ইউকে ব্র্যান্ড লাভার!", 
+        user: { name: 'Tania Akter', image: profile_pic3 }, 
+        productId: "prod_3", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'Olaplex No.3 Hair Perfector', category:'Haircare', id:'prod_3'} 
+    },
+    { 
+        id: "rat_4", 
+        rating: 5.0, 
+        review: "Got this delivered to Gulshan the very next day. Scent is so crisp, elegant, and stays fresh for hours on clothes. Checked the batch code under the bottle and everything matched perfectly. So happy to finally find a legit UK import source in BD!", 
+        user: { name: 'Sabrina Islam', image: profile_pic1 }, 
+        productId: "prod_4", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'Jo Malone English Pear Cologne', category:'Fragrance', id:'prod_4'} 
+    },
+    { 
+        id: "rat_5", 
+        rating: 5.0, 
+        review: "Pillow talk শেডটা অনেকদিন ধরে খুঁজছিলাম কিন্তু নকলের ভয়ে কেনা হচ্ছিল না। এখান থেকে নিলাম এবং লিপস্টিকের টেক্সচার, প্যাকেজিং আর ফিনিশ দেখে মন ভরে গেছে। একদম ১০০% আসল। যেকোনো ডাউট ছাড়া যে কেউ নিতে পারেন, জাস্ট ওয়াও!", 
+        user: { name: 'Farhana Ahmed', image: profile_pic2 }, 
+        productId: "prod_5", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'Charlotte Tilbury Matte Revolution', category:'Makeup', id:'prod_5'} 
+    },
+    { 
+        id: "rat_6", 
+        rating: 5.0, 
+        review: "Using this BHA liquid for blackheads and clogged pores. It literally cleared up my congested nose area within 10 days. The bottle was sealed tightly and barcode scanned instantly. Best investment for my skin, I'm definitely ordering my next bottle from here!", 
+        user: { name: 'Meherun Nesa', image: profile_pic3 }, 
+        productId: "prod_6", 
+        createdAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        updatedAt: 'Sat Jul 19 2025 14:51:25 GMT+0600 (Bangladesh Standard Time)', 
+        product: { name: 'Paula\'s Choice 2% BHA Exfoliant', category:'Skincare', id:'prod_6'} 
+    },
+];
 
 export const dummyStoreData = {
     id: "store_1",

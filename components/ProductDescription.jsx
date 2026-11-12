@@ -41,7 +41,7 @@ const ProductDescription = ({ product }) => {
         "100% Authentic UK Imported Formulation ensuring optimal potency and purity.",
         "Dermatologically tested daily care tailored for sensitive skin.",
         "Delivers visible, clinically-proven nourishment, hydration, and glow.",
-        "Sourced straight from certified British and European distributors."
+        "Direct London shipments with verified batch codes and authentic UK store packaging."
     ]
 
     return (

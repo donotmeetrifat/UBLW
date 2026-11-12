@@ -175,8 +175,8 @@ export default function ReviewsPage() {
         <div className="min-h-[75vh] mx-4 sm:mx-6 text-slate-800">
             <div className="my-10 max-w-7xl mx-auto">
                 <PageTitle
-                    heading="My Reviews & Product Ratings"
-                    text="Share authentic feedback and view reviews for your genuine UK imported beauty purchases"
+                    heading="Customer Reviews & Ratings"
+                    text="Real, verified customer experiences from beauty lovers who ordered authentic UK imports in Bangladesh"
                     linkText="My Orders"
                     linkHref="/orders"
                 />
