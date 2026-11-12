@@ -102,13 +102,13 @@ const OrderItem = ({ order }) => {
                         const prodImage = (productObj.images && productObj.images[0]) || item.image || '/product_img1.png';
                         return (
                             <div key={idx} className="flex items-center gap-3 p-2 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF]/60">
-                                <div className="size-12 rounded-xl bg-white border border-[#EFE0EF] p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                                <div className="size-12 rounded-xl bg-white border border-[#EFE0EF] shrink-0 overflow-hidden">
                                     <Image
                                         src={prodImage}
                                         alt={prodName}
-                                        width={40}
-                                        height={40}
-                                        className="w-full h-full object-contain"
+                                        width={48}
+                                        height={48}
+                                        className="w-full h-full object-cover"
                                     />
                                 </div>
                                 <div className="min-w-0 flex-1">

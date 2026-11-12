@@ -156,14 +156,14 @@ const ProductCard = ({ product }) => {
             transition={{ duration: 0.4 }}
             className='group relative flex flex-col w-full bg-white rounded-xl border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 overflow-hidden hover:shadow-[0_8px_24px_rgba(108,48,110,0.06)]'
         >
-            {/* Aspect Square Image Box (100% 1:1 Square Area for Ready-made Product Photos) */}
-            <div className='relative aspect-square w-full bg-white overflow-hidden rounded-t-xl flex items-center justify-center'>
+            {/* Aspect Square Image Box (100% 1:1 Square Area for Ready-made Product Photos - Full Filled) */}
+            <div className='relative aspect-square w-full bg-white overflow-hidden rounded-t-xl'>
                 <Link href={`/product/${product.id}`} className='w-full h-full block relative'>
                     <Image
                         ref={imageRef}
                         width={400}
                         height={400}
-                        className='w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300'
+                        className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
                         src={product.images[0]?.src || product.images[0]}
                         alt={product.name}
                     />

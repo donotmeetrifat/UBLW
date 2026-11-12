@@ -644,13 +644,13 @@ export default function CheckoutPage() {
                         <div className="divide-y divide-[#EFE0EF]/60 max-h-60 overflow-y-auto my-3 pr-1">
                             {items.map((item, idx) => (
                                 <div key={item.id || idx} className="py-2.5 flex items-center gap-3 text-xs">
-                                    <div className="size-12 rounded-xl border border-[#EFE0EF] bg-white p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                                    <div className="size-12 rounded-xl border border-[#EFE0EF] bg-white shrink-0 overflow-hidden">
                                         <Image
                                             src={Array.isArray(item.images) ? item.images[0] : (item.image || '/product_img1.png')}
                                             alt={item.name}
-                                            width={44}
-                                            height={44}
-                                            className="w-full h-full object-contain"
+                                            width={48}
+                                            height={48}
+                                            className="w-full h-full object-cover"
                                         />
                                     </div>
                                     <div className="flex-1 min-w-0">

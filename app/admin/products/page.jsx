@@ -647,11 +647,11 @@ export default function AdminProductsPage() {
                                             {/* Product Title & Thumbnail */}
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                                                    <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] shrink-0 overflow-hidden shadow-2xs">
                                                         <img
                                                             src={imageSrc}
                                                             alt={prod.name}
-                                                            className="max-h-9 w-auto object-contain"
+                                                            className="size-full object-cover"
                                                         />
                                                     </div>
                                                     <div className="min-w-0 max-w-xs">
@@ -962,12 +962,12 @@ export default function AdminProductsPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Thumbnail Preview */}
-                                                        <div className="aspect-square rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-2 mb-2">
+                                                        {/* Thumbnail Preview (1:1 Ratio Full-Filled) */}
+                                                        <div className="aspect-square rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] overflow-hidden mb-2">
                                                             <img
                                                                 src={imgUrl}
                                                                 alt={`Product image ${idx + 1}`}
-                                                                className="w-full h-full object-contain"
+                                                                className="size-full object-cover"
                                                             />
                                                         </div>
 
@@ -1129,28 +1129,28 @@ export default function AdminProductsPage() {
                                                         key={i}
                                                         type="button"
                                                         onClick={() => setActivePreviewImage(i)}
-                                                        className={`size-12 rounded-xl border p-1 bg-white overflow-hidden transition ${
+                                                        className={`size-12 rounded-xl border p-0 bg-white overflow-hidden transition ${
                                                             activePreviewImage === i
                                                                 ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20'
                                                                 : 'border-[#EFE0EF] hover:border-slate-300'
                                                         }`}
                                                     >
-                                                        <img src={img} alt="" className="w-full h-full object-contain" />
+                                                        <img src={img} alt="" className="size-full object-cover" />
                                                     </button>
                                                 ))}
                                             </div>
 
-                                            {/* Main Image with Discount Tag */}
-                                            <div className="relative aspect-square flex-1 bg-white border border-[#EFE0EF] rounded-2xl p-4 flex items-center justify-center overflow-hidden shadow-2xs">
+                                            {/* Main Image with Discount Tag (1:1 Ratio Full-Filled) */}
+                                            <div className="relative aspect-square flex-1 bg-white border border-[#EFE0EF] rounded-2xl overflow-hidden shadow-2xs">
                                                 {previewDiscount > 0 && (
-                                                    <span className="absolute top-2.5 left-2.5 bg-[#6C306E] text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                                                    <span className="absolute top-2.5 left-2.5 bg-[#6C306E] text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-xs z-10">
                                                         {previewDiscount}% OFF
                                                     </span>
                                                 )}
                                                 <img
                                                     src={formData.images[activePreviewImage] || formData.images[0] || '/product_img1.png'}
                                                     alt="Preview"
-                                                    className="w-full h-full object-contain"
+                                                    className="size-full object-cover"
                                                 />
                                             </div>
                                         </div>

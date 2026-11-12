@@ -80,20 +80,20 @@ const ProductDetails = ({ product }) => {
                                 whileHover={{ scale: 1.04 }}
                                 whileTap={{ scale: 0.96 }}
                                 onClick={() => setMainImage(image)} 
-                                className={`bg-white border overflow-hidden size-18 sm:size-20 lg:size-22 rounded-2xl cursor-pointer transition-all duration-200 p-2 ${
+                                className={`bg-white border overflow-hidden size-18 sm:size-20 lg:size-22 rounded-2xl cursor-pointer transition-all duration-200 p-0 ${
                                     isSelected 
                                         ? 'border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/15' 
                                         : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
-                                <Image src={image} className="w-full h-full object-contain" alt="" width={88} height={88} />
+                                <Image src={image} className="w-full h-full object-cover" alt="" width={88} height={88} />
                             </motion.button>
                         );
                     })}
                 </div>
 
-                {/* Main Image Showcase with Smooth Switch & Airy Padding */}
-                <div className="relative aspect-square w-full sm:w-[460px] md:w-[500px] lg:w-[520px] bg-white rounded-[32px] border border-[#EFE0EF] overflow-hidden flex items-center justify-center p-8 sm:p-10 lg:p-12 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+                {/* Main Image Showcase (100% 1:1 Square Box Full-Filled Edge to Edge) */}
+                <div className="relative aspect-square w-full sm:w-[460px] md:w-[500px] lg:w-[520px] bg-white rounded-[32px] border border-[#EFE0EF] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
                     {discountPercentage > 0 && (
                         <span className="absolute top-5 left-5 z-10 bg-[#6C306E] text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-xs tracking-wider">
                             {discountPercentage}% OFF
@@ -107,14 +107,14 @@ const ProductDetails = ({ product }) => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.96 }}
                             transition={{ duration: 0.25 }}
-                            className="w-full h-full flex items-center justify-center"
+                            className="w-full h-full"
                         >
                             <Image 
                                 src={mainImage} 
                                 alt={product.name} 
                                 width={540} 
                                 height={540} 
-                                className="w-full h-full object-contain" 
+                                className="w-full h-full object-cover" 
                                 priority
                             />
                         </motion.div>
