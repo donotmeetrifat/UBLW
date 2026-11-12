@@ -63,6 +63,7 @@ model User {
     addresses   Address[]
     orders      Order[]     @relation("CustomerOrders")
     ratings     Rating[]
+    inquiries   Inquiry[]
     store       Store?
 }
 
@@ -228,4 +229,24 @@ model Setting {
     key       String   @id
     value     String
     updatedAt DateTime @updatedAt
+}
+
+model Inquiry {
+    id         String   @id @default(cuid())
+    userId     String?
+    name       String
+    email      String
+    phone      String?
+    subject    String
+    message    String
+    status     String   @default("UNREAD") // "UNREAD", "IN_PROGRESS", "RESOLVED"
+    adminNotes String?
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    @@index([userId])
+    @@index([status])
+    @@index([createdAt])
 }

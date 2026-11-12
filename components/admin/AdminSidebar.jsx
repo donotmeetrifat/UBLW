@@ -8,6 +8,7 @@ import {
     TagIcon,
     TruckIcon,
     UserIcon,
+    MailIcon,
     CloseIcon
 } from "@/components/icons"
 import Image from "next/image"
@@ -38,6 +39,7 @@ const navSections = [
         section: 'Customer Intelligence',
         items: [
             { name: 'Customers & Purchases', href: '/admin/customers', icon: UserIcon },
+            { name: 'Customer Inquiries', href: '/admin/inquiries', icon: MailIcon },
         ]
     },
     {
