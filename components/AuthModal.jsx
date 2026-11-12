@@ -178,14 +178,13 @@ export default function AuthModal({
                 </button>
 
                 {/* Header Brand */}
-                <div className="text-center mb-5">
-                    <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 flex items-center justify-center mx-auto mb-2.5 shadow-2xs">
+                <div className="text-center mb-4">
+                    <div className="flex justify-center mb-3">
                         <Image
                             src={assets.webLogo}
                             alt="UK Brand Lover Logo"
-                            width={32}
-                            height={32}
-                            className="object-contain"
+                            className="h-10 sm:h-11 w-auto object-contain mx-auto"
+                            priority
                         />
                     </div>
 
@@ -302,20 +301,15 @@ export default function AuthModal({
                         </div>
                     </div>
 
-                    {/* PHONE NUMBER (Sign Up only - Mandatory for product tracking) */}
+                    {/* PHONE NUMBER (Sign Up only) */}
                     {mode === 'signup' && (
                         <div>
-                            <div className="flex items-center justify-between mb-1">
-                                <label className="text-[#241224] font-bold">
-                                    Phone Number <span className="text-red-500">*</span>
-                                </label>
-                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                    For Product Tracking
-                                </span>
-                            </div>
+                            <label className="block text-[#241224] font-bold mb-1">
+                                Phone Number <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <PhoneIcon size={15} color="#059669" />
+                                    <PhoneIcon size={15} color="#6C306E" />
                                 </div>
                                 <input
                                     type="tel"
@@ -323,12 +317,9 @@ export default function AuthModal({
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="01XXXXXXXXX"
-                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none text-[#241224] font-mono font-bold placeholder:text-slate-400 transition"
+                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none text-[#241224] font-medium placeholder:text-slate-400 transition"
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-1">
-                                Required for parcel delivery tracking and courier SMS updates.
-                            </p>
                         </div>
                     )}
 

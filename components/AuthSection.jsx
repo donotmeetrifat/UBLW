@@ -15,7 +15,6 @@ import {
     EyeIcon,
     EyeOffIcon,
     ShieldCheckIcon,
-    SparklesIcon,
     ArrowRightIcon,
     CheckIcon,
     BagIcon
@@ -229,21 +228,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
             >
                 {/* Brand Header */}
                 <div className="text-center mb-6">
-                    <Link href="/" className="inline-flex items-center gap-2 mb-3">
-                        <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 flex items-center justify-center shadow-xs">
+                    <div className="flex justify-center mb-4">
+                        <Link href="/" className="inline-block transition-transform hover:scale-105">
                             <Image
                                 src={assets.webLogo}
                                 alt="UK Brand Lover Logo"
-                                width={36}
-                                height={36}
-                                className="object-contain"
+                                className="h-11 sm:h-12 w-auto object-contain mx-auto"
+                                priority
                             />
-                        </div>
-                    </Link>
-
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[10px] font-bold text-[#6C306E] uppercase tracking-wider mb-2">
-                        <SparklesIcon size={12} color="#D8B56D" />
-                        <span>100% Original UK Imported Beauty</span>
+                        </Link>
                     </div>
 
                     <h1 className="text-2xl sm:text-3xl font-black text-[#241224] tracking-tight">
@@ -386,7 +379,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                         </div>
                     </div>
 
-                    {/* PHONE NUMBER (Sign Up only - Mandatory for product tracking & notifications) */}
+                    {/* PHONE NUMBER (Sign Up only) */}
                     {mode === 'signup' && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
@@ -394,17 +387,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <div className="flex items-center justify-between mb-1.5">
-                                <label className="text-[#241224] font-bold">
-                                    Phone Number <span className="text-red-500">*</span>
-                                </label>
-                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                    For Order Tracking
-                                </span>
-                            </div>
+                            <label className="block text-[#241224] font-bold mb-1.5">
+                                Phone Number <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <PhoneIcon size={16} color="#059669" />
+                                    <PhoneIcon size={16} color="#6C306E" />
                                 </div>
                                 <input
                                     type="tel"
@@ -412,12 +400,9 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="01XXXXXXXXX"
-                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-mono font-bold text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
-                                Used for parcel tracking SMS, courier dispatch notifications, and authentic product delivery updates.
-                            </p>
                         </motion.div>
                     )}
 
