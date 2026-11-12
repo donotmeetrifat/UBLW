@@ -122,7 +122,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
     return (
         <div 
-            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md overflow-y-auto transition-all duration-300"
         >
             <motion.div

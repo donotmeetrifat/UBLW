@@ -113,7 +113,6 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
 
     return (
         <div 
-            onClick={(e) => { if (e.target === e.currentTarget) setShowAddressModal(false); }}
             className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md h-screen flex items-center justify-center p-4 transition-all duration-300"
         >
             <motion.div 

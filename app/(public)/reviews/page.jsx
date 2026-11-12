@@ -491,16 +491,22 @@ export default function ReviewsPage() {
             <AnimatePresence>
                 {lightboxMedia && (
                     <div 
-                        onClick={() => setLightboxMedia(null)}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300 cursor-pointer"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md transition-all duration-300"
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
                             className="bg-white rounded-3xl p-3 border border-[#EFE0EF] shadow-2xl max-w-2xl w-full overflow-hidden relative cursor-default"
                         >
+                            <button
+                                type="button"
+                                onClick={() => setLightboxMedia(null)}
+                                className="absolute top-5 right-5 z-20 size-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer"
+                                aria-label="Close preview"
+                            >
+                                <CloseIcon size={14} color="#FFFFFF" />
+                            </button>
                             {lightboxMedia.type === 'video' ? (
                                 <video
                                     src={lightboxMedia.url}

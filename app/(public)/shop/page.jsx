@@ -256,7 +256,6 @@ function ShopContent() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsMobileFilterOpen(false)}
                             className="absolute inset-0 bg-white/60 backdrop-blur-md transition-all duration-300"
                         />
                         {/* Drawer */}

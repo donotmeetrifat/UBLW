@@ -152,7 +152,6 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
     return (
         <AnimatePresence>
             <div 
-                onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
                 className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md select-none transition-all duration-300"
             >
                 <motion.div

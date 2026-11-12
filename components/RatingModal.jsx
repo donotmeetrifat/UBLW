@@ -252,7 +252,6 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
 
     return (
         <div 
-            onClick={(e) => { if (e.target === e.currentTarget) setRatingModal(null); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-white/60 backdrop-blur-md overflow-y-auto transition-all duration-300"
         >
             <motion.div
