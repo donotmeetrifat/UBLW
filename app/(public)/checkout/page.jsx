@@ -702,14 +702,10 @@ export default function CheckoutPage() {
                         </motion.button>
 
                         {/* Trust Badges */}
-                        <div className="mt-5 pt-4 border-t border-[#EFE0EF] space-y-2 text-[11px] text-slate-500">
+                        <div className="mt-5 pt-4 border-t border-[#EFE0EF] text-[11px] text-slate-500">
                             <div className="flex items-center gap-2">
                                 <ShieldCheckIcon size={14} color="#059669" />
                                 <span>100% Original UK Imported Products Guaranteed</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <TruckIcon size={14} color="#6C306E" />
-                                <span>Fast Courier Dispatch with Live SMS & WhatsApp Tracking</span>
                             </div>
                         </div>
                     </div>
