@@ -109,7 +109,28 @@ export default function AdminProductsPage() {
         sizeVolume: '30ml'
     })
 
+    const [dbCategories, setDbCategories] = useState([
+        'Skincare',
+        'Makeup',
+        'Haircare',
+        'Fragrance',
+        'Body Care',
+        'Beauty Tools'
+    ])
+
     const fileInputRef = useRef(null)
+
+    // Load live categories from catalog
+    useEffect(() => {
+        fetch('/api/categories?all=true&_t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    setDbCategories(data.categories.map(c => c.name))
+                }
+            })
+            .catch(() => {})
+    }, [])
 
     const fetchProducts = async () => {
         try {
@@ -144,7 +165,7 @@ export default function AdminProductsPage() {
         setEditingProduct(null)
         setFormData({
             name: '',
-            category: 'Skincare',
+            category: dbCategories[0] || 'Skincare',
             brand: 'The Ordinary',
             price: '',
             mrp: '',
@@ -586,10 +607,13 @@ export default function AdminProductsPage() {
                     <AdminDropdown
                         value={selectedCategory}
                         onChange={setSelectedCategory}
-                        options={CATEGORIES.map(cat => ({
-                            value: cat,
-                            label: cat === 'All' ? 'All Categories' : `${cat} Products`
-                        }))}
+                        options={[
+                            { value: 'All', label: 'All Categories' },
+                            ...dbCategories.map(cat => ({
+                                value: cat,
+                                label: `${cat} Products`
+                            }))
+                        ]}
                         className="w-full md:w-52"
                     />
 
@@ -812,7 +836,7 @@ export default function AdminProductsPage() {
                                             <AdminDropdown
                                                 value={formData.category}
                                                 onChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
-                                                options={FORM_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                                                options={dbCategories.map(cat => ({ value: cat, label: cat }))}
                                                 fullWidth
                                             />
                                         </div>

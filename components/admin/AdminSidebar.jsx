@@ -27,6 +27,7 @@ const navSections = [
         section: 'Catalog',
         items: [
             { name: 'Products & Stock', href: '/admin/products', icon: BagIcon },
+            { name: 'Category Catalog', href: '/admin/categories', icon: TagIcon },
         ]
     },
     {

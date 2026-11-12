@@ -38,13 +38,7 @@ export const categories = [
     "Haircare",
     "Fragrance",
     "Body Care",
-    "Beauty Tools",
-    "Accessories",
-    "Lifestyle",
-    "New Arrivals",
-    "Best Sellers",
-    "Premium Picks",
-    "Sale"
+    "Beauty Tools"
 ];
 
 export const dummyRatingsData = [

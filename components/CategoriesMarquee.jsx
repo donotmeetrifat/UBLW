@@ -2,22 +2,16 @@
 
 import { SparklesIcon } from "@/components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const categoryNames = [
+const DEFAULT_CATEGORIES = [
     "Skincare",
     "Makeup",
     "Haircare",
     "Fragrance",
     "Body Care",
-    "Beauty Tools",
-    "Accessories",
-    "Lifestyle",
-    "New Arrivals",
-    "Best Sellers",
-    "Premium Picks",
-    "Sale",
+    "Beauty Tools"
 ];
 
 const CategoriesMarqueeContent = () => {
@@ -25,6 +19,21 @@ const CategoriesMarqueeContent = () => {
     const searchParams = useSearchParams();
     const activeCategory = searchParams?.get('category') || '';
     const [isPaused, setIsPaused] = useState(false);
+    const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+    useEffect(() => {
+        fetch('/api/categories?_t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    const activeNames = data.categories
+                        .filter(c => c.isActive !== false)
+                        .map(c => c.name);
+                    if (activeNames.length > 0) setCategories(activeNames);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const handleCategoryClick = (catName) => {
         router.push(`/shop?category=${encodeURIComponent(catName)}`);
@@ -48,7 +57,7 @@ const CategoriesMarqueeContent = () => {
                     className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar sm:min-w-[200%] sm:animate-[marqueeScroll_38s_linear_infinite] group-hover/marquee:[animation-play-state:paused] py-2 sm:py-3 px-2"
                     style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
                 >
-                    {[...categoryNames, ...categoryNames, ...categoryNames].map((catName, index) => {
+                    {[...categories, ...categories, ...categories].map((catName, index) => {
                         const isActive = activeCategory.toLowerCase() === catName.toLowerCase();
 
                         return (

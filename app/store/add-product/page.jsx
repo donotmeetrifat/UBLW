@@ -2,7 +2,7 @@
 
 import { assets, categories } from "@/assets/assets"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
@@ -10,16 +10,25 @@ export default function StoreAddProduct() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
     const router = useRouter()
 
-    const beautyCategories = [
+    const [beautyCategories, setBeautyCategories] = useState([
         "Skincare",
         "Makeup",
         "Haircare",
         "Fragrance",
         "Body Care",
-        "Beauty Tools",
-        "New Arrivals",
-        "Best Sellers"
-    ]
+        "Beauty Tools"
+    ])
+
+    useEffect(() => {
+        fetch('/api/categories?all=true&_t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    setBeautyCategories(data.categories.map(c => c.name))
+                }
+            })
+            .catch(() => {})
+    }, [])
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({

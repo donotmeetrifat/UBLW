@@ -50,6 +50,26 @@ function ShopContent() {
     }))
     const [sortBy, setSortBy] = useState('default')
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+    const [shopCategories, setShopCategories] = useState([
+        'Skincare',
+        'Makeup',
+        'Haircare',
+        'Fragrance',
+        'Body Care',
+        'Beauty Tools'
+    ])
+
+    useEffect(() => {
+        fetch('/api/categories?_t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    const activeNames = data.categories.filter(c => c.isActive !== false).map(c => c.name)
+                    if (activeNames.length > 0) setShopCategories(activeNames)
+                }
+            })
+            .catch(() => {})
+    }, [])
 
     // Sync URL ?category= param into filter state whenever it changes
     useEffect(() => {
@@ -168,6 +188,7 @@ function ShopContent() {
                         <ShopFilterPanel
                             filters={filters}
                             sortBy={sortBy}
+                            categories={shopCategories}
                             onToggle={toggleFilter}
                             onPriceChange={updatePriceFilter}
                             onClear={clearFilters}
@@ -269,6 +290,7 @@ function ShopContent() {
                             <ShopFilterPanel
                                 filters={filters}
                                 sortBy={sortBy}
+                                categories={shopCategories}
                                 onToggle={toggleFilter}
                                 onPriceChange={updatePriceFilter}
                                 onClear={clearFilters}

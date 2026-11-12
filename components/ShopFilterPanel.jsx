@@ -2,10 +2,10 @@
 
 import { ChevronDownIcon, CloseIcon, FilterIcon } from '@/components/icons'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export const filterOptions = {
-    categories: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools', 'Accessories', 'Lifestyle', 'New Arrivals', 'Best Sellers', 'Premium Picks', 'Sale'],
+    categories: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools'],
     sortOptions: [
         { label: 'Featured (Default)', value: 'default' },
         { label: 'Newest Arrivals', value: 'newest' },
@@ -117,8 +117,46 @@ const FilterGroup = ({ group, filters, onToggle }) => {
     )
 }
 
-const ShopFilterPanel = ({ filters, sortBy, onToggle, onPriceChange, onClear, onSortChange, onClose, showCloseButton = false }) => {
+const ShopFilterPanel = ({ 
+    filters, 
+    sortBy, 
+    onToggle, 
+    onPriceChange, 
+    onClear, 
+    onSortChange, 
+    onClose, 
+    showCloseButton = false,
+    categories = []
+}) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
+
+    const [liveCategories, setLiveCategories] = useState(
+        categories && categories.length > 0 ? categories : filterOptions.categories
+    )
+
+    useEffect(() => {
+        if (categories && categories.length > 0) {
+            setLiveCategories(categories)
+            return
+        }
+        fetch('/api/categories?_t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    const activeNames = data.categories
+                        .filter(c => c.isActive !== false)
+                        .map(c => c.name)
+                    if (activeNames.length > 0) setLiveCategories(activeNames)
+                }
+            })
+            .catch(() => {})
+    }, [categories])
+
+    const activeCategoryGroup = {
+        title: 'Category',
+        key: 'categories',
+        options: liveCategories.map((name) => ({ label: name, value: name }))
+    }
 
     return (
         <aside className="bg-white border border-[#EFE0EF] rounded-3xl p-5 lg:sticky lg:top-24 shadow-2xs">
@@ -192,9 +230,7 @@ const ShopFilterPanel = ({ filters, sortBy, onToggle, onPriceChange, onClear, on
 
             {/* Category Groups */}
             <div className="mt-2">
-                {filterGroups.map((group) => (
-                    <FilterGroup key={group.key} group={group} filters={filters} onToggle={onToggle} />
-                ))}
+                <FilterGroup group={activeCategoryGroup} filters={filters} onToggle={onToggle} />
             </div>
         </aside>
     )
