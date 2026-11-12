@@ -44,6 +44,13 @@ export default function Product() {
         fetchProduct();
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Record true authentic product view (once per browser session per product)
+            const sessionKey = `ukbl_viewed_${productId}`;
+            if (!sessionStorage.getItem(sessionKey)) {
+                sessionStorage.setItem(sessionKey, '1');
+                fetch(`/api/products/${productId}/view`, { method: 'POST' }).catch(() => {});
+            }
         }
     }, [productId, products]);
 

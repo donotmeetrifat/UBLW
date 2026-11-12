@@ -1,15 +1,16 @@
 'use client'
+
 import { useEffect, useState } from "react"
 import Loading from "../Loading"
 import Link from "next/link"
-import { ArrowRightIcon } from "@/components/icons"
+import { ArrowRightIcon, LockIcon } from "@/components/icons"
 import AdminNavbar from "./AdminNavbar"
 import AdminSidebar from "./AdminSidebar"
 
-const AdminLayout = ({ children }) => {
-
+export default function AdminLayout({ children }) {
     const [isAdmin, setIsAdmin] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
     const fetchIsAdmin = async () => {
         try {
@@ -45,26 +46,52 @@ const AdminLayout = ({ children }) => {
         fetchIsAdmin()
     }, [])
 
-    return loading ? (
-        <Loading />
-    ) : isAdmin ? (
-        <div className="flex flex-col h-screen">
-            <AdminNavbar />
-            <div className="flex flex-1 items-start h-full overflow-y-scroll no-scrollbar">
-                <AdminSidebar />
-                <div className="flex-1 h-full p-5 lg:pl-12 lg:pt-12 overflow-y-scroll">
-                    {children}
+    if (loading) return <Loading />
+
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-[#FAF6FA]/60 flex flex-col items-center justify-center text-center px-6">
+                <div className="size-16 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mb-4 shadow-sm">
+                    <LockIcon size={26} color="#6C306E" />
                 </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224]">Admin Access Required</h1>
+                <p className="text-xs text-slate-500 mt-2 max-w-md">
+                    This portal is strictly reserved for UK Brand Lover administrators to manage products, view authentic metrics, and analyze customer transactions.
+                </p>
+                <Link
+                    href="/"
+                    className="bg-[#6C306E] hover:bg-[#3A0C38] text-white flex items-center gap-2 mt-6 px-6 py-2.5 rounded-full text-xs font-bold transition shadow-2xs"
+                >
+                    <span>Return to Storefront</span>
+                    <ArrowRightIcon size={14} />
+                </Link>
             </div>
-        </div>
-    ) : (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
-            <h1 className="text-2xl sm:text-4xl font-semibold text-slate-400">You are not authorized to access this page</h1>
-            <Link href="/" className="bg-slate-700 text-white flex items-center gap-2 mt-8 p-2 px-6 max-sm:text-sm rounded-full">
-                Go to home <ArrowRightIcon size={18} />
-            </Link>
+        )
+    }
+
+    return (
+        <div className="min-h-screen flex bg-[#FAF6FA]/30">
+            {/* Mobile Backdrop */}
+            {mobileSidebarOpen && (
+                <div
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
+                />
+            )}
+
+            {/* Sidebar */}
+            <AdminSidebar
+                mobileOpen={mobileSidebarOpen}
+                onClose={() => setMobileSidebarOpen(false)}
+            />
+
+            {/* Main Content Column */}
+            <div className="flex-1 flex flex-col min-w-0">
+                <AdminNavbar onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)} />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                    {children}
+                </main>
+            </div>
         </div>
     )
 }
-
-export default AdminLayout

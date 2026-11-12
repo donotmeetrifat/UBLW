@@ -46,15 +46,22 @@ export async function PATCH(request, { params }) {
         const { id } = await params;
         const updates = await request.json();
 
+        // Sanitize numeric fields if provided
+        const cleanedData = { ...updates };
+        if (cleanedData.price !== undefined) cleanedData.price = parseFloat(cleanedData.price);
+        if (cleanedData.mrp !== undefined) cleanedData.mrp = parseFloat(cleanedData.mrp);
+        if (cleanedData.stockCount !== undefined) cleanedData.stockCount = parseInt(cleanedData.stockCount, 10);
+        if (cleanedData.inStock !== undefined) cleanedData.inStock = Boolean(cleanedData.inStock);
+
         if (isDatabaseConfigured()) {
             const product = await prisma.product.update({
                 where: { id },
-                data: updates,
+                data: cleanedData,
             });
             return NextResponse.json({ success: true, product });
         }
 
-        const product = memoryStore.updateProduct(id, updates);
+        const product = memoryStore.updateProduct(id, cleanedData);
         if (!product) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
@@ -73,8 +80,21 @@ export async function DELETE(request, { params }) {
         const { id } = await params;
 
         if (isDatabaseConfigured()) {
+            const orderItemsCount = await prisma.orderItem.count({ where: { productId: id } });
+            if (orderItemsCount > 0) {
+                // Preserve historical order records by soft-deleting
+                await prisma.product.update({
+                    where: { id },
+                    data: { isActive: false, inStock: false }
+                });
+                return NextResponse.json({
+                    success: true,
+                    message: 'Product archived from active catalog (order history preserved)'
+                });
+            }
+
             await prisma.product.delete({ where: { id } });
-            return NextResponse.json({ success: true, message: 'Product deleted' });
+            return NextResponse.json({ success: true, message: 'Product deleted permanently' });
         }
 
         const deleted = memoryStore.deleteProduct(id);

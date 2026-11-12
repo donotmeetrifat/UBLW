@@ -436,3 +436,30 @@ export const CameraIcon = ({ size = 18, className = '', color = 'currentColor', 
         <circle cx="12" cy="14" r="1.25" fill={color} />
     </svg>
 )
+
+// 39. Trend Upward Icon
+export const TrendIcon = ({ size = 18, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+    </svg>
+)
+
+// 40. Bar Chart Analytics Icon
+export const ChartBarIcon = ({ size = 18, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <line x1="12" y1="20" x2="12" y2="10" />
+        <line x1="18" y1="20" x2="18" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="16" />
+        <line x1="3" y1="20" x2="21" y2="20" />
+    </svg>
+)
+
+// 41. Hamburger Menu Icon
+export const MenuIcon = ({ size = 20, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+)

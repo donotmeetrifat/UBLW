@@ -23,6 +23,7 @@ export default function AdminCustomerMarketingHub() {
     const [activeTab, setActiveTab] = useState('crm') // 'crm', 'abandoned', 'broadcast', 'settings'
     const [customers, setCustomers] = useState([])
     const [abandonedCarts, setAbandonedCarts] = useState([])
+    const [selectedCustomer, setSelectedCustomer] = useState(null)
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
 
@@ -58,15 +59,21 @@ export default function AdminCustomerMarketingHub() {
 
     const fetchData = async () => {
         try {
-            const [custRes, cartRes] = await Promise.all([
-                fetch('/api/marketing/customers'),
+            const [adminCustRes, cartRes] = await Promise.all([
+                fetch('/api/admin/customers'),
                 fetch('/api/marketing/abandoned-carts')
             ])
-            const custData = await custRes.json()
+            const adminCustData = await adminCustRes.json()
             const cartData = await cartRes.json()
 
-            if (custData.success && Array.isArray(custData.customers)) {
-                setCustomers(custData.customers)
+            if (adminCustData.success && Array.isArray(adminCustData.customers)) {
+                setCustomers(adminCustData.customers)
+            } else {
+                const custRes = await fetch('/api/marketing/customers')
+                const custData = await custRes.json()
+                if (custData.success && Array.isArray(custData.customers)) {
+                    setCustomers(custData.customers)
+                }
             }
             if (cartData.success && Array.isArray(cartData.abandonedCarts)) {
                 setAbandonedCarts(cartData.abandonedCarts)
@@ -260,9 +267,10 @@ export default function AdminCustomerMarketingHub() {
                                     <th className="px-5 py-4">Customer Name</th>
                                     <th className="px-4 py-4">WhatsApp Mobile</th>
                                     <th className="px-4 py-4">Location</th>
-                                    <th className="px-4 py-4">Total Orders</th>
+                                    <th className="px-4 py-4 text-center">Orders</th>
+                                    <th className="px-4 py-4 text-center">Items Bought</th>
                                     <th className="px-4 py-4">Lifetime Spend</th>
-                                    <th className="px-4 py-4 text-right">Direct Action</th>
+                                    <th className="px-5 py-4 text-right">Customer Analysis</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#EFE0EF]/60">
@@ -285,22 +293,37 @@ export default function AdminCustomerMarketingHub() {
                                         <td className="px-4 py-3.5 text-slate-600 font-medium">
                                             {cust.city || 'Dhaka'}
                                         </td>
-                                        <td className="px-4 py-3.5 font-bold text-[#6C306E]">
+                                        <td className="px-4 py-3.5 text-center font-bold text-[#6C306E]">
                                             {cust.totalOrders} {cust.totalOrders === 1 ? 'order' : 'orders'}
                                         </td>
-                                        <td className="px-4 py-3.5 font-extrabold text-[#3A0C38] text-sm">
-                                            {currency}{Number(cust.totalSpend || 0).toLocaleString()}
+                                        <td className="px-4 py-3.5 text-center font-extrabold text-[#241224]">
+                                            <span className="inline-block bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-0.5 rounded-full text-[11px]">
+                                                {cust.totalUnitsBought || cust.totalOrders || 0} units
+                                            </span>
                                         </td>
-                                        <td className="px-4 py-3.5 text-right">
-                                            <a
-                                                href={`https://wa.me/88${cust.whatsapp.replace(/[^0-9]/g, '')}?text=Assalamu%20Alaikum%20${encodeURIComponent(cust.name)}%20আপু!%20Greetings%20from%20UK%20Brand%20Lover%20Flagship.`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full text-[11px] font-bold transition shadow-2xs"
-                                            >
-                                                <WhatsAppIcon size={12} color="#FFFFFF" />
-                                                <span>WhatsApp</span>
-                                            </a>
+                                        <td className="px-4 py-3.5 font-extrabold text-[#3A0C38] text-sm">
+                                            {currency}{Number(cust.totalSpent || cust.totalSpend || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-right">
+                                            <div className="inline-flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setSelectedCustomer(cust)}
+                                                    className="inline-flex items-center gap-1 bg-[#6C306E] hover:bg-[#3A0C38] text-white px-3 py-1.5 rounded-full text-[11px] font-bold transition shadow-2xs cursor-pointer"
+                                                    title="View exact products bought and order history"
+                                                >
+                                                    <BagIcon size={12} color="#FFFFFF" />
+                                                    <span>View Purchases</span>
+                                                </button>
+                                                <a
+                                                    href={`https://wa.me/88${cust.whatsapp.replace(/[^0-9]/g, '')}?text=Assalamu%20Alaikum%20${encodeURIComponent(cust.name)}%20আপু!%20Greetings%20from%20UK%20Brand%20Lover%20Flagship.`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full text-[11px] font-bold transition shadow-2xs"
+                                                >
+                                                    <WhatsAppIcon size={12} color="#FFFFFF" />
+                                                    <span>WhatsApp</span>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -769,6 +792,203 @@ export default function AdminCustomerMarketingHub() {
                             >
                                 <WhatsAppIcon size={14} color="#FFFFFF" />
                                 <span>{isSendingTest ? 'Sending...' : 'Send Test WhatsApp Message'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CUSTOMER PURCHASE BREAKDOWN & CRM ANALYSIS MODAL (CLOSES ONLY VIA EXPLICIT CLOSE BUTTON PER USER RULE) */}
+            {selectedCustomer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+                    <div className="relative w-full max-w-3xl bg-white border border-[#EFE0EF] rounded-3xl shadow-2xl p-6 sm:p-8 my-8 max-h-[90vh] overflow-y-auto text-xs">
+                        {/* Modal Header */}
+                        <div className="flex items-start justify-between pb-4 border-b border-[#EFE0EF] mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="size-12 rounded-2xl bg-[#6C306E] text-white font-extrabold text-base flex items-center justify-center shrink-0 border border-[#D8B56D]/40 shadow-xs">
+                                    {(selectedCustomer.name || 'C')[0]?.toUpperCase()}
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-[#241224] flex items-center gap-2">
+                                        <span>{selectedCustomer.name}</span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            Registered Customer
+                                        </span>
+                                    </h2>
+                                    <div className="flex flex-wrap items-center gap-3 text-slate-500 mt-1">
+                                        <span>{selectedCustomer.email}</span>
+                                        <span>•</span>
+                                        <a
+                                            href={`https://wa.me/88${selectedCustomer.whatsapp.replace(/[^0-9]/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-mono font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                                        >
+                                            <WhatsAppIcon size={12} color="#059669" />
+                                            <span>{selectedCustomer.whatsapp}</span>
+                                        </a>
+                                        <span>•</span>
+                                        <span>{selectedCustomer.city || selectedCustomer.address || 'Dhaka'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCustomer(null)}
+                                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                                aria-label="Close details"
+                            >
+                                <CloseIcon size={18} />
+                            </button>
+                        </div>
+
+                        {/* Customer KPI Summary */}
+                        <div className="grid grid-cols-3 gap-3 mb-6">
+                            <div className="p-3.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                    Total Orders
+                                </span>
+                                <span className="text-xl font-black text-[#6C306E] mt-1 block">
+                                    {selectedCustomer.totalOrders || 0}
+                                </span>
+                            </div>
+                            <div className="p-3.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                    Total Units Purchased
+                                </span>
+                                <span className="text-xl font-black text-[#241224] mt-1 block">
+                                    {selectedCustomer.totalUnitsBought || selectedCustomer.totalOrders || 0} items
+                                </span>
+                            </div>
+                            <div className="p-3.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                    Lifetime Spend
+                                </span>
+                                <span className="text-xl font-black text-emerald-700 mt-1 block">
+                                    {currency}{Number(selectedCustomer.totalSpent || selectedCustomer.totalSpend || 0).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* SECTION: EXACT PRODUCTS BOUGHT BY THIS CUSTOMER */}
+                        <div className="mb-6">
+                            <h3 className="font-extrabold text-sm text-[#241224] mb-3 flex items-center gap-2">
+                                <BagIcon size={16} color="#6C306E" />
+                                <span>Products Purchased by this Customer ({selectedCustomer.purchasedProducts?.length || 0})</span>
+                            </h3>
+
+                            {selectedCustomer.purchasedProducts && selectedCustomer.purchasedProducts.length > 0 ? (
+                                <div className="space-y-2.5">
+                                    {selectedCustomer.purchasedProducts.map((item, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="p-3.5 rounded-2xl border border-[#EFE0EF] bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF6FA]/50 transition"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-12 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-xs">
+                                                    <img
+                                                        src={item.image || '/product_img1.png'}
+                                                        alt={item.name}
+                                                        className="max-h-10 w-auto object-contain"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div className="font-extrabold text-xs text-[#241224]">
+                                                        {item.name}
+                                                    </div>
+                                                    <div className="text-[10px] text-slate-400 mt-0.5">
+                                                        {item.category} • {item.brand || 'Authentic UK'} • {currency}{Number(item.unitPrice || 0).toLocaleString()} per unit
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 self-end sm:self-auto">
+                                                <div className="text-right">
+                                                    <span className="text-[11px] font-extrabold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-1 rounded-full block">
+                                                        Bought: {item.totalQuantity} {item.totalQuantity === 1 ? 'unit' : 'units'}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 block mt-1">
+                                                        Total: <b>{currency}{Number(item.totalSpentOnItem || (item.totalQuantity * item.unitPrice) || 0).toLocaleString()}</b>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-6 text-center bg-[#FAF6FA] rounded-2xl border border-[#EFE0EF] text-slate-400">
+                                    <BagIcon size={24} color="#94A3B8" className="mx-auto mb-2 opacity-50" />
+                                    <p className="font-semibold text-xs">No completed product purchases yet</p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                        Customer has not placed any delivered or confirmed orders
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* SECTION: ORDER HISTORY TIMELINE */}
+                        <div>
+                            <h3 className="font-extrabold text-sm text-[#241224] mb-3 flex items-center gap-2">
+                                <TagIcon size={16} color="#6C306E" />
+                                <span>Order History ({selectedCustomer.orders?.length || 0})</span>
+                            </h3>
+
+                            {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
+                                <div className="space-y-3">
+                                    {selectedCustomer.orders.map((ord) => (
+                                        <div key={ord.id} className="p-4 rounded-2xl border border-[#EFE0EF] bg-white">
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EFE0EF] pb-2 mb-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-black text-xs text-[#241224]">
+                                                        #{ord.orderNumber}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400">
+                                                        {new Date(ord.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                                        {ord.status}
+                                                    </span>
+                                                    <span className="font-black text-xs text-[#241224]">
+                                                        {currency}{Number(ord.total).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Order items */}
+                                            {ord.items && ord.items.length > 0 && (
+                                                <div className="space-y-1.5 pt-1">
+                                                    {ord.items.map((it, itIdx) => (
+                                                        <div key={itIdx} className="flex items-center justify-between text-[11px] text-slate-600">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-slate-400 font-mono">x{it.quantity}</span>
+                                                                <span>{it.name}</span>
+                                                            </div>
+                                                            <span className="font-semibold text-slate-700">
+                                                                {currency}{Number(it.price * it.quantity).toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-slate-400 text-xs italic">No orders recorded</p>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="pt-6 mt-6 border-t border-[#EFE0EF] flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCustomer(null)}
+                                className="px-6 py-2.5 rounded-full bg-[#6C306E] hover:bg-[#3A0C38] text-white font-bold transition shadow-2xs cursor-pointer text-xs"
+                            >
+                                Close Details
                             </button>
                         </div>
                     </div>

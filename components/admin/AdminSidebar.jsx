@@ -1,51 +1,173 @@
 'use client'
 
 import { usePathname } from "next/navigation"
-import { CouponTicketIcon, DashboardIcon, ShieldCheckIcon, StoreFrontIcon, WhatsAppIcon, TruckIcon } from "@/components/icons"
+import {
+    DashboardIcon,
+    TrendIcon,
+    BagIcon,
+    StoreFrontIcon,
+    ShieldCheckIcon,
+    TagIcon,
+    CouponTicketIcon,
+    TruckIcon,
+    UserIcon,
+    CloseIcon
+} from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
 import { assets } from "@/assets/assets"
 
-const AdminSidebar = () => {
+const navSections = [
+    {
+        section: 'Overview',
+        items: [
+            { name: 'Dashboard', href: '/admin', icon: DashboardIcon },
+            { name: 'Product Analytics & Views', href: '/admin/analytics', icon: TrendIcon, badge: 'Live Views' },
+        ]
+    },
+    {
+        section: 'Catalog & Inventory',
+        items: [
+            { name: 'Products & Stock', href: '/admin/products', icon: BagIcon },
+            { name: 'Categories & Brands', href: '/admin/stores', icon: StoreFrontIcon },
+            { name: 'Approve Stores', href: '/admin/approve', icon: ShieldCheckIcon },
+        ]
+    },
+    {
+        section: 'Sales & Orders',
+        items: [
+            { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon },
+        ]
+    },
+    {
+        section: 'CRM & Marketing',
+        items: [
+            { name: 'Customers & Purchases', href: '/admin/customers', icon: UserIcon },
+            { name: 'Exclusive Coupons', href: '/admin/coupons', icon: CouponTicketIcon },
+        ]
+    },
+    {
+        section: 'System',
+        items: [
+            { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
+        ]
+    }
+]
+
+export default function AdminSidebar({ mobileOpen = false, onClose = () => {} }) {
     const pathname = usePathname()
 
-    const sidebarLinks = [
-        { name: 'Dashboard', href: '/admin', icon: DashboardIcon },
-        { name: 'Customers & CRM', href: '/admin/customers', icon: WhatsAppIcon },
-        { name: 'Live Stores', href: '/admin/stores', icon: StoreFrontIcon },
-        { name: 'Approve Stores', href: '/admin/approve', icon: ShieldCheckIcon },
-        { name: 'Coupons', href: '/admin/coupons', icon: CouponTicketIcon },
-        { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
-    ]
-
     return (
-        <div className="inline-flex h-full flex-col gap-5 border-r border-[#EFE0EF] sm:min-w-60 bg-[#FAF6FA]/40">
-            <div className="flex flex-col gap-3 justify-center items-center pt-8 max-sm:hidden">
-                <Image className="w-16 h-16 object-contain rounded-2xl bg-white p-2 border border-[#EFE0EF] shadow-2xs" src={assets.webLogo} alt="UK Brand Lover Admin" width={80} height={80} />
-                <p className="text-[#241224] font-bold text-xs uppercase tracking-wider">UK Brand Lover Admin</p>
+        <aside
+            className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-[#EFE0EF] flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+                mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
+            }`}
+        >
+            {/* Brand Header */}
+            <div className="h-16 px-4 border-b border-[#EFE0EF] flex items-center justify-between shrink-0 bg-[#FAF6FA]/50">
+                <Link href="/admin" className="flex items-center gap-2.5">
+                    <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shadow-xs">
+                        <Image
+                            src={assets.webLogo}
+                            alt="UK Brand Lover Logo"
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                        />
+                    </div>
+                    <div>
+                        <div className="font-extrabold text-xs text-[#241224] tracking-tight flex items-center gap-1">
+                            <span>UK Brand Lover</span>
+                            <span className="text-[#D8B56D]">★</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">
+                            Admin Command
+                        </div>
+                    </div>
+                </Link>
+
+                <button
+                    onClick={onClose}
+                    className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                    aria-label="Close sidebar"
+                >
+                    <CloseIcon size={18} />
+                </button>
             </div>
 
-            <div className="max-sm:mt-6 space-y-1 px-3">
-                {sidebarLinks.map((link, index) => {
-                    const isActive = pathname === link.href;
-                    return (
-                        <Link 
-                            key={index} 
-                            href={link.href} 
-                            className={`relative flex items-center gap-3 p-3 rounded-2xl font-bold text-xs transition-all ${
-                                isActive 
-                                    ? 'bg-[#6C306E] text-white shadow-2xs' 
-                                    : 'text-[#503E50] hover:bg-[#FAF6FA] hover:text-[#6C306E]'
-                            }`}
-                        >
-                            <link.icon size={18} color={isActive ? '#FFFFFF' : '#6C306E'} className="sm:ml-2" />
-                            <p className="max-sm:hidden">{link.name}</p>
-                        </Link>
-                    );
-                })}
+            {/* Navigation Groups */}
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 no-scrollbar">
+                {navSections.map((sec, secIdx) => (
+                    <div key={secIdx}>
+                        <div className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                            {sec.section}
+                        </div>
+                        <div className="space-y-1">
+                            {sec.items.map((item, itemIdx) => {
+                                const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href + '/'))
+                                const Icon = item.icon
+                                return (
+                                    <Link
+                                        key={itemIdx}
+                                        href={item.href}
+                                        onClick={onClose}
+                                        className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                                            isActive
+                                                ? 'bg-[#FAF6FA] text-[#6C306E] font-bold border border-[#EFE0EF] shadow-2xs'
+                                                : 'text-slate-600 hover:bg-[#FAF6FA]/80 hover:text-[#241224]'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <div
+                                                className={`size-7 rounded-lg flex items-center justify-center transition-colors ${
+                                                    isActive
+                                                        ? 'bg-[#6C306E] text-white shadow-2xs'
+                                                        : 'bg-slate-100/80 text-slate-500 group-hover:bg-[#FAF6FA] group-hover:text-[#6C306E]'
+                                                }`}
+                                            >
+                                                <Icon size={14} color="currentColor" />
+                                            </div>
+                                            <span>{item.name}</span>
+                                        </div>
+                                        {item.badge && (
+                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    </div>
+                ))}
             </div>
-        </div>
+
+            {/* Sidebar Footer with Admin Profile */}
+            <div className="p-3 border-t border-[#EFE0EF] bg-[#FAF6FA]/40 shrink-0">
+                <div className="flex items-center justify-between p-2 rounded-2xl bg-white border border-[#EFE0EF]">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <div className="size-8 rounded-full bg-[#6C306E] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-[#D8B56D]/40">
+                            A
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-xs font-bold text-[#241224] truncate">
+                                Admin Flagship
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                                admin@ukbrandlover.com
+                            </div>
+                        </div>
+                    </div>
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="text-[10px] font-bold text-[#6C306E] hover:underline bg-[#FAF6FA] px-2 py-1 rounded-md border border-[#EFE0EF] shrink-0"
+                        title="View Live Storefront"
+                    >
+                        Store ↗
+                    </Link>
+                </div>
+            </div>
+        </aside>
     )
 }
-
-export default AdminSidebar
