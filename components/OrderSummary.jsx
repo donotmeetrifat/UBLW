@@ -22,7 +22,7 @@ import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } fro
 import { FlowButton } from '@/components/ui/flow-button';
 import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
 
-const OrderSummary = ({ totalPrice, items = [] }) => {
+const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedCount, selectedQuantity }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
     const dispatch = useDispatch();
     const router = useRouter();
@@ -69,6 +69,11 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
         const code = couponCodeInput.trim().toUpperCase();
         if (!code) return;
 
+        if (items.length === 0) {
+            toast.error('Please select products before applying a coupon.');
+            return;
+        }
+
         setIsApplyingCoupon(true);
         try {
             const res = await fetch('/api/coupons/validate', {
@@ -101,19 +106,28 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
         }
     };
 
-    const discountAmount = coupon ? Math.round((coupon.discount / 100) * totalPrice) : 0;
+    const discountAmount = coupon && items.length > 0 ? Math.round((coupon.discount / 100) * totalPrice) : 0;
     
     // Calculate live delivery charge
-    const deliveryCharge = selectedAddress 
-        ? calculateDeliveryCharge(selectedAddress, totalPrice, deliverySettings)
-        : (deliverySettings.insideDhaka || 80);
+    const deliveryCharge = items.length === 0 
+        ? 0 
+        : (selectedAddress 
+            ? calculateDeliveryCharge(selectedAddress, totalPrice, deliverySettings)
+            : (deliverySettings.insideDhaka || 80));
 
     const isDhaka = selectedAddress ? isInsideDhaka(selectedAddress) : true;
-    const finalTotal = Math.max(0, totalPrice - discountAmount + (selectedAddress ? deliveryCharge : 0));
+    const finalTotal = items.length === 0 
+        ? 0 
+        : Math.max(0, totalPrice - discountAmount + (selectedAddress ? deliveryCharge : 0));
 
     const handleProceedToPayment = () => {
         if (!isClientSignedIn()) {
             requireSignIn('Please sign in to proceed with your order.');
+            return;
+        }
+
+        if (items.length === 0) {
+            toast.error('Please select at least 1 product from your shopping bag.');
             return;
         }
 
@@ -123,16 +137,13 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
             return;
         }
 
-        if (items.length === 0) {
-            toast.error('Your bag is empty.');
-            return;
-        }
-
-        // Store checkout state in localStorage so the payment page gets the exact selected address and coupon
+        // Store checkout state in localStorage so the payment page gets the exact selected items, address and coupon
         if (typeof window !== 'undefined') {
             localStorage.setItem('ukbl_checkout_data', JSON.stringify({
                 selectedAddressId: selectedAddress.id,
                 selectedAddress,
+                selectedItemIds: items.map(i => i.id),
+                selectedItems: items,
                 coupon,
                 discountAmount,
                 deliveryCharge,
@@ -256,8 +267,14 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
 
             {/* Calculations Breakdown */}
             <div className='pt-4 border-t border-[#EFE0EF] space-y-2.5 text-xs'>
+                {items.length === 0 && (
+                    <div className="p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-[11px] text-[#6C306E] font-medium text-center">
+                        Please check at least 1 product in your bag to calculate delivery & checkout.
+                    </div>
+                )}
+
                 <div className='flex justify-between text-slate-600'>
-                    <p>Subtotal ({items.length} items):</p>
+                    <p>Subtotal ({selectedQuantity !== undefined ? selectedQuantity : items.length} {selectedQuantity === 1 ? 'item' : 'items'}):</p>
                     <p className='font-bold text-[#241224]'>{currency}{totalPrice.toLocaleString()}</p>
                 </div>
 
@@ -267,7 +284,11 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                         <TruckIcon size={14} color="#6C306E" />
                         <span>Delivery Fee:</span>
                     </div>
-                    {deliveryCharge === 0 || deliverySettings.isFreeDeliveryEnabled ? (
+                    {items.length === 0 ? (
+                        <span className='text-slate-400 text-[11px] italic'>
+                            Select products
+                        </span>
+                    ) : deliveryCharge === 0 || deliverySettings.isFreeDeliveryEnabled ? (
                         <span className='font-extrabold text-emerald-700 uppercase text-[11px] tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200'>
                             FREE
                         </span>
@@ -304,7 +325,7 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                         </div>
                         <FlowButton
                             type="submit"
-                            disabled={isApplyingCoupon}
+                            disabled={isApplyingCoupon || items.length === 0}
                             text={isApplyingCoupon ? '...' : 'Apply'}
                             className="!h-10 !px-5 shrink-0"
                         />
@@ -339,12 +360,18 @@ const OrderSummary = ({ totalPrice, items = [] }) => {
                 onClick={handleProceedToPayment}
                 className='group relative overflow-hidden w-full bg-gradient-to-r from-[#5E225C] via-[#7B2E79] to-[#3A0C38] hover:from-[#6E2A70] hover:to-[#451245] text-white py-4 rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_10px_28px_-4px_rgba(108,48,110,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_16px_36px_-2px_rgba(108,48,110,0.7)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shimmer-active flex items-center justify-center gap-2 border border-white/20'
             >
-                <span>Proceed to Payment</span>
-                <ArrowRightIcon 
-                    size={14} 
-                    color="#FFFFFF" 
-                    className="group-hover:translate-x-1.5 transition-transform duration-300" 
-                />
+                <span>
+                    {items.length === 0 
+                        ? 'Select Products to Proceed' 
+                        : `Proceed to Payment (${selectedQuantity !== undefined ? selectedQuantity : items.length} ${selectedQuantity === 1 ? 'item' : 'items'})`}
+                </span>
+                {items.length > 0 && (
+                    <ArrowRightIcon 
+                        size={14} 
+                        color="#FFFFFF" 
+                        className="group-hover:translate-x-1.5 transition-transform duration-300" 
+                    />
+                )}
             </motion.button>
 
             <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">

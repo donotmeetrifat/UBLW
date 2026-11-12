@@ -22,7 +22,7 @@ import {
     CloseIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
-import { clearCart } from '@/lib/features/cart/cartSlice'
+import { clearCart, removePurchasedItems } from '@/lib/features/cart/cartSlice'
 import AddressModal from '@/components/AddressModal'
 import { productDummyData } from '@/assets/assets'
 import InvoiceModal from '@/components/InvoiceModal'
@@ -88,13 +88,31 @@ export default function CheckoutPage() {
         fetchSettings()
     }, [])
 
-    // 2. Build item list from Redux cart with resilient fallback
+    // 2. Build item list from Redux cart with resilient fallback (filters by user selected items if specified)
     useEffect(() => {
         let computedSubtotal = 0
         const itemList = []
         const allProducts = Array.isArray(products) && products.length > 0 ? products : productDummyData
 
+        // Retrieve selectedItemIds saved from the shopping bag
+        let selectedItemIds = null
+        if (typeof window !== 'undefined') {
+            try {
+                const savedData = JSON.parse(localStorage.getItem('ukbl_checkout_data') || '{}')
+                if (savedData.selectedItemIds && Array.isArray(savedData.selectedItemIds) && savedData.selectedItemIds.length > 0) {
+                    selectedItemIds = savedData.selectedItemIds
+                }
+            } catch (e) {
+                console.error('Failed to parse checkout selectedItemIds:', e)
+            }
+        }
+
         for (const [productId, qty] of Object.entries(cartItems || {})) {
+            // If user only selected certain items in cart, filter strictly to those items!
+            if (selectedItemIds && !selectedItemIds.includes(productId)) {
+                continue
+            }
+
             const product = allProducts.find(p => p.id === productId) || productDummyData.find(p => p.id === productId)
             if (product && qty > 0) {
                 itemList.push({
@@ -239,7 +257,9 @@ export default function CheckoutPage() {
                     localStorage.removeItem('ukbl_checkout_data')
                 }
 
-                dispatch(clearCart())
+                // Remove only the purchased items from bag so unselected items remain intact
+                const purchasedIds = items.map(i => i.id)
+                dispatch(removePurchasedItems(purchasedIds))
                 setConfirmedOrder(data.order)
                 toast.success('Order placed successfully! Welcome to UK Brand Lover.')
             } else {
@@ -280,7 +300,8 @@ export default function CheckoutPage() {
                 localStorage.removeItem('ukbl_checkout_data')
             }
 
-            dispatch(clearCart())
+            const purchasedIds = items.map(i => i.id)
+            dispatch(removePurchasedItems(purchasedIds))
             setConfirmedOrder(fallbackOrder)
             toast.success('Order placed successfully!')
         } finally {

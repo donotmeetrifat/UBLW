@@ -250,11 +250,30 @@ export async function POST(request) {
                     }
                 });
 
-                // Clear user's bag in database upon successful order
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: { cart: {}, abandonedCartAt: null }
-                }).catch(() => {});
+                // Remove purchased items from user's bag in database
+                try {
+                    const existingUser = await prisma.user.findUnique({
+                        where: { id: user.id },
+                        select: { cart: true }
+                    });
+                    const currentCart = (existingUser?.cart && typeof existingUser.cart === 'object') ? { ...existingUser.cart } : {};
+                    for (const item of items) {
+                        const pid = item.productId || item.id;
+                        if (pid && currentCart[pid] !== undefined) {
+                            delete currentCart[pid];
+                        }
+                    }
+                    const remainingCount = Object.keys(currentCart).length;
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            cart: currentCart,
+                            abandonedCartAt: remainingCount === 0 ? null : new Date()
+                        }
+                    });
+                } catch (cartErr) {
+                    console.error('Failed to update remaining user cart in DB:', cartErr);
+                }
 
                 return NextResponse.json({ success: true, order }, { status: 201 });
             } catch (dbError) {
