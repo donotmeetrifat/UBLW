@@ -20,8 +20,8 @@ export async function GET(request) {
                 },
             });
 
-            if (!user) {
-                return NextResponse.json({ success: false, user: null }, { status: 404 });
+            if (!user || (user.role !== 'ADMIN' && !user.isVerified && !user.emailVerified)) {
+                return NextResponse.json({ success: false, user: null }, { status: 401 });
             }
 
             const safe = sanitizeUser(user);

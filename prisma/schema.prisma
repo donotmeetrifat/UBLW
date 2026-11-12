@@ -52,6 +52,8 @@ model User {
     passwordHash    String?
     image           String?
     role            Role      @default(CUSTOMER)
+    isVerified      Boolean   @default(false)
+    emailVerified   DateTime?
     cart            Json      @default("{}")
     abandonedCartAt DateTime?
     lastActiveAt    DateTime  @default(now())

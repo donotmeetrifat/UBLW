@@ -55,14 +55,20 @@ const Navbar = () => {
 
         syncUser();
 
-        // Restore session from cookie if localStorage was cleared
-        if (typeof window !== 'undefined' && !localStorage.getItem('ukbl_current_user')) {
+        // Restore session from cookie if localStorage was cleared or after email verification
+        if (typeof window !== 'undefined' && (!localStorage.getItem('ukbl_current_user') || window.location.search.includes('verified=1'))) {
             fetch('/api/auth/me')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.user) {
                         localStorage.setItem('ukbl_current_user', JSON.stringify(data.user));
                         setCurrentUser(data.user);
+                        if (window.location.search.includes('verified=1')) {
+                            toast.success('Email verified successfully! Welcome to UK Brand Lover.');
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('verified');
+                            window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+                        }
                     }
                 })
                 .catch(() => {});

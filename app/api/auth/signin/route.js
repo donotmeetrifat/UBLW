@@ -79,6 +79,19 @@ export async function POST(request) {
                 );
             }
 
+            // Enforce email verification for customers (Admins bypass)
+            if (user.role !== 'ADMIN' && !user.isVerified && !user.emailVerified) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        requireVerification: true,
+                        email: user.email,
+                        message: 'Your email address is not verified yet. Please enter the verification code sent from Supabase to complete registration.'
+                    },
+                    { status: 403 }
+                );
+            }
+
             // Update user activity
             await prisma.user.update({
                 where: { id: user.id },

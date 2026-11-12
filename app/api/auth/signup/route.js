@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { hashPassword, createSessionToken, sanitizeUser } from '@/lib/auth';
+import { hashPassword, sanitizeUser } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request) {
     try {
         const body = await request.json();
         const { name, email, phone, password, confirmPassword } = body;
 
-        // 1. Validation
+        // 1. Input Validation
         const trimmedName = (name || '').trim();
         if (!trimmedName || trimmedName.length < 2) {
             return NextResponse.json(
@@ -27,13 +31,12 @@ export async function POST(request) {
 
         // Clean phone number: remove any non-digit characters
         let cleanPhone = (phone || '').replace(/[^0-9]/g, '');
-        // If it starts with Bangladesh country code 880, extract the local 11 digits:
         if (cleanPhone.startsWith('880') && cleanPhone.length === 13) {
             cleanPhone = '0' + cleanPhone.slice(3);
         }
         if (!cleanPhone || cleanPhone.length < 11) {
             return NextResponse.json(
-                { success: false, message: 'Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX).' },
+                { success: false, message: 'Please enter a valid 11-digit phone number (e.g. 01XXXXXXXXX) for parcel tracking.' },
                 { status: 400 }
             );
         }
@@ -54,92 +57,93 @@ export async function POST(request) {
 
         // 2. Database verification & persistence
         if (isDatabaseConfigured()) {
-            // Check if email already registered
-            const existingEmail = await prisma.user.findUnique({
+            // Check if account already exists AND is verified
+            const existingUser = await prisma.user.findUnique({
                 where: { email: trimmedEmail },
             });
 
-            if (existingEmail) {
+            if (existingUser && (existingUser.isVerified || existingUser.emailVerified)) {
                 return NextResponse.json(
                     { success: false, message: 'An account with this email address already exists. Please sign in instead.' },
                     { status: 409 }
                 );
             }
 
-            // 3. Create user in database (Phone is customer contact/tracking data and does not restrict multiple accounts)
+            // 3. Trigger Supabase Email Verification
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ukbrandlover.vercel.app';
+            const { data: supaData, error: supaError } = await supabase.auth.signUp({
+                email: trimmedEmail,
+                password: password,
+                options: {
+                    data: {
+                        name: trimmedName,
+                        phone: cleanPhone,
+                    },
+                    emailRedirectTo: `${appUrl}/api/auth/callback`
+                }
+            });
+
+            if (supaError) {
+                console.error('Supabase signup error:', supaError);
+                return NextResponse.json(
+                    { success: false, message: supaError.message || 'Unable to send verification email. Please verify your email address.' },
+                    { status: 400 }
+                );
+            }
+
+            // 4. Stage user in PostgreSQL with isVerified = false (Strictly unverified until code or email link confirmed)
             const passwordHash = hashPassword(password);
-            const user = await prisma.user.create({
-                data: {
-                    name: trimmedName,
-                    email: trimmedEmail,
-                    phone: cleanPhone,
-                    whatsapp: cleanPhone,
-                    passwordHash,
-                    role: 'CUSTOMER',
-                    cart: {},
-                    lastActiveAt: new Date(),
-                },
+            if (existingUser) {
+                await prisma.user.update({
+                    where: { email: trimmedEmail },
+                    data: {
+                        name: trimmedName,
+                        phone: cleanPhone,
+                        whatsapp: cleanPhone,
+                        passwordHash,
+                        isVerified: false,
+                        emailVerified: null,
+                        lastActiveAt: new Date()
+                    }
+                });
+            } else {
+                await prisma.user.create({
+                    data: {
+                        name: trimmedName,
+                        email: trimmedEmail,
+                        phone: cleanPhone,
+                        whatsapp: cleanPhone,
+                        passwordHash,
+                        role: 'CUSTOMER',
+                        isVerified: false,
+                        emailVerified: null,
+                        cart: {},
+                        lastActiveAt: new Date(),
+                    }
+                });
+            }
+
+            // DO NOT issue session cookie or login token. User must verify email first!
+            return NextResponse.json({
+                success: true,
+                requireVerification: true,
+                email: trimmedEmail,
+                message: `Verification message sent from Supabase to ${trimmedEmail}! Please check your email inbox to verify your account.`
+            }, {
+                status: 200,
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
             });
-
-            const safeUser = sanitizeUser(user);
-            const token = createSessionToken(safeUser);
-
-            const response = NextResponse.json(
-                {
-                    success: true,
-                    message: 'Account created successfully! Welcome to UK Brand Lover.',
-                    user: safeUser,
-                    token,
-                },
-                { status: 201 }
-            );
-
-            // Set secure auth cookie
-            response.cookies.set('ukbl_token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 30 * 24 * 60 * 60,
-                path: '/',
-            });
-
-            return response;
         }
 
         // Fallback for offline/local environment without database
-        const passwordHash = hashPassword(password);
-        const fallbackUser = {
-            id: `user_${Date.now()}`,
-            name: trimmedName,
+        return NextResponse.json({
+            success: true,
+            requireVerification: true,
             email: trimmedEmail,
-            phone: cleanPhone,
-            whatsapp: cleanPhone,
-            role: 'CUSTOMER',
-            createdAt: new Date().toISOString(),
-        };
-
-        const safeUser = sanitizeUser(fallbackUser);
-        const token = createSessionToken(safeUser);
-
-        const response = NextResponse.json(
-            {
-                success: true,
-                message: 'Account created successfully! Welcome to UK Brand Lover.',
-                user: safeUser,
-                token,
-            },
-            { status: 201 }
-        );
-
-        response.cookies.set('ukbl_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60,
-            path: '/',
+            message: `Verification code sent to ${trimmedEmail}.`
         });
-
-        return response;
     } catch (error) {
         console.error('Sign-up API Error:', error);
         return NextResponse.json(
@@ -148,4 +152,3 @@ export async function POST(request) {
         );
     }
 }
-
