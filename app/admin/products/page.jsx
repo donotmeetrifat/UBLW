@@ -412,6 +412,17 @@ export default function AdminProductsPage() {
                         dispatch(updateReduxProduct([data.product]))
                     }
                     if (typeof window !== 'undefined') {
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                            const list = Array.isArray(cached) ? cached : []
+                            const idx = list.findIndex(p => p.id === data.product?.id)
+                            if (idx >= 0) {
+                                list[idx] = { ...list[idx], ...data.product }
+                            } else if (data.product) {
+                                list.unshift(data.product)
+                            }
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                        } catch {}
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
@@ -440,6 +451,17 @@ export default function AdminProductsPage() {
                         dispatch(updateReduxProduct([data.product]))
                     }
                     if (typeof window !== 'undefined') {
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                            const list = Array.isArray(cached) ? cached : []
+                            const idx = list.findIndex(p => p.id === data.product?.id)
+                            if (idx >= 0) {
+                                list[idx] = { ...list[idx], ...data.product }
+                            } else if (data.product) {
+                                list.unshift(data.product)
+                            }
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                        } catch {}
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))

@@ -113,13 +113,33 @@ export async function PATCH(request, { params }) {
         delete cleanedData.unitsSold;
         delete cleanedData.createdAt;
         delete cleanedData.updatedAt;
+        delete cleanedData.sizeVolume;
+        delete cleanedData.stats;
+        delete cleanedData._count;
 
         if (cleanedData.price !== undefined) cleanedData.price = parseFloat(cleanedData.price);
         if (cleanedData.mrp !== undefined) cleanedData.mrp = parseFloat(cleanedData.mrp);
         if (cleanedData.stockCount !== undefined) cleanedData.stockCount = parseInt(cleanedData.stockCount, 10);
         if (cleanedData.inStock !== undefined) cleanedData.inStock = Boolean(cleanedData.inStock);
-        if (Array.isArray(cleanedData.benefits)) {
-            cleanedData.benefits = cleanedData.benefits.map(b => String(b).trim()).filter(Boolean);
+        if (cleanedData.benefits !== undefined) {
+            let parsed = cleanedData.benefits;
+            if (typeof parsed === 'string') {
+                try {
+                    parsed = JSON.parse(parsed);
+                } catch {
+                    parsed = parsed.split('\n');
+                }
+            }
+            cleanedData.benefits = Array.isArray(parsed)
+                ? parsed.map(b => String(b).trim()).filter(Boolean)
+                : [];
+        }
+        if (cleanedData.whyYouWillLoveIt !== undefined) {
+            cleanedData.whyYouWillLoveIt = String(cleanedData.whyYouWillLoveIt || '').trim();
+        }
+        if (cleanedData.formulaProfile !== undefined) {
+            cleanedData.formulaProfile = String(cleanedData.formulaProfile || '').trim();
+            cleanedData.description = cleanedData.formulaProfile;
         }
 
         if (isDatabaseConfigured()) {

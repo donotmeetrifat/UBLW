@@ -153,6 +153,17 @@ export default function DataSyncProvider({ children }) {
                 bc.onmessage = (msg) => {
                     if (msg.data?.type === 'product-updated' && msg.data?.product) {
                         dispatch(setProduct([msg.data.product]))
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                            const list = Array.isArray(cached) ? cached : []
+                            const idx = list.findIndex(p => p.id === msg.data.product.id)
+                            if (idx >= 0) {
+                                list[idx] = { ...list[idx], ...msg.data.product }
+                            } else {
+                                list.unshift(msg.data.product)
+                            }
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                        } catch {}
                     }
                     if (msg.data?.type === 'category-updated') {
                         syncCategoryCatalog()

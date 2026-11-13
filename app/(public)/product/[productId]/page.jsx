@@ -16,18 +16,20 @@ export default function Product() {
     const { productId } = useParams();
     const router = useRouter();
     const dispatch = useDispatch();
-    const [product, setProduct] = useState(null);
-    const [loading, setLoading] = useState(true);
     const products = useSelector(state => state.product.list);
+    
+    // 1. Optimistic immediate lookup from Redux store for 0ms initial render
+    const reduxProduct = products.find((p) => p.id === productId);
+    const [liveProduct, setLiveProduct] = useState(null);
+    const [loading, setLoading] = useState(!reduxProduct);
+
+    // Reactive single source of truth:
+    // Merges liveProduct with reduxProduct, ensuring the freshest database benefits & whyYouWillLoveIt are used
+    const product = liveProduct
+        ? (reduxProduct ? { ...reduxProduct, ...liveProduct } : liveProduct)
+        : reduxProduct;
 
     const fetchProduct = async () => {
-        // 1. Optimistic instant render from Redux cache if available
-        const found = products.find((p) => p.id === productId);
-        if (found && !product) {
-            setProduct(found);
-            setLoading(false);
-        }
-
         // 2. ALWAYS fetch fresh, live product from database via API with cache-busting
         try {
             const res = await fetch(`/api/products/${productId}?_t=${Date.now()}`, {
@@ -39,9 +41,24 @@ export default function Product() {
             });
             const data = await res.json();
             if (data.success && data.product) {
-                setProduct(data.product);
+                setLiveProduct(data.product);
                 // Synchronize latest database fields into Redux store
                 dispatch(updateReduxProduct([data.product]));
+
+                // Update localStorage cache so subsequent navigations and page reloads have the latest specs
+                if (typeof window !== 'undefined') {
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                        const list = Array.isArray(cached) ? cached : [];
+                        const idx = list.findIndex(p => p.id === data.product.id);
+                        if (idx >= 0) {
+                            list[idx] = { ...list[idx], ...data.product };
+                        } else {
+                            list.unshift(data.product);
+                        }
+                        localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
+                    } catch {}
+                }
             }
         } catch (error) {
             console.error('Error fetching fresh product:', error);
@@ -56,7 +73,7 @@ export default function Product() {
         // Listen for live updates dispatched from Admin panel
         const handleLiveUpdate = (e) => {
             if (e?.detail?.product?.id === productId) {
-                setProduct(e.detail.product);
+                setLiveProduct(e.detail.product);
                 dispatch(updateReduxProduct([e.detail.product]));
             } else if (!e?.detail?.product?.id) {
                 fetchProduct();
@@ -75,7 +92,7 @@ export default function Product() {
             bc.onmessage = (msg) => {
                 if (msg.data?.type === 'product-updated') {
                     if (msg.data.product?.id === productId) {
-                        setProduct(msg.data.product);
+                        setLiveProduct(msg.data.product);
                         dispatch(updateReduxProduct([msg.data.product]));
                     } else {
                         fetchProduct();
