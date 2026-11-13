@@ -36,6 +36,26 @@ export default function DataSyncProvider({ children }) {
         if (hasInitializedRef.current) return
         hasInitializedRef.current = true
 
+        // Register Service Worker for Complete Offline Storefront Capability
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then((registration) => {
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        if (installingWorker) {
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content available
+                                }
+                            };
+                        }
+                    };
+                }).catch((err) => {
+                    console.warn('[SW] Offline worker registration:', err);
+                });
+            });
+        }
+
         // 1. INSTANT 0ms HYDRATION FROM LOCALSTORAGE
         if (typeof window !== 'undefined') {
             try {

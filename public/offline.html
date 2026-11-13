@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Mode | UK Brand Lover</title>
+    <link rel="icon" href="/favicon.ico">
+    <meta name="theme-color" content="#6C306E">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #FAF6FA;
+            color: #241224;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+        }
+        .card {
+            background: #ffffff;
+            border: 1px solid #EFE0EF;
+            border-radius: 28px;
+            padding: 40px 32px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(108, 48, 110, 0.06);
+        }
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #FAF6FA;
+            border: 1px solid #EFE0EF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            color: #6C306E;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #241224;
+            margin-bottom: 8px;
+        }
+        p {
+            font-size: 13px;
+            color: #64748B;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #FAF6FA;
+            color: #6C306E;
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid #EFE0EF;
+            margin-bottom: 16px;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #6C306E, #4A1D4C);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            display: inline-block;
+            background: #ffffff;
+            color: #334155;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 999px;
+            border: 1px solid #EFE0EF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: #FAF6FA;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #F59E0B;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">
+            <span class="status-dot"></span>Offline Mode
+        </div>
+        <div class="icon-circle">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+        </div>
+        <h1>You're Browsing Offline</h1>
+        <p>No internet connection was detected. But good news: your saved shopping bag, viewed UK beauty products, and cached collections remain available on your device.</p>
+        
+        <div class="actions">
+            <a href="/" class="btn-primary">Return to Storefront Home</a>
+            <a href="/shop" class="btn-secondary">Browse Cached Catalog</a>
+            <a href="/cart" class="btn-secondary">View Saved Bag</a>
+            <button onclick="window.location.reload()" class="btn-secondary" style="margin-top: 6px;">Try Reconnecting</button>
+        </div>
+    </div>
+</body>
+</html>

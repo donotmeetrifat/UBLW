@@ -188,6 +188,11 @@ export default function CheckoutPage() {
     const handlePlaceOrder = async (e) => {
         if (e && e.preventDefault) e.preventDefault()
 
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            toast.error('You are currently offline. Your shopping bag and address are safely preserved! Please connect to internet to confirm and submit your order.')
+            return
+        }
+
         if (!isClientSignedIn()) {
             toast.error('You must be signed in to confirm your order.')
             requireSignIn('Please sign in to place and confirm your order.')

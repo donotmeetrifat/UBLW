@@ -1,0 +1,49 @@
+{
+  "name": "UK Brand Lover | 100% Authentic UK Beauty",
+  "short_name": "UK Brand Lover",
+  "description": "Shop 100% authentic UK imported beauty, skincare, haircare, and cosmetics in Bangladesh with offline support.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF6FA",
+  "theme_color": "#6C306E",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop All Beauty",
+      "url": "/shop",
+      "description": "Explore all authentic UK imported collections"
+    },
+    {
+      "name": "My Shopping Bag",
+      "url": "/cart",
+      "description": "View and manage items in your bag"
+    },
+    {
+      "name": "Track Orders",
+      "url": "/orders",
+      "description": "Track your courier delivery timeline"
+    }
+  ]
+}
