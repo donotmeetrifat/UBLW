@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
-import { setProduct, setCategories, setHomepageSections, setBanners } from '@/lib/features/product/productSlice'
+import { setProduct, setCategories, setHomepageSections, setBanners, setPromotions } from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
@@ -66,6 +66,17 @@ export default function DataSyncProvider({ children }) {
                         const parsedBanners = JSON.parse(storedBanners)
                         if (Array.isArray(parsedBanners) && parsedBanners.length > 0) {
                             dispatch(setBanners(parsedBanners))
+                        }
+                    } catch (e) {}
+                }
+
+                // Hydrate Hero Promotional Boxes for 0ms instantaneous render
+                const storedPromos = localStorage.getItem('ukbl_cached_promotions')
+                if (storedPromos) {
+                    try {
+                        const parsedPromos = JSON.parse(storedPromos)
+                        if (parsedPromos && typeof parsedPromos === 'object') {
+                            dispatch(setPromotions(parsedPromos))
                         }
                     } catch (e) {}
                 }
@@ -206,16 +217,41 @@ export default function DataSyncProvider({ children }) {
         }
         syncHeroBanners()
 
+        // 2e. FETCH LIVE HERO PROMOTIONAL BOXES
+        const syncHeroPromotions = async () => {
+            try {
+                const res = await fetch(`/api/promotions?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                const data = await res.json()
+                if (data.success && data.promotions) {
+                    dispatch(setPromotions(data.promotions))
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_promotions', JSON.stringify(data.promotions))
+                    }
+                }
+            } catch (e) {
+                // Silent fallback
+            }
+        }
+        syncHeroPromotions()
+
         if (typeof window !== 'undefined') {
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
             window.addEventListener('homepage-sections-updated', syncHomepageSections)
             window.addEventListener('hero-banners-updated', syncHeroBanners)
+            window.addEventListener('hero-promotions-updated', syncHeroPromotions)
             window.addEventListener('storage', (e) => {
                 if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
                 if (e.key === 'ukbl_products_synced') syncProductCatalog()
                 if (e.key === 'ukbl_sections_synced') syncHomepageSections()
                 if (e.key === 'ukbl_banners_synced') syncHeroBanners()
+                if (e.key === 'ukbl_promotions_synced') syncHeroPromotions()
                 if (e.key === 'ukbl_coupons_synced') {
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
                 }
@@ -223,6 +259,12 @@ export default function DataSyncProvider({ children }) {
             try {
                 const bc = new BroadcastChannel('ukbl_catalog_channel')
                 bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'promotions-updated' && msg.data?.promotions) {
+                        dispatch(setPromotions(msg.data.promotions))
+                        try {
+                            localStorage.setItem('ukbl_cached_promotions', JSON.stringify(msg.data.promotions))
+                        } catch {}
+                    }
                     if (msg.data?.type === 'hero-banners-updated' && Array.isArray(msg.data?.banners)) {
                         dispatch(setBanners(msg.data.banners))
                         try {

@@ -68,9 +68,21 @@ const CategoriesMarqueeContent = () => {
                 if (e.key === 'ukbl_categories_synced') loadLiveCategories();
             };
             window.addEventListener('storage', onStorage);
+
+            let bc;
+            try {
+                bc = new BroadcastChannel('ukbl_catalog_channel');
+                bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'category-updated') {
+                        loadLiveCategories();
+                    }
+                };
+            } catch {}
+
             return () => {
                 window.removeEventListener('category-catalog-updated', loadLiveCategories);
                 window.removeEventListener('storage', onStorage);
+                if (bc) bc.close();
             };
         }
     }, []);

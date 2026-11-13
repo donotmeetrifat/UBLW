@@ -12,7 +12,8 @@ import {
     CouponTicketIcon,
     CloseIcon,
     SparklesIcon,
-    CameraIcon
+    CameraIcon,
+    RoyalCrownIcon
 } from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
@@ -33,6 +34,7 @@ const navSections = [
             { name: 'Category Catalog', href: '/admin/categories', icon: TagIcon },
             { name: 'Homepage Showcase', href: '/admin/homepage', icon: SparklesIcon },
             { name: 'Hero Banner Slider', href: '/admin/banners', icon: CameraIcon },
+            { name: 'Hero Promo Cards', href: '/admin/promotions', icon: RoyalCrownIcon },
         ]
     },
     {
