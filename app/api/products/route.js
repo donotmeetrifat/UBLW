@@ -55,7 +55,34 @@ export async function GET(request) {
                 `);
             }
 
-            return NextResponse.json({ success: true, products }, {
+            const normalized = (products || []).map(p => {
+                let parsedBenefits = p.benefits;
+                if (typeof parsedBenefits === 'string') {
+                    try {
+                        parsedBenefits = JSON.parse(parsedBenefits);
+                    } catch (e) {
+                        if (parsedBenefits.startsWith('{') && parsedBenefits.endsWith('}')) {
+                            parsedBenefits = parsedBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                        } else if (parsedBenefits.includes('\n')) {
+                            parsedBenefits = parsedBenefits.split('\n').map(s => s.trim());
+                        } else {
+                            parsedBenefits = [parsedBenefits.trim()];
+                        }
+                    }
+                }
+                const cleanBenefits = Array.isArray(parsedBenefits)
+                    ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+                    : [];
+
+                return {
+                    ...p,
+                    formulaProfile: (p.formulaProfile || p.description || '').trim(),
+                    benefits: cleanBenefits,
+                    whyYouWillLoveIt: (p.whyYouWillLoveIt || '').trim()
+                };
+            });
+
+            return NextResponse.json({ success: true, products: normalized }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
                 }
@@ -99,7 +126,20 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { name, description, mrp, price, images, category, brand, inStock, stockCount } = body;
+        const {
+            name,
+            description,
+            formulaProfile,
+            benefits,
+            whyYouWillLoveIt,
+            mrp,
+            price,
+            images,
+            category,
+            brand,
+            inStock,
+            stockCount
+        } = body;
 
         if (!name || !price || !category) {
             return NextResponse.json(
@@ -108,23 +148,53 @@ export async function POST(request) {
             );
         }
 
+        const cleanFormula = (formulaProfile || description || '').trim();
+        const cleanWhy = (whyYouWillLoveIt || '').trim();
+        const cleanBenefits = Array.isArray(benefits)
+            ? benefits.map(b => String(b).trim()).filter(Boolean)
+            : (typeof benefits === 'string' && benefits.trim() ? [benefits.trim()] : []);
+
         const productData = {
-            name,
-            description: description || '',
+            name: name.trim(),
+            description: cleanFormula,
+            formulaProfile: cleanFormula,
+            benefits: cleanBenefits,
+            whyYouWillLoveIt: cleanWhy || null,
             mrp: Number(mrp) || Number(price),
             price: Number(price),
-            images: Array.isArray(images) && images.length > 0 ? images : ['/product_img1.png'],
-            category,
-            brand: brand || 'UK Import',
-            inStock: inStock !== undefined ? inStock : true,
+            images: Array.isArray(images) && images.length > 0 ? images.filter(Boolean) : ['/product_img1.png'],
+            category: category.trim(),
+            brand: brand ? brand.trim() : 'UK Import',
+            inStock: inStock !== undefined ? Boolean(inStock) : true,
             stockCount: Number(stockCount) || 50,
         };
 
         if (isDatabaseConfigured()) {
             // Find default store
-            const store = await prisma.store.findFirst();
+            let store = await prisma.store.findFirst();
             if (!store) {
-                return NextResponse.json({ success: false, message: 'Store not configured' }, { status: 500 });
+                let adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+                if (!adminUser) {
+                    adminUser = await prisma.user.create({
+                        data: {
+                            name: 'UK Brand Lover Admin',
+                            email: 'admin@ukbrandlover.com',
+                            role: 'ADMIN'
+                        }
+                    });
+                }
+                store = await prisma.store.create({
+                    data: {
+                        userId: adminUser.id,
+                        name: 'UK Brand Lover Flagship',
+                        username: 'ukbrandlover-official',
+                        description: 'Official 100% Authentic UK Imported Skincare & Cosmetics Flagship',
+                        address: 'Dhaka, Bangladesh',
+                        contact: '+8801959524393',
+                        email: 'admin@ukbrandlover.com',
+                        logo: '/logo.png',
+                    }
+                });
             }
 
             const product = await prisma.product.create({
@@ -134,7 +204,12 @@ export async function POST(request) {
                 },
             });
 
-            return NextResponse.json({ success: true, product }, { status: 201 });
+            return NextResponse.json({ success: true, product }, {
+                status: 201,
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
+            });
         }
 
         const product = memoryStore.addProduct({

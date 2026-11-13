@@ -55,7 +55,10 @@ export default function Product() {
 
         // Listen for live updates dispatched from Admin panel
         const handleLiveUpdate = (e) => {
-            if (!e?.detail?.product?.id || e.detail.product.id === productId) {
+            if (e?.detail?.product?.id === productId) {
+                setProduct(e.detail.product);
+                dispatch(updateReduxProduct([e.detail.product]));
+            } else if (!e?.detail?.product?.id) {
                 fetchProduct();
             }
         };
@@ -65,6 +68,21 @@ export default function Product() {
                 fetchProduct();
             }
         };
+
+        let bc;
+        try {
+            bc = new BroadcastChannel('ukbl_catalog_channel');
+            bc.onmessage = (msg) => {
+                if (msg.data?.type === 'product-updated') {
+                    if (msg.data.product?.id === productId) {
+                        setProduct(msg.data.product);
+                        dispatch(updateReduxProduct([msg.data.product]));
+                    } else {
+                        fetchProduct();
+                    }
+                }
+            };
+        } catch {}
 
         window.addEventListener('product-updated', handleLiveUpdate);
         window.addEventListener('product-catalog-updated', fetchProduct);
@@ -90,6 +108,7 @@ export default function Product() {
             window.removeEventListener('product-updated', handleLiveUpdate);
             window.removeEventListener('product-catalog-updated', fetchProduct);
             window.removeEventListener('storage', handleStorageUpdate);
+            if (bc) bc.close();
         };
     }, [productId]);
 

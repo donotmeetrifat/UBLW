@@ -310,7 +310,37 @@ export async function POST(request) {
                 }
             }
 
-            return NextResponse.json({ success: true, product: created }, { status: 201 });
+            let parsedBenefits = created?.benefits;
+            if (typeof parsedBenefits === 'string') {
+                try {
+                    parsedBenefits = JSON.parse(parsedBenefits);
+                } catch (e) {
+                    if (parsedBenefits.startsWith('{') && parsedBenefits.endsWith('}')) {
+                        parsedBenefits = parsedBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                    } else if (parsedBenefits.includes('\n')) {
+                        parsedBenefits = parsedBenefits.split('\n').map(s => s.trim());
+                    } else {
+                        parsedBenefits = [parsedBenefits.trim()];
+                    }
+                }
+            }
+            const finalBenefits = Array.isArray(parsedBenefits)
+                ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+                : cleanBenefits;
+
+            const normalizedProduct = {
+                ...created,
+                formulaProfile: (created?.formulaProfile || cleanFormula || '').trim(),
+                benefits: finalBenefits,
+                whyYouWillLoveIt: (created?.whyYouWillLoveIt || cleanWhyYouWillLoveIt || '').trim()
+            };
+
+            return NextResponse.json({ success: true, product: normalizedProduct }, {
+                status: 201,
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                }
+            });
         }
 
         const memProduct = memoryStore.addProduct({

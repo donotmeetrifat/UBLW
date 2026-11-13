@@ -44,7 +44,33 @@ export async function GET(request, { params }) {
             if (!product) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
             }
-            return NextResponse.json({ success: true, product }, {
+
+            let parsedBenefits = product.benefits;
+            if (typeof parsedBenefits === 'string') {
+                try {
+                    parsedBenefits = JSON.parse(parsedBenefits);
+                } catch (e) {
+                    if (parsedBenefits.startsWith('{') && parsedBenefits.endsWith('}')) {
+                        parsedBenefits = parsedBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                    } else if (parsedBenefits.includes('\n')) {
+                        parsedBenefits = parsedBenefits.split('\n').map(s => s.trim());
+                    } else {
+                        parsedBenefits = [parsedBenefits.trim()];
+                    }
+                }
+            }
+            const cleanBenefits = Array.isArray(parsedBenefits)
+                ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+                : [];
+
+            const normalizedProduct = {
+                ...product,
+                formulaProfile: (product.formulaProfile || product.description || '').trim(),
+                benefits: cleanBenefits,
+                whyYouWillLoveIt: (product.whyYouWillLoveIt || '').trim()
+            };
+
+            return NextResponse.json({ success: true, product: normalizedProduct }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
                 }
@@ -135,7 +161,32 @@ export async function PATCH(request, { params }) {
                     product = await prisma.product.findUnique({ where: { id } });
                 }
             }
-            return NextResponse.json({ success: true, product }, {
+            let parsedBenefits = product?.benefits;
+            if (typeof parsedBenefits === 'string') {
+                try {
+                    parsedBenefits = JSON.parse(parsedBenefits);
+                } catch (e) {
+                    if (parsedBenefits.startsWith('{') && parsedBenefits.endsWith('}')) {
+                        parsedBenefits = parsedBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                    } else if (parsedBenefits.includes('\n')) {
+                        parsedBenefits = parsedBenefits.split('\n').map(s => s.trim());
+                    } else {
+                        parsedBenefits = [parsedBenefits.trim()];
+                    }
+                }
+            }
+            const cleanBenefits = Array.isArray(parsedBenefits)
+                ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+                : [];
+
+            const normalizedProduct = {
+                ...product,
+                formulaProfile: (product?.formulaProfile || product?.description || '').trim(),
+                benefits: cleanBenefits,
+                whyYouWillLoveIt: (product?.whyYouWillLoveIt || '').trim()
+            };
+
+            return NextResponse.json({ success: true, product: normalizedProduct }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
                 }

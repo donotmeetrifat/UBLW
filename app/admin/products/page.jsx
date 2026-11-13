@@ -174,16 +174,16 @@ export default function AdminProductsPage() {
         setFormData({
             name: '',
             category: dbCategories[0] || 'Skincare',
-            brand: 'The Ordinary',
+            brand: 'UK Import',
             price: '',
             mrp: '',
             stockCount: 50,
             inStock: true,
             images: ['/product_img1.png'],
-            formulaProfile: 'A high-strength vitamin and mineral formula that targets visible congestion, enhances skin barrier resilience, and promotes a smoother complexion. Authentic UK formulation.',
-            benefits: [...DEFAULT_BENEFITS],
-            whyYouWillLoveIt: 'Sourced directly from authorized UK retailers and laboratories. Formulated to provide lasting hydration and barrier defense without clogging pores or causing irritation.',
-            sizeVolume: '30ml'
+            formulaProfile: '',
+            benefits: [''],
+            whyYouWillLoveIt: '',
+            sizeVolume: 'Standard'
         })
         setActivePreviewImage(0)
         setIsEditorOpen(true)
@@ -194,9 +194,22 @@ export default function AdminProductsPage() {
         const initialImages = Array.isArray(prod.images) && prod.images.length > 0
             ? prod.images
             : ['/product_img1.png']
-        const initialBenefits = Array.isArray(prod.benefits) && prod.benefits.length > 0
-            ? prod.benefits
-            : [...DEFAULT_BENEFITS]
+
+        let initialBenefits = []
+        if (Array.isArray(prod.benefits) && prod.benefits.length > 0) {
+            initialBenefits = prod.benefits.map(b => String(b).trim()).filter(Boolean)
+        } else if (typeof prod.benefits === 'string' && prod.benefits.trim()) {
+            try {
+                const parsed = JSON.parse(prod.benefits)
+                if (Array.isArray(parsed)) initialBenefits = parsed.map(b => String(b).trim()).filter(Boolean)
+                else initialBenefits = [prod.benefits.trim()]
+            } catch {
+                initialBenefits = [prod.benefits.trim()]
+            }
+        }
+        if (initialBenefits.length === 0) {
+            initialBenefits = ['']
+        }
 
         setFormData({
             name: prod.name || '',
@@ -207,10 +220,10 @@ export default function AdminProductsPage() {
             stockCount: prod.stockCount !== undefined ? prod.stockCount : 50,
             inStock: prod.inStock !== undefined ? Boolean(prod.inStock) : true,
             images: initialImages,
-            formulaProfile: prod.formulaProfile || prod.description || '',
+            formulaProfile: (prod.formulaProfile || prod.description || '').trim(),
             benefits: initialBenefits,
-            whyYouWillLoveIt: prod.whyYouWillLoveIt || 'Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration.',
-            sizeVolume: prod.sizeVolume || 'Standard Size'
+            whyYouWillLoveIt: (prod.whyYouWillLoveIt || '').trim(),
+            sizeVolume: prod.sizeVolume || 'Standard'
         })
         setActivePreviewImage(0)
         setIsEditorOpen(true)
@@ -365,6 +378,10 @@ export default function AdminProductsPage() {
         setIsSaving(true)
         const toastId = toast.loading(editingProduct ? 'Saving updates...' : 'Listing product...')
 
+        const cleanBenefits = formData.benefits
+            .map(b => (typeof b === 'string' ? b.trim() : String(b || '')))
+            .filter(Boolean)
+
         const payload = {
             name: formData.name.trim(),
             category: formData.category,
@@ -376,7 +393,7 @@ export default function AdminProductsPage() {
             images: formData.images,
             description: formData.formulaProfile.trim(),
             formulaProfile: formData.formulaProfile.trim(),
-            benefits: formData.benefits.filter(b => b.trim().length > 0),
+            benefits: cleanBenefits,
             whyYouWillLoveIt: formData.whyYouWillLoveIt.trim(),
             sizeVolume: formData.sizeVolume || 'Standard'
         }
@@ -398,6 +415,11 @@ export default function AdminProductsPage() {
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                        try {
+                            const bc = new BroadcastChannel('ukbl_catalog_channel')
+                            bc.postMessage({ type: 'product-updated', product: data.product })
+                            bc.close()
+                        } catch {}
                     }
                     setIsEditorOpen(false)
                     setEditingProduct(null)
@@ -421,6 +443,11 @@ export default function AdminProductsPage() {
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                        try {
+                            const bc = new BroadcastChannel('ukbl_catalog_channel')
+                            bc.postMessage({ type: 'product-updated', product: data.product })
+                            bc.close()
+                        } catch {}
                     }
                     setIsEditorOpen(false)
                     fetchProducts()

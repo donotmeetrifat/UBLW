@@ -124,6 +124,15 @@ export default function DataSyncProvider({ children }) {
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
                 }
             })
+            try {
+                const bc = new BroadcastChannel('ukbl_catalog_channel')
+                bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'product-updated' && msg.data?.product) {
+                        dispatch(setProduct([msg.data.product]))
+                    }
+                    syncProductCatalog()
+                }
+            } catch {}
         }
 
         // 3. SYNCHRONIZE USER ACCOUNT, DATABASE CART & ADDRESSES
