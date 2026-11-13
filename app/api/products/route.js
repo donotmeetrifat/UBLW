@@ -204,7 +204,14 @@ export async function POST(request) {
                 },
             });
 
-            return NextResponse.json({ success: true, product }, {
+            const normalizedProduct = {
+                ...product,
+                formulaProfile: cleanFormula,
+                benefits: cleanBenefits,
+                whyYouWillLoveIt: cleanWhy
+            };
+
+            return NextResponse.json({ success: true, product: normalizedProduct }, {
                 status: 201,
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'

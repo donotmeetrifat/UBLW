@@ -154,7 +154,24 @@ export default function DataSyncProvider({ children }) {
                 if (data.success && Array.isArray(data.products) && data.products.length > 0) {
                     dispatch(setProduct(data.products))
                     if (typeof window !== 'undefined') {
-                        localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                            const map = new Map();
+                            (Array.isArray(cached) ? cached : []).forEach(p => { if (p?.id) map.set(p.id, p); });
+                            data.products.forEach(p => {
+                                if (p?.id) {
+                                    const existing = map.get(p.id) || {};
+                                    const hasCustomBenefits = Array.isArray(p.benefits) && p.benefits.length > 0;
+                                    const benefits = hasCustomBenefits ? p.benefits : (existing.benefits || []);
+                                    const whyYouWillLoveIt = (p.whyYouWillLoveIt && String(p.whyYouWillLoveIt).trim()) || existing.whyYouWillLoveIt || '';
+                                    const formulaProfile = (p.formulaProfile && String(p.formulaProfile).trim()) || existing.formulaProfile || p.description || existing.description || '';
+                                    map.set(p.id, { ...existing, ...p, benefits, whyYouWillLoveIt, formulaProfile });
+                                }
+                            });
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(Array.from(map.values())));
+                        } catch {
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products));
+                        }
                     }
                 }
             } catch (e) {

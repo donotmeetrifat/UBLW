@@ -438,6 +438,17 @@ export default function AdminProductsPage() {
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
                         } catch {}
+
+                        // Purge Service Worker API & page caches
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
+                        }
+                        if ('caches' in window) {
+                            caches.delete('ukbl-api-v1').catch(() => {})
+                            caches.delete('ukbl-api-v2').catch(() => {})
+                            caches.delete('ukbl-pages-v1').catch(() => {})
+                            caches.delete('ukbl-pages-v2').catch(() => {})
+                        }
                     }
                     setIsEditorOpen(false)
                     setEditingProduct(null)
@@ -477,6 +488,17 @@ export default function AdminProductsPage() {
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
                         } catch {}
+
+                        // Purge Service Worker API & page caches
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
+                        }
+                        if ('caches' in window) {
+                            caches.delete('ukbl-api-v1').catch(() => {})
+                            caches.delete('ukbl-api-v2').catch(() => {})
+                            caches.delete('ukbl-pages-v1').catch(() => {})
+                            caches.delete('ukbl-pages-v2').catch(() => {})
+                        }
                     }
                     setIsEditorOpen(false)
                     fetchProducts()
@@ -505,6 +527,15 @@ export default function AdminProductsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
+                    }
+                    if ('caches' in window) {
+                        caches.delete('ukbl-api-v1').catch(() => {})
+                        caches.delete('ukbl-api-v2').catch(() => {})
+                        caches.delete('ukbl-pages-v1').catch(() => {})
+                        caches.delete('ukbl-pages-v2').catch(() => {})
+                    }
                 }
                 setDeletingProduct(null)
                 fetchProducts()
@@ -533,6 +564,15 @@ export default function AdminProductsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
+                    }
+                    if ('caches' in window) {
+                        caches.delete('ukbl-api-v1').catch(() => {})
+                        caches.delete('ukbl-api-v2').catch(() => {})
+                        caches.delete('ukbl-pages-v1').catch(() => {})
+                        caches.delete('ukbl-pages-v2').catch(() => {})
+                    }
                 }
                 toast.success(nextState ? 'Marked In Stock' : 'Marked Out of Stock')
             }

@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckIcon, StarIcon, RoyalCrownIcon, ReviewBadgeIcon, VideoIcon, CameraIcon } from "@/components/icons"
+import { CheckIcon, StarIcon, RoyalCrownIcon, ReviewBadgeIcon, VideoIcon, CameraIcon, CloseIcon } from "@/components/icons"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect } from "react"
@@ -45,34 +45,52 @@ const ProductDescription = ({ product }) => {
     ]
 
     const resolvedBenefits = (() => {
-        let raw = product?.benefits
+        let raw = product?.benefits;
+        if (!raw) return defaultBenefits;
+
         if (typeof raw === 'string') {
             try {
-                raw = JSON.parse(raw)
+                raw = JSON.parse(raw);
             } catch (e) {
                 if (raw.startsWith('{') && raw.endsWith('}')) {
-                    raw = raw.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim())
+                    raw = raw.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
                 } else if (raw.includes('\n')) {
-                    raw = raw.split('\n').map(s => s.trim())
+                    raw = raw.split('\n').map(s => s.trim());
+                } else if (raw.includes('•') || raw.includes('-')) {
+                    raw = raw.split(/[•\-]/).map(s => s.trim());
                 } else {
-                    raw = [raw.trim()]
+                    raw = [raw.trim()];
                 }
             }
         }
         if (Array.isArray(raw)) {
-            const list = raw.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
-            if (list.length > 0) return list
+            const list = raw
+                .map(b => {
+                    if (typeof b === 'string') return b.trim();
+                    if (b && typeof b === 'object' && b.text) return String(b.text).trim();
+                    return String(b || '').trim();
+                })
+                .filter(Boolean);
+            if (list.length > 0) return list;
         }
-        return defaultBenefits
-    })()
+        return defaultBenefits;
+    })();
 
-    const resolvedWhyYouLoveIt = (product?.whyYouWillLoveIt && String(product.whyYouWillLoveIt).trim().length > 0)
-        ? String(product.whyYouWillLoveIt).trim()
-        : "Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation."
+    const resolvedWhyYouLoveIt = (() => {
+        const customWhy = product?.whyYouWillLoveIt;
+        if (customWhy && String(customWhy).trim().length > 0) {
+            return String(customWhy).trim();
+        }
+        return "Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation.";
+    })();
 
-    const resolvedFormulaProfile = (product?.formulaProfile && String(product.formulaProfile).trim().length > 0)
-        ? String(product.formulaProfile).trim()
-        : (product?.description || '')
+    const resolvedFormulaProfile = (() => {
+        const customFormula = product?.formulaProfile;
+        if (customFormula && String(customFormula).trim().length > 0) {
+            return String(customFormula).trim();
+        }
+        return (product?.description || '').trim();
+    })();
 
     return (
         <div className="mt-16 sm:mt-20 mb-16 sm:mb-20 pt-10 sm:pt-14 border-t border-[#EFE0EF] text-sm text-slate-600">

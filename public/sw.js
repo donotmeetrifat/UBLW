@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ukbl-v1';
-const STATIC_CACHE = 'ukbl-static-v1';
-const PAGES_CACHE = 'ukbl-pages-v1';
-const API_CACHE = 'ukbl-api-v1';
-const IMAGE_CACHE = 'ukbl-images-v1';
+const CACHE_NAME = 'ukbl-v2';
+const STATIC_CACHE = 'ukbl-static-v2';
+const PAGES_CACHE = 'ukbl-pages-v2';
+const API_CACHE = 'ukbl-api-v2';
+const IMAGE_CACHE = 'ukbl-images-v2';
 
 const PRECACHE_URLS = [
     '/',
@@ -44,6 +44,20 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// Real-time cache invalidation message listener from Admin and Client events
+self.addEventListener('message', (event) => {
+    if (event.data && (event.data.type === 'CLEAR_API_CACHE' || event.data.type === 'PRODUCT_UPDATED' || event.data.type === 'CLEAR_ALL_CACHES')) {
+        Promise.all([
+            caches.delete(API_CACHE),
+            caches.delete(PAGES_CACHE)
+        ]).then(() => {
+            // Re-open fresh empty caches
+            caches.open(API_CACHE);
+            caches.open(PAGES_CACHE);
+        });
+    }
+});
+
 // Fetch Event: Strategy Router
 self.addEventListener('fetch', (event) => {
     const { request } = event;
@@ -59,6 +73,10 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    const isCacheBusted = url.searchParams.has('_t') || 
+                          request.headers.get('Cache-Control')?.includes('no-cache') || 
+                          request.headers.get('Pragma') === 'no-cache';
+
     // 1. Navigation Requests (HTML Page Visits): Network-First with Cache Fallback
     if (request.mode === 'navigate') {
         event.respondWith(
@@ -66,7 +84,7 @@ self.addEventListener('fetch', (event) => {
                 .then((networkResponse) => {
                     if (networkResponse && networkResponse.status === 200) {
                         const copy = networkResponse.clone();
-                        caches.open(PAGES_CACHE).then((cache) => cache.put(request, copy));
+                        caches.open(PAGES_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
                     }
                     return networkResponse;
                 })
@@ -90,18 +108,45 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. Core Catalog APIs: Network-First with Offline API Cache Fallback
+    // 2. Core Catalog APIs: Always fetch fresh live network data when cache-busted; offline cache fallback
     if (url.pathname.startsWith('/api/products') || 
         url.pathname.startsWith('/api/categories') || 
         url.pathname.startsWith('/api/banners') || 
         url.pathname.startsWith('/api/promotions') || 
         url.pathname.startsWith('/api/homepage-sections')) {
+        
+        // If explicitly cache-busted or no-cache, bypass cache lookup completely and hit live network
+        if (isCacheBusted) {
+            event.respondWith(
+                fetch(request)
+                    .then((apiResponse) => {
+                        return apiResponse;
+                    })
+                    .catch(async () => {
+                        // Offline emergency fallback
+                        const cleanUrl = new URL(request.url);
+                        cleanUrl.searchParams.delete('_t');
+                        const cachedFallback = await caches.match(cleanUrl.toString());
+                        if (cachedFallback) return cachedFallback;
+
+                        return new Response(JSON.stringify({
+                            success: true,
+                            isOfflineFallback: true,
+                            message: 'Serving offline cached catalog'
+                        }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    })
+            );
+            return;
+        }
+
         event.respondWith(
             fetch(request)
                 .then((apiResponse) => {
                     if (apiResponse && apiResponse.status === 200) {
                         const copy = apiResponse.clone();
-                        caches.open(API_CACHE).then((cache) => cache.put(request, copy));
+                        caches.open(API_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
                     }
                     return apiResponse;
                 })
@@ -170,3 +215,4 @@ self.addEventListener('fetch', (event) => {
         fetch(request).catch(() => caches.match(request))
     );
 });
+

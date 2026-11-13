@@ -24,19 +24,55 @@ export default function Product() {
     const [loading, setLoading] = useState(!reduxProduct);
 
     // Reactive single source of truth:
-    // Merges liveProduct with reduxProduct, ensuring the freshest database benefits & whyYouWillLoveIt are used
-    const product = liveProduct
-        ? (reduxProduct ? { ...reduxProduct, ...liveProduct } : liveProduct)
-        : reduxProduct;
+    // Merges liveProduct with reduxProduct, guaranteeing custom benefits, formula, and whyYouWillLoveIt are strictly preserved
+    const product = (() => {
+        if (!liveProduct && !reduxProduct) return null;
+        const fresh = liveProduct || {};
+        const base = reduxProduct || {};
+        const merged = { ...base, ...fresh };
+
+        const freshBenefits = Array.isArray(fresh.benefits) && fresh.benefits.length > 0
+            ? fresh.benefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
+            : [];
+        const baseBenefits = Array.isArray(base.benefits) && base.benefits.length > 0
+            ? base.benefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
+            : [];
+        const benefits = freshBenefits.length > 0 ? freshBenefits : baseBenefits;
+
+        const freshWhy = (fresh.whyYouWillLoveIt && String(fresh.whyYouWillLoveIt).trim().length > 0)
+            ? String(fresh.whyYouWillLoveIt).trim()
+            : '';
+        const baseWhy = (base.whyYouWillLoveIt && String(base.whyYouWillLoveIt).trim().length > 0)
+            ? String(base.whyYouWillLoveIt).trim()
+            : '';
+        const whyYouWillLoveIt = freshWhy || baseWhy;
+
+        const freshFormula = (fresh.formulaProfile && String(fresh.formulaProfile).trim().length > 0)
+            ? String(fresh.formulaProfile).trim()
+            : '';
+        const baseFormula = (base.formulaProfile && String(base.formulaProfile).trim().length > 0)
+            ? String(base.formulaProfile).trim()
+            : '';
+        const formulaProfile = freshFormula || baseFormula || fresh.description || base.description || '';
+
+        return {
+            ...merged,
+            benefits,
+            whyYouWillLoveIt,
+            formulaProfile,
+            description: formulaProfile || merged.description || ''
+        };
+    })();
 
     const fetchProduct = async () => {
+        if (!productId) return;
         // 2. ALWAYS fetch fresh, live product from database via API with cache-busting
         try {
             const res = await fetch(`/api/products/${productId}?_t=${Date.now()}`, {
                 cache: 'no-store',
                 headers: {
                     'Pragma': 'no-cache',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
             const data = await res.json();
