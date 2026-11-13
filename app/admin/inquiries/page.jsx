@@ -25,9 +25,9 @@ export default function AdminInquiriesPage() {
     const [adminNotesInput, setAdminNotesInput] = useState('')
     const [savingNotes, setSavingNotes] = useState(false)
 
-    const fetchInquiries = async () => {
+    const fetchInquiries = async (isBackground = false) => {
         try {
-            setLoading(true)
+            if (!isBackground) setLoading(true)
             const params = new URLSearchParams()
             if (selectedStatus !== 'ALL') params.set('status', selectedStatus)
             if (searchQuery.trim()) params.set('search', searchQuery.trim())
@@ -38,20 +38,43 @@ export default function AdminInquiriesPage() {
                 setInquiries(data.inquiries)
                 if (data.stats) setStats(data.stats)
             } else {
-                setInquiries([])
+                if (!isBackground) setInquiries([])
             }
         } catch (error) {
             console.error('Error fetching inquiries:', error)
-            toast.error('Failed to load inquiries')
-            setInquiries([])
+            if (!isBackground) toast.error('Failed to load inquiries')
         } finally {
-            setLoading(false)
+            if (!isBackground) setLoading(false)
         }
     }
 
     useEffect(() => {
         fetchInquiries()
-    }, [selectedStatus])
+
+        // Background auto-polling every 8 seconds for real-time live updates
+        const interval = setInterval(() => {
+            fetchInquiries(true)
+        }, 8000)
+
+        const onFocus = () => fetchInquiries(true)
+        const onStorage = (e) => {
+            if (e.key === 'ukbl_inquiry_sync') {
+                fetchInquiries(true)
+            }
+        }
+        const onCustomSync = () => fetchInquiries(true)
+
+        window.addEventListener('focus', onFocus)
+        window.addEventListener('storage', onStorage)
+        window.addEventListener('ukbl_inquiry_updated', onCustomSync)
+
+        return () => {
+            clearInterval(interval)
+            window.removeEventListener('focus', onFocus)
+            window.removeEventListener('storage', onStorage)
+            window.removeEventListener('ukbl_inquiry_updated', onCustomSync)
+        }
+    }, [selectedStatus, searchQuery])
 
     // Update inquiry status
     const handleUpdateStatus = async (inquiryId, newStatus) => {
@@ -157,7 +180,7 @@ export default function AdminInquiriesPage() {
                 </div>
 
                 <button
-                    onClick={fetchInquiries}
+                    onClick={() => fetchInquiries(false)}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] text-xs font-bold text-slate-700 shadow-2xs transition self-start sm:self-auto cursor-pointer"
                 >
                     <span>Refresh Inquiries</span>

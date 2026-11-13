@@ -43,10 +43,16 @@ export async function POST(request) {
 
         let activeUser = null;
         if (isDatabaseConfigured()) {
-            activeUser = await prisma.user.findUnique({
-                where: { id: payload.id },
-                select: { id: true, name: true, email: true, phone: true, role: true }
-            });
+            try {
+                if (prisma.user) {
+                    activeUser = await prisma.user.findUnique({
+                        where: { id: payload.id },
+                        select: { id: true, name: true, email: true, phone: true, role: true }
+                    });
+                }
+            } catch (userErr) {
+                console.warn('Prisma user lookup error in contact inquiry:', userErr.message);
+            }
         }
 
         const senderName = (name || activeUser?.name || payload.name || 'Valued Customer').trim();
@@ -60,47 +66,70 @@ export async function POST(request) {
             );
         }
 
-        if (isDatabaseConfigured()) {
-            const inquiry = await prisma.inquiry.create({
-                data: {
-                    userId: payload.id,
-                    name: senderName,
-                    email: senderEmail,
-                    phone: senderPhone,
-                    subject: trimmedSubject,
-                    message: trimmedMessage,
-                    status: 'UNREAD',
-                },
-                include: {
-                    user: {
-                        select: { id: true, name: true, email: true, phone: true, role: true }
-                    }
-                }
-            });
+        let savedInquiry = null;
 
-            return NextResponse.json({
-                success: true,
-                message: 'Thank you! Your inquiry message has been submitted to UK Brand Lover. Our team will review your account details and contact you shortly.',
-                inquiry
-            }, { status: 201 });
+        if (isDatabaseConfigured()) {
+            try {
+                if (prisma.inquiry) {
+                    savedInquiry = await prisma.inquiry.create({
+                        data: {
+                            userId: payload.id,
+                            name: senderName,
+                            email: senderEmail,
+                            phone: senderPhone,
+                            subject: trimmedSubject,
+                            message: trimmedMessage,
+                            status: 'UNREAD',
+                        },
+                        include: {
+                            user: {
+                                select: { id: true, name: true, email: true, phone: true, role: true }
+                            }
+                        }
+                    });
+                }
+            } catch (dbErr) {
+                console.error('Database inquiry creation error, falling back to memory store:', dbErr);
+            }
         }
 
-        // Memory store fallback
-        const fallbackInquiry = memoryStore.addInquiry({
-            userId: payload.id,
-            name: senderName,
-            email: senderEmail,
-            phone: senderPhone,
-            subject: trimmedSubject,
-            message: trimmedMessage,
-            status: 'UNREAD',
-            user: activeUser || { id: payload.id, name: senderName, email: senderEmail, phone: senderPhone, role: 'CUSTOMER' }
-        });
+        // Memory store fallback if DB not configured or creation failed
+        if (!savedInquiry) {
+            savedInquiry = memoryStore.addInquiry({
+                userId: payload.id,
+                name: senderName,
+                email: senderEmail,
+                phone: senderPhone,
+                subject: trimmedSubject,
+                message: trimmedMessage,
+                status: 'UNREAD',
+                user: activeUser || { id: payload.id, name: senderName, email: senderEmail, phone: senderPhone, role: 'CUSTOMER' }
+            });
+        } else {
+            // Also sync to memory store so all handlers have immediate access
+            try {
+                memoryStore.addInquiry({
+                    id: savedInquiry.id,
+                    userId: savedInquiry.userId,
+                    name: savedInquiry.name,
+                    email: savedInquiry.email,
+                    phone: savedInquiry.phone,
+                    subject: savedInquiry.subject,
+                    message: savedInquiry.message,
+                    status: savedInquiry.status,
+                    createdAt: savedInquiry.createdAt ? new Date(savedInquiry.createdAt).toISOString() : new Date().toISOString(),
+                    updatedAt: savedInquiry.updatedAt ? new Date(savedInquiry.updatedAt).toISOString() : new Date().toISOString(),
+                    user: savedInquiry.user || activeUser
+                });
+            } catch (syncErr) {
+                // Ignore sync warning
+            }
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Thank you! Your inquiry message has been submitted to UK Brand Lover.',
-            inquiry: fallbackInquiry
+            message: 'Thank you! Your inquiry message has been submitted to UK Brand Lover. Our team will review your account details and contact you shortly.',
+            inquiry: savedInquiry
         }, { status: 201 });
 
     } catch (error) {

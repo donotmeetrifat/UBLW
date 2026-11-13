@@ -21,58 +21,64 @@ export async function GET(request) {
         const search = (searchParams.get('search') || '').trim().toLowerCase();
 
         if (isDatabaseConfigured()) {
-            const where = {};
+            try {
+                if (prisma.inquiry) {
+                    const where = {};
 
-            if (status && status !== 'ALL') {
-                where.status = status.toUpperCase();
-            }
-
-            if (search) {
-                where.OR = [
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { email: { contains: search, mode: 'insensitive' } },
-                    { phone: { contains: search, mode: 'insensitive' } },
-                    { subject: { contains: search, mode: 'insensitive' } },
-                    { message: { contains: search, mode: 'insensitive' } },
-                    { user: { name: { contains: search, mode: 'insensitive' } } },
-                    { user: { email: { contains: search, mode: 'insensitive' } } },
-                ];
-            }
-
-            const inquiries = await prisma.inquiry.findMany({
-                where,
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true,
-                            phone: true,
-                            role: true,
-                            isVerified: true,
-                            createdAt: true,
-                            _count: {
-                                select: { orders: true }
-                            }
-                        }
+                    if (status && status !== 'ALL') {
+                        where.status = status.toUpperCase();
                     }
-                },
-                orderBy: { createdAt: 'desc' }
-            });
 
-            // Calculate overview stats
-            const [total, unread, inProgress, resolved] = await Promise.all([
-                prisma.inquiry.count(),
-                prisma.inquiry.count({ where: { status: 'UNREAD' } }),
-                prisma.inquiry.count({ where: { status: 'IN_PROGRESS' } }),
-                prisma.inquiry.count({ where: { status: 'RESOLVED' } }),
-            ]);
+                    if (search) {
+                        where.OR = [
+                            { name: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { phone: { contains: search, mode: 'insensitive' } },
+                            { subject: { contains: search, mode: 'insensitive' } },
+                            { message: { contains: search, mode: 'insensitive' } },
+                            { user: { name: { contains: search, mode: 'insensitive' } } },
+                            { user: { email: { contains: search, mode: 'insensitive' } } },
+                        ];
+                    }
 
-            return NextResponse.json({
-                success: true,
-                inquiries,
-                stats: { total, unread, inProgress, resolved }
-            });
+                    const inquiries = await prisma.inquiry.findMany({
+                        where,
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    phone: true,
+                                    role: true,
+                                    isVerified: true,
+                                    createdAt: true,
+                                    _count: {
+                                        select: { orders: true }
+                                    }
+                                }
+                            }
+                        },
+                        orderBy: { createdAt: 'desc' }
+                    });
+
+                    // Calculate overview stats
+                    const [total, unread, inProgress, resolved] = await Promise.all([
+                        prisma.inquiry.count(),
+                        prisma.inquiry.count({ where: { status: 'UNREAD' } }),
+                        prisma.inquiry.count({ where: { status: 'IN_PROGRESS' } }),
+                        prisma.inquiry.count({ where: { status: 'RESOLVED' } }),
+                    ]);
+
+                    return NextResponse.json({
+                        success: true,
+                        inquiries,
+                        stats: { total, unread, inProgress, resolved }
+                    });
+                }
+            } catch (dbErr) {
+                console.error('Admin inquiries database query error, falling back to memoryStore:', dbErr);
+            }
         }
 
         // Memory store fallback

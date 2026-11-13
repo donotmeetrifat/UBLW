@@ -30,25 +30,34 @@ export async function PATCH(request, { params }) {
         }
 
         if (isDatabaseConfigured()) {
-            const updated = await prisma.inquiry.update({
-                where: { id },
-                data: updateData,
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true,
-                            phone: true,
-                            role: true,
-                            isVerified: true,
-                            _count: { select: { orders: true } }
+            try {
+                if (prisma.inquiry) {
+                    const updated = await prisma.inquiry.update({
+                        where: { id },
+                        data: updateData,
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    phone: true,
+                                    role: true,
+                                    isVerified: true,
+                                    _count: { select: { orders: true } }
+                                }
+                            }
                         }
-                    }
-                }
-            });
+                    });
 
-            return NextResponse.json({ success: true, inquiry: updated });
+                    // Also sync memory store if it exists there
+                    memoryStore.updateInquiry(id, updateData);
+
+                    return NextResponse.json({ success: true, inquiry: updated });
+                }
+            } catch (dbErr) {
+                console.warn('Database inquiry update failed, falling back to memoryStore:', dbErr.message);
+            }
         }
 
         const updated = memoryStore.updateInquiry(id, updateData);
@@ -81,8 +90,15 @@ export async function DELETE(request, { params }) {
         const id = resolvedParams.id;
 
         if (isDatabaseConfigured()) {
-            await prisma.inquiry.delete({ where: { id } });
-            return NextResponse.json({ success: true, message: 'Inquiry deleted successfully' });
+            try {
+                if (prisma.inquiry) {
+                    await prisma.inquiry.delete({ where: { id } });
+                    memoryStore.deleteInquiry(id);
+                    return NextResponse.json({ success: true, message: 'Inquiry deleted successfully' });
+                }
+            } catch (dbErr) {
+                console.warn('Database inquiry delete failed, attempting memoryStore delete:', dbErr.message);
+            }
         }
 
         memoryStore.deleteInquiry(id);

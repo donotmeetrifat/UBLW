@@ -149,6 +149,14 @@ export default function ContactPage() {
             setSuccessMessage(data.message || 'Thank you! Your message has been sent to our team.')
             setSubject('')
             setMessage('')
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem('ukbl_inquiry_sync', Date.now().toString())
+                    window.dispatchEvent(new Event('ukbl_inquiry_updated'))
+                } catch (e) {
+                    // Ignore localStorage error
+                }
+            }
         } catch (error) {
             console.error('Error submitting inquiry:', error)
             setErrorMessage('Network error. Please check your connection and try again.')
@@ -253,10 +261,6 @@ export default function ContactPage() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                            <CheckIcon size={10} color="#059669" />
-                                            <span>Verified</span>
-                                        </span>
                                     </div>
 
                                     {/* Success & Error Banners */}
