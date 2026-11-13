@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
-import { setProduct, setCategories } from '@/lib/features/product/productSlice'
+import { setProduct, setCategories, setHomepageSections } from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
@@ -46,6 +46,17 @@ export default function DataSyncProvider({ children }) {
                     if (Array.isArray(parsedCats) && parsedCats.length > 0) {
                         dispatch(setCategories(parsedCats))
                     }
+                }
+
+                // Hydrate Homepage Sections for 0ms instantaneous render
+                const storedSections = localStorage.getItem('ukbl_cached_homepage_sections')
+                if (storedSections) {
+                    try {
+                        const parsedSec = JSON.parse(storedSections)
+                        if (parsedSec && typeof parsedSec === 'object') {
+                            dispatch(setHomepageSections(parsedSec))
+                        }
+                    } catch (e) {}
                 }
 
                 // Hydrate Products for 0ms instantaneous render
@@ -138,12 +149,37 @@ export default function DataSyncProvider({ children }) {
         }
         syncCategoryCatalog()
 
+        // 2c. FETCH LIVE HOMEPAGE CURATED SECTIONS
+        const syncHomepageSections = async () => {
+            try {
+                const res = await fetch(`/api/homepage-sections?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                const data = await res.json()
+                if (data.success && data.sections) {
+                    dispatch(setHomepageSections(data.sections))
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(data.sections))
+                    }
+                }
+            } catch (e) {
+                // Silent fallback
+            }
+        }
+        syncHomepageSections()
+
         if (typeof window !== 'undefined') {
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
+            window.addEventListener('homepage-sections-updated', syncHomepageSections)
             window.addEventListener('storage', (e) => {
                 if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
                 if (e.key === 'ukbl_products_synced') syncProductCatalog()
+                if (e.key === 'ukbl_sections_synced') syncHomepageSections()
                 if (e.key === 'ukbl_coupons_synced') {
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
                 }
@@ -151,6 +187,12 @@ export default function DataSyncProvider({ children }) {
             try {
                 const bc = new BroadcastChannel('ukbl_catalog_channel')
                 bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'homepage-sections-updated' && msg.data?.sections) {
+                        dispatch(setHomepageSections(msg.data.sections))
+                        try {
+                            localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(msg.data.sections))
+                        } catch {}
+                    }
                     if (msg.data?.type === 'product-updated' && msg.data?.product) {
                         dispatch(setProduct([msg.data.product]))
                         try {

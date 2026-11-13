@@ -10,7 +10,8 @@ import {
     UserIcon,
     MailIcon,
     CouponTicketIcon,
-    CloseIcon
+    CloseIcon,
+    SparklesIcon
 } from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
@@ -29,6 +30,7 @@ const navSections = [
         items: [
             { name: 'Products & Stock', href: '/admin/products', icon: BagIcon },
             { name: 'Category Catalog', href: '/admin/categories', icon: TagIcon },
+            { name: 'Homepage Showcase', href: '/admin/homepage', icon: SparklesIcon },
         ]
     },
     {
