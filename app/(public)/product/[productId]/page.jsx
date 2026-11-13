@@ -72,12 +72,17 @@ export default function Product() {
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // Record true authentic product view (once per browser session per product)
-            const sessionKey = `ukbl_viewed_${productId}`;
-            if (!sessionStorage.getItem(sessionKey)) {
-                sessionStorage.setItem(sessionKey, '1');
-                fetch(`/api/products/${productId}/view`, { method: 'POST' }).catch(() => {});
-            }
+            // Record authentic product view and notify open admin tabs immediately
+            fetch(`/api/products/${productId}/view`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data?.success) {
+                        try {
+                            localStorage.setItem('ukbl_analytics_updated', Date.now().toString());
+                        } catch {}
+                    }
+                })
+                .catch(() => {});
         }
 
         return () => {

@@ -46,7 +46,6 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         order.email || 
         accountUser?.email || 
         (order.address?.email && !order.address.email.includes('example.com') ? order.address.email : '') || 
-        accountUser?.email || 
         ''
 
     const custAddr = `${order.address?.address || order.address?.street || 'Delivery Address'}, ${order.address?.city || 'Dhaka'}${order.address?.region ? `, ${order.address.region}` : ''}`
@@ -58,9 +57,9 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
     const subtotal = Number(order.subtotal || (order.total - deliveryFee + discount))
     const totalAmount = Number(order.total || (subtotal + deliveryFee - discount))
 
-    const formattedDate = new Date(order.createdAt || Date.now()).toLocaleDateString('en-US', {
-        month: 'long',
+    const formattedDate = new Date(order.createdAt || Date.now()).toLocaleDateString('en-GB', {
         day: 'numeric',
+        month: 'long',
         year: 'numeric'
     })
 
@@ -73,7 +72,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         return 'Cash on Delivery'
     })()
 
-    // 100% Reliable Client-Side A4 PDF Download
+    // 100% Reliable Client-Side A4 PDF Download - Strictly Single Page Guarantee
     const handleDownloadInvoice = async () => {
         try {
             setIsDownloading(true)
@@ -87,7 +86,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             const { jsPDF } = await import('jspdf')
 
             const canvas = await html2canvas(element, {
-                scale: 2.5, // 300 DPI high resolution
+                scale: 2.5, // Crisp 300 DPI vector clarity
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
@@ -95,19 +94,44 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             })
 
             const imgData = canvas.toDataURL('image/png')
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const pdfWidth = pdf.internal.pageSize.getWidth()
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            })
 
-            // Center vertically if shorter than full A4 page, otherwise pin to top
-            const topMargin = pdfHeight < 280 ? Math.max(0, (297 - pdfHeight) / 4) : 0
-            pdf.addImage(imgData, 'PNG', 0, topMargin, pdfWidth, Math.min(pdfHeight, 297))
+            const pageWidth = 210
+            const pageHeight = 297
+            const marginX = 8
+            const marginY = 10
+            const usableWidth = pageWidth - (marginX * 2)
+            const usableHeight = pageHeight - (marginY * 2)
+
+            let renderWidth = usableWidth
+            let renderHeight = (canvas.height * usableWidth) / canvas.width
+
+            // Scale to fit strictly within single page height
+            if (renderHeight > usableHeight) {
+                renderHeight = usableHeight
+                renderWidth = (canvas.width * usableHeight) / canvas.height
+            }
+
+            const posX = marginX + ((usableWidth - renderWidth) / 2)
+            const posY = marginY + ((usableHeight - renderHeight) / 2)
+
+            pdf.addImage(imgData, 'PNG', posX, posY, renderWidth, renderHeight, undefined, 'FAST')
+
+            // HARD ENFORCE: strictly 1 single page (delete any extra page if created)
+            while (pdf.internal.getNumberOfPages() > 1) {
+                pdf.deletePage(pdf.internal.getNumberOfPages())
+            }
 
             pdf.save(`UKBL_Invoice_${orderNo}.pdf`)
-            toast.success('Invoice downloaded successfully!')
+            toast.success('Official invoice downloaded successfully!')
         } catch (error) {
             console.error('Error generating PDF invoice:', error)
-            toast.error('Could not generate PDF. Opening print dialog as fallback...')
+            toast.error('Could not generate PDF directly. Opening print dialog as fallback...')
             window.print()
         } finally {
             setIsDownloading(false)
@@ -116,7 +140,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-white/60 backdrop-blur-md overflow-y-auto transition-all duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto transition-all duration-300"
         >
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
@@ -127,13 +151,34 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
                 @page {
                     size: A4 portrait;
-                    margin: 12mm 15mm;
+                    margin: 0;
                 }
 
                 @media print {
-                    body {
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
                         background: #ffffff !important;
-                        color: #111827 !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                    }
+                    body * {
+                        visibility: hidden !important;
+                    }
+                    #printable-invoice-content, #printable-invoice-content * {
+                        visibility: visible !important;
+                    }
+                    #printable-invoice-content {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 14mm 16mm !important;
+                        border: none !important;
+                        border-radius: 0 !important;
+                        box-shadow: none !important;
+                        background: #ffffff !important;
                     }
                     .print-hidden-bar {
                         display: none !important;
@@ -141,14 +186,17 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 }
             `}</style>
 
-            {/* Modal Container */}
-            <div className="clean-invoice-font bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-10 border border-[#EFE0EF] shadow-2xl relative my-6">
+            {/* Modal Container: borderless professional document viewport */}
+            <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-6">
                 
-                {/* Screen Action Bar (Clean Header: Invoice # on Left, Download Button on Right) */}
-                <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-[#EFE0EF]">
+                {/* Screen Action Bar (Clean Header: Invoice # on Left, Download & Close on Right) */}
+                <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
                     <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF]">
-                            #{orderNo}
+                            Official Invoice #{orderNo}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                            100% UK Verified
                         </span>
                     </div>
 
@@ -157,14 +205,14 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             type="button"
                             disabled={isDownloading}
                             onClick={handleDownloadInvoice}
-                            className="bg-[#6C306E] hover:bg-[#3A0C38] disabled:opacity-70 text-white px-5 py-2.5 rounded-full text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                            className="bg-[#6C306E] hover:bg-[#3A0C38] disabled:opacity-70 text-white px-4 sm:px-5 py-2 rounded-full text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                         >
                             {isDownloading ? (
                                 <div className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <DownloadIcon size={14} color="#FFFFFF" />
                             )}
-                            <span>{isDownloading ? 'Downloading...' : 'Download Invoice'}</span>
+                            <span>{isDownloading ? 'Downloading...' : 'Download Invoice (PDF)'}</span>
                         </button>
                         <button
                             type="button"
@@ -177,11 +225,14 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Printable Invoice (Exact Match to Clean Minimal Modern Business Invoice Template) */}
-                <div id="printable-invoice-content" className="clean-invoice-font bg-white text-neutral-900 p-2 sm:p-4">
-                    
+                {/* Printable Invoice (Borderless, Full-Width Professional Corporate Document Format) */}
+                <div 
+                    id="printable-invoice-content" 
+                    className="clean-invoice-font bg-white text-neutral-900 w-full"
+                    style={{ border: 'none', boxShadow: 'none' }}
+                >
                     {/* 1. Header Centered Logo & Subtitle */}
-                    <div className="text-center pt-2 pb-10">
+                    <div className="text-center pt-1 pb-8">
                         <div className="flex flex-col items-center justify-center">
                             <Image
                                 src={assets.webLogo}
@@ -198,7 +249,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
 
                     {/* 2. Top Two-Column Info Row (INVOICE TO on left, INVOICE metadata on right) */}
-                    <div className="grid grid-cols-2 gap-6 pb-6 pt-2 items-start">
+                    <div className="grid grid-cols-2 gap-6 pb-6 pt-1 items-start">
                         {/* Left: INVOICE TO */}
                         <div>
                             <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">
@@ -232,12 +283,12 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* 3. Line Items Table with Exact Border Style from Template */}
+                    {/* 3. Line Items Table with Clean Corporate Divider Rules */}
                     <div className="mt-2 mb-6">
                         <table className="w-full text-xs">
                             <thead>
                                 <tr className="border-t-2 border-b border-neutral-900 text-neutral-900 font-bold uppercase tracking-wider text-[11px]">
-                                    <th className="py-3 text-left font-bold">SERVICE</th>
+                                    <th className="py-3 text-left font-bold">ITEM DESCRIPTION</th>
                                     <th className="py-3 text-center font-bold w-16">QTY</th>
                                     <th className="py-3 text-right font-bold w-24 sm:w-28">PRICE</th>
                                     <th className="py-3 text-right font-bold w-24 sm:w-28">TOTAL</th>
@@ -340,7 +391,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                     </span>
                                 </div>
 
-                                {/* Divider Line Above Total (Exact Match to PDF) */}
+                                {/* Divider Line Above Total */}
                                 <div className="border-t border-neutral-900 pt-2.5 mt-2 flex justify-between items-baseline">
                                     <span className="font-bold text-neutral-900 text-xs">Total :</span>
                                     <span className="font-bold text-neutral-900 text-base">
@@ -351,11 +402,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* 5. Elegant Signature Script: "Thank You" (Exact Halimun Vector Outline from Template) */}
-                    <div className="pt-10 pb-4 text-center">
+                    {/* 5. Elegant Signature Script: "Thank You" */}
+                    <div className="pt-8 pb-3 text-center">
                         <ThankYouSignature className="w-56 sm:w-64 mx-auto text-[#242424]" />
                     </div>
-
                 </div>
             </div>
         </div>

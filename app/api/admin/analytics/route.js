@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
@@ -17,7 +20,10 @@ export async function GET() {
                         },
                         ratings: { select: { rating: true } }
                     },
-                    orderBy: { views: 'desc' }
+                    orderBy: [
+                        { views: 'desc' },
+                        { updatedAt: 'desc' }
+                    ]
                 }),
                 prisma.order.findMany({
                     where: { status: { not: 'CANCELLED' } },
@@ -28,19 +34,21 @@ export async function GET() {
                 })
             ]);
 
-            // Calculate active cart additions per product
+            // Calculate active in-cart additions per product from real users
             const cartCounts = {};
             usersWithCart.forEach(u => {
                 if (u.cart && typeof u.cart === 'object') {
                     Object.entries(u.cart).forEach(([prodId, qty]) => {
                         const count = typeof qty === 'number' ? qty : (qty?.quantity || 1);
-                        cartCounts[prodId] = (cartCounts[prodId] || 0) + Number(count || 1);
+                        if (count > 0) {
+                            cartCounts[prodId] = (cartCounts[prodId] || 0) + Number(count);
+                        }
                     });
                 }
             });
 
-            // Aggregate metrics per product
-            const rankedProducts = products.map((p, index) => {
+            // Aggregate authentic metrics per product
+            const rankedProducts = products.map((p) => {
                 const nonCancelledItems = (p.orderItems || []).filter(
                     item => item.order && item.order.status !== 'CANCELLED'
                 );
@@ -48,17 +56,27 @@ export async function GET() {
                 const ordersCount = nonCancelledItems.length;
                 const revenue = nonCancelledItems.reduce((acc, item) => acc + ((item.price || p.price) * (item.quantity || 1)), 0);
                 const inCart = cartCounts[p.id] || 0;
-                const views = p.views || 0;
-                const conversionRate = views > 0 ? parseFloat(((unitsBought / views) * 100).toFixed(1)) : 0;
-                const avgRating = p.ratings && p.ratings.length > 0
+                const views = Number(p.views || 0);
+
+                // Authentic conversion rate: units sold / page views
+                let conversionRate = 0;
+                if (views > 0) {
+                    conversionRate = parseFloat(((unitsBought / views) * 100).toFixed(1));
+                } else if (unitsBought > 0) {
+                    conversionRate = 100.0;
+                }
+
+                // Authentic ratings: never show fake 5.0 if product has 0 reviews
+                const hasReviews = p.ratings && p.ratings.length > 0;
+                const avgRating = hasReviews
                     ? parseFloat((p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length).toFixed(1))
-                    : 5.0;
+                    : null;
+                const reviewCount = hasReviews ? p.ratings.length : 0;
 
                 return {
                     id: p.id,
-                    rank: index + 1,
                     name: p.name,
-                    category: p.category,
+                    category: p.category || 'General',
                     brand: p.brand || 'UK Import',
                     price: p.price,
                     mrp: p.mrp,
@@ -71,17 +89,32 @@ export async function GET() {
                     inCart,
                     revenue,
                     conversionRate,
-                    avgRating
+                    avgRating,
+                    reviewCount
                 };
+            });
+
+            // Rank strictly by views first, then unitsBought, then revenue
+            rankedProducts.sort((a, b) => {
+                if (b.views !== a.views) return b.views - a.views;
+                if (b.unitsBought !== a.unitsBought) return b.unitsBought - a.unitsBought;
+                return (b.revenue || 0) - (a.revenue || 0);
+            });
+
+            // Assign 1-based ranks
+            rankedProducts.forEach((p, idx) => {
+                p.rank = idx + 1;
             });
 
             const totalViews = rankedProducts.reduce((acc, p) => acc + p.views, 0);
             const totalUnitsSold = rankedProducts.reduce((acc, p) => acc + p.unitsBought, 0);
             const totalCartItems = Object.values(cartCounts).reduce((a, b) => a + b, 0);
             const totalRevenue = orders.reduce((acc, o) => acc + (o.total || 0), 0);
-            const overallConversion = totalViews > 0 ? parseFloat(((totalUnitsSold / totalViews) * 100).toFixed(1)) : 0;
+            const overallConversion = totalViews > 0 
+                ? parseFloat(((totalUnitsSold / totalViews) * 100).toFixed(1)) 
+                : (totalUnitsSold > 0 ? 100.0 : 0);
 
-            // Category summary
+            // Group by real category
             const categoryMap = {};
             rankedProducts.forEach(p => {
                 const cat = p.category || 'Other';
@@ -98,6 +131,7 @@ export async function GET() {
 
             return NextResponse.json({
                 success: true,
+                timestamp: Date.now(),
                 analytics: {
                     summary: {
                         totalViews,
@@ -112,6 +146,12 @@ export async function GET() {
                     },
                     topProducts: rankedProducts,
                     categoryBreakdown
+                }
+            }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
                 }
             });
         }
@@ -138,11 +178,13 @@ export async function GET() {
             inCart: 0,
             revenue: 0,
             conversionRate: 0,
-            avgRating: 5.0
+            avgRating: null,
+            reviewCount: 0
         })).sort((a, b) => b.views - a.views);
 
         return NextResponse.json({
             success: true,
+            timestamp: Date.now(),
             analytics: {
                 summary: {
                     totalViews,
@@ -160,8 +202,10 @@ export async function GET() {
             }
         });
     } catch (error) {
-        console.error('Error computing admin analytics:', error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        console.error('Error fetching analytics:', error);
+        return NextResponse.json(
+            { success: false, message: 'Failed to calculate analytics', error: error.message },
+            { status: 500 }
+        );
     }
 }
-

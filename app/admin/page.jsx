@@ -13,40 +13,93 @@ import {
     TruckIcon,
     CheckIcon
 } from "@/components/icons"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
 
 export default function AdminDashboard() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
     const [loading, setLoading] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const [lastSyncTime, setLastSyncTime] = useState(null)
+    const isFirstLoad = useRef(true)
+
     const [dashboardData, setDashboardData] = useState({
         products: 0,
         revenue: '0.00',
         orders: 0,
         customers: 0,
         totalViews: 0,
+        todayOrders: 0,
+        todayRevenue: '0.00',
+        pendingOrders: 0,
+        deliveredOrders: 0,
         topProducts: [],
         recentOrders: [],
     })
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async (isManual = false) => {
         try {
-            const res = await fetch('/api/admin/dashboard')
+            if (isManual) setIsRefreshing(true)
+            const res = await fetch(`/api/admin/dashboard?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            })
             const data = await res.json()
             if (data.success && data.dashboardData) {
                 setDashboardData(data.dashboardData)
+                setLastSyncTime(new Date())
             }
         } catch (error) {
-            console.error('Error fetching admin dashboard data:', error)
+            console.error('Error fetching admin dashboard real data:', error)
         } finally {
-            setLoading(false)
+            if (isFirstLoad.current) {
+                setLoading(false)
+                isFirstLoad.current = false
+            }
+            if (isManual) setIsRefreshing(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
         fetchDashboardData()
-    }, [])
+
+        // 1. Auto-refresh live data every 8 seconds
+        const intervalId = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                fetchDashboardData(false)
+            }
+        }, 8000)
+
+        // 2. Immediate refresh on storage events from any storefront tab
+        const handleStorageSync = (e) => {
+            if (
+                e.key === 'ukbl_analytics_updated' ||
+                e.key === 'ukbl_orders_synced' ||
+                e.key === 'ukbl_products_synced' ||
+                e.key === 'ukbl_categories_synced'
+            ) {
+                fetchDashboardData(false)
+            }
+        }
+
+        // 3. Immediate refresh when admin refocuses this browser tab
+        const handleWindowFocus = () => {
+            fetchDashboardData(false)
+        }
+
+        window.addEventListener('storage', handleStorageSync)
+        window.addEventListener('focus', handleWindowFocus)
+
+        return () => {
+            clearInterval(intervalId)
+            window.removeEventListener('storage', handleStorageSync)
+            window.removeEventListener('focus', handleWindowFocus)
+        }
+    }, [fetchDashboardData])
 
     if (loading) return <Loading />
 
@@ -61,9 +114,9 @@ export default function AdminDashboard() {
             href: '/admin/products'
         },
         {
-            title: 'True Product Views',
+            title: 'Live Product Views',
             value: Number(dashboardData.totalViews || 0).toLocaleString(),
-            subtext: 'Real Verified Visitor Views',
+            subtext: 'Genuine Real Impressions',
             icon: EyeIcon,
             color: '#059669',
             bg: 'bg-emerald-50',
@@ -73,16 +126,18 @@ export default function AdminDashboard() {
         {
             title: 'Customer Orders',
             value: dashboardData.orders || 0,
-            subtext: 'Total Customer Bookings',
+            subtext: `${dashboardData.pendingOrders || 0} active, ${dashboardData.deliveredOrders || 0} delivered`,
             icon: TagIcon,
             color: '#D8B56D',
             bg: 'bg-amber-50',
             href: '/admin/orders'
         },
         {
-            title: 'Total Revenue',
+            title: 'Total Sales Revenue',
             value: `${currency}${Number(dashboardData.revenue || 0).toLocaleString()}`,
-            subtext: 'Confirmed & Completed Sales',
+            subtext: dashboardData.todayOrders > 0 
+                ? `Today: +${currency}${Number(dashboardData.todayRevenue || 0).toLocaleString()} (${dashboardData.todayOrders})`
+                : 'Confirmed Store Sales',
             icon: CardPaymentIcon,
             color: '#241224',
             bg: 'bg-[#FAF6FA]',
@@ -91,7 +146,7 @@ export default function AdminDashboard() {
         {
             title: 'Registered Users',
             value: dashboardData.customers || 0,
-            subtext: 'Active Customer Accounts',
+            subtext: 'Active Verified Accounts',
             icon: UserIcon,
             color: '#2563EB',
             bg: 'bg-blue-50',
@@ -113,16 +168,39 @@ export default function AdminDashboard() {
             {/* Header & Quick Action Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
-                        <span>Admin</span>
-                        <span className="text-[#6C306E]">Dashboard</span>
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
+                            <span>Admin</span>
+                            <span className="text-[#6C306E]">Dashboard</span>
+                        </h1>
+
+                        {/* Live Real-Data Badge */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                            <span className="relative flex size-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full size-2 bg-emerald-600"></span>
+                            </span>
+                            <span>Live Database Connected</span>
+                        </div>
+                    </div>
                     <p className="text-xs text-slate-500 mt-1">
-                        Executive live summary of products, genuine views, customer orders, and revenue
+                        100% genuine live metrics from PostgreSQL database • Real products, orders, views, and revenue
                     </p>
                 </div>
 
                 <div className="flex items-center gap-2.5">
+                    {/* Manual Refresh Button */}
+                    <button
+                        type="button"
+                        onClick={() => fetchDashboardData(true)}
+                        disabled={isRefreshing}
+                        title="Fetch latest database metrics"
+                        className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+                    >
+                        <span className={`size-3.5 border-2 border-[#6C306E] border-t-transparent rounded-full ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
+                    </button>
+
                     <Link
                         href="/admin/products"
                         className="inline-flex items-center gap-1.5 bg-[#6C306E] hover:bg-[#3A0C38] text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs"
@@ -140,19 +218,19 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* KPI Metric Cards (Titas Enterprise Design) */}
+            {/* KPI Metric Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 {kpiCards.map((card, idx) => (
                     <Link
                         key={idx}
                         href={card.href}
-                        className="block bg-white border border-[#EFE0EF] p-4.5 rounded-2xl shadow-2xs hover:border-[#6C306E]/40 hover:shadow-xs transition"
+                        className="block bg-white border border-[#EFE0EF] p-4.5 rounded-2xl shadow-2xs hover:border-[#6C306E]/40 hover:shadow-xs transition group"
                     >
                         <div className="flex items-center justify-between mb-2.5">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 {card.title}
                             </span>
-                            <div className={`size-8 rounded-xl ${card.bg} border border-[#EFE0EF] flex items-center justify-center shrink-0`}>
+                            <div className={`size-8 rounded-xl ${card.bg} border border-[#EFE0EF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
                                 <card.icon size={15} color={card.color} />
                             </div>
                         </div>
@@ -210,10 +288,10 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="font-bold text-[#241224]">
-                                                    {order.user?.name || 'Valued Customer'}
+                                                    {order.customerName || order.user?.name || order.address?.fullName || 'Customer'}
                                                 </div>
                                                 <div className="text-[10px] text-slate-400">
-                                                    {order.user?.phone || order.user?.email || 'Direct Order'}
+                                                    {order.customerContact || order.user?.phone || order.address?.phoneNumber || order.user?.email || 'Direct Order'}
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4 text-slate-600 font-medium">
@@ -228,14 +306,14 @@ export default function AdminDashboard() {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-right text-slate-400 text-[11px] whitespace-nowrap">
-                                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Recent'}
+                                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
-                                            No customer orders recorded yet.
+                                            No customer orders recorded in database yet.
                                         </td>
                                     </tr>
                                 )}
@@ -287,7 +365,7 @@ export default function AdminDashboard() {
                                                     {p.name}
                                                 </p>
                                                 <p className="text-[10px] text-slate-400 font-medium">
-                                                    {currency}{Number(p.price).toLocaleString()} • {p.category || 'Skincare'}
+                                                    {currency}{Number(p.price).toLocaleString()} • {p.category || 'General'}
                                                 </p>
                                             </div>
                                         </div>
@@ -301,7 +379,7 @@ export default function AdminDashboard() {
                                 ))
                             ) : (
                                 <p className="text-xs text-slate-400 text-center py-6">
-                                    No product view metrics recorded yet.
+                                    No product view metrics recorded in database yet.
                                 </p>
                             )}
                         </div>

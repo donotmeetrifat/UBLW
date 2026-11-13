@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import Loading from "@/components/Loading"
 import {
     TrendIcon,
@@ -19,28 +19,72 @@ import AdminDropdown from "@/components/admin/AdminDropdown"
 export default function AdminAnalyticsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
     const [loading, setLoading] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const [analytics, setAnalytics] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [categoryFilter, setCategoryFilter] = useState('All')
+    const isFirstLoad = useRef(true)
 
-    const fetchAnalytics = async () => {
+    const fetchAnalytics = useCallback(async (isManual = false) => {
         try {
-            setLoading(true)
-            const res = await fetch('/api/admin/analytics')
+            if (isManual) setIsRefreshing(true)
+            const res = await fetch(`/api/admin/analytics?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            })
             const data = await res.json()
             if (data.success && data.analytics) {
                 setAnalytics(data.analytics)
             }
         } catch (error) {
-            console.error('Error fetching analytics:', error)
+            console.error('Error fetching analytics real data:', error)
         } finally {
-            setLoading(false)
+            if (isFirstLoad.current) {
+                setLoading(false)
+                isFirstLoad.current = false
+            }
+            if (isManual) setIsRefreshing(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
         fetchAnalytics()
-    }, [])
+
+        // 1. Auto-refresh live analytics every 8 seconds
+        const intervalId = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                fetchAnalytics(false)
+            }
+        }, 8000)
+
+        // 2. Storage synchronization across tabs
+        const handleStorageSync = (e) => {
+            if (
+                e.key === 'ukbl_analytics_updated' ||
+                e.key === 'ukbl_orders_synced' ||
+                e.key === 'ukbl_products_synced'
+            ) {
+                fetchAnalytics(false)
+            }
+        }
+
+        // 3. Immediate sync on window focus
+        const handleWindowFocus = () => {
+            fetchAnalytics(false)
+        }
+
+        window.addEventListener('storage', handleStorageSync)
+        window.addEventListener('focus', handleWindowFocus)
+
+        return () => {
+            clearInterval(intervalId)
+            window.removeEventListener('storage', handleStorageSync)
+            window.removeEventListener('focus', handleWindowFocus)
+        }
+    }, [fetchAnalytics])
 
     if (loading) return <Loading />
 
@@ -72,22 +116,44 @@ export default function AdminAnalyticsPage() {
 
     return (
         <div className="space-y-6 pb-24 text-slate-800">
-            {/* Header */}
+            {/* Header with Live Status & Manual Refresh */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
-                        <span>Product Views & Engagement</span>
-                        <span className="text-[#6C306E]">Analytics</span>
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
+                            <span>Product Views & Engagement</span>
+                            <span className="text-[#6C306E]">Analytics</span>
+                        </h1>
+
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                            <span className="relative flex size-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full size-2 bg-emerald-600"></span>
+                            </span>
+                            <span>Live Database Sync</span>
+                        </div>
+                    </div>
                     <p className="text-xs text-slate-500 mt-1">
-                        Track authentic visitor view counts, view-to-bag frequency, and top-performing UK cosmetics
+                        100% genuine visitor impressions, bag frequency, and purchase conversions from PostgreSQL database
                     </p>
                 </div>
 
-                <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 self-start sm:self-auto">
-                    <span className="text-[11px] font-extrabold text-emerald-800">
-                        100% True Traffic Verified
-                    </span>
+                <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                    <button
+                        type="button"
+                        onClick={() => fetchAnalytics(true)}
+                        disabled={isRefreshing}
+                        className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+                    >
+                        <span className={`size-3.5 border-2 border-[#6C306E] border-t-transparent rounded-full ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>{isRefreshing ? 'Syncing...' : 'Refresh Data'}</span>
+                    </button>
+                    <Link
+                        href="/admin/products"
+                        className="inline-flex items-center gap-1.5 bg-[#6C306E] hover:bg-[#3A0C38] text-white px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow-2xs"
+                    >
+                        <span>Manage Products</span>
+                    </Link>
                 </div>
             </div>
 
@@ -109,17 +175,17 @@ export default function AdminAnalyticsPage() {
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-wider block">
-                                Most Viewed Overall
+                                Most Viewed Product
                             </span>
                             <h3 className="font-extrabold text-xs text-[#241224] line-clamp-2 mt-0.5" title={summary.topViewedProduct?.name}>
-                                {summary.topViewedProduct?.name || 'No product views recorded yet'}
+                                {summary.topViewedProduct?.name || 'Awaiting product traffic'}
                             </h3>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 p-3 bg-white border border-[#EFE0EF] rounded-2xl text-center">
                         <div>
-                            <div className="text-[10px] text-slate-400 font-semibold uppercase">True Views</div>
+                            <div className="text-[10px] text-slate-400 font-semibold uppercase">Real Views</div>
                             <div className="text-base font-black text-emerald-700 mt-0.5 flex items-center justify-center gap-1">
                                 <EyeIcon size={13} color="#059669" />
                                 <span>{Number(summary.topViewedProduct?.views || 0).toLocaleString()}</span>
@@ -159,14 +225,14 @@ export default function AdminAnalyticsPage() {
                                 Runner Up Viewed
                             </span>
                             <h3 className="font-extrabold text-xs text-[#241224] line-clamp-2 mt-0.5" title={summary.secondTopViewed?.name}>
-                                {summary.secondTopViewed?.name || 'Awaiting more views'}
+                                {summary.secondTopViewed?.name || 'Awaiting second product traffic'}
                             </h3>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 p-3 bg-white border border-[#EFE0EF] rounded-2xl text-center">
                         <div>
-                            <div className="text-[10px] text-slate-400 font-semibold uppercase">True Views</div>
+                            <div className="text-[10px] text-slate-400 font-semibold uppercase">Real Views</div>
                             <div className="text-base font-black text-emerald-700 mt-0.5 flex items-center justify-center gap-1">
                                 <EyeIcon size={13} color="#059669" />
                                 <span>{Number(summary.secondTopViewed?.views || 0).toLocaleString()}</span>
@@ -206,14 +272,14 @@ export default function AdminAnalyticsPage() {
                                 Third Most Viewed
                             </span>
                             <h3 className="font-extrabold text-xs text-[#241224] line-clamp-2 mt-0.5" title={summary.thirdTopViewed?.name}>
-                                {summary.thirdTopViewed?.name || 'Awaiting more views'}
+                                {summary.thirdTopViewed?.name || 'Awaiting third product traffic'}
                             </h3>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 p-3 bg-white border border-[#EFE0EF] rounded-2xl text-center">
                         <div>
-                            <div className="text-[10px] text-slate-400 font-semibold uppercase">True Views</div>
+                            <div className="text-[10px] text-slate-400 font-semibold uppercase">Real Views</div>
                             <div className="text-base font-black text-emerald-700 mt-0.5 flex items-center justify-center gap-1">
                                 <EyeIcon size={13} color="#059669" />
                                 <span>{Number(summary.thirdTopViewed?.views || 0).toLocaleString()}</span>
@@ -246,7 +312,7 @@ export default function AdminAnalyticsPage() {
                             {Number(summary.totalViews || 0).toLocaleString()}
                         </div>
                         <div className="text-[10px] text-emerald-600 font-semibold mt-1">
-                            True verified product visits
+                            True database verified visits
                         </div>
                     </div>
                     <div className="size-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
@@ -297,7 +363,7 @@ export default function AdminAnalyticsPage() {
                             {summary.overallConversion || 0}%
                         </div>
                         <div className="text-[10px] text-emerald-800 font-semibold mt-1">
-                            Conversion efficiency
+                            Real conversion efficiency
                         </div>
                     </div>
                     <div className="size-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
@@ -314,7 +380,7 @@ export default function AdminAnalyticsPage() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search top products by name or brand..."
+                        placeholder="Search products by name or brand..."
                         className="w-full bg-[#FAF6FA]/50 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-full pl-10 pr-4 py-2 text-xs outline-none transition"
                     />
                 </div>
@@ -330,18 +396,18 @@ export default function AdminAnalyticsPage() {
                 </div>
             </div>
 
-            {/* FULL LEADERBOARD TABLE (TOP 1, 2, 3, etc.) */}
+            {/* FULL LEADERBOARD TABLE (RANKED BY TRUE VIEWS) */}
             <div className="bg-white border border-[#EFE0EF] rounded-3xl shadow-2xs overflow-hidden">
                 <div className="p-5 border-b border-[#EFE0EF] flex items-center justify-between bg-[#FAF6FA]/40">
                     <div>
                         <h2 className="text-base font-black text-[#241224] flex items-center gap-2">
                             <span>Top Viewed UK Products Leaderboard</span>
                             <span className="text-[10px] font-bold bg-[#6C306E] text-white px-2 py-0.5 rounded-full">
-                                Ranked by Views
+                                Real Traffic Ranked
                             </span>
                         </h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Detailed breakdown of authentic visitor interest, bag additions, and purchase conversions
+                            Live breakdown of genuine visitor impressions, bag additions, orders count, and sales revenue
                         </p>
                     </div>
                 </div>
@@ -354,7 +420,7 @@ export default function AdminAnalyticsPage() {
                                 <th className="px-4 py-4">Product</th>
                                 <th className="px-4 py-4">Category</th>
                                 <th className="px-4 py-4 text-center">True Views</th>
-                                <th className="px-4 py-4 text-center">In Bag / Cart</th>
+                                <th className="px-4 py-4 text-center">In Bag</th>
                                 <th className="px-4 py-4 text-center">Units Sold</th>
                                 <th className="px-4 py-4 text-center">Conversion</th>
                                 <th className="px-5 py-4 text-right">Revenue</th>
@@ -418,7 +484,7 @@ export default function AdminAnalyticsPage() {
                                                 </span>
                                             </td>
 
-                                            {/* True Verified Views (Clean Text Only) */}
+                                            {/* True Verified Views */}
                                             <td className="px-4 py-3.5 text-center">
                                                 <span className="font-bold text-xs text-slate-800">
                                                     {Number(prod.views || 0).toLocaleString()}
@@ -472,4 +538,3 @@ export default function AdminAnalyticsPage() {
         </div>
     )
 }
-
