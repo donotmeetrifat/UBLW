@@ -11,7 +11,8 @@ import {
     RoyalCrownIcon,
     StarIcon,
     SearchIcon,
-    CheckIcon
+    CheckIcon,
+    RefreshIcon
 } from "@/components/icons"
 import Link from "next/link"
 import AdminDropdown from "@/components/admin/AdminDropdown"
@@ -116,25 +117,15 @@ export default function AdminAnalyticsPage() {
 
     return (
         <div className="space-y-6 pb-24 text-slate-800">
-            {/* Header with Live Status & Manual Refresh */}
+            {/* Header & Quick Action Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
-                            <span>Product Views & Engagement</span>
-                            <span className="text-[#6C306E]">Analytics</span>
-                        </h1>
-
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
-                            <span className="relative flex size-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full size-2 bg-emerald-600"></span>
-                            </span>
-                            <span>Live Database Sync</span>
-                        </div>
-                    </div>
+                    <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
+                        <span>Product Views & Engagement</span>
+                        <span className="text-[#6C306E]">Analytics</span>
+                    </h1>
                     <p className="text-xs text-slate-500 mt-1">
-                        100% genuine visitor impressions, bag frequency, and purchase conversions from PostgreSQL database
+                        Track customer impressions, interest, and conversion metrics
                     </p>
                 </div>
 
@@ -143,9 +134,9 @@ export default function AdminAnalyticsPage() {
                         type="button"
                         onClick={() => fetchAnalytics(true)}
                         disabled={isRefreshing}
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+                        className="inline-flex items-center gap-2 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
                     >
-                        <span className={`size-3.5 border-2 border-[#6C306E] border-t-transparent rounded-full ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <RefreshIcon size={14} className={isRefreshing ? "animate-spin text-[#6C306E]" : "text-slate-600"} />
                         <span>{isRefreshing ? 'Syncing...' : 'Refresh Data'}</span>
                     </button>
                     <Link

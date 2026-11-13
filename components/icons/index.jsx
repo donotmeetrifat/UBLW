@@ -516,3 +516,14 @@ export const CalendarIcon = ({ size = 18, className = '', color = 'currentColor'
         <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
 )
+
+// 45. Clean 2D Refresh / Reload Icon
+export const RefreshIcon = ({ size = 16, className = '', color = 'currentColor', strokeWidth = 2, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <path d="M21 2v6h-6" />
+        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M3 22v-6h6" />
+        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    </svg>
+)
+

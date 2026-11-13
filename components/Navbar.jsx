@@ -272,7 +272,7 @@ const Navbar = () => {
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <ShieldCheckIcon size={15} color="#6C306E" />
-                                                                <span>Admin Command Portal</span>
+                                                                <span>Admin Portal</span>
                                                             </div>
                                                             <span className="text-xs">↗</span>
                                                         </Link>

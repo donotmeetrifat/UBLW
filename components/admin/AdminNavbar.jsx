@@ -23,7 +23,7 @@ export default function AdminNavbar({ onToggleSidebar = () => {} }) {
                         <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
                     </span>
                     <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#6C306E]">
-                        Admin Command Portal
+                        Admin Portal
                     </span>
                 </div>
             </div>

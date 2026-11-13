@@ -11,7 +11,8 @@ import {
     ArrowRightIcon,
     UserIcon,
     TruckIcon,
-    CheckIcon
+    CheckIcon,
+    RefreshIcon
 } from "@/components/icons"
 import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
@@ -168,23 +169,12 @@ export default function AdminDashboard() {
             {/* Header & Quick Action Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
-                            <span>Admin</span>
-                            <span className="text-[#6C306E]">Dashboard</span>
-                        </h1>
-
-                        {/* Live Real-Data Badge */}
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
-                            <span className="relative flex size-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full size-2 bg-emerald-600"></span>
-                            </span>
-                            <span>Live Database Connected</span>
-                        </div>
-                    </div>
+                    <h1 className="text-2xl font-black text-[#241224] tracking-tight flex items-center gap-2">
+                        <span>Admin</span>
+                        <span className="text-[#6C306E]">Dashboard</span>
+                    </h1>
                     <p className="text-xs text-slate-500 mt-1">
-                        100% genuine live metrics from PostgreSQL database • Real products, orders, views, and revenue
+                        Overview of store activity, orders, and sales performance
                     </p>
                 </div>
 
@@ -195,9 +185,9 @@ export default function AdminDashboard() {
                         onClick={() => fetchDashboardData(true)}
                         disabled={isRefreshing}
                         title="Fetch latest database metrics"
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+                        className="inline-flex items-center gap-2 bg-white hover:bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] px-3.5 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
                     >
-                        <span className={`size-3.5 border-2 border-[#6C306E] border-t-transparent rounded-full ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <RefreshIcon size={14} className={isRefreshing ? "animate-spin text-[#6C306E]" : "text-slate-600"} />
                         <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
                     </button>
 
