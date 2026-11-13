@@ -200,11 +200,8 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 {/* Screen Action Bar (Clean Header: Invoice # on Left, Download & Close on Right) */}
                 <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF]">
-                            Official Invoice #{orderNo}
-                        </span>
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                            100% UK Verified
+                        <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3.5 py-1.5 rounded-full border border-[#EFE0EF]">
+                            Invoice: #{orderNo}
                         </span>
                     </div>
 
