@@ -37,9 +37,10 @@ export default function AdminHeroBannersPage() {
     const [saving, setSaving] = useState(false)
     const [draggedIndex, setDraggedIndex] = useState(null)
 
-    // Interactive Storefront Preview State
+    // Interactive Storefront Preview & Global Store Autoplay State
     const [previewActiveIndex, setPreviewActiveIndex] = useState(0)
-    const [isPreviewAutoplay, setIsPreviewAutoplay] = useState(true)
+    const [isAutoplay, setIsAutoplay] = useState(true)
+    const [isTogglingAutoplay, setIsTogglingAutoplay] = useState(false)
 
     // Modal State (Add or Edit)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -58,7 +59,7 @@ export default function AdminHeroBannersPage() {
         displayOrder: 1
     })
 
-    // 1. Fetch live banners from API
+    // 1. Fetch live banners & settings from API
     const fetchBanners = async () => {
         try {
             setLoading(true)
@@ -68,6 +69,11 @@ export default function AdminHeroBannersPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.banners)) {
                 setBanners(data.banners)
+                if (data.settings && typeof data.settings.autoplay === 'boolean') {
+                    setIsAutoplay(data.settings.autoplay)
+                } else if (typeof data.autoplay === 'boolean') {
+                    setIsAutoplay(data.autoplay)
+                }
             } else {
                 toast.error(data.message || 'Failed to load banners')
             }
@@ -83,14 +89,77 @@ export default function AdminHeroBannersPage() {
         fetchBanners()
     }, [])
 
-    // Autoplay for the Live Storefront Preview slider on the admin page
+    // Real-time Autoplay Toggle handler - updates DB, server, and all users instantly
+    const handleToggleAutoplay = async () => {
+        if (isTogglingAutoplay) return
+        setIsTogglingAutoplay(true)
+        const nextState = !isAutoplay
+
+        // Optimistic UI update
+        setIsAutoplay(nextState)
+        const toastId = toast.loading(nextState ? 'Enabling Storefront Autoplay...' : 'Disabling Storefront Autoplay...')
+
+        try {
+            const res = await fetch('/api/admin/banners', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ autoplay: nextState })
+            })
+            const data = await res.json()
+
+            if (data.success) {
+                const finalAutoplay = data.autoplay !== undefined ? data.autoplay : nextState
+                setIsAutoplay(finalAutoplay)
+                toast.success(
+                    finalAutoplay 
+                        ? 'Hero slider Autoplay is now ON across the storefront!' 
+                        : 'Hero slider Autoplay is now OFF across the storefront!',
+                    { id: toastId }
+                )
+
+                // Multi-channel real-time synchronization across frontend, backend, server, and all users
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify({ autoplay: finalAutoplay, delay: 5000 }))
+                    localStorage.setItem('ukbl_banners_synced', Date.now().toString())
+
+                    window.dispatchEvent(new CustomEvent('hero-banner-autoplay-updated', { detail: { autoplay: finalAutoplay } }))
+                    window.dispatchEvent(new CustomEvent('hero-banners-updated'))
+
+                    try {
+                        const bc = new BroadcastChannel('ukbl_catalog_channel')
+                        bc.postMessage({ type: 'hero-banner-autoplay-updated', autoplay: finalAutoplay })
+                        bc.close()
+                    } catch {}
+
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
+                    }
+                    if ('caches' in window) {
+                        caches.delete('ukbl-api-v1').catch(() => {})
+                        caches.delete('ukbl-api-v2').catch(() => {})
+                    }
+                }
+            } else {
+                setIsAutoplay(!nextState)
+                toast.error(data.message || 'Failed to update autoplay setting', { id: toastId })
+            }
+        } catch (err) {
+            console.error('Error toggling autoplay:', err)
+            setIsAutoplay(!nextState)
+            toast.error('Network error toggling autoplay', { id: toastId })
+        } finally {
+            setIsTogglingAutoplay(false)
+        }
+    }
+
+    // Autoplay for the Live Storefront Preview slider on the admin page (strictly syncs with isAutoplay)
     useEffect(() => {
-        if (!isPreviewAutoplay || banners.length <= 1) return
+        if (!isAutoplay || banners.length <= 1) return
         const timer = setInterval(() => {
             setPreviewActiveIndex(prev => (prev + 1) % banners.length)
         }, 4500)
         return () => clearInterval(timer)
-    }, [isPreviewAutoplay, banners.length])
+    }, [isAutoplay, banners.length])
 
     // --- Modal Openers ---
     const handleOpenAddModal = () => {
@@ -392,14 +461,20 @@ export default function AdminHeroBannersPage() {
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={() => setIsPreviewAutoplay(prev => !prev)}
-                            className={`px-3 py-1 rounded-full text-xs font-bold transition border ${
-                                isPreviewAutoplay
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200'
-                            }`}
+                            onClick={handleToggleAutoplay}
+                            disabled={isTogglingAutoplay}
+                            title={isAutoplay ? 'Click to turn OFF autoplay across the entire store' : 'Click to turn ON autoplay across the entire store'}
+                            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-2xs border cursor-pointer ${
+                                isAutoplay
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 ring-2 ring-emerald-500/15'
+                                    : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 ring-2 ring-rose-500/15'
+                            } ${isTogglingAutoplay ? 'opacity-70 cursor-wait' : ''}`}
                         >
-                            {isPreviewAutoplay ? '▶ Autoplay ON' : '⏸ Autoplay Paused'}
+                            <span className={`size-2 rounded-full ${isAutoplay ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                            <span>{isAutoplay ? '▶ Autoplay ON' : '⏸ Autoplay OFF'}</span>
+                            <span className="text-[10px] opacity-75 font-normal">
+                                ({isAutoplay ? 'Storewide ON' : 'Storewide OFF'})
+                            </span>
                         </button>
                     </div>
                 </div>

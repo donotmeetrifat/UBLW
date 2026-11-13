@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getHeroBanners, saveHeroBanners } from '@/lib/banners';
+import { getHeroBanners, saveHeroBanners, getHeroBannerSettings, saveHeroBannerSettings } from '@/lib/banners';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
     try {
-        const banners = await getHeroBanners(false); // return all (active + inactive) for admin
+        const [banners, settings] = await Promise.all([
+            getHeroBanners(false), // return all (active + inactive) for admin
+            getHeroBannerSettings()
+        ]);
         return NextResponse.json({
             success: true,
-            banners
+            banners,
+            settings,
+            autoplay: settings?.autoplay !== false
         }, {
             headers: {
                 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -179,6 +184,40 @@ export async function DELETE(request) {
         console.error('Error deleting hero banner:', error);
         return NextResponse.json(
             { success: false, message: error.message || 'Failed to delete banner' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PATCH(request) {
+    try {
+        const body = await request.json();
+        let newAutoplay = body.autoplay;
+
+        if (body.action === 'toggle_autoplay') {
+            const current = await getHeroBannerSettings();
+            newAutoplay = !current.autoplay;
+        }
+
+        const updatedSettings = await saveHeroBannerSettings({
+            autoplay: Boolean(newAutoplay),
+            delay: Number(body.delay) || 5000
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: `Hero slider autoplay ${updatedSettings.autoplay ? 'enabled' : 'disabled'} storewide successfully!`,
+            settings: updatedSettings,
+            autoplay: updatedSettings.autoplay
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+        });
+    } catch (error) {
+        console.error('Error updating hero banner settings:', error);
+        return NextResponse.json(
+            { success: false, message: error.message || 'Failed to update hero banner settings' },
             { status: 500 }
         );
     }

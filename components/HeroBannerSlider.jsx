@@ -23,6 +23,57 @@ const DEFAULT_SLIDES = [
 const HeroBannerSlider = () => {
     const router = useRouter()
     const reduxBanners = useSelector(state => state.product.banners)
+    const bannerSettings = useSelector(state => state.product.bannerSettings)
+
+    // Storefront Autoplay resolution (true by default unless disabled by admin)
+    const [liveAutoplay, setLiveAutoplay] = useState(
+        bannerSettings?.autoplay !== undefined ? bannerSettings.autoplay : true
+    )
+
+    useEffect(() => {
+        if (bannerSettings && typeof bannerSettings.autoplay === 'boolean') {
+            setLiveAutoplay(bannerSettings.autoplay)
+        }
+    }, [bannerSettings])
+
+    // Real-time synchronization when admin toggles autoplay on/off storewide
+    useEffect(() => {
+        const handleAutoplayChange = (e) => {
+            if (typeof e?.detail?.autoplay === 'boolean') {
+                setLiveAutoplay(e.detail.autoplay)
+            }
+        }
+
+        const handleStorage = (e) => {
+            if (e.key === 'ukbl_cached_hero_banner_settings') {
+                try {
+                    const parsed = JSON.parse(e.newValue || '{}')
+                    if (typeof parsed?.autoplay === 'boolean') {
+                        setLiveAutoplay(parsed.autoplay)
+                    }
+                } catch {}
+            }
+        }
+
+        window.addEventListener('hero-banner-autoplay-updated', handleAutoplayChange)
+        window.addEventListener('storage', handleStorage)
+
+        let bc
+        try {
+            bc = new BroadcastChannel('ukbl_catalog_channel')
+            bc.onmessage = (msg) => {
+                if (msg.data?.type === 'hero-banner-autoplay-updated' && typeof msg.data?.autoplay === 'boolean') {
+                    setLiveAutoplay(msg.data.autoplay)
+                }
+            }
+        } catch {}
+
+        return () => {
+            window.removeEventListener('hero-banner-autoplay-updated', handleAutoplayChange)
+            window.removeEventListener('storage', handleStorage)
+            if (bc) bc.close()
+        }
+    }, [])
 
     // Compute active slides from Redux / Live database, with default fallback
     const slides = useMemo(() => {
@@ -152,14 +203,15 @@ const HeroBannerSlider = () => {
     }
 
     useEffect(() => {
-        if (isPaused || isDragging || slides.length <= 1) return
+        if (!liveAutoplay || isPaused || isDragging || slides.length <= 1) return
 
+        const delay = bannerSettings?.delay || AUTOPLAY_DELAY
         const timer = setInterval(() => {
             setActiveIndex((currentIndex) => (currentIndex + 1) % slides.length)
-        }, AUTOPLAY_DELAY)
+        }, delay)
 
         return () => clearInterval(timer)
-    }, [isPaused, isDragging, activeIndex, slides.length])
+    }, [liveAutoplay, isPaused, isDragging, activeIndex, slides.length, bannerSettings?.delay])
 
     if (!slides || slides.length === 0) return null
 

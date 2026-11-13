@@ -4,7 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
-import { setProduct, setCategories, setHomepageSections, setBanners, setPromotions } from '@/lib/features/product/productSlice'
+import { 
+    setProduct, 
+    setCategories, 
+    setHomepageSections, 
+    setBanners, 
+    setBannerSettings, 
+    setHeroBannerAutoplay, 
+    setPromotions 
+} from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
@@ -86,6 +94,17 @@ export default function DataSyncProvider({ children }) {
                         const parsedBanners = JSON.parse(storedBanners)
                         if (Array.isArray(parsedBanners) && parsedBanners.length > 0) {
                             dispatch(setBanners(parsedBanners))
+                        }
+                    } catch (e) {}
+                }
+
+                // Hydrate Hero Banner Settings (autoplay, timing)
+                const storedBannerSettings = localStorage.getItem('ukbl_cached_hero_banner_settings')
+                if (storedBannerSettings) {
+                    try {
+                        const parsedSettings = JSON.parse(storedBannerSettings)
+                        if (parsedSettings && typeof parsedSettings === 'object') {
+                            dispatch(setBannerSettings(parsedSettings))
                         }
                     } catch (e) {}
                 }
@@ -231,7 +250,7 @@ export default function DataSyncProvider({ children }) {
         }
         syncHomepageSections()
 
-        // 2d. FETCH LIVE HERO BANNERS
+        // 2d. FETCH LIVE HERO BANNERS & SETTINGS
         const syncHeroBanners = async () => {
             try {
                 const res = await fetch(`/api/banners?_t=${Date.now()}`, {
@@ -242,10 +261,23 @@ export default function DataSyncProvider({ children }) {
                     }
                 })
                 const data = await res.json()
-                if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
-                    dispatch(setBanners(data.banners))
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
+                if (data.success) {
+                    if (Array.isArray(data.banners) && data.banners.length > 0) {
+                        dispatch(setBanners(data.banners))
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
+                        }
+                    }
+                    if (data.settings && typeof data.settings === 'object') {
+                        dispatch(setBannerSettings(data.settings))
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify(data.settings))
+                        }
+                    } else if (typeof data.autoplay === 'boolean') {
+                        dispatch(setHeroBannerAutoplay(data.autoplay))
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify({ autoplay: data.autoplay, delay: 5000 }))
+                        }
                     }
                 }
             } catch (e) {
@@ -278,16 +310,37 @@ export default function DataSyncProvider({ children }) {
         syncHeroPromotions()
 
         if (typeof window !== 'undefined') {
+            const handleAutoplayUpdated = (e) => {
+                if (typeof e?.detail?.autoplay === 'boolean') {
+                    dispatch(setHeroBannerAutoplay(e.detail.autoplay))
+                } else {
+                    syncHeroBanners()
+                }
+            }
+
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
             window.addEventListener('homepage-sections-updated', syncHomepageSections)
             window.addEventListener('hero-banners-updated', syncHeroBanners)
+            window.addEventListener('hero-banner-autoplay-updated', handleAutoplayUpdated)
             window.addEventListener('hero-promotions-updated', syncHeroPromotions)
             window.addEventListener('storage', (e) => {
                 if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
                 if (e.key === 'ukbl_products_synced') syncProductCatalog()
                 if (e.key === 'ukbl_sections_synced') syncHomepageSections()
                 if (e.key === 'ukbl_banners_synced') syncHeroBanners()
+                if (e.key === 'ukbl_cached_hero_banner_settings' || e.key === 'ukbl_hero_banner_autoplay') {
+                    try {
+                        const parsed = JSON.parse(e.newValue || '{}')
+                        if (typeof parsed?.autoplay === 'boolean') {
+                            dispatch(setHeroBannerAutoplay(parsed.autoplay))
+                        } else {
+                            syncHeroBanners()
+                        }
+                    } catch {
+                        syncHeroBanners()
+                    }
+                }
                 if (e.key === 'ukbl_promotions_synced') syncHeroPromotions()
                 if (e.key === 'ukbl_coupons_synced') {
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
@@ -296,6 +349,16 @@ export default function DataSyncProvider({ children }) {
             try {
                 const bc = new BroadcastChannel('ukbl_catalog_channel')
                 bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'hero-banner-autoplay-updated') {
+                        if (typeof msg.data?.autoplay === 'boolean') {
+                            dispatch(setHeroBannerAutoplay(msg.data.autoplay))
+                            try {
+                                localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify({ autoplay: msg.data.autoplay, delay: 5000 }))
+                            } catch {}
+                        } else {
+                            syncHeroBanners()
+                        }
+                    }
                     if (msg.data?.type === 'promotions-updated' && msg.data?.promotions) {
                         dispatch(setPromotions(msg.data.promotions))
                         try {
