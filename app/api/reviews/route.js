@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { memoryStore } from '@/lib/db/initialData';
 
 // GET: Fetch reviews by product, by user, or get customer's review status
 export async function GET(request) {
@@ -270,6 +271,23 @@ export async function POST(request) {
 
             let isDeliveredVerified = !!deliveredItem;
 
+            // Check if specific orderId provided is DELIVERED
+            if (!isDeliveredVerified && orderId) {
+                const targetedOrder = await prisma.order.findFirst({
+                    where: {
+                        OR: [
+                            { id: orderId },
+                            { orderNumber: orderId }
+                        ],
+                        userId: userId,
+                        status: 'DELIVERED'
+                    }
+                });
+                if (targetedOrder) {
+                    isDeliveredVerified = true;
+                }
+            }
+
             // Check if user has any delivered order in DB that matches this product
             if (!isDeliveredVerified) {
                 const userOrders = await prisma.order.findMany({
@@ -284,6 +302,14 @@ export async function POST(request) {
                         isDeliveredVerified = true;
                         break;
                     }
+                }
+            }
+
+            // Memory store check if DB verification didn't match (e.g. recent offline order)
+            if (!isDeliveredVerified && orderId) {
+                const memOrder = memoryStore.getOrderById(orderId);
+                if (memOrder && memOrder.status === 'DELIVERED') {
+                    isDeliveredVerified = true;
                 }
             }
 

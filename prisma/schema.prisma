@@ -54,6 +54,7 @@ model User {
     image           String?
     role            Role      @default(CUSTOMER)
     isVerified      Boolean   @default(false)
+    isActive        Boolean   @default(true)
     emailVerified   DateTime?
     cart            Json      @default("{}")
     abandonedCartAt DateTime?

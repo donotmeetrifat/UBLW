@@ -206,58 +206,71 @@ const OrderItem = ({ order }) => {
                                 </div>
 
                                 {/* Stepper with Mathematical Precision Horizontal Progress Rail */}
-                                <div className="relative py-2">
-                                    {/* Background Progress Rail */}
-                                    <div className="absolute top-[16px] left-[10%] right-[10%] h-1 bg-[#F0E6F0] rounded-full -translate-y-1/2 z-0" />
+                                <div className="grid grid-cols-5 text-center relative py-2">
+                                    {STAGES.map((stage, idx) => {
+                                        const isStepDone = idx < activeIndex || (idx === activeIndex && currentStatus === 'DELIVERED');
+                                        const isStepCurrent = idx === activeIndex && currentStatus !== 'DELIVERED';
+                                        
+                                        // Left connector line (from left edge of this column to outer edge of circle)
+                                        const isLeftConnectorActive = idx <= activeIndex && idx > 0;
+                                        // Right connector line (from outer edge of circle to right edge of this column)
+                                        const isRightConnectorActive = idx < activeIndex;
 
-                                    {/* Active Animated Gradient Progress Rail */}
-                                    <div
-                                        className="absolute top-[16px] left-[10%] h-1 bg-gradient-to-r from-[#6C306E] via-[#9956A1] to-[#6C306E] rounded-full -translate-y-1/2 z-0 transition-all duration-700 ease-out shadow-xs"
-                                        style={{ width: `${(activeIndex / 4) * 80}%` }}
-                                    />
+                                        return (
+                                            <div key={stage.key} className="flex flex-col items-center relative">
+                                                {/* Left Connector Line (Only between columns: terminates at circle perimeter) */}
+                                                {idx > 0 && (
+                                                    <div 
+                                                        className={`absolute top-4 left-0 right-[calc(50%+16px)] h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-l-full ${
+                                                            isLeftConnectorActive ? 'bg-[#6C306E]' : 'bg-[#F0E6F0]'
+                                                        }`} 
+                                                    />
+                                                )}
 
-                                    {/* Stepper Nodes */}
-                                    <div className="grid grid-cols-5 text-center relative z-10">
-                                        {STAGES.map((stage, idx) => {
-                                            const isStepDone = idx < activeIndex || (idx === activeIndex && currentStatus === 'DELIVERED');
-                                            const isStepCurrent = idx === activeIndex && currentStatus !== 'DELIVERED';
+                                                {/* Right Connector Line (Only between columns: begins at circle perimeter) */}
+                                                {idx < STAGES.length - 1 && (
+                                                    <div 
+                                                        className={`absolute top-4 left-[calc(50%+16px)] right-0 h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-r-full ${
+                                                            isRightConnectorActive ? 'bg-[#6C306E]' : 'bg-[#F0E6F0]'
+                                                        }`} 
+                                                    />
+                                                )}
 
-                                            return (
-                                                <div key={stage.key} className="flex flex-col items-center">
-                                                    {/* Node Circle */}
-                                                    <div className={`size-8 rounded-full flex items-center justify-center transition-all duration-300 ring-4 ring-white ${
+                                                {/* Node Circle (size 32px, height 32px, vertical center exactly at top-4 = 16px) */}
+                                                <div 
+                                                    className={`size-8 rounded-full flex items-center justify-center transition-all duration-300 relative z-10 ${
                                                         isStepDone
-                                                            ? 'bg-gradient-to-tr from-[#6C306E] to-[#9956A1] text-white shadow-xs'
+                                                            ? 'bg-gradient-to-tr from-[#6C306E] to-[#9956A1] text-white shadow-xs ring-4 ring-white'
                                                             : isStepCurrent
-                                                            ? 'bg-white border-2 border-[#6C306E] ring-[#6C306E]/20 shadow-sm'
-                                                            : 'bg-white border-2 border-[#E9DFE9] text-slate-300'
-                                                    }`}>
-                                                        {isStepDone ? (
-                                                            <CheckIcon size={13} color="#FFFFFF" strokeWidth={2.75} />
-                                                        ) : isStepCurrent ? (
-                                                            <span className="size-2.5 rounded-full bg-gradient-to-tr from-[#6C306E] to-[#9956A1] animate-pulse" />
-                                                        ) : (
-                                                            <span className="size-1.5 rounded-full bg-slate-300" />
-                                                        )}
-                                                    </div>
-
-                                                    {/* Label & Description */}
-                                                    <p className={`text-[11px] font-extrabold mt-2.5 truncate w-full transition-colors ${
-                                                        isStepCurrent
-                                                            ? 'text-[#3A0C38]'
-                                                            : isStepDone
-                                                            ? 'text-[#6C306E]'
-                                                            : 'text-slate-400'
-                                                    }`}>
-                                                        {stage.label}
-                                                    </p>
-                                                    <span className="text-[9.5px] font-medium text-slate-400 hidden sm:block mt-0.5">
-                                                        {stage.desc}
-                                                    </span>
+                                                            ? 'bg-white border-2 border-[#6C306E] text-[#6C306E] shadow-sm ring-4 ring-[#6C306E]/15'
+                                                            : 'bg-white border-2 border-[#E9DFE9] text-slate-300 ring-4 ring-white'
+                                                    }`}
+                                                >
+                                                    {isStepDone ? (
+                                                        <CheckIcon size={13} color="#FFFFFF" strokeWidth={2.75} />
+                                                    ) : isStepCurrent ? (
+                                                        <span className="size-2.5 rounded-full bg-gradient-to-tr from-[#6C306E] to-[#9956A1] animate-pulse" />
+                                                    ) : (
+                                                        <span className="size-1.5 rounded-full bg-slate-300" />
+                                                    )}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+
+                                                {/* Label & Description */}
+                                                <p className={`text-[11px] font-extrabold mt-2.5 truncate w-full transition-colors ${
+                                                    isStepCurrent
+                                                        ? 'text-[#3A0C38]'
+                                                        : isStepDone
+                                                        ? 'text-[#6C306E]'
+                                                        : 'text-slate-400'
+                                                }`}>
+                                                    {stage.label}
+                                                </p>
+                                                <span className="text-[9.5px] font-medium text-slate-400 hidden sm:block mt-0.5">
+                                                    {stage.desc}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
 
                                 {/* Courier & Consignment Tracking Strip */}
@@ -300,22 +313,37 @@ const OrderItem = ({ order }) => {
                                 <div className="space-y-2">
                                     {orderItems.map((item, index) => {
                                         const productObj = item.product || item;
-                                        const prodName = productObj.name || item.name || 'UK Beauty Product';
-                                        const prodId = productObj.id || item.productId;
-                                        const existingReview = ratings.find(r => r.orderId === order.id && r.productId === prodId);
+                                        const prodName = item.name || productObj.name || 'UK Beauty Product';
+                                        const prodId = item.productId || productObj.id || item.id;
+                                        const prodImage = item.image || (Array.isArray(productObj.images) && productObj.images[0]) || productObj.image || '/product_img1.png';
+                                        const existingReview = ratings.find(r => (r.orderId === order.id || !r.orderId) && (r.productId === prodId || r.product?.id === prodId));
 
                                         return (
                                             <div key={index} className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-xs">
-                                                <div className="min-w-0 flex-1 pr-3">
-                                                    <p className="font-bold text-[#241224] truncate">{prodName}</p>
-                                                    <p className="text-[11px] text-slate-500">
-                                                        {currency}{Number(item.price || 0).toLocaleString()} × {item.quantity || 1}
-                                                    </p>
+                                                <div className="min-w-0 flex-1 pr-3 flex items-center gap-3">
+                                                    <div className="size-10 rounded-xl bg-white border border-[#EFE0EF] p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
+                                                        <Image
+                                                            src={prodImage}
+                                                            alt={prodName}
+                                                            width={36}
+                                                            height={36}
+                                                            className="w-full h-full object-contain"
+                                                        />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-bold text-[#241224] truncate">{prodName}</p>
+                                                        <p className="text-[11px] text-slate-500">
+                                                            {currency}{Number(item.price || 0).toLocaleString()} × {item.quantity || 1}
+                                                        </p>
+                                                    </div>
                                                 </div>
 
                                                 <div className="shrink-0">
                                                     {existingReview ? (
-                                                        <Rating value={existingReview.rating} />
+                                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-800 text-[11px] font-bold">
+                                                            <Rating value={existingReview.rating} />
+                                                            <span>Reviewed</span>
+                                                        </div>
                                                     ) : currentStatus === 'DELIVERED' ? (
                                                         <button
                                                             type="button"
