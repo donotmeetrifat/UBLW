@@ -47,3 +47,4 @@ export function ModifiedClassicLoader({ size = 'md', className = '' }) {
     />
   )
 }
+

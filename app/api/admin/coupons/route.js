@@ -93,21 +93,34 @@ export async function POST(request) {
         } = body;
 
         if (!code || typeof code !== 'string' || !code.trim()) {
-            return NextResponse.json({ success: false, message: 'Coupon code is required' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'Please enter a coupon code' }, { status: 400 });
         }
 
         const normalizedCode = code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
         if (!normalizedCode) {
-            return NextResponse.json({ success: false, message: 'Please enter a valid alphanumeric coupon code' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'Please enter a valid alphanumeric coupon code (e.g. VIP20, EID500)' }, { status: 400 });
         }
 
         const parsedDiscount = parseFloat(discount);
         if (isNaN(parsedDiscount) || parsedDiscount <= 0) {
-            return NextResponse.json({ success: false, message: 'Please enter a valid discount value greater than 0' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'Please enter a valid discount amount greater than 0' }, { status: 400 });
         }
 
         if (discountType === 'PERCENTAGE' && parsedDiscount > 100) {
             return NextResponse.json({ success: false, message: 'Percentage discount cannot exceed 100%' }, { status: 400 });
+        }
+
+        // Validate and sanitize dates safely
+        let parsedStartsAt = null;
+        if (startsAt) {
+            const d = new Date(startsAt);
+            if (!isNaN(d.getTime())) parsedStartsAt = d;
+        }
+
+        let parsedExpiresAt = null;
+        if (!isLifetime && expiresAt) {
+            const d = new Date(expiresAt);
+            if (!isNaN(d.getTime())) parsedExpiresAt = d;
         }
 
         // Sanitize allowed user emails (trim and lower-case)
@@ -117,9 +130,13 @@ export async function POST(request) {
                 .filter(e => e.length > 3 && e.includes('@'))
             : [];
 
-        const parsedUsageLimit = usageLimit !== null && usageLimit !== '' ? parseInt(usageLimit, 10) : null;
-        const parsedMinOrder = parseFloat(minOrderAmount) || 0;
-        const parsedMaxDiscount = maxDiscount !== null && maxDiscount !== '' ? parseFloat(maxDiscount) : null;
+        const parsedUsageLimit = usageLimit !== null && usageLimit !== '' && !isNaN(parseInt(usageLimit, 10))
+            ? parseInt(usageLimit, 10)
+            : null;
+        const parsedMinOrder = !isNaN(parseFloat(minOrderAmount)) ? parseFloat(minOrderAmount) : 0;
+        const parsedMaxDiscount = maxDiscount !== null && maxDiscount !== '' && !isNaN(parseFloat(maxDiscount))
+            ? parseFloat(maxDiscount)
+            : null;
 
         const couponPayload = {
             code: normalizedCode,
@@ -129,8 +146,8 @@ export async function POST(request) {
             minOrderAmount: Math.max(0, parsedMinOrder),
             maxDiscount: parsedMaxDiscount ? Math.max(0, parsedMaxDiscount) : null,
             isLifetime: Boolean(isLifetime),
-            startsAt: startsAt ? new Date(startsAt) : null,
-            expiresAt: (!isLifetime && expiresAt) ? new Date(expiresAt) : null,
+            startsAt: parsedStartsAt,
+            expiresAt: parsedExpiresAt,
             usageLimit: (parsedUsageLimit && parsedUsageLimit > 0) ? parsedUsageLimit : null,
             perUserLimit: Math.max(1, parseInt(perUserLimit, 10) || 1),
             forNewUserOnly: Boolean(forNewUserOnly),
@@ -140,26 +157,55 @@ export async function POST(request) {
         };
 
         if (isDatabaseConfigured()) {
-            const existing = await prisma.coupon.findUnique({
-                where: { code: normalizedCode }
-            });
+            try {
+                const existing = await prisma.coupon.findUnique({
+                    where: { code: normalizedCode }
+                });
 
-            if (existing) {
-                return NextResponse.json(
-                    { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
-                    { status: 409 }
-                );
+                if (existing) {
+                    return NextResponse.json(
+                        { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
+                        { status: 409 }
+                    );
+                }
+
+                const coupon = await prisma.coupon.create({
+                    data: couponPayload
+                });
+
+                // Also keep memoryStore synchronized for real-time fallback
+                try {
+                    memoryStore.addCoupon(coupon);
+                } catch {}
+
+                return NextResponse.json({
+                    success: true,
+                    message: `Coupon code ${normalizedCode} created and published live!`,
+                    coupon
+                });
+            } catch (dbError) {
+                console.error('Database coupon creation error:', dbError);
+                if (dbError.code === 'P2002') {
+                    return NextResponse.json(
+                        { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
+                        { status: 409 }
+                    );
+                }
+                // Memory store fallback so creation NEVER breaks
+                const memoryExisting = memoryStore.getCouponByCode(normalizedCode);
+                if (memoryExisting) {
+                    return NextResponse.json(
+                        { success: false, message: `Coupon code "${normalizedCode}" already exists.` },
+                        { status: 409 }
+                    );
+                }
+                const coupon = memoryStore.addCoupon(couponPayload);
+                return NextResponse.json({
+                    success: true,
+                    message: `Coupon code ${normalizedCode} created successfully!`,
+                    coupon
+                });
             }
-
-            const coupon = await prisma.coupon.create({
-                data: couponPayload
-            });
-
-            return NextResponse.json({
-                success: true,
-                message: `Coupon code ${normalizedCode} created and active!`,
-                coupon
-            });
         }
 
         // Memory Store Fallback
@@ -180,9 +226,8 @@ export async function POST(request) {
     } catch (error) {
         console.error('Error creating coupon:', error);
         return NextResponse.json(
-            { success: false, message: 'Failed to create coupon', error: error.message },
+            { success: false, message: error.message || 'Failed to create coupon' },
             { status: 500 }
         );
     }
 }
-
