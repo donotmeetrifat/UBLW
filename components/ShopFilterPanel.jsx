@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
 export const filterOptions = {
-    categories: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools'],
+    categories: [],
     sortOptions: [
         { label: 'Featured (Default)', value: 'default' },
         { label: 'Newest Arrivals', value: 'newest' },
@@ -133,9 +133,15 @@ const ShopFilterPanel = ({
     const reduxCategories = useSelector(state => state.product?.categories)
 
     const [liveCategories, setLiveCategories] = useState(() => {
-        if (categories && categories.length > 0) return categories
-        if (reduxCategories && reduxCategories.length > 0) return reduxCategories
-        return filterOptions.categories
+        if (categories && categories.length > 0) return categories;
+        if (reduxCategories && reduxCategories.length > 0) return reduxCategories;
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]');
+                if (Array.isArray(cached) && cached.length > 0) return cached;
+            } catch {}
+        }
+        return [];
     })
 
     const fetchFreshCategories = () => {
@@ -165,7 +171,14 @@ const ShopFilterPanel = ({
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.addEventListener('category-catalog-updated', fetchFreshCategories)
-            return () => window.removeEventListener('category-catalog-updated', fetchFreshCategories)
+            const onStorage = (e) => {
+                if (e.key === 'ukbl_categories_synced') fetchFreshCategories()
+            }
+            window.addEventListener('storage', onStorage)
+            return () => {
+                window.removeEventListener('category-catalog-updated', fetchFreshCategories)
+                window.removeEventListener('storage', onStorage)
+            }
         }
     }, [])
 

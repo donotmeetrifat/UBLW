@@ -1,13 +1,14 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState, useCallback } from "react"
 import Loading from "@/components/Loading"
 import ProductCard from "@/components/ProductCard"
 import ShopFilterPanel, { filterOptions } from "@/components/ShopFilterPanel"
 import { ArrowLeftIcon, CloseIcon, FilterIcon, SparklesIcon } from "@/components/icons"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
+import { setCategories } from "@/lib/features/product/productSlice"
 
 const emptyFilters = {
     categories: [],
@@ -42,6 +43,7 @@ function ShopContent() {
     const search = searchParams.get('search') || ''
     const categoryParam = searchParams.get('category') || ''
     const router = useRouter()
+    const dispatch = useDispatch()
     const products = useSelector(state => state.product.list)
 
     const [filters, setFilters] = useState(() => ({
@@ -52,31 +54,84 @@ function ShopContent() {
     const [sortBy, setSortBy] = useState('default')
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
     const reduxCategories = useSelector(state => state.product?.categories)
-    const [shopCategories, setShopCategories] = useState(reduxCategories || [
-        'Skincare',
-        'Makeup',
-        'Haircare',
-        'Fragrance',
-        'Body Care',
-        'Beauty Tools'
-    ])
+
+    // Fast 0ms hydration from cache or Redux:
+    const [shopCategories, setShopCategories] = useState(() => {
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) return reduxCategories;
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]');
+                if (Array.isArray(cached) && cached.length > 0) return cached;
+            } catch {}
+        }
+        return [];
+    })
+
+    // Fetch and sync live categories from PostgreSQL database
+    const loadLiveCategories = useCallback(async () => {
+        try {
+            const res = await fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' });
+            const data = await res.json();
+            if (data.success && Array.isArray(data.categories)) {
+                const activeNames = data.categories
+                    .filter(c => c.isActive !== false)
+                    .map(c => c.name);
+                if (activeNames.length > 0) {
+                    setShopCategories(activeNames);
+                    dispatch(setCategories(activeNames));
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error syncing live categories on shop page:', e);
+        }
+    }, [dispatch]);
+
+    useEffect(() => {
+        loadLiveCategories();
+
+        const onCategoryUpdate = () => loadLiveCategories();
+        const onStorage = (e) => {
+            if (e.key === 'ukbl_categories_synced') loadLiveCategories();
+        };
+
+        window.addEventListener('category-catalog-updated', onCategoryUpdate);
+        window.addEventListener('storage', onStorage);
+
+        try {
+            const bc = new BroadcastChannel('ukbl_catalog_channel');
+            bc.onmessage = (msg) => {
+                if (msg.data?.type === 'category-updated') {
+                    loadLiveCategories();
+                }
+            };
+            return () => {
+                bc.close();
+                window.removeEventListener('category-catalog-updated', onCategoryUpdate);
+                window.removeEventListener('storage', onStorage);
+            };
+        } catch {
+            return () => {
+                window.removeEventListener('category-catalog-updated', onCategoryUpdate);
+                window.removeEventListener('storage', onStorage);
+            };
+        }
+    }, [loadLiveCategories]);
 
     useEffect(() => {
         if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
-            setShopCategories(reduxCategories)
-            return
+            setShopCategories(reduxCategories);
         }
+    }, [reduxCategories]);
 
-        fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-                    const activeNames = data.categories.filter(c => c.isActive !== false).map(c => c.name)
-                    if (activeNames.length > 0) setShopCategories(activeNames)
-                }
-            })
-            .catch(() => {})
-    }, [reduxCategories])
+    // Compute all available categories from active category catalog + live products
+    const displayCategories = useMemo(() => {
+        const productCategories = (products || []).map(p => p.category).filter(Boolean);
+        const combined = Array.from(new Set([...(shopCategories || []), ...productCategories]));
+        return combined;
+    }, [shopCategories, products]);
 
     // Sync URL ?category= param into filter state whenever it changes
     useEffect(() => {
@@ -195,7 +250,7 @@ function ShopContent() {
                         <ShopFilterPanel
                             filters={filters}
                             sortBy={sortBy}
-                            categories={shopCategories}
+                            categories={displayCategories}
                             onToggle={toggleFilter}
                             onPriceChange={updatePriceFilter}
                             onClear={clearFilters}
@@ -297,7 +352,7 @@ function ShopContent() {
                             <ShopFilterPanel
                                 filters={filters}
                                 sortBy={sortBy}
-                                categories={shopCategories}
+                                categories={displayCategories}
                                 onToggle={toggleFilter}
                                 onPriceChange={updatePriceFilter}
                                 onClear={clearFilters}

@@ -128,6 +128,11 @@ export default function AdminCategoriesPage() {
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('category-catalog-updated'))
                 localStorage.setItem('ukbl_categories_synced', Date.now().toString())
+                try {
+                    const bc = new BroadcastChannel('ukbl_catalog_channel')
+                    bc.postMessage({ type: 'category-updated', timestamp: Date.now() })
+                    bc.close()
+                } catch {}
             }
         } catch (error) {
             console.error('Error saving category:', error)
@@ -158,6 +163,11 @@ export default function AdminCategoriesPage() {
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('category-catalog-updated'))
                 localStorage.setItem('ukbl_categories_synced', Date.now().toString())
+                try {
+                    const bc = new BroadcastChannel('ukbl_catalog_channel')
+                    bc.postMessage({ type: 'category-updated', timestamp: Date.now() })
+                    bc.close()
+                } catch {}
             }
         } catch (error) {
             toast.error('Failed to delete category')

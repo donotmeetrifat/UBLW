@@ -28,11 +28,25 @@ export async function GET(request) {
                 ]
             });
 
-            // Map and count matching products
-            const formatted = await Promise.all(categories.map(async (c) => {
-                const productCount = await prisma.product.count({
-                    where: { category: c.name }
+            // High-performance single aggregation query for all category product counts (replaces N+1 slow queries)
+            let countMap = new Map();
+            try {
+                const productCounts = await prisma.product.groupBy({
+                    by: ['category'],
+                    _count: { id: true }
                 });
+                productCounts.forEach(item => {
+                    if (item.category) {
+                        countMap.set(item.category.toLowerCase().trim(), item._count.id);
+                    }
+                });
+            } catch (groupByErr) {
+                console.warn('Fast category groupBy fallback:', groupByErr.message);
+            }
+
+            const formatted = categories.map((c) => {
+                const catLower = (c.name || '').toLowerCase().trim();
+                const matchedCount = countMap.get(catLower) ?? c._count?.products ?? 0;
                 return {
                     id: c.id,
                     name: c.name,
@@ -41,11 +55,11 @@ export async function GET(request) {
                     image: c.image,
                     displayOrder: c.displayOrder,
                     isActive: c.isActive,
-                    count: productCount || c._count?.products || 0,
+                    count: matchedCount,
                     createdAt: c.createdAt,
                     updatedAt: c.updatedAt
                 };
-            }));
+            });
 
             return NextResponse.json(
                 { success: true, categories: formatted },

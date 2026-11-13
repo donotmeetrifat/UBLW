@@ -21,7 +21,16 @@ const CategoriesMarqueeContent = () => {
     const activeCategory = searchParams?.get('category') || '';
     const [isPaused, setIsPaused] = useState(false);
     const reduxCategories = useSelector(state => state.product?.categories);
-    const [categories, setCategories] = useState(reduxCategories || DEFAULT_CATEGORIES);
+    const [categories, setCategories] = useState(() => {
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) return reduxCategories;
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]');
+                if (Array.isArray(cached) && cached.length > 0) return cached;
+            } catch {}
+        }
+        return DEFAULT_CATEGORIES;
+    });
 
     const loadLiveCategories = () => {
         fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
@@ -31,24 +40,38 @@ const CategoriesMarqueeContent = () => {
                     const activeNames = data.categories
                         .filter(c => c.isActive !== false)
                         .map(c => c.name);
-                    if (activeNames.length > 0) setCategories(activeNames);
+                    if (activeNames.length > 0) {
+                        setCategories(activeNames);
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
+                        }
+                    }
                 }
             })
             .catch(() => {});
     };
 
     useEffect(() => {
+        loadLiveCategories();
+    }, []);
+
+    useEffect(() => {
         if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
             setCategories(reduxCategories);
-        } else {
-            loadLiveCategories();
         }
     }, [reduxCategories]);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.addEventListener('category-catalog-updated', loadLiveCategories);
-            return () => window.removeEventListener('category-catalog-updated', loadLiveCategories);
+            const onStorage = (e) => {
+                if (e.key === 'ukbl_categories_synced') loadLiveCategories();
+            };
+            window.addEventListener('storage', onStorage);
+            return () => {
+                window.removeEventListener('category-catalog-updated', loadLiveCategories);
+                window.removeEventListener('storage', onStorage);
+            };
         }
     }, []);
 

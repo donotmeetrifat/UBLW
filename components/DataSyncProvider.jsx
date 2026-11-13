@@ -36,9 +36,27 @@ export default function DataSyncProvider({ children }) {
         if (hasInitializedRef.current) return
         hasInitializedRef.current = true
 
-        // 1. INSTANT 0ms HYDRATION FROM LOCALSTORAGE (STRICTLY FOR AUTHENTICATED USERS)
+        // 1. INSTANT 0ms HYDRATION FROM LOCALSTORAGE
         if (typeof window !== 'undefined') {
             try {
+                // Hydrate Categories for 0ms instantaneous render
+                const storedCats = localStorage.getItem('ukbl_cached_categories')
+                if (storedCats) {
+                    const parsedCats = JSON.parse(storedCats)
+                    if (Array.isArray(parsedCats) && parsedCats.length > 0) {
+                        dispatch(setCategories(parsedCats))
+                    }
+                }
+
+                // Hydrate Products for 0ms instantaneous render
+                const storedProds = localStorage.getItem('ukbl_cached_products')
+                if (storedProds) {
+                    const parsedProds = JSON.parse(storedProds)
+                    if (Array.isArray(parsedProds) && parsedProds.length > 0) {
+                        dispatch(setProduct(parsedProds))
+                    }
+                }
+
                 const currentUser = localStorage.getItem('ukbl_current_user')
 
                 if (currentUser) {
@@ -82,6 +100,9 @@ export default function DataSyncProvider({ children }) {
                 const data = await res.json()
                 if (data.success && Array.isArray(data.products) && data.products.length > 0) {
                     dispatch(setProduct(data.products))
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
+                    }
                 }
             } catch (e) {
                 // Silent fallback: productDummyData remains active
@@ -106,6 +127,9 @@ export default function DataSyncProvider({ children }) {
                         .map(c => c.name)
                     if (activeNames.length > 0) {
                         dispatch(setCategories(activeNames))
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
+                        }
                     }
                 }
             } catch (e) {
@@ -129,6 +153,9 @@ export default function DataSyncProvider({ children }) {
                 bc.onmessage = (msg) => {
                     if (msg.data?.type === 'product-updated' && msg.data?.product) {
                         dispatch(setProduct([msg.data.product]))
+                    }
+                    if (msg.data?.type === 'category-updated') {
+                        syncCategoryCatalog()
                     }
                     syncProductCatalog()
                 }

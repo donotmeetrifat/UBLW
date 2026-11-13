@@ -8,16 +8,19 @@ export const revalidate = 0;
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
-            const [products, orders, usersWithCart] = await Promise.all([
+            const [products, ordersAgg, soldItemsByProduct, usersWithCart] = await Promise.all([
                 prisma.product.findMany({
-                    include: {
-                        orderItems: {
-                            include: {
-                                order: {
-                                    select: { id: true, status: true, createdAt: true }
-                                }
-                            }
-                        },
+                    select: {
+                        id: true,
+                        name: true,
+                        category: true,
+                        brand: true,
+                        price: true,
+                        mrp: true,
+                        images: true,
+                        stockCount: true,
+                        inStock: true,
+                        views: true,
                         ratings: { select: { rating: true } }
                     },
                     orderBy: [
@@ -25,18 +28,41 @@ export async function GET() {
                         { updatedAt: 'desc' }
                     ]
                 }),
-                prisma.order.findMany({
-                    where: { status: { not: 'CANCELLED' } },
-                    select: { id: true, total: true, createdAt: true, status: true }
+                // Total non-cancelled orders count & revenue directly aggregated
+                prisma.order.aggregate({
+                    _sum: { total: true },
+                    _count: { id: true },
+                    where: { status: { not: 'CANCELLED' } }
                 }),
+                // Fast grouped sales per product (replaces heavy nested joins)
+                prisma.orderItem.groupBy({
+                    by: ['productId'],
+                    _sum: { quantity: true, price: true },
+                    _count: { orderId: true },
+                    where: {
+                        order: { status: { not: 'CANCELLED' } }
+                    }
+                }).catch(() => []),
+                // Only select cart for non-empty carts
                 prisma.user.findMany({
-                    select: { cart: true }
-                })
+                    where: { NOT: { cart: {} } },
+                    select: { cart: true },
+                    take: 500
+                }).catch(() => [])
             ]);
+
+            // Map product sales
+            const soldMap = new Map();
+            (soldItemsByProduct || []).forEach(item => {
+                soldMap.set(item.productId, {
+                    unitsBought: item._sum?.quantity || 0,
+                    ordersCount: item._count?.orderId || 0,
+                });
+            });
 
             // Calculate active in-cart additions per product from real users
             const cartCounts = {};
-            usersWithCart.forEach(u => {
+            (usersWithCart || []).forEach(u => {
                 if (u.cart && typeof u.cart === 'object') {
                     Object.entries(u.cart).forEach(([prodId, qty]) => {
                         const count = typeof qty === 'number' ? qty : (qty?.quantity || 1);
@@ -49,12 +75,10 @@ export async function GET() {
 
             // Aggregate authentic metrics per product
             const rankedProducts = products.map((p) => {
-                const nonCancelledItems = (p.orderItems || []).filter(
-                    item => item.order && item.order.status !== 'CANCELLED'
-                );
-                const unitsBought = nonCancelledItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
-                const ordersCount = nonCancelledItems.length;
-                const revenue = nonCancelledItems.reduce((acc, item) => acc + ((item.price || p.price) * (item.quantity || 1)), 0);
+                const sales = soldMap.get(p.id) || { unitsBought: 0, ordersCount: 0 };
+                const unitsBought = sales.unitsBought;
+                const ordersCount = sales.ordersCount;
+                const revenue = unitsBought * (p.price || 0);
                 const inCart = cartCounts[p.id] || 0;
                 const views = Number(p.views || 0);
 

@@ -39,7 +39,7 @@ export async function GET(request) {
                 products = await prisma.product.findMany({
                     where,
                     orderBy,
-                    include: { ratings: true },
+                    include: { ratings: { select: { rating: true } } },
                 });
             } catch (queryErr) {
                 console.warn('Prisma findMany query note, using direct SQL fallback:', queryErr.message);

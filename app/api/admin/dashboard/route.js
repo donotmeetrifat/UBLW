@@ -8,9 +8,23 @@ export const revalidate = 0;
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
-            const [productsCount, orders, customersCount, totalViewsAgg, topProducts] = await Promise.all([
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            const [
+                productsCount,
+                recentOrders,
+                customersCount,
+                totalViewsAgg,
+                topProducts,
+                revenueAgg,
+                todayRevenueAgg,
+                statusCounts
+            ] = await Promise.all([
                 prisma.product.count(),
+                // Only fetch top 8 recent orders for display (massive performance boost)
                 prisma.order.findMany({
+                    take: 8,
                     select: {
                         id: true,
                         orderNumber: true,
@@ -54,21 +68,42 @@ export async function GET() {
                         stockCount: true, 
                         inStock: true 
                     }
+                }),
+                // Fast direct DB aggregation for all-time non-cancelled revenue & count
+                prisma.order.aggregate({
+                    _sum: { total: true },
+                    _count: { id: true },
+                    where: { status: { not: 'CANCELLED' } }
+                }),
+                // Fast direct DB aggregation for today's revenue & count
+                prisma.order.aggregate({
+                    _sum: { total: true },
+                    _count: { id: true },
+                    where: { status: { not: 'CANCELLED' }, createdAt: { gte: startOfToday } }
+                }),
+                // Fast group count by status
+                prisma.order.groupBy({
+                    by: ['status'],
+                    _count: { id: true }
                 })
             ]);
 
-            const nonCancelledOrders = orders.filter(o => o.status !== 'CANCELLED');
-            const revenue = nonCancelledOrders.reduce((acc, curr) => acc + (curr.total || 0), 0);
+            const totalOrdersCount = revenueAgg._count?.id || 0;
+            const revenue = revenueAgg._sum?.total || 0;
+            const todayOrdersCount = todayRevenueAgg._count?.id || 0;
+            const todayRevenue = todayRevenueAgg._sum?.total || 0;
 
-            // Compute today's real performance
-            const now = new Date();
-            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const todayOrders = nonCancelledOrders.filter(o => new Date(o.createdAt) >= startOfToday);
-            const todayRevenue = todayOrders.reduce((acc, curr) => acc + (curr.total || 0), 0);
-
-            // Real order status counts
-            const pendingOrders = orders.filter(o => ['ORDER_PLACED', 'CONFIRMED', 'PROCESSING'].includes(o.status)).length;
-            const deliveredOrders = orders.filter(o => o.status === 'DELIVERED').length;
+            // Status counts from single groupBy
+            let pendingOrders = 0;
+            let deliveredOrders = 0;
+            (statusCounts || []).forEach(sc => {
+                if (['ORDER_PLACED', 'CONFIRMED', 'PROCESSING'].includes(sc.status)) {
+                    pendingOrders += sc._count?.id || 0;
+                }
+                if (sc.status === 'DELIVERED') {
+                    deliveredOrders += sc._count?.id || 0;
+                }
+            });
 
             return NextResponse.json({
                 success: true,
@@ -76,10 +111,10 @@ export async function GET() {
                 dashboardData: {
                     products: productsCount,
                     revenue: revenue.toFixed(2),
-                    orders: orders.length,
+                    orders: totalOrdersCount,
                     customers: customersCount,
-                    totalViews: totalViewsAgg._sum.views || 0,
-                    todayOrders: todayOrders.length,
+                    totalViews: totalViewsAgg._sum?.views || 0,
+                    todayOrders: todayOrdersCount,
                     todayRevenue: todayRevenue.toFixed(2),
                     pendingOrders,
                     deliveredOrders,
@@ -87,7 +122,7 @@ export async function GET() {
                         ...p,
                         image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/product_img1.png'
                     })),
-                    recentOrders: orders.slice(0, 8).map(order => ({
+                    recentOrders: recentOrders.map(order => ({
                         ...order,
                         customerName: order.address?.fullName || order.user?.name || 'Valued Customer',
                         customerContact: order.address?.phoneNumber || order.user?.phone || order.user?.email || 'Direct Order'
