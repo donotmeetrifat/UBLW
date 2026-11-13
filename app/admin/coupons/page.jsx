@@ -139,24 +139,36 @@ export default function AdminCouponsPage() {
 
     const handleToggleActive = async (coupon) => {
         const nextState = !coupon.isActive
+        // Optimistic UI state update
+        setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, isActive: nextState } : c))
+
         try {
             const res = await fetch(`/api/admin/coupons/${coupon.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isActive: nextState })
+                body: JSON.stringify({ id: coupon.id, isActive: nextState })
             })
             const data = await res.json()
             if (data.success) {
-                setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, isActive: nextState } : c))
                 toast.success(`Coupon ${coupon.code} marked ${nextState ? 'Active' : 'Inactive'}`)
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_coupons_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
+                    try {
+                        const channel = new BroadcastChannel('ukbl_catalog_channel')
+                        channel.postMessage({ type: 'COUPON_UPDATED', id: coupon.id, isActive: nextState })
+                        channel.close()
+                    } catch (e) {
+                        // ignore BroadcastChannel errors
+                    }
                 }
             } else {
+                // Revert optimistic update on error
+                setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, isActive: !nextState } : c))
                 toast.error(data.message || 'Failed to update coupon status')
             }
         } catch (error) {
+            setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, isActive: !nextState } : c))
             toast.error('Error connecting to server')
         }
     }
@@ -278,7 +290,7 @@ export default function AdminCouponsPage() {
                 res = await fetch(`/api/admin/coupons/${editingCoupon.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ ...payload, id: editingCoupon.id })
                 })
             } else {
                 res = await fetch('/api/admin/coupons', {
@@ -296,6 +308,13 @@ export default function AdminCouponsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_coupons_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
+                    try {
+                        const channel = new BroadcastChannel('ukbl_catalog_channel')
+                        channel.postMessage({ type: 'COUPON_UPDATED', id: editingCoupon ? editingCoupon.id : data.coupon?.id })
+                        channel.close()
+                    } catch (e) {
+                        // ignore
+                    }
                 }
             } else {
                 toast.error(data.message || data.error || 'Failed to save coupon')
@@ -916,12 +935,9 @@ export default function AdminCouponsPage() {
                                             </div>
 
                                             {formData.isLifetime ? (
-                                                <div className="p-3 rounded-xl bg-white border border-[#EFE0EF] flex items-center gap-2.5 text-xs text-slate-700 shadow-2xs">
-                                                    <div className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0">
-                                                        <SparklesIcon size={14} color="#6C306E" />
-                                                    </div>
-                                                    <p className="text-[11px] leading-relaxed">
-                                                        <strong>✨ Lifetime Voucher Active:</strong> This coupon will run indefinitely on the storefront until you manually pause it.
+                                                <div className="p-3.5 rounded-xl bg-white border border-[#EFE0EF] text-xs text-slate-700 shadow-2xs">
+                                                    <p className="text-xs leading-relaxed text-slate-700">
+                                                        <strong className="text-[#6C306E] font-bold">Lifetime Voucher Active:</strong> This coupon will run indefinitely on the storefront until you manually pause it.
                                                     </p>
                                                 </div>
                                             ) : (
@@ -1143,13 +1159,6 @@ export default function AdminCouponsPage() {
                                                             UK Brand Lover
                                                         </span>
                                                     </div>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                                        formData.isActive
-                                                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
-                                                            : 'bg-white/10 text-white/60 border-white/20'
-                                                    }`}>
-                                                        {formData.isActive ? '● Live on Store' : '○ Disabled'}
-                                                    </span>
                                                 </div>
 
                                                 {/* Big Discount Value */}

@@ -148,18 +148,28 @@ export default function LuxuryDatePicker({
     const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7 // Monday = 0
     const totalDays = new Date(year, month + 1, 0).getDate()
 
+    const formatTimeDisplay = (date) => {
+        if (!date) return ''
+        let hours = date.getHours()
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        const period = hours >= 12 ? 'PM' : 'AM'
+        hours = hours % 12
+        hours = hours ? hours : 12
+        return `${hours}:${minutes} ${period}`
+    }
+
     const formattedDisplay = selectedDate ? (
-        <span className="flex items-center gap-1.5 font-bold text-[#241224] text-xs">
+        <span className="flex items-center gap-1 font-bold text-[#241224] text-xs whitespace-nowrap">
             <span>
                 {selectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
-            <span className="text-[#6C306E] font-medium">•</span>
-            <span className="text-[#6C306E]">
-                {selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+            <span className="text-[#6C306E]/70 font-semibold">•</span>
+            <span className="text-[#6C306E] font-bold">
+                {formatTimeDisplay(selectedDate)}
             </span>
         </span>
     ) : (
-        <span className="text-slate-400 text-xs font-medium">{placeholder}</span>
+        <span className="text-slate-400 text-xs font-medium truncate block">{placeholder}</span>
     )
 
     return (
@@ -177,29 +187,29 @@ export default function LuxuryDatePicker({
                     onClick={() => setIsOpen(!isOpen)}
                     className={`w-full flex items-center justify-between bg-white border ${
                         isOpen ? 'border-[#6C306E] ring-2 ring-[#6C306E]/15' : 'border-[#EFE0EF]'
-                    } hover:border-[#6C306E] rounded-xl px-3.5 py-2 text-left transition cursor-pointer shadow-2xs group`}
+                    } hover:border-[#6C306E] rounded-xl px-2.5 sm:px-3 py-2 text-left transition cursor-pointer shadow-2xs group`}
                 >
-                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <div className="text-[#6C306E] shrink-0">
                             <CalendarIcon size={14} color="#6C306E" />
                         </div>
-                        <div className="truncate">
+                        <div className="min-w-0 overflow-visible">
                             {formattedDisplay}
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0 ml-1">
                         {selectedDate && !required && (
                             <span
                                 role="button"
                                 tabIndex={0}
                                 onClick={handleClear}
-                                className="text-slate-400 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition text-xs font-bold"
+                                className="text-slate-400 hover:text-rose-600 size-4 flex items-center justify-center rounded-full hover:bg-rose-50 transition text-xs font-bold leading-none cursor-pointer"
                                 title="Clear date"
                             >
                                 ×
                             </span>
                         )}
-                        <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-md border border-[#EFE0EF] group-hover:bg-[#6C306E] group-hover:text-white transition">
+                        <span className="text-[9.5px] font-bold text-[#6C306E] bg-[#FAF6FA] px-1.5 py-0.5 rounded border border-[#EFE0EF] group-hover:bg-[#6C306E] group-hover:text-white transition">
                             {isOpen ? 'Close' : 'Choose'}
                         </span>
                     </div>
