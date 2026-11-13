@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTitle from '@/components/PageTitle';
 import RatingModal from '@/components/RatingModal';
+import Loading from '@/components/Loading';
 import { 
     ReviewBadgeIcon, 
     StarIcon, 
@@ -236,10 +237,7 @@ export default function ReviewsPage() {
 
                 {/* Content Area */}
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <div className="size-8 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin mb-3" />
-                        <p className="text-xs">Loading authentic reviews & purchased products...</p>
-                    </div>
+                    <Loading message="Loading authentic reviews & purchased products..." />
                 ) : activeTab === 'to-review' ? (
                     // 1. TO REVIEW TAB
                     filteredToReview.length > 0 ? (

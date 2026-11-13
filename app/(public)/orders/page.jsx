@@ -3,6 +3,7 @@
 import PageTitle from "@/components/PageTitle"
 import { useEffect, useState } from "react";
 import OrderItem from "@/components/OrderItem";
+import Loading from "@/components/Loading";
 import { orderDummyData } from "@/assets/assets";
 import { BagIcon, SearchIcon, SparklesIcon, TruckIcon, LockIcon } from "@/components/icons";
 import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
@@ -127,10 +128,7 @@ export default function Orders() {
                 </div>
 
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <div className="size-8 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin mb-3" />
-                        <p className="text-xs">Connecting to UK Brand Lover tracking network...</p>
-                    </div>
+                    <Loading message="Connecting to UK Brand Lover tracking network..." />
                 ) : filteredOrders.length > 0 ? (
                     <div className="space-y-6">
                         {filteredOrders.map((order) => (

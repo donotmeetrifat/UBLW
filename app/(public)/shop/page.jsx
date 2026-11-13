@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useMemo, useState } from "react"
+import Loading from "@/components/Loading"
 import ProductCard from "@/components/ProductCard"
 import ShopFilterPanel, { filterOptions } from "@/components/ShopFilterPanel"
 import { ArrowLeftIcon, CloseIcon, FilterIcon, SparklesIcon } from "@/components/icons"
@@ -314,7 +315,7 @@ function ShopContent() {
 
 export default function Shop() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#6C306E] font-medium text-sm">Loading beauty catalog...</div>}>
+        <Suspense fallback={<Loading message="Curating authentic UK beauty catalog..." />}>
             <ShopContent />
         </Suspense>
     )

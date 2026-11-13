@@ -3,6 +3,7 @@
 import ProductDescription from "@/components/ProductDescription";
 import ProductDetails from "@/components/ProductDetails";
 import ProductCard from "@/components/ProductCard";
+import Loading from "@/components/Loading";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -98,12 +99,7 @@ export default function Product() {
         .slice(0, 4);
 
     if (loading) {
-        return (
-            <div className="min-h-[70vh] flex flex-col items-center justify-center text-slate-400">
-                <div className="size-8 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin mb-3" />
-                <p className="text-xs">Loading authentic UK product details...</p>
-            </div>
-        );
+        return <Loading message="Loading authentic UK product details..." />;
     }
 
     if (!product) {
