@@ -1,10 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { assets } from '@/assets/assets'
 import { CloseIcon, DownloadIcon } from '@/components/icons'
 import ThankYouSignature from '@/components/ThankYouSignature'
+import { webLogoBase64 } from '@/assets/webLogoBase64'
 import { isInsideDhaka } from '@/lib/settings'
 import toast from 'react-hot-toast'
 
@@ -72,7 +71,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         return 'Cash on Delivery'
     })()
 
-    // 100% Reliable Client-Side A4 PDF Download - Strictly Single Page Guarantee
+    // 100% Reliable Client-Side A4 PDF Download - Strictly Single Page Full-Screen Guarantee
     const handleDownloadInvoice = async () => {
         try {
             setIsDownloading(true)
@@ -86,11 +85,27 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             const { jsPDF } = await import('jspdf')
 
             const canvas = await html2canvas(element, {
-                scale: 2.5, // Crisp 300 DPI vector clarity
+                scale: 2, // Crisp 200+ DPI vector clarity, fast and lightweight
                 useCORS: true,
-                allowTaint: true,
+                allowTaint: false,
                 logging: false,
                 backgroundColor: '#ffffff',
+                windowWidth: 794,
+                onclone: (clonedDoc) => {
+                    const clonedEl = clonedDoc.getElementById('printable-invoice-content')
+                    if (clonedEl) {
+                        clonedEl.style.width = '794px'
+                        clonedEl.style.minHeight = '1123px'
+                        clonedEl.style.maxWidth = '794px'
+                        clonedEl.style.padding = '48px 56px 40px 56px'
+                        clonedEl.style.boxSizing = 'border-box'
+                        clonedEl.style.border = 'none'
+                        clonedEl.style.borderRadius = '0'
+                        clonedEl.style.boxShadow = 'none'
+                        clonedEl.style.margin = '0 auto'
+                        clonedEl.style.background = '#ffffff'
+                    }
+                }
             })
 
             const imgData = canvas.toDataURL('image/png')
@@ -101,28 +116,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 compress: true
             })
 
-            const pageWidth = 210
-            const pageHeight = 297
-            const marginX = 8
-            const marginY = 10
-            const usableWidth = pageWidth - (marginX * 2)
-            const usableHeight = pageHeight - (marginY * 2)
+            // Cover full A4 page edge-to-edge (0,0 to 210,297) without outer border or frame
+            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST')
 
-            let renderWidth = usableWidth
-            let renderHeight = (canvas.height * usableWidth) / canvas.width
-
-            // Scale to fit strictly within single page height
-            if (renderHeight > usableHeight) {
-                renderHeight = usableHeight
-                renderWidth = (canvas.width * usableHeight) / canvas.height
-            }
-
-            const posX = marginX + ((usableWidth - renderWidth) / 2)
-            const posY = marginY + ((usableHeight - renderHeight) / 2)
-
-            pdf.addImage(imgData, 'PNG', posX, posY, renderWidth, renderHeight, undefined, 'FAST')
-
-            // HARD ENFORCE: strictly 1 single page (delete any extra page if created)
+            // HARD ENFORCE: strictly 1 single page (strip any accidental trailing page)
             while (pdf.internal.getNumberOfPages() > 1) {
                 pdf.deletePage(pdf.internal.getNumberOfPages())
             }
@@ -143,8 +140,6 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto transition-all duration-300"
         >
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
                 .clean-invoice-font {
                     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
@@ -159,26 +154,39 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         margin: 0 !important;
                         padding: 0 !important;
                         background: #ffffff !important;
-                        width: 100% !important;
-                        height: 100% !important;
+                        width: 210mm !important;
+                        height: 297mm !important;
+                        max-height: 297mm !important;
+                        overflow: hidden !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     body * {
                         visibility: hidden !important;
                     }
-                    #printable-invoice-content, #printable-invoice-content * {
+                    #printable-invoice-content,
+                    #printable-invoice-content * {
                         visibility: visible !important;
                     }
                     #printable-invoice-content {
-                        position: absolute !important;
+                        position: fixed !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 100% !important;
+                        width: 210mm !important;
+                        height: 297mm !important;
+                        max-height: 297mm !important;
+                        box-sizing: border-box !important;
                         margin: 0 !important;
-                        padding: 14mm 16mm !important;
+                        padding: 16mm 18mm 12mm 18mm !important;
                         border: none !important;
                         border-radius: 0 !important;
                         box-shadow: none !important;
                         background: #ffffff !important;
+                        page-break-after: avoid !important;
+                        page-break-inside: avoid !important;
+                        break-after: avoid !important;
+                        break-inside: avoid !important;
+                        overflow: hidden !important;
                     }
                     .print-hidden-bar {
                         display: none !important;
@@ -187,7 +195,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             `}</style>
 
             {/* Modal Container: borderless professional document viewport */}
-            <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-6">
+            <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-6 border-0">
                 
                 {/* Screen Action Bar (Clean Header: Invoice # on Left, Download & Close on Right) */}
                 <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
@@ -229,18 +237,16 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 <div 
                     id="printable-invoice-content" 
                     className="clean-invoice-font bg-white text-neutral-900 w-full"
-                    style={{ border: 'none', boxShadow: 'none' }}
+                    style={{ border: 'none', boxShadow: 'none', borderRadius: '0' }}
                 >
                     {/* 1. Header Centered Logo & Subtitle */}
                     <div className="text-center pt-1 pb-8">
                         <div className="flex flex-col items-center justify-center">
-                            <Image
-                                src={assets.webLogo}
+                            {/* Embedded high-resolution vector-grade logo without network/CORS overhead */}
+                            <img
+                                src={webLogoBase64}
                                 alt="UK Brand Lover Logo"
-                                width={180}
-                                height={50}
-                                className="h-10 sm:h-11 w-auto object-contain mx-auto"
-                                priority
+                                className="h-10 sm:h-12 w-auto object-contain mx-auto"
                             />
                             <p className="text-[10px] text-neutral-400 font-semibold tracking-widest uppercase mt-2">
                                 100% ORIGINAL UK IMPORTED PRODUCTS
