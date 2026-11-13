@@ -76,3 +76,4 @@ export async function PUT(request) {
 export async function POST(request) {
     return PUT(request);
 }
+

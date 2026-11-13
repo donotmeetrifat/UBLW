@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
-import { setProduct, setCategories, setHomepageSections } from '@/lib/features/product/productSlice'
+import { setProduct, setCategories, setHomepageSections, setBanners } from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
 
 export default function DataSyncProvider({ children }) {
@@ -55,6 +55,17 @@ export default function DataSyncProvider({ children }) {
                         const parsedSec = JSON.parse(storedSections)
                         if (parsedSec && typeof parsedSec === 'object') {
                             dispatch(setHomepageSections(parsedSec))
+                        }
+                    } catch (e) {}
+                }
+
+                // Hydrate Hero Banners for 0ms instantaneous render
+                const storedBanners = localStorage.getItem('ukbl_cached_hero_banners')
+                if (storedBanners) {
+                    try {
+                        const parsedBanners = JSON.parse(storedBanners)
+                        if (Array.isArray(parsedBanners) && parsedBanners.length > 0) {
+                            dispatch(setBanners(parsedBanners))
                         }
                     } catch (e) {}
                 }
@@ -172,14 +183,39 @@ export default function DataSyncProvider({ children }) {
         }
         syncHomepageSections()
 
+        // 2d. FETCH LIVE HERO BANNERS
+        const syncHeroBanners = async () => {
+            try {
+                const res = await fetch(`/api/banners?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                const data = await res.json()
+                if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+                    dispatch(setBanners(data.banners))
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
+                    }
+                }
+            } catch (e) {
+                // Silent fallback
+            }
+        }
+        syncHeroBanners()
+
         if (typeof window !== 'undefined') {
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
             window.addEventListener('homepage-sections-updated', syncHomepageSections)
+            window.addEventListener('hero-banners-updated', syncHeroBanners)
             window.addEventListener('storage', (e) => {
                 if (e.key === 'ukbl_categories_synced') syncCategoryCatalog()
                 if (e.key === 'ukbl_products_synced') syncProductCatalog()
                 if (e.key === 'ukbl_sections_synced') syncHomepageSections()
+                if (e.key === 'ukbl_banners_synced') syncHeroBanners()
                 if (e.key === 'ukbl_coupons_synced') {
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
                 }
@@ -187,6 +223,12 @@ export default function DataSyncProvider({ children }) {
             try {
                 const bc = new BroadcastChannel('ukbl_catalog_channel')
                 bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'hero-banners-updated' && Array.isArray(msg.data?.banners)) {
+                        dispatch(setBanners(msg.data.banners))
+                        try {
+                            localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(msg.data.banners))
+                        } catch {}
+                    }
                     if (msg.data?.type === 'homepage-sections-updated' && msg.data?.sections) {
                         dispatch(setHomepageSections(msg.data.sections))
                         try {
