@@ -22,7 +22,11 @@ import {
     StarIcon,
     ShieldCheckIcon,
     TruckIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    CameraIcon,
+    LockIcon,
+    TagIcon,
+    ReviewBadgeIcon
 } from "@/components/icons"
 import AdminDropdown from "@/components/admin/AdminDropdown"
 
@@ -92,21 +96,23 @@ export default function AdminProductsPage() {
     const [isUploadingImages, setIsUploadingImages] = useState(false)
     const [activePreviewImage, setActivePreviewImage] = useState(0)
     const [draggedImageIndex, setDraggedImageIndex] = useState(null)
+    const [modalViewMode, setModalViewMode] = useState('split') // 'split' | 'form' | 'preview'
+    const [previewTab, setPreviewTab] = useState('details') // 'details' | 'reviews'
 
     // Form data state
     const [formData, setFormData] = useState({
         name: '',
         category: 'Skincare',
-        brand: 'The Ordinary',
+        brand: 'UK Import',
         price: '',
         mrp: '',
         stockCount: 50,
         inStock: true,
-        images: ['/product_img1.png'],
+        images: [],
         formulaProfile: '',
-        benefits: [...DEFAULT_BENEFITS],
+        benefits: [''],
         whyYouWillLoveIt: '',
-        sizeVolume: '30ml'
+        sizeVolume: 'Standard'
     })
 
     const [dbCategories, setDbCategories] = useState([
@@ -179,21 +185,23 @@ export default function AdminProductsPage() {
             mrp: '',
             stockCount: 50,
             inStock: true,
-            images: ['/product_img1.png'],
+            images: [],
             formulaProfile: '',
             benefits: [''],
             whyYouWillLoveIt: '',
             sizeVolume: 'Standard'
         })
         setActivePreviewImage(0)
+        setModalViewMode('split')
+        setPreviewTab('details')
         setIsEditorOpen(true)
     }
 
     const handleOpenEdit = (prod) => {
         setEditingProduct(prod)
         const initialImages = Array.isArray(prod.images) && prod.images.length > 0
-            ? prod.images
-            : ['/product_img1.png']
+            ? prod.images.filter(img => typeof img === 'string' && img.trim() && !img.startsWith('/product_img'))
+            : []
 
         let initialBenefits = []
         if (Array.isArray(prod.benefits) && prod.benefits.length > 0) {
@@ -226,6 +234,8 @@ export default function AdminProductsPage() {
             sizeVolume: prod.sizeVolume || 'Standard'
         })
         setActivePreviewImage(0)
+        setModalViewMode('split')
+        setPreviewTab('details')
         setIsEditorOpen(true)
     }
 
@@ -250,16 +260,16 @@ export default function AdminProductsPage() {
             const data = await res.json()
 
             if (data.success && Array.isArray(data.urls) && data.urls.length > 0) {
-                // If existing images had only dummy placeholder, replace it; otherwise append
                 setFormData(prev => {
-                    const filteredPrev = prev.images.filter(img => !img.startsWith('/product_img'))
+                    const filteredPrev = (prev.images || []).filter(img => typeof img === 'string' && img.trim() && !img.startsWith('/product_img'))
                     const updated = [...filteredPrev, ...data.urls]
                     return {
                         ...prev,
-                        images: updated.length > 0 ? updated : data.urls
+                        images: updated
                     }
                 })
-                toast.success(`${data.urls.length} image(s) uploaded in full high resolution!`, { id: uploadToast })
+                setActivePreviewImage(0)
+                toast.success(`${data.urls.length} photo(s) uploaded successfully!`, { id: uploadToast })
             } else {
                 toast.error(data.message || 'Image upload failed', { id: uploadToast })
             }
@@ -285,10 +295,6 @@ export default function AdminProductsPage() {
     }
 
     const removeImage = (indexToRemove) => {
-        if (formData.images.length <= 1) {
-            toast.error('At least one product image is required')
-            return
-        }
         setFormData(prev => ({
             ...prev,
             images: prev.images.filter((_, idx) => idx !== indexToRemove)
@@ -296,6 +302,7 @@ export default function AdminProductsPage() {
         if (activePreviewImage >= indexToRemove) {
             setActivePreviewImage(Math.max(0, activePreviewImage - 1))
         }
+        toast.success('Photo removed')
     }
 
     const setAsCover = (index) => {
@@ -850,30 +857,102 @@ export default function AdminProductsPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
                     <div className="relative w-full max-w-7xl bg-white border border-[#EFE0EF] rounded-3xl shadow-2xl overflow-hidden my-4 max-h-[94vh] flex flex-col">
                         {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-[#EFE0EF] flex items-center justify-between bg-[#FAF6FA]/80 shrink-0">
-                            <div>
-                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6C306E]">
+                        <div className="px-5 sm:px-6 py-3.5 border-b border-[#EFE0EF] flex items-center justify-between bg-[#FAF6FA]/90 shrink-0 gap-3">
+                            <div className="min-w-0">
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6C306E] block">
                                     {editingProduct ? 'Update UK Product' : 'Catalog Listing Studio'}
                                 </span>
-                                <h2 className="text-base sm:text-lg font-black text-[#241224] flex items-center gap-2">
+                                <h2 className="text-sm sm:text-base font-black text-[#241224] truncate flex items-center gap-2">
                                     <span>{editingProduct ? `Edit: ${editingProduct.name}` : 'Add New Authentic UK Product'}</span>
                                 </h2>
                             </div>
 
+                            {/* View Switcher Controls */}
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="hidden sm:flex items-center gap-1 bg-white border border-[#EFE0EF] p-1 rounded-2xl shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalViewMode('split')}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                            modalViewMode === 'split'
+                                                ? 'bg-[#6C306E] text-white shadow-xs'
+                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                        }`}
+                                        title="Split Screen: Form and Customer Preview side-by-side"
+                                    >
+                                        Split View
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalViewMode('form')}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                            modalViewMode === 'form'
+                                                ? 'bg-[#6C306E] text-white shadow-xs'
+                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                        }`}
+                                        title="Form Editor Only"
+                                    >
+                                        Form Only
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalViewMode('preview')}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                            modalViewMode === 'preview'
+                                                ? 'bg-[#6C306E] text-white shadow-xs'
+                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                        }`}
+                                        title="Full-Width Live Customer Preview"
+                                    >
+                                        <EyeIcon size={13} />
+                                        <span>Live Preview</span>
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditorOpen(false)}
+                                    className="p-2 rounded-full text-slate-400 hover:text-[#241224] hover:bg-white transition cursor-pointer"
+                                    aria-label="Close editor"
+                                >
+                                    <CloseIcon size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile View Toggle */}
+                        <div className="sm:hidden flex items-center border-b border-[#EFE0EF] bg-[#FAF6FA] px-3 py-1.5 shrink-0 gap-2">
                             <button
                                 type="button"
-                                onClick={() => setIsEditorOpen(false)}
-                                className="p-2 rounded-full text-slate-400 hover:text-[#241224] hover:bg-white transition cursor-pointer"
-                                aria-label="Close editor"
+                                onClick={() => setModalViewMode('form')}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer ${
+                                    modalViewMode !== 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
+                                }`}
                             >
-                                <CloseIcon size={16} />
+                                1. Form Editor
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setModalViewMode('preview')}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+                                    modalViewMode === 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
+                                }`}
+                            >
+                                <EyeIcon size={12} />
+                                <span>2. Live Preview</span>
                             </button>
                         </div>
 
                         {/* Modal Body: Split Screen (Left: Form Inputs | Right: Exact Live Website Preview) */}
                         <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#EFE0EF]">
-                            {/* LEFT COLUMN: FORM CONTROLS (7 Cols on desktop) */}
-                            <form onSubmit={handleSaveProduct} id="productForm" className="lg:col-span-6 p-5 sm:p-6 space-y-6">
+                            {/* LEFT COLUMN: FORM CONTROLS */}
+                            <form
+                                onSubmit={handleSaveProduct}
+                                id="productForm"
+                                className={`${
+                                    modalViewMode === 'preview' ? 'hidden' : modalViewMode === 'form' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
+                                } p-5 sm:p-6 space-y-6`}
+                            >
                                 {/* SECTION 1: CORE INFORMATION */}
                                 <div className="space-y-4">
                                     <div className="text-xs font-black text-[#241224] uppercase tracking-wider border-b border-[#EFE0EF] pb-2 flex items-center gap-1.5">
@@ -1018,96 +1097,116 @@ export default function AdminProductsPage() {
 
                                     {/* Draggable Photos List with Serial Number */}
                                     <div className="space-y-2">
-                                        <p className="text-[11px] text-slate-500 font-medium">
-                                            Uploaded Photos ({formData.images.length}): Drag photos to change display order or use buttons.
-                                        </p>
+                                        <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                            <span>Uploaded Photos ({formData.images.length})</span>
+                                            {formData.images.length > 0 && (
+                                                <span className="text-[10px] text-[#6C306E] font-bold">
+                                                    Drag to reorder • #1 is cover photo
+                                                </span>
+                                            )}
+                                        </div>
 
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                                            {formData.images.map((imgUrl, idx) => {
-                                                const isCover = idx === 0
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(e, idx)}
-                                                        onDragOver={(e) => handleDragOver(e, idx)}
-                                                        onDrop={(e) => handleDrop(e, idx)}
-                                                        className={`relative rounded-2xl border bg-white p-2 flex flex-col justify-between group transition-all cursor-grab active:cursor-grabbing ${
-                                                            isCover
-                                                                ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
-                                                                : 'border-[#EFE0EF] hover:border-slate-300'
-                                                        }`}
-                                                    >
-                                                        {/* Serial Number Badge */}
-                                                        <div className="flex items-center justify-between mb-1.5">
-                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                        {formData.images.length > 0 ? (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                                {formData.images.map((imgUrl, idx) => {
+                                                    const isCover = idx === 0
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, idx)}
+                                                            onDragOver={(e) => handleDragOver(e, idx)}
+                                                            onDrop={(e) => handleDrop(e, idx)}
+                                                            className={`relative rounded-2xl border bg-white p-2 flex flex-col justify-between group transition-all cursor-grab active:cursor-grabbing ${
                                                                 isCover
-                                                                    ? 'bg-[#6C306E] text-white'
-                                                                    : 'bg-slate-100 text-slate-600'
-                                                            }`}>
-                                                                {isCover ? '★ #1 Cover' : `#${idx + 1}`}
-                                                            </span>
+                                                                    ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
+                                                                    : 'border-[#EFE0EF] hover:border-slate-300'
+                                                            }`}
+                                                        >
+                                                            {/* Serial Number Badge */}
+                                                            <div className="flex items-center justify-between mb-1.5">
+                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                                                    isCover
+                                                                        ? 'bg-[#6C306E] text-white'
+                                                                        : 'bg-slate-100 text-slate-600'
+                                                                }`}>
+                                                                    {isCover ? '★ #1 Cover' : `#${idx + 1}`}
+                                                                </span>
 
-                                                            <div className="text-slate-300 group-hover:text-slate-600 transition">
-                                                                <GripVerticalIcon size={12} />
+                                                                <div className="text-slate-300 group-hover:text-slate-600 transition">
+                                                                    <GripVerticalIcon size={12} />
+                                                                </div>
                                                             </div>
-                                                        </div>
 
-                                                        {/* Thumbnail Preview (1:1 Ratio Full-Filled) */}
-                                                        <div className="aspect-square rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] overflow-hidden mb-2">
-                                                            <img
-                                                                src={imgUrl}
-                                                                alt={`Product image ${idx + 1}`}
-                                                                className="size-full object-cover"
-                                                            />
-                                                        </div>
+                                                            {/* Thumbnail Preview (1:1 Ratio Full-Filled) */}
+                                                            <div className="aspect-square rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] overflow-hidden mb-2 relative">
+                                                                <img
+                                                                    src={imgUrl}
+                                                                    alt={formData.name ? `${formData.name} Photo ${idx + 1}` : `Product Photo ${idx + 1}`}
+                                                                    className="size-full object-cover"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            </div>
 
-                                                        {/* Ordering Control Buttons */}
-                                                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#EFE0EF]">
-                                                            <div className="flex items-center gap-1">
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={idx === 0}
-                                                                    onClick={() => moveImage(idx, idx - 1)}
-                                                                    className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold disabled:opacity-30"
-                                                                    title="Move Left"
-                                                                >
-                                                                    ←
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={idx === formData.images.length - 1}
-                                                                    onClick={() => moveImage(idx, idx + 1)}
-                                                                    className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold disabled:opacity-30"
-                                                                    title="Move Right"
-                                                                >
-                                                                    →
-                                                                </button>
-                                                                {!isCover && (
+                                                            {/* Ordering Control Buttons */}
+                                                            <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#EFE0EF]">
+                                                                <div className="flex items-center gap-1">
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setAsCover(idx)}
-                                                                        className="px-1.5 py-0.5 rounded bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white text-[#6C306E] text-[10px] font-bold border border-[#EFE0EF]"
-                                                                        title="Make Cover Image"
+                                                                        disabled={idx === 0}
+                                                                        onClick={() => moveImage(idx, idx - 1)}
+                                                                        className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold disabled:opacity-30 cursor-pointer"
+                                                                        title="Move Left"
                                                                     >
-                                                                        Cover
+                                                                        ←
                                                                     </button>
-                                                                )}
-                                                            </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={idx === formData.images.length - 1}
+                                                                        onClick={() => moveImage(idx, idx + 1)}
+                                                                        className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold disabled:opacity-30 cursor-pointer"
+                                                                        title="Move Right"
+                                                                    >
+                                                                        →
+                                                                    </button>
+                                                                    {!isCover && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setAsCover(idx)}
+                                                                            className="px-1.5 py-0.5 rounded bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white text-[#6C306E] text-[10px] font-bold border border-[#EFE0EF] cursor-pointer transition"
+                                                                            title="Make Cover Photo"
+                                                                        >
+                                                                            Cover
+                                                                        </button>
+                                                                    )}
+                                                                </div>
 
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeImage(idx)}
-                                                                className="p-1 rounded text-rose-500 hover:bg-rose-50 transition"
-                                                                title="Delete Image"
-                                                            >
-                                                                <TrashIcon size={12} color="#DC2626" />
-                                                            </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeImage(idx)}
+                                                                    className="p-1 rounded text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                                                                    title="Delete Photo"
+                                                                >
+                                                                    <TrashIcon size={12} color="#DC2626" />
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 rounded-2xl border border-dashed border-[#EFE0EF] bg-[#FAF6FA]/60 text-center flex flex-col items-center justify-center">
+                                                <div className="size-8 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mb-1.5 shadow-2xs">
+                                                    <CameraIcon size={14} color="#6C306E" />
+                                                </div>
+                                                <p className="text-xs font-bold text-[#241224]">No Photos Uploaded Yet</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                                                    Upload high-resolution images above. The first photo will automatically become your product's main cover photo.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -1185,17 +1284,44 @@ export default function AdminProductsPage() {
                                 </div>
                             </form>
 
-                            {/* RIGHT COLUMN: 1:1 LIVE WEBSITE PREVIEW (Matches Screenshot 2 Exactly) */}
-                            <div className="lg:col-span-6 bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto">
-                                <div className="sticky top-0 z-10 flex items-center justify-between pb-3 mb-4 border-b border-[#EFE0EF] bg-white/80 backdrop-blur-xs p-2 rounded-xl shadow-2xs">
+                            {/* RIGHT COLUMN: 1:1 LIVE WEBSITE PREVIEW (Matches Storefront Details Page) */}
+                            <div className={`${
+                                modalViewMode === 'form' ? 'hidden' : modalViewMode === 'preview' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
+                            } bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto`}>
+                                <div className="sticky top-0 z-10 flex items-center justify-between pb-3 mb-4 border-b border-[#EFE0EF] bg-white/90 backdrop-blur-xs p-2.5 rounded-2xl shadow-2xs">
                                     <div className="flex items-center gap-2">
+                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <span className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-wider">
                                             Live Website Preview
                                         </span>
+                                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                            Real-Time 1:1 Sync
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] text-slate-400">
-                                        Exact Customer View
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-slate-400 hidden sm:inline">
+                                            Exact Customer View
+                                        </span>
+                                        {modalViewMode !== 'preview' ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setModalViewMode('preview')}
+                                                className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-2.5 py-1 rounded-xl border border-[#EFE0EF] transition cursor-pointer"
+                                                title="Expand preview to full width"
+                                            >
+                                                Expand Fullscreen
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setModalViewMode('split')}
+                                                className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-2.5 py-1 rounded-xl border border-[#EFE0EF] transition cursor-pointer"
+                                                title="Return to side-by-side split screen"
+                                            >
+                                                Return to Split View
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Preview Card Frame */}
@@ -1207,29 +1333,40 @@ export default function AdminProductsPage() {
                                         <span>Collection</span>
                                         <ChevronRightIcon size={10} color="#8A758A" />
                                         <span className="text-[#6C306E] font-bold">{formData.category}</span>
+                                        <ChevronRightIcon size={10} color="#8A758A" />
+                                        <span className="text-[#241224] font-semibold truncate max-w-[200px]">
+                                            {formData.name || 'Your Product Title'}
+                                        </span>
                                     </div>
 
                                     {/* Main Showcase Layout */}
                                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-5">
                                         {/* Gallery Column (Thumbnails + Main Photo) */}
                                         <div className="sm:col-span-6 flex gap-2.5">
-                                            {/* Thumbnails strip */}
-                                            <div className="flex flex-col gap-2 shrink-0">
-                                                {formData.images.map((img, i) => (
-                                                    <button
-                                                        key={i}
-                                                        type="button"
-                                                        onClick={() => setActivePreviewImage(i)}
-                                                        className={`size-12 rounded-xl border p-0 bg-white overflow-hidden transition ${
-                                                            activePreviewImage === i
-                                                                ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20'
-                                                                : 'border-[#EFE0EF] hover:border-slate-300'
-                                                        }`}
-                                                    >
-                                                        <img src={img} alt="" className="size-full object-cover" />
-                                                    </button>
-                                                ))}
-                                            </div>
+                                            {/* Thumbnails strip - only rendered when multiple photos uploaded */}
+                                            {formData.images.length > 1 && (
+                                                <div className="flex flex-col gap-2 shrink-0">
+                                                    {formData.images.map((img, i) => (
+                                                        <button
+                                                            key={i}
+                                                            type="button"
+                                                            onClick={() => setActivePreviewImage(i)}
+                                                            className={`size-12 rounded-xl border p-0 bg-white overflow-hidden transition cursor-pointer ${
+                                                                activePreviewImage === i
+                                                                    ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
+                                                                    : 'border-[#EFE0EF] hover:border-slate-300'
+                                                            }`}
+                                                        >
+                                                            <img
+                                                                src={img}
+                                                                alt=""
+                                                                className="size-full object-cover"
+                                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Main Image with Discount Tag (1:1 Ratio Full-Filled) */}
                                             <div className="relative aspect-square flex-1 bg-white border border-[#EFE0EF] rounded-2xl overflow-hidden shadow-2xs">
@@ -1238,11 +1375,26 @@ export default function AdminProductsPage() {
                                                         {previewDiscount}% OFF
                                                     </span>
                                                 )}
-                                                <img
-                                                    src={formData.images[activePreviewImage] || formData.images[0] || '/product_img1.png'}
-                                                    alt="Preview"
-                                                    className="size-full object-cover"
-                                                />
+                                                {formData.images.length > 0 && formData.images[activePreviewImage] ? (
+                                                    <img
+                                                        src={formData.images[activePreviewImage] || formData.images[0]}
+                                                        alt={formData.name || 'Product Image Preview'}
+                                                        className="size-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="size-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-[#FAF6FA] to-white">
+                                                        <div className="size-14 rounded-2xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mb-2.5 shadow-2xs">
+                                                            <CameraIcon size={24} color="#6C306E" />
+                                                        </div>
+                                                        <p className="text-xs font-bold text-[#241224]">Live Product Photo Preview</p>
+                                                        <p className="text-[10px] text-slate-400 mt-1 max-w-[170px] leading-relaxed">
+                                                            Upload photos in Section 2 to see the exact customer photo showcase.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1279,15 +1431,15 @@ export default function AdminProductsPage() {
                                                 </div>
 
                                                 {previewSavings > 0 && (
-                                                    <div className="text-[10px] font-bold text-[#6C306E] flex items-center gap-1">
-                                                        <SparklesIcon size={11} color="#6C306E" />
+                                                    <div className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-1 rounded-xl w-fit flex items-center gap-1.5 shadow-2xs">
+                                                        <TagIcon size={12} color="#6C306E" />
                                                         <span>Save {currency}{previewSavings.toLocaleString()} ({previewDiscount}% OFF) today</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* Quick Summary */}
-                                            <p className="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
+                                            <p className="text-[11px] text-slate-600 line-clamp-3 leading-relaxed whitespace-pre-line">
                                                 {formData.formulaProfile || 'Product formulation description will be displayed here for all visiting customers.'}
                                             </p>
 
@@ -1295,95 +1447,166 @@ export default function AdminProductsPage() {
                                             <div className="flex items-center gap-2 pt-1">
                                                 <button
                                                     type="button"
-                                                    className="flex-1 bg-[#6C306E] text-white py-2 rounded-xl text-xs font-bold text-center pointer-events-none"
+                                                    className="flex-1 bg-gradient-to-r from-[#6C306E] to-[#3A0C38] text-white py-2 rounded-xl text-xs font-bold text-center pointer-events-none flex items-center justify-center gap-1.5 shadow-xs"
                                                 >
-                                                    Add to Bag
+                                                    <BagIcon size={13} color="#FFFFFF" />
+                                                    <span>Add to Bag</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="flex-1 border border-[#EFE0EF] bg-white text-slate-700 py-2 rounded-xl text-xs font-bold text-center pointer-events-none"
+                                                    className="flex-1 border border-[#6C306E] bg-white text-[#6C306E] py-2 rounded-xl text-xs font-bold text-center pointer-events-none shadow-2xs"
                                                 >
                                                     Buy Now
                                                 </button>
                                             </div>
 
-                                            {/* Trust Badges */}
-                                            <div className="pt-2 grid grid-cols-3 gap-1.5 text-center text-[9px] text-slate-500 font-semibold border-t border-[#EFE0EF]">
-                                                <div className="p-1 rounded bg-[#FAF6FA]">100% Genuine UK</div>
-                                                <div className="p-1 rounded bg-[#FAF6FA]">Fast Delivery</div>
-                                                <div className="p-1 rounded bg-[#FAF6FA]">Cash on Delivery</div>
+                                            {/* Luxury Trust Badges */}
+                                            <div className="pt-2 grid grid-cols-3 gap-1.5 text-center text-[9px] text-slate-600 font-semibold border-t border-[#EFE0EF]">
+                                                <div className="p-1.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center gap-1">
+                                                    <ShieldCheckIcon size={12} color="#6C306E" />
+                                                    <span>100% Genuine UK</span>
+                                                </div>
+                                                <div className="p-1.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center gap-1">
+                                                    <TruckIcon size={12} color="#6C306E" />
+                                                    <span>Fast Delivery</span>
+                                                </div>
+                                                <div className="p-1.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center gap-1">
+                                                    <LockIcon size={12} color="#6C306E" />
+                                                    <span>Cash on Delivery</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Bottom Description Tabs Preview */}
                                     <div className="pt-4 border-t border-[#EFE0EF] space-y-4">
-                                        <div className="flex items-center gap-4 text-xs font-bold border-b border-[#EFE0EF] pb-2">
-                                            <span className="text-[#6C306E] border-b-2 border-[#6C306E] pb-2 -mb-2.5">
+                                        <div className="flex items-center gap-3 border-b border-[#EFE0EF] pb-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewTab('details')}
+                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer ${
+                                                    previewTab === 'details'
+                                                        ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
+                                                        : 'text-slate-400 hover:text-slate-600'
+                                                }`}
+                                            >
                                                 Product Details & Specs
-                                            </span>
-                                            <span className="text-slate-400">
-                                                Customer Reviews (4)
-                                            </span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewTab('reviews')}
+                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer flex items-center gap-1 ${
+                                                    previewTab === 'reviews'
+                                                        ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
+                                                        : 'text-slate-400 hover:text-slate-600'
+                                                }`}
+                                            >
+                                                <span>Customer Reviews (24)</span>
+                                            </button>
                                         </div>
 
-                                        {/* FORMULATION & PROFILE */}
-                                        <div className="space-y-1.5">
-                                            <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider">
-                                                FORMULATION & PROFILE
-                                            </div>
-                                            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                                                {formData.formulaProfile || 'A high-strength vitamin and mineral blemish formula that targets skin congestion and visible pores. Authentic UK Formula.'}
-                                            </p>
-                                        </div>
-
-                                        {/* KEY PROVEN BENEFITS (2x2 Grid with Crown) */}
-                                        <div className="bg-[#FAF6FA] border border-[#EFE0EF] p-4 rounded-2xl space-y-2.5">
-                                            <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider flex items-center gap-1.5">
-                                                <RoyalCrownIcon size={13} color="#6C306E" />
-                                                <span>KEY PROVEN BENEFITS</span>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700">
-                                                {formData.benefits.filter(b => b.trim().length > 0).map((b, idx) => (
-                                                    <div key={idx} className="flex items-start gap-2">
-                                                        <span className="size-4 rounded-full bg-white border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5">
-                                                            ✓
-                                                        </span>
-                                                        <span className="leading-snug">{b}</span>
+                                        {previewTab === 'details' ? (
+                                            <div className="space-y-4">
+                                                {/* FORMULATION & PROFILE */}
+                                                <div className="space-y-1.5">
+                                                    <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider">
+                                                        FORMULATION & PROFILE
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                                                        {formData.formulaProfile || 'A high-strength vitamin and mineral blemish formula that targets skin congestion and visible pores. Authentic UK Formula.'}
+                                                    </p>
+                                                </div>
 
-                                        {/* WHY YOU'LL LOVE IT */}
-                                        <div className="space-y-1.5">
-                                            <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider">
-                                                WHY YOU'LL LOVE IT
-                                            </div>
-                                            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                                                {formData.whyYouWillLoveIt || 'Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance and barrier protection.'}
-                                            </p>
-                                        </div>
+                                                {/* KEY PROVEN BENEFITS (2x2 Grid with Crown) */}
+                                                <div className="bg-[#FAF6FA] border border-[#EFE0EF] p-4 rounded-2xl space-y-2.5">
+                                                    <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider flex items-center justify-between">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <RoyalCrownIcon size={13} color="#6C306E" />
+                                                            <span>KEY PROVEN BENEFITS</span>
+                                                        </div>
+                                                        {formData.benefits.filter(b => b.trim().length > 0).length === 0 && (
+                                                            <span className="text-[9px] font-normal text-slate-400">
+                                                                (Default UK Storefront Benefits)
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700">
+                                                        {(formData.benefits.filter(b => b.trim().length > 0).length > 0
+                                                            ? formData.benefits.filter(b => b.trim().length > 0)
+                                                            : DEFAULT_BENEFITS
+                                                        ).map((b, idx) => (
+                                                            <div key={idx} className="flex items-start gap-2">
+                                                                <span className="size-4 rounded-full bg-white border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5 shadow-2xs">
+                                                                    ✓
+                                                                </span>
+                                                                <span className="leading-snug">{b}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
 
-                                        {/* PRODUCT SPECIFICATIONS */}
-                                        <div className="border border-[#EFE0EF] rounded-xl p-3 bg-white grid grid-cols-4 gap-2 text-center text-[10px]">
-                                            <div>
-                                                <span className="text-slate-400 block">Brand Origin</span>
-                                                <strong className="text-[#241224]">{formData.brand || 'UK Import'}</strong>
+                                                {/* WHY YOU'LL LOVE IT */}
+                                                <div className="space-y-1.5">
+                                                    <div className="text-[10px] font-extrabold text-[#6C306E] uppercase tracking-wider">
+                                                        WHY YOU'LL LOVE IT
+                                                    </div>
+                                                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                                                        {formData.whyYouWillLoveIt.trim() || 'Sourced with direct traceability from authorized UK brands and laboratories. Formulated to provide lasting radiance, barrier protection, and hydration without clogging pores or causing irritation.'}
+                                                    </p>
+                                                </div>
+
+                                                {/* PRODUCT SPECIFICATIONS */}
+                                                <div className="border border-[#EFE0EF] rounded-xl p-3 bg-white grid grid-cols-4 gap-2 text-center text-[10px]">
+                                                    <div>
+                                                        <span className="text-slate-400 block mb-0.5">Brand Origin</span>
+                                                        <strong className="text-[#241224]">{formData.brand || 'UK Import'}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-400 block mb-0.5">Category</span>
+                                                        <strong className="text-[#241224]">{formData.category}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-400 block mb-0.5">Price</span>
+                                                        <strong className="text-[#6C306E]">{currency}{previewPrice.toLocaleString()}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-400 block mb-0.5">Authenticity</span>
+                                                        <strong className="text-emerald-700">100% Certified</strong>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <span className="text-slate-400 block">Category</span>
-                                                <strong className="text-[#241224]">{formData.category}</strong>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between pb-2 border-b border-[#EFE0EF]">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-bold text-[#241224]">Customer Feedback</span>
+                                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                            Verified Buyer
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[11px] font-bold text-[#D8B56D]">
+                                                        {'★★★★★'} <span className="text-slate-600">5.0 / 5.0</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-3.5 rounded-2xl bg-[#FAF6FA]/80 border border-[#EFE0EF] space-y-1.5 text-xs">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="size-6 rounded-full bg-[#6C306E] text-white flex items-center justify-center font-bold text-[10px]">
+                                                                T
+                                                            </div>
+                                                            <span className="font-bold text-[#241224] text-[11px]">Tuhina Jahan</span>
+                                                            <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                                                                Verified Buyer
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-slate-400 text-[10px]">Recent Delivery</span>
+                                                    </div>
+                                                    <p className="text-slate-700 text-[11px] leading-relaxed">
+                                                        "100% authentic UK imported item with intact batch code. Absorbs smoothly without feeling greasy and delivered promptly in Dhaka."
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <span className="text-slate-400 block">Price</span>
-                                                <strong className="text-[#6C306E]">{currency}{previewPrice.toLocaleString()}</strong>
-                                            </div>
-                                            <div>
-                                                <span className="text-slate-400 block">Authenticity</span>
-                                                <strong className="text-emerald-700">100% Certified</strong>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
