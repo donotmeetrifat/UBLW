@@ -11,6 +11,7 @@ import { setProduct as updateReduxProduct } from "@/lib/features/product/product
 import { SparklesIcon, ChevronRightIcon, BagIcon } from "@/components/icons";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { broadcastStoreChange } from "@/lib/realtimeSync";
 
 export default function Product() {
     const { productId } = useParams();
@@ -124,6 +125,22 @@ export default function Product() {
 
     useEffect(() => {
         fetchProduct();
+
+        // Track verified product impression in database and broadcast live analytics update
+        if (typeof window !== 'undefined' && productId) {
+            const viewedSessionKey = `ukbl_viewed_${productId}`;
+            if (!sessionStorage.getItem(viewedSessionKey)) {
+                sessionStorage.setItem(viewedSessionKey, '1');
+                fetch(`/api/products/${productId}/view`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.views) {
+                            broadcastStoreChange('analytics', { productId, views: data.views });
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
 
         // Listen for live updates dispatched from Admin panel
         const handleLiveUpdate = (e) => {

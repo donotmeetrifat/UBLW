@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
-            const [products, ordersAgg, soldItemsByProduct, usersWithCart] = await Promise.all([
+            const [products, ordersAgg, orderItems, usersWithCart] = await Promise.all([
                 prisma.product.findMany({
                     select: {
                         id: true,
@@ -34,30 +34,42 @@ export async function GET() {
                     _count: { id: true },
                     where: { status: { not: 'CANCELLED' } }
                 }),
-                // Fast grouped sales per product (replaces heavy nested joins)
-                prisma.orderItem.groupBy({
-                    by: ['productId'],
-                    _sum: { quantity: true, price: true },
-                    _count: { orderId: true },
+                // All non-cancelled order items for precise product-level sales & revenue
+                prisma.orderItem.findMany({
                     where: {
                         order: { status: { not: 'CANCELLED' } }
+                    },
+                    select: {
+                        productId: true,
+                        price: true,
+                        quantity: true,
+                        orderId: true
                     }
                 }).catch(() => []),
-                // Only select cart for non-empty carts
+                // User carts to calculate active in-bag additions
                 prisma.user.findMany({
-                    where: { NOT: { cart: {} } },
                     select: { cart: true },
                     take: 500
                 }).catch(() => [])
             ]);
 
             // Map product sales
-            const soldMap = new Map();
-            (soldItemsByProduct || []).forEach(item => {
-                soldMap.set(item.productId, {
-                    unitsBought: item._sum?.quantity || 0,
-                    ordersCount: item._count?.orderId || 0,
-                });
+            const salesMap = {};
+            (orderItems || []).forEach(item => {
+                if (item.productId) {
+                    if (!salesMap[item.productId]) {
+                        salesMap[item.productId] = {
+                            unitsBought: 0,
+                            revenue: 0,
+                            orderIds: new Set()
+                        };
+                    }
+                    const q = Number(item.quantity) || 1;
+                    const pr = Number(item.price) || 0;
+                    salesMap[item.productId].unitsBought += q;
+                    salesMap[item.productId].revenue += q * pr;
+                    salesMap[item.productId].orderIds.add(item.orderId);
+                }
             });
 
             // Calculate active in-cart additions per product from real users
@@ -75,10 +87,10 @@ export async function GET() {
 
             // Aggregate authentic metrics per product
             const rankedProducts = products.map((p) => {
-                const sales = soldMap.get(p.id) || { unitsBought: 0, ordersCount: 0 };
+                const sales = salesMap[p.id] || { unitsBought: 0, revenue: 0, orderIds: new Set() };
                 const unitsBought = sales.unitsBought;
-                const ordersCount = sales.ordersCount;
-                const revenue = unitsBought * (p.price || 0);
+                const ordersCount = sales.orderIds.size;
+                const revenue = sales.revenue;
                 const inCart = cartCounts[p.id] || 0;
                 const views = Number(p.views || 0);
 
@@ -97,6 +109,10 @@ export async function GET() {
                     : null;
                 const reviewCount = hasReviews ? p.ratings.length : 0;
 
+                const firstImage = Array.isArray(p.images) && p.images.length > 0
+                    ? p.images[0]
+                    : (typeof p.images === 'string' ? p.images : null);
+
                 return {
                     id: p.id,
                     name: p.name,
@@ -104,7 +120,7 @@ export async function GET() {
                     brand: p.brand || 'UK Import',
                     price: p.price,
                     mrp: p.mrp,
-                    image: Array.isArray(p.images) && p.images[0] && !p.images[0].startsWith('/product_img') ? p.images[0] : null,
+                    image: firstImage,
                     stockCount: p.stockCount,
                     inStock: p.inStock,
                     views,
@@ -133,7 +149,8 @@ export async function GET() {
             const totalViews = rankedProducts.reduce((acc, p) => acc + p.views, 0);
             const totalUnitsSold = rankedProducts.reduce((acc, p) => acc + p.unitsBought, 0);
             const totalCartItems = Object.values(cartCounts).reduce((a, b) => a + b, 0);
-            const totalRevenue = orders.reduce((acc, o) => acc + (o.total || 0), 0);
+            const totalRevenue = Number(ordersAgg?._sum?.total || 0);
+            const totalOrders = Number(ordersAgg?._count?.id || 0);
             const overallConversion = totalViews > 0 
                 ? parseFloat(((totalUnitsSold / totalViews) * 100).toFixed(1)) 
                 : (totalUnitsSold > 0 ? 100.0 : 0);
@@ -160,7 +177,7 @@ export async function GET() {
                     summary: {
                         totalViews,
                         totalUnitsSold,
-                        totalOrders: orders.length,
+                        totalOrders,
                         totalCartItems,
                         totalRevenue,
                         overallConversion,
@@ -193,7 +210,7 @@ export async function GET() {
             brand: p.brand || 'UK Import',
             price: p.price,
             mrp: p.mrp,
-            image: Array.isArray(p.images) && p.images[0] && !p.images[0].startsWith('/product_img') ? p.images[0] : null,
+            image: Array.isArray(p.images) && p.images[0] ? p.images[0] : null,
             stockCount: p.stockCount || 50,
             inStock: p.inStock,
             views: p.views || 0,

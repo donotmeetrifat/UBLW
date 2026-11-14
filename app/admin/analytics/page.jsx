@@ -16,6 +16,7 @@ import {
 } from "@/components/icons"
 import Link from "next/link"
 import AdminDropdown from "@/components/admin/AdminDropdown"
+import { subscribeToStoreSync } from "@/lib/realtimeSync"
 
 export default function AdminAnalyticsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -54,36 +55,51 @@ export default function AdminAnalyticsPage() {
     useEffect(() => {
         fetchAnalytics()
 
-        // 1. Auto-refresh live analytics periodically (45s background sync)
-        const intervalId = setInterval(() => {
-            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        // 1. Instant Realtime synchronization across all devices and tabs
+        const unsubscribe = subscribeToStoreSync((payload) => {
+            const t = payload?.type?.toLowerCase()
+            if (t === 'analytics' || t === 'orders' || t === 'products' || t === 'cart' || t === 'store_updated') {
                 fetchAnalytics(false)
             }
-        }, 45000)
+        })
 
-        // 2. Storage synchronization across tabs
+        // 2. Custom window events for local instant updates
+        const handleLocalSync = () => fetchAnalytics(false)
+        window.addEventListener('orders-updated', handleLocalSync)
+        window.addEventListener('products-updated', handleLocalSync)
+        window.addEventListener('cart-updated', handleLocalSync)
+        window.addEventListener('analytics-updated', handleLocalSync)
+        window.addEventListener('focus', handleLocalSync)
+
+        // 3. Storage synchronization across tabs
         const handleStorageSync = (e) => {
             if (
                 e.key === 'ukbl_analytics_updated' ||
                 e.key === 'ukbl_orders_synced' ||
-                e.key === 'ukbl_products_synced'
+                e.key === 'ukbl_products_synced' ||
+                e.key === 'ukbl_sync_event'
             ) {
                 fetchAnalytics(false)
             }
         }
-
-        // 3. Immediate sync on window focus
-        const handleWindowFocus = () => {
-            fetchAnalytics(false)
-        }
-
         window.addEventListener('storage', handleStorageSync)
-        window.addEventListener('focus', handleWindowFocus)
+
+        // 4. Background sync interval (20s)
+        const intervalId = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                fetchAnalytics(false)
+            }
+        }, 20000)
 
         return () => {
-            clearInterval(intervalId)
+            unsubscribe()
+            window.removeEventListener('orders-updated', handleLocalSync)
+            window.removeEventListener('products-updated', handleLocalSync)
+            window.removeEventListener('cart-updated', handleLocalSync)
+            window.removeEventListener('analytics-updated', handleLocalSync)
+            window.removeEventListener('focus', handleLocalSync)
             window.removeEventListener('storage', handleStorageSync)
-            window.removeEventListener('focus', handleWindowFocus)
+            clearInterval(intervalId)
         }
     }, [fetchAnalytics])
 
@@ -158,14 +174,16 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            {summary.topViewedProduct?.image && !summary.topViewedProduct.image.startsWith('/product_img') ? (
+                            {summary.topViewedProduct?.image ? (
                                 <img
                                     src={summary.topViewedProduct.image}
                                     alt={summary.topViewedProduct.name || ''}
                                     className="max-h-13 w-auto object-contain"
                                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
-                            ) : null}
+                            ) : (
+                                <SparklesIcon size={22} color="#D8B56D" />
+                            )}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-wider block">
@@ -208,14 +226,16 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            {summary.secondTopViewed?.image && !summary.secondTopViewed.image.startsWith('/product_img') ? (
+                            {summary.secondTopViewed?.image ? (
                                 <img
                                     src={summary.secondTopViewed.image}
                                     alt={summary.secondTopViewed.name || ''}
                                     className="max-h-13 w-auto object-contain"
                                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
-                            ) : null}
+                            ) : (
+                                <SparklesIcon size={22} color="#94A3B8" />
+                            )}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
@@ -258,14 +278,16 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            {summary.thirdTopViewed?.image && !summary.thirdTopViewed.image.startsWith('/product_img') ? (
+                            {summary.thirdTopViewed?.image ? (
                                 <img
                                     src={summary.thirdTopViewed.image}
                                     alt={summary.thirdTopViewed.name || ''}
                                     className="max-h-13 w-auto object-contain"
                                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
-                            ) : null}
+                            ) : (
+                                <SparklesIcon size={22} color="#D97706" />
+                            )}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">
@@ -460,14 +482,16 @@ export default function AdminAnalyticsPage() {
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-xs">
-                                                        {prod.image && !prod.image.startsWith('/product_img') ? (
+                                                        {prod.image ? (
                                                             <img
                                                                 src={prod.image}
                                                                 alt={prod.name || ''}
                                                                 className="max-h-9 w-auto object-contain"
                                                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                                             />
-                                                        ) : null}
+                                                        ) : (
+                                                            <SparklesIcon size={16} color="#6C306E" />
+                                                        )}
                                                     </div>
                                                     <div className="min-w-0 max-w-xs">
                                                         <p className="font-extrabold text-[#241224] text-xs line-clamp-1" title={prod.name}>
