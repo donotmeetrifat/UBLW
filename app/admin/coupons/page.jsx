@@ -67,7 +67,14 @@ export default function AdminCouponsPage() {
     const fetchCoupons = async () => {
         try {
             setLoading(true)
-            const res = await fetch('/api/admin/coupons?_t=' + Date.now(), { cache: 'no-store' })
+            const res = await fetch('/api/admin/coupons?_t=' + Date.now(), {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Expires': '0'
+                }
+            })
             const data = await res.json()
             if (data.success) {
                 setCoupons(data.coupons || [])
@@ -304,6 +311,23 @@ export default function AdminCouponsPage() {
             if (data.success) {
                 toast.success(editingCoupon ? 'Coupon updated successfully!' : `Coupon ${cleanCode} published live!`)
                 setIsEditorOpen(false)
+
+                // Optimistically update state so the coupon is immediately visible in the table
+                if (data.coupon) {
+                    setCoupons(prev => {
+                        const list = Array.isArray(prev) ? prev : []
+                        const exists = list.some(c => c.id === data.coupon.id || c.code === data.coupon.code)
+                        if (exists) {
+                            return list.map(c => (c.id === data.coupon.id || c.code === data.coupon.code) ? { ...c, ...data.coupon } : c)
+                        }
+                        return [data.coupon, ...list]
+                    })
+                }
+
+                // Reset search query and filter to ALL so the newly created/updated coupon is never hidden
+                setSearchQuery('')
+                setFilterTab('ALL')
+
                 fetchCoupons()
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_coupons_synced', Date.now().toString())
@@ -337,6 +361,8 @@ export default function AdminCouponsPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success(data.message || 'Coupon removed successfully')
+                const deletedId = deletingCoupon.id
+                setCoupons(prev => prev.filter(c => c.id !== deletedId))
                 setDeletingCoupon(null)
                 fetchCoupons()
                 if (typeof window !== 'undefined') {

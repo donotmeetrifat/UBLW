@@ -81,6 +81,11 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Never intercept or cache admin API routes or admin portal pages
+    if (url.pathname.startsWith('/api/admin') || url.pathname.startsWith('/admin')) {
+        return;
+    }
+
     // Skip Chrome extension and external third-party tracking scripts
     if (url.origin !== self.location.origin && !url.hostname.includes('vercel') && !url.hostname.includes('supabase')) {
         return;

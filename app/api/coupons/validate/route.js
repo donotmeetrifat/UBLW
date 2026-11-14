@@ -17,9 +17,18 @@ export async function POST(request) {
         const parsedSubtotal = Math.max(0, parseFloat(subtotal) || 0);
 
         if (isDatabaseConfigured()) {
-            const coupon = await prisma.coupon.findUnique({
-                where: { code: normalizedCode },
-            });
+            let coupon = null;
+            try {
+                coupon = await prisma.coupon.findUnique({
+                    where: { code: normalizedCode },
+                });
+            } catch (findErr) {
+                const rows = await prisma.$queryRawUnsafe(
+                    `SELECT * FROM "Coupon" WHERE UPPER(code) = $1 LIMIT 1`,
+                    normalizedCode
+                );
+                coupon = rows && rows[0] ? rows[0] : null;
+            }
 
             if (!coupon || !coupon.isActive) {
                 return NextResponse.json({ success: false, message: 'Invalid or inactive coupon code' }, { status: 404 });
@@ -108,7 +117,11 @@ export async function POST(request) {
                 }
             }, {
                 headers: {
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'CDN-Cache-Control': 'no-store',
+                    'Vercel-CDN-Cache-Control': 'no-store'
                 }
             });
         }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,11 +9,22 @@ export const revalidate = 0;
 export async function GET() {
     try {
         if (isDatabaseConfigured()) {
-            const [coupons, customers] = await Promise.all([
-                prisma.coupon.findMany({
+            let coupons = [];
+            try {
+                coupons = await prisma.coupon.findMany({
                     orderBy: { createdAt: 'desc' }
-                }),
-                prisma.user.findMany({
+                });
+            } catch (queryErr) {
+                console.warn('Prisma coupon.findMany note, using direct SQL fallback:', queryErr.message);
+                const rows = await prisma.$queryRawUnsafe(`
+                    SELECT * FROM "Coupon" ORDER BY "createdAt" DESC
+                `);
+                coupons = Array.isArray(rows) ? rows : [];
+            }
+
+            let customers = [];
+            try {
+                customers = await prisma.user.findMany({
                     select: {
                         id: true,
                         name: true,
@@ -22,8 +34,17 @@ export async function GET() {
                         createdAt: true
                     },
                     orderBy: { createdAt: 'desc' }
-                })
-            ]);
+                });
+            } catch (userErr) {
+                try {
+                    const uRows = await prisma.$queryRawUnsafe(`
+                        SELECT id, name, email, phone, role, "createdAt"
+                        FROM "User"
+                        ORDER BY "createdAt" DESC
+                    `);
+                    customers = Array.isArray(uRows) ? uRows : [];
+                } catch {}
+            }
 
             const totalCoupons = coupons.length;
             const activeCoupons = coupons.filter(c => c.isActive).length;
@@ -41,7 +62,11 @@ export async function GET() {
                 }
             }, {
                 headers: {
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'CDN-Cache-Control': 'no-store',
+                    'Vercel-CDN-Cache-Control': 'no-store'
                 }
             });
         }
@@ -61,6 +86,14 @@ export async function GET() {
                 activeCoupons,
                 totalRedemptions,
                 registeredUsers: 0
+            }
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'CDN-Cache-Control': 'no-store',
+                'Vercel-CDN-Cache-Control': 'no-store'
             }
         });
     } catch (error) {
@@ -157,55 +190,89 @@ export async function POST(request) {
         };
 
         if (isDatabaseConfigured()) {
+            let existing = null;
             try {
-                const existing = await prisma.coupon.findUnique({
+                existing = await prisma.coupon.findUnique({
                     where: { code: normalizedCode }
                 });
+            } catch (checkErr) {
+                const rows = await prisma.$queryRawUnsafe(
+                    `SELECT id FROM "Coupon" WHERE code = $1 LIMIT 1`,
+                    normalizedCode
+                );
+                existing = rows && rows[0] ? rows[0] : null;
+            }
 
-                if (existing) {
-                    return NextResponse.json(
-                        { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
-                        { status: 409 }
-                    );
-                }
+            if (existing) {
+                return NextResponse.json(
+                    { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
+                    { status: 409 }
+                );
+            }
 
-                const coupon = await prisma.coupon.create({
+            let coupon = null;
+            try {
+                coupon = await prisma.coupon.create({
                     data: couponPayload
                 });
-
-                // Also keep memoryStore synchronized for real-time fallback
-                try {
-                    memoryStore.addCoupon(coupon);
-                } catch {}
-
-                return NextResponse.json({
-                    success: true,
-                    message: `Coupon code ${normalizedCode} created and published live!`,
-                    coupon
-                });
-            } catch (dbError) {
-                console.error('Database coupon creation error:', dbError);
-                if (dbError.code === 'P2002') {
-                    return NextResponse.json(
-                        { success: false, message: `Coupon code "${normalizedCode}" already exists. Please choose a different code.` },
-                        { status: 409 }
-                    );
-                }
-                // Memory store fallback so creation NEVER breaks
-                const memoryExisting = memoryStore.getCouponByCode(normalizedCode);
-                if (memoryExisting) {
-                    return NextResponse.json(
-                        { success: false, message: `Coupon code "${normalizedCode}" already exists.` },
-                        { status: 409 }
-                    );
-                }
-                const coupon = memoryStore.addCoupon(couponPayload);
-                return NextResponse.json({
-                    success: true,
-                    message: `Coupon code ${normalizedCode} created successfully!`,
-                    coupon
-                });
+            } catch (createErr) {
+                console.warn('Prisma coupon.create note, executing direct SQL insert fallback:', createErr.message);
+                const couponId = 'cmw' + randomUUID().replace(/-/g, '').slice(0, 21);
+                const rows = await prisma.$queryRawUnsafe(`
+                    INSERT INTO "Coupon" (
+                        "id", "code", "description", "discountType", "discount",
+                        "forNewUserOnly", "minOrderAmount", "maxDiscount", "isLifetime",
+                        "startsAt", "expiresAt", "usageLimit", "usedCount", "perUserLimit",
+                        "allowedUserEmails", "isActive", "createdAt", "updatedAt"
+                    ) VALUES (
+                        $1, $2, $3, $4, $5,
+                        $6, $7, $8, $9,
+                        $10, $11, $12, $13, $14,
+                        $15, $16, NOW(), NOW()
+                    ) RETURNING *
+                `,
+                    couponId,
+                    normalizedCode,
+                    couponPayload.description,
+                    couponPayload.discountType,
+                    couponPayload.discount,
+                    couponPayload.forNewUserOnly,
+                    couponPayload.minOrderAmount,
+                    couponPayload.maxDiscount,
+                    couponPayload.isLifetime,
+                    couponPayload.startsAt,
+                    couponPayload.expiresAt,
+                    couponPayload.usageLimit,
+                    0,
+                    couponPayload.perUserLimit,
+                    couponPayload.allowedUserEmails,
+                    couponPayload.isActive
+                );
+                coupon = rows && rows[0] ? rows[0] : null;
             }
+
+            if (!coupon) {
+                throw new Error('Failed to create coupon in database');
+            }
+
+            // Also keep memoryStore synchronized for real-time fallback
+            try {
+                memoryStore.addCoupon(coupon);
+            } catch {}
+
+            return NextResponse.json({
+                success: true,
+                message: `Coupon code ${normalizedCode} created and published live!`,
+                coupon
+            }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'CDN-Cache-Control': 'no-store',
+                    'Vercel-CDN-Cache-Control': 'no-store'
+                }
+            });
         }
 
         // Memory Store Fallback
@@ -222,6 +289,14 @@ export async function POST(request) {
             success: true,
             message: `Coupon code ${normalizedCode} created successfully!`,
             coupon
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'CDN-Cache-Control': 'no-store',
+                'Vercel-CDN-Cache-Control': 'no-store'
+            }
         });
     } catch (error) {
         console.error('Error creating coupon:', error);
