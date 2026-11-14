@@ -209,7 +209,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                     productId: ratingModal.productId || ratingModal.product?.id,
                     productName: productName,
                     orderId: ratingModal.orderId,
-                    userName: activeUser?.name || 'Verified Buyer',
+                    userName: activeUser?.name || 'Customer',
                     userEmail: activeUser?.email,
                     userId: activeUser?.id,
                 }),

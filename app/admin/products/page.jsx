@@ -1780,9 +1780,6 @@ export default function AdminProductsPage() {
                                                 <div className="flex items-center justify-between pb-2 border-b border-[#EFE0EF]">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs font-bold text-[#241224]">Customer Feedback</span>
-                                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                                            Verified Buyer
-                                                        </span>
                                                     </div>
                                                     <div className="flex items-center gap-1 text-[11px] font-bold text-[#D8B56D]">
                                                         {'★★★★★'} <span className="text-slate-600">5.0 / 5.0</span>
@@ -1795,9 +1792,6 @@ export default function AdminProductsPage() {
                                                                 T
                                                             </div>
                                                             <span className="font-bold text-[#241224] text-[11px]">Tuhina Jahan</span>
-                                                            <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                                                                Verified Buyer
-                                                            </span>
                                                         </div>
                                                         <span className="text-slate-400 text-[10px]">Recent Delivery</span>
                                                     </div>

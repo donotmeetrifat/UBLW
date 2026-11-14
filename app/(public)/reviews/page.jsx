@@ -361,10 +361,7 @@ export default function ReviewsPage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                                            Verified Buyer
-                                                        </span>
+                                                    <div className="mb-0.5">
                                                         <span className="text-[11px] text-slate-400">
                                                             {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                         </span>

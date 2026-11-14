@@ -213,7 +213,7 @@ const ProductDescription = ({ product }) => {
                     >
                         {reviews.length > 0 ? (
                             reviews.map((item, index) => {
-                                const userName = item.user?.name || 'Verified Buyer';
+                                const userName = item.user?.name || 'Customer';
                                 const userImage = item.user?.image || null;
                                 const reviewImages = Array.isArray(item.images) ? item.images : [];
                                 const reviewVideos = Array.isArray(item.videos) ? item.videos : [];
@@ -236,12 +236,7 @@ const ProductDescription = ({ product }) => {
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h5 className="font-bold text-[#241224] text-sm">{userName}</h5>
-                                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                                            Verified Buyer
-                                                        </span>
-                                                    </div>
+                                                    <h5 className="font-bold text-[#241224] text-sm leading-tight">{userName}</h5>
                                                     <span className="text-slate-400 text-[11px]">
                                                         {new Date(item.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </span>
