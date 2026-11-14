@@ -28,12 +28,12 @@ const STATUSES = [
 ]
 
 const ORDER_STATUS_OPTIONS = [
-    { value: 'ORDER_PLACED', label: 'Order Placed' },
-    { value: 'CONFIRMED', label: 'Confirmed' },
-    { value: 'PROCESSING', label: 'Processing' },
-    { value: 'SHIPPED', label: 'Shipped' },
-    { value: 'DELIVERED', label: 'Delivered' },
-    { value: 'CANCELLED', label: 'Cancelled' }
+    { value: 'ORDER_PLACED', label: 'Order Placed', dot: 'bg-amber-500' },
+    { value: 'CONFIRMED', label: 'Confirmed', dot: 'bg-[#6C306E]' },
+    { value: 'PROCESSING', label: 'Processing', dot: 'bg-blue-500' },
+    { value: 'SHIPPED', label: 'Shipped', dot: 'bg-indigo-500' },
+    { value: 'DELIVERED', label: 'Delivered', dot: 'bg-emerald-500' },
+    { value: 'CANCELLED', label: 'Cancelled', dot: 'bg-rose-500' }
 ]
 
 export default function AdminOrdersPage() {
@@ -161,15 +161,6 @@ export default function AdminOrdersPage() {
         return counts
     }, [orders])
 
-    const getStatusStyle = (status) => {
-        const s = (status || '').toUpperCase()
-        if (s === 'DELIVERED') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-        if (s === 'SHIPPED') return 'bg-blue-50 text-blue-700 border-blue-200'
-        if (s === 'CONFIRMED' || s === 'PROCESSING') return 'bg-purple-50 text-purple-700 border-purple-200'
-        if (s === 'CANCELLED') return 'bg-rose-50 text-rose-700 border-rose-200'
-        return 'bg-amber-50 text-amber-700 border-amber-200'
-    }
-
     if (loading) return <Loading />
 
     return (
@@ -241,7 +232,7 @@ export default function AdminOrdersPage() {
 
             {/* Orders Table */}
             <div className="bg-white border border-[#EFE0EF] rounded-2xl shadow-2xs overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto min-h-[400px] pb-32">
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr className="border-b border-[#EFE0EF] bg-[#FAF6FA]/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -357,13 +348,13 @@ export default function AdminOrdersPage() {
                                                 )}
                                             </td>
 
-                                            {/* Status Dropdown (Custom Premium Text-only Dropdown) */}
+                                            {/* Status Dropdown (Standard Box Dropdown matching portal design) */}
                                             <td className="py-3.5 px-4 whitespace-nowrap">
                                                 <AdminDropdown
                                                     value={order.status}
                                                     onChange={(newStatus) => handleUpdateStatus(order.id, newStatus)}
                                                     options={ORDER_STATUS_OPTIONS}
-                                                    buttonClassName={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition ${getStatusStyle(order.status)}`}
+                                                    className="w-[145px]"
                                                     align="right"
                                                 />
                                             </td>
@@ -420,15 +411,28 @@ export default function AdminOrdersPage() {
                         </button>
 
                         <div className="border-b border-[#EFE0EF] pb-4 mb-4">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                Order Overview
-                            </span>
-                            <h3 className="text-lg font-black text-[#241224]">
-                                #{selectedOrder.orderNumber || selectedOrder.id}
-                            </h3>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                                Placed on {new Date(selectedOrder.createdAt).toLocaleString()}
-                            </p>
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        Order Overview
+                                    </span>
+                                    <h3 className="text-lg font-black text-[#241224]">
+                                        #{selectedOrder.orderNumber || selectedOrder.id}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Placed on {new Date(selectedOrder.createdAt).toLocaleString()}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 pt-1 mr-6">
+                                    <AdminDropdown
+                                        value={selectedOrder.status}
+                                        onChange={(newStatus) => handleUpdateStatus(selectedOrder.id, newStatus)}
+                                        options={ORDER_STATUS_OPTIONS}
+                                        className="w-[145px]"
+                                        align="right"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         {/* Customer Information */}
