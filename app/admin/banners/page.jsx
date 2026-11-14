@@ -13,7 +13,6 @@ import {
     CloseIcon,
     CheckIcon,
     RefreshIcon,
-    ArrowRightIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     StoreFrontIcon,
@@ -21,13 +20,13 @@ import {
 } from '@/components/icons'
 import ClassicLoader from '@/components/ui/classic-loader'
 
-const DEFAULT_BANNER_SUGGESTIONS = [
-    { label: 'All Collections', url: '/shop' },
+const QUICK_LINKS = [
+    { label: '/shop', url: '/shop' },
     { label: 'Skincare', url: '/shop?category=Skincare' },
     { label: 'Makeup', url: '/shop?category=Makeup' },
     { label: 'Haircare', url: '/shop?category=Haircare' },
     { label: 'Fragrance', url: '/shop?category=Fragrance' },
-    { label: 'Contact Advisory', url: '/contact' }
+    { label: 'Contact', url: '/contact' }
 ]
 
 export default function AdminHeroBannersPage() {
@@ -36,17 +35,16 @@ export default function AdminHeroBannersPage() {
     const [hasPendingChanges, setHasPendingChanges] = useState(false)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [lastSavedAt, setLastSavedAt] = useState(null)
     const [draggedIndex, setDraggedIndex] = useState(null)
 
-    // Interactive Storefront Preview & Global Store Autoplay State
+    // Storefront Preview & Autoplay
     const [previewActiveIndex, setPreviewActiveIndex] = useState(0)
     const [isAutoplay, setIsAutoplay] = useState(true)
     const [isTogglingAutoplay, setIsTogglingAutoplay] = useState(false)
 
-    // Modal State (Add or Edit)
+    // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [editingBanner, setEditingBanner] = useState(null) // null when adding
+    const [editingBanner, setEditingBanner] = useState(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
     const fileInputRef = useRef(null)
 
@@ -61,7 +59,7 @@ export default function AdminHeroBannersPage() {
         displayOrder: 1
     })
 
-    // 1. Fetch live banners & settings from API
+    // Fetch live banners from API
     const fetchBanners = async () => {
         try {
             setLoading(true)
@@ -94,7 +92,7 @@ export default function AdminHeroBannersPage() {
         fetchBanners()
     }, [])
 
-    // Autoplay for the Live Storefront Preview slider on the admin page (strictly syncs with isAutoplay)
+    // Preview Autoplay
     useEffect(() => {
         if (!isAutoplay || banners.length <= 1) return
         const timer = setInterval(() => {
@@ -103,7 +101,7 @@ export default function AdminHeroBannersPage() {
         return () => clearInterval(timer)
     }, [isAutoplay, banners.length])
 
-    // Multi-channel real-time synchronization broadcast across all devices, browsers, and workers
+    // Broadcast sync across all devices and tabs
     const syncBroadcast = (newBanners) => {
         if (typeof window !== 'undefined') {
             try {
@@ -121,27 +119,15 @@ export default function AdminHeroBannersPage() {
             } catch (syncErr) {
                 console.error('Broadcast sync error:', syncErr)
             }
-
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
-                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ALL_CACHES' })
-            }
-            if ('caches' in window) {
-                caches.delete('ukbl-api-v1').catch(() => {})
-                caches.delete('ukbl-api-v2').catch(() => {})
-            }
         }
     }
 
-    // Real-time Autoplay Toggle handler - updates DB, server, and all users instantly
+    // Toggle Autoplay
     const handleToggleAutoplay = async () => {
         if (isTogglingAutoplay) return
         setIsTogglingAutoplay(true)
         const nextState = !isAutoplay
-
-        // Optimistic UI update
         setIsAutoplay(nextState)
-        const toastId = toast.loading(nextState ? 'Enabling Storefront Autoplay...' : 'Disabling Storefront Autoplay...')
 
         try {
             const res = await fetch('/api/admin/banners', {
@@ -154,49 +140,35 @@ export default function AdminHeroBannersPage() {
             if (data.success) {
                 const finalAutoplay = data.autoplay !== undefined ? data.autoplay : nextState
                 setIsAutoplay(finalAutoplay)
-                toast.success(
-                    finalAutoplay 
-                        ? 'Hero slider Autoplay is now ON across the storefront!' 
-                        : 'Hero slider Autoplay is now OFF across the storefront!',
-                    { id: toastId }
-                )
+                toast.success(finalAutoplay ? 'Autoplay turned ON' : 'Autoplay turned OFF')
 
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify({ autoplay: finalAutoplay, delay: 5000 }))
                     localStorage.setItem('ukbl_banners_synced', Date.now().toString())
-
                     window.dispatchEvent(new CustomEvent('hero-banner-autoplay-updated', { detail: { autoplay: finalAutoplay } }))
-                    window.dispatchEvent(new CustomEvent('hero-banners-updated'))
-
                     try {
                         const bc = new BroadcastChannel('ukbl_catalog_channel')
                         bc.postMessage({ type: 'hero-banner-autoplay-updated', autoplay: finalAutoplay })
                         bc.close()
                     } catch {}
-
-                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
-                    }
                 }
             } else {
                 setIsAutoplay(!nextState)
-                toast.error(data.message || 'Failed to update autoplay setting', { id: toastId })
+                toast.error(data.message || 'Failed to update autoplay')
             }
         } catch (err) {
-            console.error('Error toggling autoplay:', err)
             setIsAutoplay(!nextState)
-            toast.error('Network error toggling autoplay', { id: toastId })
+            toast.error('Network error toggling autoplay')
         } finally {
             setIsTogglingAutoplay(false)
         }
     }
 
-    // --- Master Save All Banners to Database and Storefront ---
+    // Save All Banners to Database
     const handleSaveAllBanners = async (customList = null) => {
         const listToSave = customList || banners
         if (!Array.isArray(listToSave)) return
 
-        // Normalize display order sequentially
         const normalized = listToSave.map((b, idx) => ({
             ...b,
             displayOrder: idx + 1
@@ -204,8 +176,6 @@ export default function AdminHeroBannersPage() {
 
         try {
             setSaving(true)
-            const toastId = toast.loading('Saving hero banners to database & publishing storewide...')
-
             const res = await fetch('/api/admin/banners', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -217,30 +187,215 @@ export default function AdminHeroBannersPage() {
                 setBanners(data.banners)
                 setSavedBanners(data.banners)
                 setHasPendingChanges(false)
-                setLastSavedAt(new Date().toLocaleTimeString())
-
                 syncBroadcast(data.banners)
-                toast.success('All hero banner updates saved to database & published live storewide across all devices!', { id: toastId, duration: 4000 })
+                toast.success('Banners saved and published live!')
             } else {
-                toast.error(data.message || 'Failed to save banners', { id: toastId })
+                toast.error(data.message || 'Failed to save banners')
             }
         } catch (err) {
             console.error('Failed to save banners:', err)
-            toast.error('Network error saving banners to server')
+            toast.error('Network error saving banners')
         } finally {
             setSaving(false)
         }
     }
 
-    // --- Discard Pending Changes and revert to server state ---
-    const handleDiscardChanges = () => {
-        if (!confirm('Discard all unsaved banner changes and restore the live saved slides?')) return
-        setBanners([...savedBanners])
-        setHasPendingChanges(false)
-        toast.success('Unsaved changes discarded.')
+    // Client-side image compression for files > 2MB to prevent payload errors
+    const compressImageIfNeeded = async (file) => {
+        if (!file.type.startsWith('image/') || file.size < 2 * 1024 * 1024) {
+            return file
+        }
+        return new Promise((resolve) => {
+            const img = new window.Image()
+            const url = URL.createObjectURL(file)
+            img.onload = () => {
+                URL.revokeObjectURL(url)
+                const maxDim = 2560
+                let width = img.width
+                let height = img.height
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width)
+                        width = maxDim
+                    } else {
+                        width = Math.round((width * maxDim) / height)
+                        height = maxDim
+                    }
+                }
+                const canvas = document.createElement('canvas')
+                canvas.width = width
+                canvas.height = height
+                const ctx = canvas.getContext('2d')
+                ctx.drawImage(img, 0, 0, width, height)
+                canvas.toBlob((blob) => {
+                    if (blob && blob.size < file.size) {
+                        resolve(new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' }))
+                    } else {
+                        resolve(file)
+                    }
+                }, 'image/jpeg', 0.92)
+            }
+            img.onerror = () => resolve(file)
+            img.src = url
+        })
     }
 
-    // --- Modal Openers ---
+    const uploadSingleFile = async (file) => {
+        const compressed = await compressImageIfNeeded(file)
+        const uploadData = new FormData()
+        uploadData.append('file', compressed)
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: uploadData
+        })
+        const data = await res.json()
+        if (data.success && data.url) {
+            return data.url
+        }
+        throw new Error(data.message || 'Upload failed')
+    }
+
+    // Image Upload Handler (Supports single or multiple file upload)
+    const handleImageFileSelect = async (e) => {
+        const files = Array.from(e.target.files || [])
+        if (files.length === 0) return
+
+        setIsUploadingImage(true)
+        const toastId = toast.loading(files.length > 1 ? `Uploading ${files.length} images...` : 'Uploading banner image...')
+
+        try {
+            if (files.length === 1) {
+                const url = await uploadSingleFile(files[0])
+                setFormData(prev => ({
+                    ...prev,
+                    image: url,
+                    imageAlt: prev.imageAlt || files[0].name.replace(/\.[^/.]+$/, '')
+                }))
+                toast.success('Image uploaded successfully!', { id: toastId })
+            } else {
+                const uploaded = []
+                for (const file of files) {
+                    try {
+                        const url = await uploadSingleFile(file)
+                        uploaded.push({ url, name: file.name.replace(/\.[^/.]+$/, '') })
+                    } catch (err) {
+                        console.error('File upload error:', file.name, err)
+                    }
+                }
+
+                if (uploaded.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        image: uploaded[0].url,
+                        imageAlt: prev.imageAlt || uploaded[0].name
+                    }))
+
+                    // Add remaining images as new slides automatically
+                    if (uploaded.length > 1) {
+                        const extraSlides = uploaded.slice(1).map((item, idx) => ({
+                            id: `hero-banner-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+                            title: '',
+                            subtitle: '',
+                            image: item.url,
+                            imageAlt: item.name || 'Banner promotion',
+                            link: '/shop',
+                            isActive: true,
+                            displayOrder: banners.length + idx + 1
+                        }))
+                        const merged = [...banners, ...extraSlides].map((b, i) => ({ ...b, displayOrder: i + 1 }))
+                        setBanners(merged)
+                        setHasPendingChanges(true)
+                        toast.success(`${uploaded.length} images uploaded! Additional slides added to list.`, { id: toastId })
+                    } else {
+                        toast.success('Image uploaded successfully!', { id: toastId })
+                    }
+                } else {
+                    toast.error('Failed to upload images', { id: toastId })
+                }
+            }
+        } catch (err) {
+            console.error('Upload error:', err)
+            toast.error(err.message || 'Image upload failed', { id: toastId })
+        } finally {
+            setIsUploadingImage(false)
+            if (fileInputRef.current) fileInputRef.current.value = ''
+        }
+    }
+
+    // Save banner from modal directly
+    const handleSaveBanner = async () => {
+        if (!formData.image.trim()) {
+            toast.error('Please upload an image or provide an image URL')
+            return
+        }
+
+        let updatedList = [...banners]
+        const targetOrder = Math.max(1, Number(formData.displayOrder) || (updatedList.length + 1))
+
+        if (editingBanner) {
+            const existingIndex = updatedList.findIndex(b => b.id === editingBanner.id)
+            if (existingIndex >= 0) {
+                const updatedItem = {
+                    ...updatedList[existingIndex],
+                    ...formData,
+                    id: editingBanner.id,
+                    displayOrder: targetOrder
+                }
+                updatedList.splice(existingIndex, 1)
+                const targetIdx = Math.min(targetOrder - 1, updatedList.length)
+                updatedList.splice(targetIdx, 0, updatedItem)
+            }
+        } else {
+            const newId = `hero-banner-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+            const newBanner = {
+                id: newId,
+                title: formData.title.trim(),
+                subtitle: formData.subtitle.trim(),
+                image: formData.image.trim(),
+                imageAlt: formData.imageAlt.trim() || formData.title.trim() || 'Hero Banner',
+                link: formData.link.trim(),
+                isActive: formData.isActive !== false,
+                displayOrder: targetOrder
+            }
+            const targetIdx = Math.min(targetOrder - 1, updatedList.length)
+            updatedList.splice(targetIdx, 0, newBanner)
+        }
+
+        const normalized = updatedList.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
+        setBanners(normalized)
+        setIsModalOpen(false)
+
+        // Save immediately to DB and publish
+        await handleSaveAllBanners(normalized)
+    }
+
+    // Delete Banner
+    const handleDeleteBanner = async (bannerId) => {
+        if (!confirm('Are you sure you want to delete this banner?')) return
+        const updated = banners.filter(b => b.id !== bannerId).map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
+        setBanners(updated)
+        await handleSaveAllBanners(updated)
+    }
+
+    // Toggle Active on row
+    const handleToggleActiveRow = async (bannerId) => {
+        const updated = banners.map(b => b.id === bannerId ? { ...b, isActive: !b.isActive } : b)
+        setBanners(updated)
+        await handleSaveAllBanners(updated)
+    }
+
+    // Move Banner Order
+    const handleMoveBanner = async (fromIndex, toIndex) => {
+        if (toIndex < 0 || toIndex >= banners.length || fromIndex === toIndex) return
+        const reordered = [...banners]
+        const [moved] = reordered.splice(fromIndex, 1)
+        reordered.splice(toIndex, 0, moved)
+        const normalized = reordered.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
+        setBanners(normalized)
+        setHasPendingChanges(true)
+    }
+
+    // Open Modal Handlers
     const handleOpenAddModal = () => {
         setEditingBanner(null)
         setFormData({
@@ -250,7 +405,7 @@ export default function AdminHeroBannersPage() {
             imageAlt: '',
             link: '/shop',
             isActive: true,
-            displayOrder: 1
+            displayOrder: banners.length + 1
         })
         setIsModalOpen(true)
     }
@@ -269,361 +424,160 @@ export default function AdminHeroBannersPage() {
         setIsModalOpen(true)
     }
 
-    // --- Image Upload Handler ---
-    const handleImageFileSelect = async (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        try {
-            setIsUploadingImage(true)
-            const uploadToast = toast.loading('Uploading banner image in full high resolution...')
-
-            const uploadData = new FormData()
-            uploadData.append('file', file)
-
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: uploadData
-            })
-            const data = await res.json()
-
-            if (data.success && data.url) {
-                setFormData(prev => ({
-                    ...prev,
-                    image: data.url,
-                    imageAlt: prev.imageAlt || file.name.replace(/\.[^/.]+$/, '')
-                }))
-                toast.success('Banner image uploaded successfully!', { id: uploadToast })
-            } else {
-                toast.error(data.message || 'Failed to upload image', { id: uploadToast })
-            }
-        } catch (err) {
-            console.error('Upload error:', err)
-            toast.error('Image upload failed')
-        } finally {
-            setIsUploadingImage(false)
-        }
-    }
-
-    // --- Save or Apply from Modal ---
-    const handleApplyBannerModal = async (publishImmediately = false) => {
-        if (!formData.image.trim()) {
-            toast.error('Please upload or provide a banner image URL')
-            return
-        }
-
-        let updatedList = [...banners]
-        const targetOrder = Math.max(1, Number(formData.displayOrder) || (updatedList.length + 1))
-
-        if (editingBanner) {
-            // Edit existing banner
-            const existingIndex = updatedList.findIndex(b => b.id === editingBanner.id)
-            if (existingIndex >= 0) {
-                const updatedItem = {
-                    ...updatedList[existingIndex],
-                    ...formData,
-                    id: editingBanner.id
-                }
-                updatedList.splice(existingIndex, 1)
-                const targetIdx = Math.min(targetOrder - 1, updatedList.length)
-                updatedList.splice(targetIdx, 0, updatedItem)
-            }
-        } else {
-            // Add new banner
-            const newId = `hero-banner-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-            const newBanner = {
-                id: newId,
-                title: formData.title.trim(),
-                subtitle: formData.subtitle.trim(),
-                image: formData.image.trim(),
-                imageAlt: formData.imageAlt.trim() || formData.title.trim() || 'UK Brand Lover banner promotion',
-                link: formData.link.trim(),
-                isActive: formData.isActive !== false,
-                displayOrder: targetOrder
-            }
-            const targetIdx = Math.min(targetOrder - 1, updatedList.length)
-            updatedList.splice(targetIdx, 0, newBanner)
-        }
-
-        const normalized = updatedList.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
-        setBanners(normalized)
-        setIsModalOpen(false)
-
-        if (publishImmediately) {
-            await handleSaveAllBanners(normalized)
-        } else {
-            setHasPendingChanges(true)
-            toast.success(editingBanner 
-                ? 'Slide updated! Click "Save Updates" to publish storewide.' 
-                : 'New slide added! Click "Save Updates" to publish storewide.')
-        }
-    }
-
-    // --- Delete Banner ---
-    const handleDeleteBanner = (bannerId) => {
-        if (!confirm('Are you sure you want to remove this hero banner? Click "Save Updates" to commit changes live storewide.')) return
-        const updated = banners.filter(b => b.id !== bannerId).map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
-        setBanners(updated)
-        setHasPendingChanges(true)
-        toast.success('Slide removed from list. Click "Save Updates" to publish changes live storewide!')
-    }
-
-    // --- Toggle Row Active Status ---
-    const handleToggleActiveRow = (bannerId) => {
-        const updated = banners.map(b => b.id === bannerId ? { ...b, isActive: !b.isActive } : b)
-        setBanners(updated)
-        setHasPendingChanges(true)
-        const target = updated.find(b => b.id === bannerId)
-        toast.info(target?.isActive 
-            ? 'Banner marked Active. Click "Save Updates" to publish.' 
-            : 'Banner marked Hidden. Click "Save Updates" to publish.', 
-            { id: 'banner-active-toggle' }
-        )
-    }
-
-    // --- Shift and Reorder Actions ---
-    const handleMoveBanner = (fromIndex, toIndex) => {
-        if (toIndex < 0 || toIndex >= banners.length) return
-        const updated = [...banners]
-        const [moved] = updated.splice(fromIndex, 1)
-        updated.splice(toIndex, 0, moved)
-
-        const normalized = updated.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
-        setBanners(normalized)
-        setHasPendingChanges(true)
-        toast.info(`Moved to #${toIndex + 1}. Click "Save Updates" to publish live.`, { id: 'banner-reorder' })
-    }
-
-    const handleDirectOrderChange = (fromIndex, targetRankStr) => {
-        const targetRank = parseInt(targetRankStr, 10)
-        if (isNaN(targetRank)) return
-        const toIndex = Math.max(0, Math.min(targetRank - 1, banners.length - 1))
-        if (fromIndex === toIndex) return
-
-        const updated = [...banners]
-        const [moved] = updated.splice(fromIndex, 1)
-        updated.splice(toIndex, 0, moved)
-
-        const normalized = updated.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
-        setBanners(normalized)
-        setHasPendingChanges(true)
-        toast.info(`Moved to #${toIndex + 1}. Click "Save Updates" to publish live.`, { id: 'banner-reorder' })
-    }
-
-    // Drag and Drop
-    const handleDragStart = (e, index) => {
-        setDraggedIndex(index)
-        e.dataTransfer.effectAllowed = 'move'
-    }
-
-    const handleDragOver = (e, index) => {
-        e.preventDefault()
-        e.dataTransfer.dropEffect = 'move'
-    }
-
-    const handleDrop = (e, targetIndex) => {
-        e.preventDefault()
-        if (draggedIndex === null || draggedIndex === targetIndex) {
-            setDraggedIndex(null)
-            return
-        }
-        handleMoveBanner(draggedIndex, targetIndex)
-        setDraggedIndex(null)
-    }
-
-    // Current active banner in preview
     const activePreviewBanner = banners[previewActiveIndex] || banners[0]
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-24">
-            {/* Header with Title and Actions */}
+            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] px-2.5 py-1 rounded-full border border-[#EFE0EF]">
-                            Homepage Hero Studio
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] px-2.5 py-0.5 rounded-full border border-[#EFE0EF]">
+                            Homepage Slider
                         </span>
-                        <span className="text-slate-400 text-xs">• Live Database Sync</span>
-                        {hasPendingChanges && (
-                            <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 animate-pulse">
-                                Unsaved Changes Pending
-                            </span>
-                        )}
+                        <span className="text-xs text-slate-400">• {banners.length} Banners</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight">
-                        Hero Banner Slider Management
+                    <h1 className="text-2xl font-extrabold text-[#241224] tracking-tight">
+                        Hero Banners
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-                        Add, edit, delete, and reorder homepage promotional slider images. Set exact serial positions (#1, #2, #3...) and attach custom click redirect URLs. All updates go live instantly across the entire store after clicking &quot;Save Updates&quot;.
-                    </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                     <Link
                         href="/"
                         target="_blank"
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:text-[#6C306E] transition shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:text-[#6C306E] transition shadow-2xs"
                     >
                         <StoreFrontIcon size={14} color="#6C306E" />
-                        <span>View Storefront</span>
-                        <ArrowRightIcon size={12} />
+                        <span>View Store</span>
                     </Link>
 
-                    <button
-                        onClick={fetchBanners}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-[#FAF6FA] border border-[#EFE0EF] hover:bg-[#FAF6FA]/80 transition cursor-pointer"
-                        title="Reload clean state from database"
-                    >
-                        <RefreshIcon size={14} />
-                        <span>Refresh</span>
-                    </button>
-
-                    {/* Prominent Master Save Updates Button in Header */}
+                    {/* Autoplay Toggle */}
                     <button
                         type="button"
-                        onClick={() => handleSaveAllBanners()}
-                        disabled={saving}
-                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold transition shadow-md cursor-pointer ${
-                            hasPendingChanges
-                                ? 'bg-linear-to-r from-[#6C306E] to-[#4A1D4C] text-white hover:from-[#5A255C] hover:to-[#381439] ring-4 ring-[#6C306E]/20 animate-pulse'
-                                : 'bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF] hover:bg-[#EFE0EF]'
+                        onClick={handleToggleAutoplay}
+                        disabled={isTogglingAutoplay}
+                        className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-bold transition shadow-2xs border cursor-pointer ${
+                            isAutoplay
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                                : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
                         }`}
-                        title={hasPendingChanges ? 'You have unsaved changes. Click to publish live storewide.' : 'All changes are saved. Click anytime to re-sync across all devices.'}
                     >
-                        {saving ? (
-                            <>
-                                <ClassicLoader />
-                                <span>Saving to Database...</span>
-                            </>
-                        ) : hasPendingChanges ? (
-                            <>
-                                <span className="size-2 rounded-full bg-amber-300 animate-ping" />
-                                <span>Save All Changes (Unsaved Pending)</span>
-                            </>
-                        ) : (
-                            <>
-                                <CheckIcon size={14} />
-                                <span>Save Updates {lastSavedAt ? `(Saved ${lastSavedAt})` : ''}</span>
-                            </>
-                        )}
+                        <span className={`size-2 rounded-full ${isAutoplay ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                        <span>{isAutoplay ? 'Autoplay ON' : 'Autoplay OFF'}</span>
                     </button>
+
+                    {/* Save Changes button if order dragged */}
+                    {hasPendingChanges && (
+                        <button
+                            type="button"
+                            onClick={() => handleSaveAllBanners()}
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md transition cursor-pointer"
+                        >
+                            {saving ? <ClassicLoader /> : <CheckIcon size={14} />}
+                            <span>Save Order</span>
+                        </button>
+                    )}
 
                     <button
                         onClick={handleOpenAddModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#4A1D4C] shadow-md shadow-[#6C306E]/20 transition cursor-pointer"
                     >
-                        <PlusIcon size={15} />
-                        <span>Add New Hero Banner</span>
+                        <PlusIcon size={14} />
+                        <span>Add Banner</span>
                     </button>
                 </div>
             </div>
 
-            {/* LIVE 1:1 HERO BANNER SLIDER PREVIEW */}
+            {/* Live Storefront Preview */}
             <div className="bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-base sm:text-lg font-extrabold text-[#241224]">
-                                1:1 Live Storefront Hero Preview
-                            </h2>
-                            <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                Real-Time Simulation
-                            </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                            Exact simulation of the visitor slider with touch/mouse navigation, responsive aspect ratio, and click redirect testing.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={handleToggleAutoplay}
-                            disabled={isTogglingAutoplay}
-                            title={isAutoplay ? 'Click to turn OFF autoplay across the entire store' : 'Click to turn ON autoplay across the entire store'}
-                            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-2xs border cursor-pointer ${
-                                isAutoplay
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 ring-2 ring-emerald-500/15'
-                                    : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 ring-2 ring-rose-500/15'
-                            } ${isTogglingAutoplay ? 'opacity-70 cursor-wait' : ''}`}
-                        >
-                            <span className={`size-2 rounded-full ${isAutoplay ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                            <span>{isAutoplay ? '▶ Autoplay ON' : '⏸ Autoplay OFF'}</span>
-                            <span className="text-[10px] opacity-75 font-normal">
-                                ({isAutoplay ? 'Storewide ON' : 'Storewide OFF'})
-                            </span>
-                        </button>
-                    </div>
+                    <h2 className="text-sm font-bold text-[#241224] uppercase tracking-wide">
+                        Storefront Preview
+                    </h2>
+                    <span className="text-xs text-slate-400">
+                        Slide {previewActiveIndex + 1} of {banners.length}
+                    </span>
                 </div>
 
                 {banners.length === 0 ? (
                     <div className="py-12 text-center text-slate-400 text-xs">
-                        No hero banners available. Click &quot;+ Add New Hero Banner&quot; to create your first slide.
+                        No banners added yet. Click &quot;Add Banner&quot; to create your first slide.
                     </div>
                 ) : (
-                    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-sm select-none">
-                        {/* Slide Display */}
+                    <div className="relative overflow-hidden rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-sm select-none">
                         <div className="relative w-full aspect-[21/9] sm:aspect-[24/9] md:aspect-[26/9] min-h-[160px] max-h-[460px] overflow-hidden flex items-center justify-center">
                             {activePreviewBanner && activePreviewBanner.image ? (
-                                <Image
-                                    src={activePreviewBanner.image}
-                                    alt={activePreviewBanner.imageAlt || activePreviewBanner.title || 'Hero Banner'}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized
-                                />
+                                <>
+                                    <Image
+                                        src={activePreviewBanner.image}
+                                        alt={activePreviewBanner.title || 'Hero Banner'}
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+
+                                    {/* Campaign Title & Subtitle Overlay on Live Preview */}
+                                    {(activePreviewBanner.title || activePreviewBanner.subtitle) && (
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent flex items-end p-6 sm:p-10 z-10 pointer-events-none">
+                                            <div className="max-w-xl text-white space-y-1 sm:space-y-2">
+                                                {activePreviewBanner.title && (
+                                                    <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
+                                                        {activePreviewBanner.title}
+                                                    </h2>
+                                                )}
+                                                {activePreviewBanner.subtitle && (
+                                                    <p className="text-xs sm:text-sm text-white/90 font-medium line-clamp-2 drop-shadow-sm">
+                                                        {activePreviewBanner.subtitle}
+                                                    </p>
+                                                )}
+                                                {activePreviewBanner.link && (
+                                                    <div className="pt-1">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
+                                                            <span>Explore</span>
+                                                            <ChevronRightIcon size={11} color="#FFFFFF" />
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="text-center p-6 text-slate-400 text-xs">
-                                    No Image Provided
+                                    No image available
                                 </div>
                             )}
-
-                            {/* Banner Meta Pill Overlay on Preview */}
-                            <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 z-20">
-                                <span className="text-[10px] font-extrabold uppercase bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-full border border-white/20">
-                                    Slide #{previewActiveIndex + 1} of {banners.length} (Priority #{activePreviewBanner?.displayOrder})
-                                </span>
-                                {activePreviewBanner?.link ? (
-                                    <span className="text-[10px] font-bold bg-[#6C306E]/90 backdrop-blur-md text-white px-2.5 py-1 rounded-full border border-white/20">
-                                        🔗 Target: {activePreviewBanner.link}
-                                    </span>
-                                ) : (
-                                    <span className="text-[10px] font-semibold bg-black/40 backdrop-blur-md text-white/80 px-2.5 py-1 rounded-full">
-                                        No link assigned
-                                    </span>
-                                )}
-                            </div>
                         </div>
 
                         {/* Navigation Arrows */}
                         <button
                             type="button"
                             onClick={() => setPreviewActiveIndex((previewActiveIndex - 1 + banners.length) % banners.length)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer z-20"
                             title="Previous slide"
                         >
-                            <ChevronLeftIcon size={16} color="#6C306E" />
+                            <ChevronLeftIcon size={14} color="#6C306E" />
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setPreviewActiveIndex((previewActiveIndex + 1) % banners.length)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer z-20"
                             title="Next slide"
                         >
-                            <ChevronRightIcon size={16} color="#6C306E" />
+                            <ChevronRightIcon size={14} color="#6C306E" />
                         </button>
 
-                        {/* Dots Capsule */}
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/20">
+                        {/* Dots */}
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/30 backdrop-blur-md z-20">
                             {banners.map((_, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setPreviewActiveIndex(idx)}
                                     className={`transition-all rounded-full cursor-pointer ${
-                                        previewActiveIndex === idx
-                                            ? 'w-5 h-2 bg-white'
-                                            : 'size-2 bg-white/60 hover:bg-white'
+                                        previewActiveIndex === idx ? 'w-4 h-1.5 bg-white' : 'size-1.5 bg-white/60'
                                     }`}
                                 />
                             ))}
@@ -632,77 +586,35 @@ export default function AdminHeroBannersPage() {
                 )}
             </div>
 
-            {/* CURATED HERO BANNERS & SERIAL PRIORITY LIST */}
+            {/* Slides List Table */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden">
-                <div className="p-6 border-b border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-6 border-b border-[#EFE0EF] flex items-center justify-between">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-extrabold text-[#241224]">
-                                Hero Banner Slides &amp; Display Priorities
-                            </h2>
-                            <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF]">
-                                {banners.length} Total Banners
-                            </span>
-                            {hasPendingChanges && (
-                                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                                    ● Unsaved Reorder / Edits
-                                </span>
-                            )}
-                        </div>
+                        <h2 className="text-base font-extrabold text-[#241224]">
+                            Slider Priority &amp; Reorder
+                        </h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Banners slide on the storefront in the exact serial order shown below. Drag rows or use Move buttons / Serial numbers, then click &quot;Save Updates&quot; to commit.
+                            Drag rows or use arrows to change the presentation sequence.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                        {/* Section Header Save Updates Button */}
-                        <button
-                            type="button"
-                            onClick={() => handleSaveAllBanners()}
-                            disabled={saving}
-                            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-extrabold transition shadow-xs cursor-pointer ${
-                                hasPendingChanges
-                                    ? 'bg-[#6C306E] text-white hover:bg-[#4A1D4C] ring-2 ring-[#6C306E]/30'
-                                    : 'bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] hover:bg-slate-100'
-                            }`}
-                        >
-                            {saving ? <ClassicLoader /> : <CheckIcon size={13} />}
-                            <span>{hasPendingChanges ? 'Save Banner Updates' : 'Save Updates'}</span>
-                        </button>
-
-                        <button
-                            onClick={handleOpenAddModal}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] shadow-xs transition cursor-pointer shrink-0"
-                        >
-                            <PlusIcon size={14} />
-                            <span>Add New Slide</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleOpenAddModal}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-[#6C306E] hover:bg-[#4A1D4C] transition shadow-2xs cursor-pointer"
+                    >
+                        <PlusIcon size={13} />
+                        <span>Add Slide</span>
+                    </button>
                 </div>
 
                 {loading ? (
                     <div className="py-16 text-center">
                         <ClassicLoader className="mx-auto" />
-                        <p className="text-xs text-slate-500 mt-3 font-semibold">Loading hero banners...</p>
+                        <p className="text-xs text-slate-500 mt-2">Loading banners...</p>
                     </div>
                 ) : banners.length === 0 ? (
-                    <div className="py-16 px-6 text-center max-w-md mx-auto space-y-3">
-                        <div className="size-16 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E]">
-                            <CameraIcon size={28} color="#6C306E" />
-                        </div>
-                        <h3 className="text-base font-extrabold text-[#241224]">
-                            No Hero Banners Found
-                        </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                            Add promotional banners to showcase your authentic UK imports, seasonal deals, or new skincare arrivals right at the top of your homepage.
-                        </p>
-                        <button
-                            onClick={handleOpenAddModal}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-xs mt-2 cursor-pointer"
-                        >
-                            <PlusIcon size={14} />
-                            <span>Add Your First Banner</span>
-                        </button>
+                    <div className="py-16 text-center text-slate-400 text-xs">
+                        No banners configured. Click &quot;Add Slide&quot; to create one.
                     </div>
                 ) : (
                     <div className="divide-y divide-[#EFE0EF]">
@@ -710,12 +622,17 @@ export default function AdminHeroBannersPage() {
                             <div
                                 key={banner.id}
                                 draggable
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragOver={(e) => handleDragOver(e, index)}
-                                onDrop={(e) => handleDrop(e, index)}
-                                className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-all ${
+                                onDragStart={() => setDraggedIndex(index)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => {
+                                    if (draggedIndex !== null && draggedIndex !== index) {
+                                        handleMoveBanner(draggedIndex, index)
+                                    }
+                                    setDraggedIndex(null)
+                                }}
+                                className={`p-4 flex items-center justify-between gap-4 transition-all ${
                                     draggedIndex === index
-                                        ? 'bg-[#FAF6FA]/80 border-2 border-dashed border-[#6C306E]'
+                                        ? 'bg-[#FAF6FA] border-2 border-dashed border-[#6C306E]'
                                         : 'hover:bg-[#FAF6FA]/50 bg-white'
                                 }`}
                             >
@@ -723,21 +640,19 @@ export default function AdminHeroBannersPage() {
                                 <div className="flex items-center gap-3 shrink-0">
                                     <div
                                         className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#6C306E] p-1 rounded transition"
-                                        title="Drag to reorder priority"
+                                        title="Drag to reorder"
                                     >
-                                        <GripVerticalIcon size={18} />
+                                        <GripVerticalIcon size={16} />
                                     </div>
 
-                                    {/* Priority Rank Badge */}
-                                    <div className="size-11 rounded-xl bg-linear-to-br from-[#6C306E] to-[#3A0C38] text-white flex flex-col items-center justify-center font-extrabold shadow-2xs shrink-0">
-                                        <span className="text-[9px] uppercase tracking-tighter opacity-70">RANK</span>
-                                        <span className="text-sm leading-none">#{index + 1}</span>
+                                    <div className="size-8 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center font-black text-xs shrink-0">
+                                        #{index + 1}
                                     </div>
                                 </div>
 
-                                {/* Center: Banner Image Thumbnail & Meta */}
-                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                    <div className="w-28 sm:w-36 aspect-[21/9] rounded-xl border border-[#EFE0EF] bg-slate-50 relative shrink-0 overflow-hidden shadow-2xs">
+                                {/* Center: Thumbnail & Meta */}
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-24 sm:w-28 aspect-[21/9] rounded-lg border border-[#EFE0EF] bg-slate-50 relative shrink-0 overflow-hidden shadow-2xs">
                                         {banner.image ? (
                                             <Image
                                                 src={banner.image}
@@ -747,7 +662,7 @@ export default function AdminHeroBannersPage() {
                                                 unoptimized
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px]">
                                                 No Image
                                             </div>
                                         )}
@@ -755,109 +670,74 @@ export default function AdminHeroBannersPage() {
 
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
+                                            <h3 className="font-extrabold text-xs sm:text-sm text-[#241224] truncate">
+                                                {banner.title || `Slide #${index + 1}`}
+                                            </h3>
                                             <button
                                                 type="button"
                                                 onClick={() => handleToggleActiveRow(banner.id)}
-                                                className={`text-[10px] font-black px-2.5 py-0.5 rounded-full cursor-pointer transition ${
+                                                className={`text-[9.5px] font-bold px-2 py-0.2 rounded-full cursor-pointer transition ${
                                                     banner.isActive !== false
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                                        : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                        : 'bg-slate-100 text-slate-500 border border-slate-200'
                                                 }`}
-                                                title="Click to toggle active on storefront"
                                             >
-                                                {banner.isActive !== false ? '● Active on Storefront' : '○ Hidden / Inactive'}
+                                                {banner.isActive !== false ? 'Active' : 'Hidden'}
                                             </button>
-                                            {index === 0 && (
-                                                <span className="text-[10px] font-extrabold text-[#D8B56D] bg-[#FAF6FA] px-2 py-0.5 rounded-full border border-[#EFE0EF]">
-                                                    ★ First Visible Slide
-                                                </span>
-                                            )}
                                         </div>
 
-                                        <h3 className="font-extrabold text-sm text-[#241224] truncate mt-1">
-                                            {banner.title || `Promotional Slide #${index + 1}`}
-                                        </h3>
-
                                         {banner.subtitle && (
-                                            <p className="text-xs text-slate-500 truncate mt-0.5">
+                                            <p className="text-[11px] text-slate-500 truncate mt-0.5">
                                                 {banner.subtitle}
                                             </p>
                                         )}
 
-                                        <div className="flex items-center gap-2 mt-1.5 text-xs">
-                                            <span className="text-slate-400 font-semibold">Redirect Link:</span>
-                                            {banner.link ? (
-                                                <span className="font-bold text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-md border border-[#EFE0EF] truncate max-w-xs">
-                                                    {banner.link}
-                                                </span>
-                                            ) : (
-                                                <span className="text-slate-400 italic">None (Display Only)</span>
-                                            )}
-                                        </div>
+                                        {banner.link && (
+                                            <p className="text-[10px] text-[#6C306E] truncate font-medium mt-0.5">
+                                                🔗 {banner.link}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Right: Serial Adjusters & Actions */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {/* Direct Serial Input */}
-                                    <div className="hidden sm:flex items-center gap-1 bg-[#FAF6FA] px-2 py-1 rounded-xl border border-[#EFE0EF]">
-                                        <span className="text-[10px] font-bold text-slate-400">Serial:</span>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max={banners.length}
-                                            defaultValue={index + 1}
-                                            key={`rank-${banner.id}-${index}`}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleDirectOrderChange(index, e.target.value)
-                                                }
-                                            }}
-                                            onBlur={(e) => handleDirectOrderChange(index, e.target.value)}
-                                            className="w-10 text-center text-xs font-black text-[#6C306E] bg-white rounded-lg border border-[#EFE0EF] py-0.5 focus:outline-hidden"
-                                        />
-                                    </div>
-
-                                    {/* Move Up */}
+                                {/* Right: Reorder arrows & Edit/Delete */}
+                                <div className="flex items-center gap-1 shrink-0">
                                     <button
                                         type="button"
-                                        onClick={() => handleMoveBanner(index, index - 1)}
                                         disabled={index === 0}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs cursor-pointer"
-                                        title="Move Priority Up"
+                                        onClick={() => handleMoveBanner(index, index - 1)}
+                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                                        title="Move up"
                                     >
                                         ▲
                                     </button>
 
-                                    {/* Move Down */}
                                     <button
                                         type="button"
-                                        onClick={() => handleMoveBanner(index, index + 1)}
                                         disabled={index === banners.length - 1}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs cursor-pointer"
-                                        title="Move Priority Down"
+                                        onClick={() => handleMoveBanner(index, index + 1)}
+                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                                        title="Move down"
                                     >
                                         ▼
                                     </button>
 
-                                    {/* Edit Button */}
                                     <button
                                         type="button"
                                         onClick={() => handleOpenEditModal(banner)}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-[#6C306E] flex items-center justify-center transition shadow-2xs cursor-pointer"
-                                        title="Edit Slide & Target URL"
+                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center hover:bg-white transition cursor-pointer ml-1"
+                                        title="Edit banner"
                                     >
-                                        <EditIcon size={14} />
+                                        <EditIcon size={12} />
                                     </button>
 
-                                    {/* Delete Button */}
                                     <button
                                         type="button"
                                         onClick={() => handleDeleteBanner(banner.id)}
-                                        className="size-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs cursor-pointer"
-                                        title="Delete Banner Slide"
+                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-400 hover:text-rose-600 flex items-center justify-center hover:bg-rose-50 transition cursor-pointer"
+                                        title="Delete banner"
                                     >
-                                        <TrashIcon size={14} />
+                                        <TrashIcon size={12} />
                                     </button>
                                 </div>
                             </div>
@@ -866,176 +746,122 @@ export default function AdminHeroBannersPage() {
                 )}
             </div>
 
-            {/* STICKY FLOATING ACTION BAR FOR PENDING CHANGES */}
-            {hasPendingChanges && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-3xl bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-[#6C306E] shadow-2xl shadow-[#6C306E]/30 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-5 duration-300">
-                    <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center font-black text-lg shrink-0 shadow-2xs">
-                            💾
-                        </div>
-                        <div>
-                            <p className="text-xs sm:text-sm font-extrabold text-[#241224]">
-                                You have unsaved changes in hero banner slides!
-                            </p>
-                            <p className="text-[11px] text-slate-500">
-                                Click &quot;Save Updates &amp; Publish Storewide&quot; to commit changes to the database and update all visitors instantly.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-end">
-                        <button
-                            type="button"
-                            onClick={handleDiscardChanges}
-                            disabled={saving}
-                            className="px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
-                        >
-                            Discard
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => handleSaveAllBanners()}
-                            disabled={saving}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-lg shadow-[#6C306E]/25 transition cursor-pointer"
-                        >
-                            {saving ? (
-                                <>
-                                    <ClassicLoader />
-                                    <span>Saving to Database...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <CheckIcon size={14} />
-                                    <span>Save Updates &amp; Publish Storewide</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* ADD / EDIT BANNER SLIDE MODAL WITH LIVE PREVIEW */}
+            {/* Clean, Modern Edit / Add Banner Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-                    <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-[#EFE0EF] flex items-center justify-between shrink-0 bg-[#FAF6FA]/50">
+                    <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-[#EFE0EF] flex items-center justify-between shrink-0 bg-[#FAF6FA]/50">
                             <div>
-                                <span className="text-[10px] font-black uppercase text-[#6C306E] tracking-wider">
-                                    {editingBanner ? 'Update Existing Slide' : 'Create New Hero Slide'}
-                                </span>
-                                <h3 className="text-xl font-extrabold text-[#241224]">
-                                    {editingBanner ? 'Edit Hero Banner & Link' : 'Add New Hero Banner Slide'}
+                                <h3 className="text-lg font-extrabold text-[#241224]">
+                                    {editingBanner ? 'Edit Hero Banner' : 'Add Hero Banner'}
                                 </h3>
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                    Configure high-resolution slide photo, target customer redirection URL, and initial display priority.
+                                <p className="text-xs text-slate-500">
+                                    Configure image, text overlay, and redirection link.
                                 </p>
                             </div>
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="size-9 rounded-full bg-white border border-[#EFE0EF] text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                className="size-8 rounded-full bg-white border border-[#EFE0EF] text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer"
                             >
-                                <CloseIcon size={16} />
+                                <CloseIcon size={14} />
                             </button>
                         </div>
 
-                        {/* Modal Body */}
-                        <form onSubmit={(e) => { e.preventDefault(); handleApplyBannerModal(false); }} className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Left Column: Inputs */}
-                                <div className="space-y-4">
-                                    {/* Image Upload Box */}
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {/* Left: Form Inputs */}
+                                <div className="space-y-3.5">
+                                    {/* Upload Dropzone */}
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                            Banner Image * (Recommended: 21:9 or 24:9 widescreen high-res)
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                            Banner Image
                                         </label>
                                         
                                         <div
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="border-2 border-dashed border-[#EFE0EF] hover:border-[#6C306E] bg-[#FAF6FA]/60 rounded-2xl p-5 text-center cursor-pointer transition"
+                                            className="border-2 border-dashed border-[#EFE0EF] hover:border-[#6C306E] bg-[#FAF6FA]/60 rounded-2xl p-4 text-center cursor-pointer transition group"
                                         >
                                             <input
                                                 type="file"
                                                 ref={fileInputRef}
                                                 onChange={handleImageFileSelect}
                                                 accept="image/*"
+                                                multiple
                                                 className="hidden"
                                             />
-                                            <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E] shadow-2xs mb-2">
-                                                {isUploadingImage ? <ClassicLoader /> : <UploadCloudIcon size={20} />}
+                                            <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E] shadow-2xs mb-1.5 group-hover:scale-105 transition">
+                                                {isUploadingImage ? <ClassicLoader /> : <UploadCloudIcon size={18} />}
                                             </div>
                                             <p className="text-xs font-extrabold text-[#241224]">
-                                                {isUploadingImage ? 'Uploading Image...' : 'Click to Upload High-Res Banner'}
+                                                {isUploadingImage ? 'Uploading Image...' : 'Click to Upload Image(s)'}
                                             </p>
                                             <p className="text-[10px] text-slate-400 mt-0.5">
-                                                Supports PNG, JPG, WEBP • Direct CDN Upload
+                                                PNG, JPG, WEBP (Supports multiple files)
                                             </p>
                                         </div>
 
-                                        {/* Direct URL input alternative */}
-                                        <div className="mt-2.5">
+                                        <div className="mt-2">
                                             <input
                                                 type="text"
                                                 value={formData.image}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                                                placeholder="Or paste direct image URL (e.g. /banner/1.png or https://...)"
-                                                className="w-full px-3.5 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                                placeholder="Or paste image URL"
+                                                className="w-full px-3 py-1.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Slide Title */}
+                                    {/* Campaign Title */}
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Banner Campaign Title (Optional)
+                                            Campaign Title (Displays on Banner)
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                            placeholder="e.g. Welcome to Radiant You"
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            placeholder="e.g. Summer Glow Collection"
+                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                         />
                                     </div>
 
-                                    {/* Subtitle / Alt Text */}
+                                    {/* Subtitle */}
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Subtitle / Accessibility Alt Text
+                                            Subtitle (Displays on Banner)
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.subtitle}
                                             onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                                            placeholder="e.g. Where beauty meets care! Discover the finest in skincare..."
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            placeholder="e.g. Authentic UK beauty imported directly"
+                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                         />
                                     </div>
 
-                                    {/* Target Redirection URL */}
+                                    {/* Destination Link */}
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Target Click Redirection URL (When user clicks banner)
+                                            Destination Link (Where click redirects)
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.link}
                                             onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
-                                            placeholder="e.g. /shop?category=Skincare or /product/xxx"
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            placeholder="e.g. /shop or https://..."
+                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                         />
 
-                                        {/* Quick Suggestion Pills */}
-                                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                                            <span className="text-[10px] text-slate-400 font-semibold mr-1">Quick Links:</span>
-                                            {DEFAULT_BANNER_SUGGESTIONS.map((item, idx) => (
+                                        <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                                            {QUICK_LINKS.map((item, idx) => (
                                                 <button
                                                     key={idx}
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({ ...prev, link: item.url }))}
-                                                    className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#FAF6FA]/80 px-2 py-0.5 rounded-md border border-[#EFE0EF] transition cursor-pointer"
+                                                    className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-md border border-[#EFE0EF] hover:bg-[#EFE0EF] transition cursor-pointer"
                                                 >
                                                     {item.label}
                                                 </button>
@@ -1043,132 +869,120 @@ export default function AdminHeroBannersPage() {
                                         </div>
                                     </div>
 
-                                    {/* Display Serial Position */}
-                                    <div className="grid grid-cols-2 gap-4 pt-1">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                                                Serial Display Order
-                                            </label>
+                                    {/* Order & Active */}
+                                    <div className="flex items-center justify-between pt-1">
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-xs font-bold text-slate-700">Display Order:</label>
                                             <input
                                                 type="number"
                                                 min="1"
                                                 value={formData.displayOrder}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, displayOrder: e.target.value }))}
-                                                className="w-full px-3.5 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-black text-[#6C306E] focus:outline-hidden"
+                                                className="w-16 px-2.5 py-1 rounded-lg border border-[#EFE0EF] text-xs font-black text-[#6C306E] text-center"
                                             />
-                                            <p className="text-[10px] text-slate-400 mt-0.5">
-                                                Position 1 = First slide seen by visitors
-                                            </p>
                                         </div>
 
-                                        <div className="flex flex-col justify-center">
-                                            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer mt-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isActive}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                                    className="accent-[#6C306E] size-4 rounded cursor-pointer"
-                                                />
-                                                <span>Active on Storefront</span>
-                                            </label>
-                                        </div>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.isActive}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                                                className="accent-[#6C306E] size-3.5 rounded cursor-pointer"
+                                            />
+                                            <span>Active on Storefront</span>
+                                        </label>
                                     </div>
                                 </div>
 
-                                {/* Right Column: Instant Live Preview Card */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black uppercase text-[#6C306E] tracking-wider">
-                                            Exact Customer Slide Preview
-                                        </span>
-                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                            Priority #{formData.displayOrder || 1}
-                                        </span>
-                                    </div>
+                                {/* Right: Live Preview Box */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-slate-700">
+                                        Live Preview
+                                    </label>
 
                                     <div className="relative aspect-[21/9] sm:aspect-[24/9] rounded-2xl overflow-hidden bg-[#FAF6FA] border border-[#EFE0EF] shadow-sm flex items-center justify-center">
                                         {formData.image ? (
-                                            <Image
-                                                src={formData.image}
-                                                alt={formData.title || 'Preview'}
-                                                fill
-                                                className="object-cover"
-                                                unoptimized
-                                            />
+                                            <>
+                                                <Image
+                                                    src={formData.image}
+                                                    alt={formData.title || 'Preview'}
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+
+                                                {/* Live Overlay of Title & Subtitle */}
+                                                {(formData.title || formData.subtitle) && (
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent flex items-end p-4 z-10 pointer-events-none">
+                                                        <div className="text-white space-y-0.5">
+                                                            {formData.title && (
+                                                                <h4 className="text-sm font-extrabold text-white drop-shadow-md">
+                                                                    {formData.title}
+                                                                </h4>
+                                                            )}
+                                                            {formData.subtitle && (
+                                                                <p className="text-[10px] text-white/90 font-medium line-clamp-2 drop-shadow-sm">
+                                                                    {formData.subtitle}
+                                                                </p>
+                                                            )}
+                                                            {formData.link && (
+                                                                <div className="pt-0.5">
+                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold text-white bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/30">
+                                                                        <span>Explore</span>
+                                                                        <ChevronRightIcon size={9} color="#FFFFFF" />
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <div className="text-center p-6 text-slate-400 space-y-1">
-                                                <CameraIcon size={28} className="mx-auto text-slate-300" />
-                                                <p className="text-xs font-bold text-slate-400">Live Preview Box</p>
-                                                <p className="text-[10px] text-slate-400">Upload or enter image URL to see live preview</p>
-                                            </div>
-                                        )}
-
-                                        {formData.link && (
-                                            <div className="absolute bottom-2 left-2 z-10">
-                                                <span className="text-[9px] font-bold bg-[#6C306E] text-white px-2 py-0.5 rounded-full shadow-md">
-                                                    🔗 Click navigates to: {formData.link}
-                                                </span>
+                                                <CameraIcon size={24} className="mx-auto text-slate-300" />
+                                                <p className="text-xs text-slate-400 font-medium">Upload an image to see preview</p>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] space-y-1.5 text-xs">
-                                        <h4 className="font-extrabold text-[#241224]">
-                                            {formData.title || 'Untitled Promotional Banner'}
-                                        </h4>
-                                        <p className="text-slate-500 text-[11px]">
-                                            {formData.subtitle || 'No subtitle description provided.'}
+                                    {formData.link && (
+                                        <p className="text-[10px] text-slate-500 truncate">
+                                            Target URL: <span className="font-semibold text-[#6C306E]">{formData.link}</span>
                                         </p>
-                                        <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400">
-                                            <span>Display Serial: #{formData.displayOrder}</span>
-                                            <span>Status: {formData.isActive ? 'Active' : 'Hidden'}</span>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Modal Footer with Choice: Apply Staged vs Save & Publish Immediately */}
-                            <div className="p-4 border-t border-[#EFE0EF] bg-[#FAF6FA] -mx-6 -mb-6 flex flex-wrap items-center justify-between gap-3 shrink-0 mt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-5 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition shadow-2xs cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
+                        {/* Footer with ONE Single Clear Action Button */}
+                        <div className="px-6 py-3.5 border-t border-[#EFE0EF] bg-[#FAF6FA] flex items-center justify-between shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition shadow-2xs cursor-pointer"
+                            >
+                                Cancel
+                            </button>
 
-                                <div className="flex items-center gap-2.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleApplyBannerModal(false)}
-                                        disabled={saving}
-                                        className="px-5 py-2.5 rounded-full text-xs font-extrabold text-[#6C306E] bg-white border border-[#6C306E]/30 hover:bg-[#FAF6FA] transition shadow-2xs cursor-pointer"
-                                        title="Keep changes in stage list and publish together with Master Save"
-                                    >
-                                        <span>{editingBanner ? 'Apply Changes' : 'Add to Slider'}</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleApplyBannerModal(true)}
-                                        disabled={saving}
-                                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-50 cursor-pointer"
-                                    >
-                                        {saving ? (
-                                            <>
-                                                <ClassicLoader />
-                                                <span>Saving to Database...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CheckIcon size={14} />
-                                                <span>Save &amp; Publish Storewide</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                            <button
+                                type="button"
+                                onClick={handleSaveBanner}
+                                disabled={saving}
+                                className="inline-flex items-center gap-1.5 px-6 py-2 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#4A1D4C] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-50 cursor-pointer"
+                            >
+                                {saving ? (
+                                    <>
+                                        <ClassicLoader />
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckIcon size={14} />
+                                        <span>Save Banner</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

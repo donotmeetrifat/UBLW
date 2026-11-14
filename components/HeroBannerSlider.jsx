@@ -221,7 +221,7 @@ const HeroBannerSlider = () => {
             diff = diff * 0.3
         }
 
-        if (Math.abs(diff) > 5) {
+        if (Math.abs(diff) > 15) {
             setIsDragging(true)
             hasDraggedBeyondThreshold.current = true
         }
@@ -247,6 +247,11 @@ const HeroBannerSlider = () => {
         setDragOffset(0)
         currentDragOffset.current = 0
         setIsPaused(false)
+
+        // Reset drag threshold shortly after click handling
+        setTimeout(() => {
+            hasDraggedBeyondThreshold.current = false
+        }, 120)
     }
 
     const handlePointerCancel = () => {
@@ -255,20 +260,32 @@ const HeroBannerSlider = () => {
         setIsDragging(false)
         setDragOffset(0)
         currentDragOffset.current = 0
+        hasDraggedBeyondThreshold.current = false
         setIsPaused(false)
+    }
+
+    // Format target redirection URL (supports internal /shop, external https://..., and clean www....)
+    const formatRedirectUrl = (raw) => {
+        if (!raw) return ''
+        let trimmed = String(raw).trim()
+        if (!trimmed) return ''
+        if (trimmed.startsWith('/') || trimmed.startsWith('#')) return trimmed
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+        if (trimmed.includes('.')) return `https://${trimmed}`
+        return trimmed
     }
 
     // Handle slide click to navigate to target URL configured by Admin
     const handleSlideClick = (slide) => {
-        if (hasDraggedBeyondThreshold.current || isDragging || Math.abs(currentDragOffset.current) > 5) {
+        if (hasDraggedBeyondThreshold.current || isDragging || Math.abs(currentDragOffset.current) > 10) {
             return
         }
 
-        const url = (slide.link || '').trim()
+        const url = formatRedirectUrl(slide.link)
         if (!url) return
 
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            window.open(url, '_blank', 'noopener,noreferrer')
+            window.location.assign(url)
         } else {
             router.push(url)
         }
@@ -343,6 +360,32 @@ const HeroBannerSlider = () => {
                                         quality={92}
                                         unoptimized
                                     />
+
+                                    {/* Campaign Title & Subtitle Overlay */}
+                                    {(slide.title || slide.subtitle) && (
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent flex items-end p-5 sm:p-8 md:p-12 z-10 pointer-events-none">
+                                            <div className="max-w-xl text-white space-y-1 sm:space-y-2">
+                                                {slide.title && (
+                                                    <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white drop-shadow-md">
+                                                        {slide.title}
+                                                    </h2>
+                                                )}
+                                                {slide.subtitle && (
+                                                    <p className="text-xs sm:text-sm md:text-base text-white/90 font-medium line-clamp-2 drop-shadow-sm">
+                                                        {slide.subtitle}
+                                                    </p>
+                                                )}
+                                                {hasLink && (
+                                                    <div className="pt-1.5 sm:pt-2.5">
+                                                        <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/30 shadow-sm">
+                                                            <span>Explore Collection</span>
+                                                            <ChevronRightIcon size={12} color="#FFFFFF" />
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </article>
                         )
