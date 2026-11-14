@@ -5,21 +5,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import {
-    SparklesIcon,
-    RoyalCrownIcon,
     PlusIcon,
     TrashIcon,
     GripVerticalIcon,
     SearchIcon,
     CloseIcon,
     CheckIcon,
-    RefreshIcon,
-    ArrowRightIcon,
-    EyeIcon,
-    BagIcon,
-    TagIcon,
-    StoreFrontIcon,
-    FilterIcon
+    BagIcon
 } from '@/components/icons'
 import ClassicLoader from '@/components/ui/classic-loader'
 
@@ -34,7 +26,7 @@ const DEFAULT_SECTIONS = {
     bestSelling: {
         enabled: true,
         title: 'Best Selling Beauty',
-        description: 'Explore our most-loved UK imported skincare, cosmetics, and haircare essentials.',
+        description: 'Discover the latest authentic UK imported skincare, cult cosmetics, and personal care.',
         displayLimit: 8,
         productIds: []
     }
@@ -55,7 +47,7 @@ export default function AdminHomepageSectionsPage() {
     const [catalogSearch, setCatalogSearch] = useState('')
     const [catalogCategory, setCatalogCategory] = useState('All')
 
-    // Live preview view toggle
+    // Live mini-preview toggle
     const [showLivePreview, setShowLivePreview] = useState(false)
 
     // 1. Fetch initial configuration & product catalog
@@ -129,7 +121,6 @@ export default function AdminHomepageSectionsPage() {
             if (found) {
                 list.push({ ...found, priorityOrder: index + 1 })
             } else {
-                // Product might have been deleted or from fallback dummy data
                 list.push({
                     id,
                     name: `Curated UK Product (${id.slice(0, 8)})`,
@@ -316,57 +307,69 @@ export default function AdminHomepageSectionsPage() {
     }
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-16">
-            {/* Header with Title and Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] px-2.5 py-1 rounded-full border border-[#EFE0EF]">
-                            Homepage Showcase Studio
-                        </span>
-                        <span className="text-slate-400 text-xs">• Live Database Sync</span>
+        <div className="max-w-[1520px] w-full mx-auto space-y-6">
+            {/* Top Showcase Studio Hero & Actions Container */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+                <div className="space-y-1.5 max-w-3xl">
+                    {/* Studio Pill Sub-heading */}
+                    <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-purple-50 text-plum font-semibold text-[11px] tracking-wide uppercase border border-purple-100">
+                        <span>Homepage Showcase Studio</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight">
+                    {/* Page Title */}
+                    <h1 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
                         Homepage Curated Sections & Priorities
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-                        Select which authentic UK imported products appear on the storefront homepage and set their exact serial rank (#1, #2, #3...). All changes publish instantly across frontend, backend, and database.
-                    </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                {/* Studio Actions Buttons */}
+                <div className="flex items-center gap-2.5 shrink-0 w-full xl:w-auto justify-start xl:justify-end">
+                    {/* View Live Store */}
                     <Link
                         href="/"
                         target="_blank"
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:text-[#6C306E] transition shadow-2xs"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs"
                     >
-                        <StoreFrontIcon size={14} color="#6C306E" />
+                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M2 3h20v14H2z"></path>
+                            <path d="M8 21h8"></path>
+                            <path d="M12 17v4"></path>
+                        </svg>
                         <span>View Live Store</span>
-                        <ArrowRightIcon size={12} />
+                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path d="M7 17L17 7M17 7H7M17 7V17"></path>
+                        </svg>
                     </Link>
 
+                    {/* Reset Auto */}
                     <button
                         onClick={handleResetDefaults}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-[#EFE0EF] transition"
-                        title="Reset current section to automatic sorting"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer"
+                        type="button"
                     >
-                        <RefreshIcon size={14} />
+                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
                         <span>Reset Auto</span>
                     </button>
 
+                    {/* Save & Publish Showcase (Primary Action) */}
                     <button
                         onClick={handleSaveAndPublish}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition-all disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                        type="button"
                     >
                         {saving ? (
                             <>
                                 <ClassicLoader />
-                                <span>Publishing to Storefront...</span>
+                                <span>Publishing Showcase...</span>
                             </>
                         ) : (
                             <>
-                                <CheckIcon size={15} />
+                                <svg className="w-3.5 h-3.5 text-white/90" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
                                 <span>Save & Publish Showcase</span>
                             </>
                         )}
@@ -374,157 +377,181 @@ export default function AdminHomepageSectionsPage() {
                 </div>
             </div>
 
-            {/* Section Switcher Dual Tabs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Tab 1: New UK Arrivals */}
-                <button
+            {/* BEGIN: SectionSwitcherCards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card 1: New UK Arrivals */}
+                <div
                     onClick={() => setActiveTab('newArrivals')}
-                    className={`p-5 rounded-2xl border text-left transition-all relative overflow-hidden flex items-start gap-4 ${
+                    className={`relative rounded-2xl p-5 cursor-pointer transition-all ${
                         activeTab === 'newArrivals'
-                            ? 'bg-white border-[#6C306E] shadow-md shadow-[#6C306E]/10 ring-2 ring-[#6C306E]/20'
-                            : 'bg-white/80 border-[#EFE0EF] hover:bg-white hover:border-[#6C306E]/40'
+                            ? 'bg-white border-2 border-plum shadow-card'
+                            : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className={`size-11 rounded-xl flex items-center justify-center shrink-0 ${
-                        activeTab === 'newArrivals' ? 'bg-[#6C306E] text-white shadow-2xs' : 'bg-[#FAF6FA] text-[#6C306E]'
-                    }`}>
-                        <SparklesIcon size={22} color={activeTab === 'newArrivals' ? '#FFFFFF' : '#6C306E'} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="font-extrabold text-base text-[#241224]">
-                                1. New UK Arrivals
-                            </span>
-                            <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${
-                                sections.newArrivals.productIds.length > 0
-                                    ? 'bg-[#6C306E]/10 text-[#6C306E] border border-[#6C306E]/20'
-                                    : 'bg-slate-100 text-slate-500'
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3.5">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors ${
+                                activeTab === 'newArrivals'
+                                    ? 'bg-plum text-white'
+                                    : 'bg-slate-50 text-slate-600 border border-slate-100'
                             }`}>
-                                {sections.newArrivals.productIds.length > 0
-                                    ? `${sections.newArrivals.productIds.length} Curated`
-                                    : 'Auto Latest'}
-                            </span>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className={`font-display font-bold text-base ${activeTab === 'newArrivals' ? 'text-slate-900' : 'text-slate-800'}`}>
+                                        1. New UK Arrivals
+                                    </h3>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                                    <span>{sections.newArrivals.title || 'New UK Arrivals'}</span>
+                                    <span className="text-slate-300">•</span>
+                                    <span>Placed directly beneath the Hero banner</span>
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                            {sections.newArrivals.title} • Placed directly beneath the Hero banner
-                        </p>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
+                            sections.newArrivals.productIds.length > 0
+                                ? 'bg-purple-50 text-plum border-purple-200'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                            {sections.newArrivals.productIds.length > 0
+                                ? `${sections.newArrivals.productIds.length} Curated`
+                                : 'Auto Latest'}
+                        </span>
                     </div>
+                </div>
 
-                    {activeTab === 'newArrivals' && (
-                        <div className="absolute top-0 right-0 w-2 h-full bg-[#6C306E]" />
-                    )}
-                </button>
-
-                {/* Tab 2: Best Selling Beauty */}
-                <button
+                {/* Card 2: Best Selling Beauty */}
+                <div
                     onClick={() => setActiveTab('bestSelling')}
-                    className={`p-5 rounded-2xl border text-left transition-all relative overflow-hidden flex items-start gap-4 ${
+                    className={`relative rounded-2xl p-5 cursor-pointer transition-all ${
                         activeTab === 'bestSelling'
-                            ? 'bg-white border-[#6C306E] shadow-md shadow-[#6C306E]/10 ring-2 ring-[#6C306E]/20'
-                            : 'bg-white/80 border-[#EFE0EF] hover:bg-white hover:border-[#6C306E]/40'
+                            ? 'bg-white border-2 border-plum shadow-card'
+                            : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className={`size-11 rounded-xl flex items-center justify-center shrink-0 ${
-                        activeTab === 'bestSelling' ? 'bg-[#6C306E] text-white shadow-2xs' : 'bg-[#FAF6FA] text-[#6C306E]'
-                    }`}>
-                        <RoyalCrownIcon size={22} color={activeTab === 'bestSelling' ? '#FFFFFF' : '#6C306E'} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="font-extrabold text-base text-[#241224]">
-                                2. Best Selling Beauty
-                            </span>
-                            <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${
-                                sections.bestSelling.productIds.length > 0
-                                    ? 'bg-[#6C306E]/10 text-[#6C306E] border border-[#6C306E]/20'
-                                    : 'bg-slate-100 text-slate-500'
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3.5">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                activeTab === 'bestSelling'
+                                    ? 'bg-plum text-white shadow-sm'
+                                    : 'bg-slate-50 text-slate-600 border border-slate-100'
                             }`}>
-                                {sections.bestSelling.productIds.length > 0
-                                    ? `${sections.bestSelling.productIds.length} Curated`
-                                    : 'Auto Bestsellers'}
-                            </span>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
+                                    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className={`font-display font-bold text-base ${activeTab === 'bestSelling' ? 'text-slate-900' : 'text-slate-800'}`}>
+                                    2. Best Selling Beauty
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                                    <span>{sections.bestSelling.title || 'Best Selling Beauty'}</span>
+                                    <span className="text-slate-300">•</span>
+                                    <span>Signature high-converting storefront grid</span>
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                            {sections.bestSelling.title} • Signature high-converting storefront grid
-                        </p>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
+                            sections.bestSelling.productIds.length > 0
+                                ? 'bg-purple-50 text-plum border-purple-200'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                            {sections.bestSelling.productIds.length > 0
+                                ? `${sections.bestSelling.productIds.length} Curated`
+                                : 'Auto Bestsellers'}
+                        </span>
                     </div>
-
-                    {activeTab === 'bestSelling' && (
-                        <div className="absolute top-0 right-0 w-2 h-full bg-[#6C306E]" />
-                    )}
-                </button>
+                </div>
             </div>
+            {/* END: SectionSwitcherCards */}
 
-            {/* Section Settings Configuration Card */}
-            <div className="bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE0EF]">
+            {/* BEGIN: ConfigurationPanel */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle space-y-6">
+                {/* Panel Header & Storefront Status Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
                     <div>
-                        <h2 className="text-lg font-extrabold text-[#241224] flex items-center gap-2">
-                            <span>Configure {activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}</span>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Active on Homepage
-                            </span>
-                        </h2>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <div className="flex items-center gap-2.5">
+                            <h2 className="font-display font-bold text-lg text-slate-900 tracking-tight">
+                                Configure {activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}
+                            </h2>
+                            {currentSectionConfig.enabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    Active on Storefront
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
                             Customize section heading, customer advisory description, and maximum display count.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={currentSectionConfig.enabled}
-                                onChange={(e) => handleUpdateSectionMeta('enabled', e.target.checked)}
-                                className="accent-[#6C306E] size-4 rounded"
-                            />
-                            <span>Enable Section on Storefront</span>
-                        </label>
-                    </div>
+                    {/* Custom Checkbox / Toggle */}
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={currentSectionConfig.enabled}
+                            onChange={(e) => handleUpdateSectionMeta('enabled', e.target.checked)}
+                            className="w-4 h-4 rounded text-plum accent-plum focus:ring-plum/30 border-slate-300 transition cursor-pointer"
+                        />
+                        <span className="text-xs font-semibold text-slate-800">Enable Section on Storefront</span>
+                    </label>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Section Heading Title *
+                {/* Section Configuration Inputs */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Section Heading Title Input */}
+                    <div className="lg:col-span-5 space-y-1.5">
+                        <label className="block text-xs font-semibold text-slate-700" htmlFor="sectionHeading">
+                            Section Heading Title <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            type="text"
-                            value={currentSectionConfig.title}
-                            onChange={(e) => handleUpdateSectionMeta('title', e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
-                            placeholder="e.g. New UK Arrivals"
-                        />
+                        <div className="relative">
+                            <input
+                                className="w-full text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
+                                id="sectionHeading"
+                                placeholder="e.g. New UK Arrivals"
+                                type="text"
+                                value={currentSectionConfig.title || ''}
+                                onChange={(e) => handleUpdateSectionMeta('title', e.target.value)}
+                            />
+                        </div>
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {/* Section Subtitle / Description Input */}
+                    <div className="lg:col-span-7 space-y-1.5">
+                        <label className="block text-xs font-semibold text-slate-700" htmlFor="sectionSubtitle">
                             Section Subtitle / Description
                         </label>
-                        <input
-                            type="text"
-                            value={currentSectionConfig.description}
-                            onChange={(e) => handleUpdateSectionMeta('description', e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
-                            placeholder="e.g. Discover the latest authentic UK imported skincare..."
-                        />
+                        <div className="relative">
+                            <input
+                                className="w-full text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
+                                id="sectionSubtitle"
+                                placeholder="Customer advisory headline or promotional context"
+                                type="text"
+                                value={currentSectionConfig.description || ''}
+                                onChange={(e) => handleUpdateSectionMeta('description', e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-3 text-xs">
-                        <span className="font-bold text-slate-600">Max Storefront Display Limit:</span>
+                {/* Display Limit Pills & Preview Link */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 gap-4">
+                    {/* Max Storefront Display Limit Selector */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-700 mr-1.5">Max Storefront Display Limit:</span>
                         {[4, 6, 8, 12, 16].map(num => (
                             <button
                                 key={num}
                                 type="button"
                                 onClick={() => handleUpdateSectionMeta('displayLimit', num)}
-                                className={`px-3 py-1 rounded-lg font-bold text-xs transition ${
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                                     currentSectionConfig.displayLimit === num
-                                        ? 'bg-[#6C306E] text-white shadow-2xs'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        ? 'bg-plum text-white shadow-2xs'
+                                        : 'font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200'
                                 }`}
                             >
                                 {num} Products
@@ -532,43 +559,49 @@ export default function AdminHomepageSectionsPage() {
                         ))}
                     </div>
 
+                    {/* Mini Live Preview CTA */}
                     <button
                         type="button"
                         onClick={() => setShowLivePreview(prev => !prev)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6C306E] hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-plum transition cursor-pointer"
                     >
-                        <EyeIcon size={14} />
-                        <span>{showLivePreview ? 'Hide Preview' : 'Show Live Mini-Preview'}</span>
+                        <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-plum" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span>{showLivePreview ? 'Hide Live Mini-Preview' : 'Show Live Mini-Preview'}</span>
                     </button>
                 </div>
             </div>
+            {/* END: ConfigurationPanel */}
 
-            {/* Live Mini Preview (Optional Dropdown) */}
+            {/* Optional Live Mini Preview */}
             {showLivePreview && (
-                <div className="bg-[#FAF6FA] p-6 rounded-3xl border border-[#EFE0EF] shadow-inner space-y-4">
+                <div className="bg-[#FAF9FB] p-6 rounded-2xl border border-slate-200/80 shadow-subtle space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <span className="text-[10px] font-black uppercase text-[#6C306E] tracking-wider">
+                            <span className="text-[10px] font-bold uppercase text-plum tracking-wider bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-100 inline-block">
                                 Live Customer Storefront Preview
                             </span>
-                            <h3 className="text-xl font-extrabold text-[#241224]">{currentSectionConfig.title}</h3>
+                            <h3 className="text-lg font-bold font-display text-slate-900 mt-1.5">{currentSectionConfig.title}</h3>
                             <p className="text-xs text-slate-500">{currentSectionConfig.description}</p>
                         </div>
                         <button
                             onClick={() => setShowLivePreview(false)}
-                            className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
+                            type="button"
                         >
                             <CloseIcon size={16} />
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                         {curatedProducts.slice(0, currentSectionConfig.displayLimit).map((p, idx) => (
-                            <div key={p.id || idx} className="bg-white p-3 rounded-2xl border border-[#EFE0EF] text-center space-y-2">
-                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#6C306E] text-white">
+                            <div key={p.id || idx} className="bg-white p-3 rounded-xl border border-slate-200/80 text-center space-y-2 shadow-2xs">
+                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-plum text-white">
                                     Priority #{idx + 1}
                                 </span>
-                                <div className="size-20 mx-auto relative rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                <div className="w-20 h-20 mx-auto relative rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
                                     {p.images && p.images[0] ? (
                                         <Image
                                             src={p.images[0]}
@@ -581,10 +614,10 @@ export default function AdminHomepageSectionsPage() {
                                         <BagIcon size={20} color="#94A3B8" />
                                     )}
                                 </div>
-                                <h4 className="text-[11px] font-bold text-[#241224] line-clamp-2 leading-tight">
+                                <h4 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight">
                                     {p.name}
                                 </h4>
-                                <div className="text-xs font-black text-[#6C306E]">
+                                <div className="text-xs font-bold text-plum">
                                     {currency}{Number(p.price || 0).toLocaleString()}
                                 </div>
                             </div>
@@ -593,60 +626,73 @@ export default function AdminHomepageSectionsPage() {
                 </div>
             )}
 
-            {/* Product Priorities List */}
-            <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden">
-                <div className="p-6 border-b border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* BEGIN: CuratedProductsSection */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle space-y-6">
+                {/* Products Area Header Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-extrabold text-[#241224]">
+                        <div className="flex items-center gap-2.5">
+                            <h2 className="font-display font-bold text-lg text-slate-900 tracking-tight">
                                 Curated Products & Serial Priorities
                             </h2>
-                            <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                                 {curatedProducts.length} Selected
                             </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-1">
                             Products appear on the homepage exactly in the order shown below. Drag rows or use the Move buttons / Serial numbers to adjust priorities.
                         </p>
                     </div>
 
+                    {/* Add Products CTA Button */}
                     <button
                         onClick={() => {
                             setCatalogSearch('')
                             setIsAddModalOpen(true)
                         }}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] shadow-xs transition shrink-0"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition shrink-0 active:scale-[0.98] cursor-pointer"
+                        type="button"
                     >
-                        <PlusIcon size={15} />
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <line x1="12" x2="12" y1="5" y2="19"></line>
+                            <line x1="5" x2="19" y1="12" y2="12"></line>
+                        </svg>
                         <span>Add Products from Catalog</span>
                     </button>
                 </div>
 
+                {/* Empty State Container */}
                 {curatedProducts.length === 0 ? (
-                    <div className="py-16 px-6 text-center max-w-md mx-auto space-y-3">
-                        <div className="size-16 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E]">
-                            <SparklesIcon size={28} color="#6C306E" />
+                    <div className="py-16 px-6 border-2 border-dashed border-slate-200/80 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/40">
+                        {/* Sparkling Icon Badge */}
+                        <div className="w-14 h-14 rounded-2xl bg-plum/10 text-plum flex items-center justify-center mb-4 shadow-2xs">
+                            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
                         </div>
-                        <h3 className="text-base font-extrabold text-[#241224]">
-                            No Custom Products Assigned Yet
-                        </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                            This section is currently using automatic catalog sorting ({activeTab === 'newArrivals' ? 'newest imports first' : 'highest customer reviews first'}).
-                            Click below to select specific authentic products and curate their exact display sequence.
+                        {/* Empty State Headings */}
+                        <h3 className="font-display font-bold text-base text-slate-900 mb-1.5">No Custom Products Assigned Yet</h3>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed mb-6">
+                            This section is currently using automatic catalog sorting ({activeTab === 'newArrivals' ? 'newest imports first' : 'highest customer reviews first'}). Click below to select specific authentic products and curate their exact display sequence.
                         </p>
+                        {/* Center Call to Action */}
                         <button
                             onClick={() => {
                                 setCatalogSearch('')
                                 setIsAddModalOpen(true)
                             }}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-xs mt-2"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition active:scale-[0.98] cursor-pointer"
+                            type="button"
                         >
-                            <PlusIcon size={14} />
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <line x1="12" x2="12" y1="5" y2="19"></line>
+                                <line x1="5" x2="19" y1="12" y2="12"></line>
+                            </svg>
                             <span>Select Products from Catalog</span>
                         </button>
                     </div>
                 ) : (
-                    <div className="divide-y divide-[#EFE0EF]">
+                    <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/80 overflow-hidden bg-white shadow-subtle">
                         {curatedProducts.map((prod, index) => (
                             <div
                                 key={prod.id}
@@ -656,29 +702,29 @@ export default function AdminHomepageSectionsPage() {
                                 onDrop={(e) => handleDrop(e, index)}
                                 className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-all ${
                                     draggedIndex === index
-                                        ? 'bg-[#FAF6FA]/80 border-2 border-dashed border-[#6C306E]'
-                                        : 'hover:bg-[#FAF6FA]/50 bg-white'
+                                        ? 'bg-plum/5 border-2 border-dashed border-plum'
+                                        : 'hover:bg-slate-50/60 bg-white'
                                 }`}
                             >
                                 {/* Left: Drag handle & Priority Rank */}
                                 <div className="flex items-center gap-3 shrink-0">
                                     <div
-                                        className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#6C306E] p-1 rounded transition"
+                                        className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-plum p-1.5 rounded-lg transition"
                                         title="Drag to reorder priority"
                                     >
                                         <GripVerticalIcon size={18} />
                                     </div>
 
                                     {/* Priority Rank Badge */}
-                                    <div className="size-10 rounded-xl bg-linear-to-br from-[#6C306E] to-[#3A0C38] text-white flex flex-col items-center justify-center font-extrabold shadow-2xs shrink-0">
-                                        <span className="text-[9px] uppercase tracking-tighter opacity-70">RANK</span>
-                                        <span className="text-sm leading-none">#{index + 1}</span>
+                                    <div className="w-10 h-10 rounded-xl bg-plum text-white flex flex-col items-center justify-center font-bold shadow-2xs shrink-0 font-display">
+                                        <span className="text-[9px] uppercase tracking-tighter opacity-80">RANK</span>
+                                        <span className="text-sm leading-none font-bold">#{index + 1}</span>
                                     </div>
                                 </div>
 
                                 {/* Center: Product Thumbnail & Meta */}
                                 <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                                    <div className="size-14 rounded-xl border border-[#EFE0EF] bg-slate-50 relative shrink-0 overflow-hidden flex items-center justify-center">
+                                    <div className="w-14 h-14 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1">
                                         {prod.images && prod.images[0] ? (
                                             <Image
                                                 src={prod.images[0]}
@@ -693,35 +739,35 @@ export default function AdminHomepageSectionsPage() {
                                     </div>
 
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black uppercase text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-full border border-[#EFE0EF]">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-[10px] font-semibold text-plum bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 uppercase tracking-wide">
                                                 {prod.category || 'Beauty'}
                                             </span>
-                                            <span className="text-[10px] font-bold text-slate-400">
+                                            <span className="text-[10px] font-medium text-slate-400">
                                                 {prod.brand || 'UK Import'}
                                             </span>
                                             {index < currentSectionConfig.displayLimit ? (
-                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    Visible on Homepage
+                                                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    Visible on Storefront
                                                 </span>
                                             ) : (
-                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                                                     Queue #{index + 1}
                                                 </span>
                                             )}
                                         </div>
 
-                                        <h3 className="font-extrabold text-sm text-[#241224] truncate mt-0.5">
+                                        <h4 className="font-bold text-sm text-slate-900 truncate mt-1">
                                             {prod.name}
-                                        </h3>
+                                        </h4>
 
                                         <div className="flex items-center gap-3 mt-1 text-xs">
-                                            <span className="font-extrabold text-[#6C306E]">
+                                            <span className="font-bold text-plum">
                                                 {currency}{Number(prod.price || 0).toLocaleString()}
                                             </span>
                                             <span className="text-slate-300">•</span>
-                                            <span className={`font-semibold text-[11px] ${prod.inStock ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                                {prod.inStock ? 'In Stock' : 'Out of Stock'}
+                                            <span className={`font-medium text-[11px] ${prod.inStock !== false ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                {prod.inStock !== false ? 'In Stock' : 'Out of Stock'}
                                             </span>
                                         </div>
                                     </div>
@@ -730,8 +776,8 @@ export default function AdminHomepageSectionsPage() {
                                 {/* Right: Priority Adjusters & Remove Action */}
                                 <div className="flex items-center gap-2 shrink-0">
                                     {/* Direct Serial Input */}
-                                    <div className="hidden sm:flex items-center gap-1 bg-[#FAF6FA] px-2 py-1 rounded-xl border border-[#EFE0EF]">
-                                        <span className="text-[10px] font-bold text-slate-400">Serial:</span>
+                                    <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                                        <span className="text-[10px] font-semibold text-slate-500">Serial:</span>
                                         <input
                                             type="number"
                                             min="1"
@@ -744,7 +790,7 @@ export default function AdminHomepageSectionsPage() {
                                                 }
                                             }}
                                             onBlur={(e) => handleDirectOrderChange(index, e.target.value)}
-                                            className="w-10 text-center text-xs font-black text-[#6C306E] bg-white rounded-lg border border-[#EFE0EF] py-0.5 focus:outline-hidden"
+                                            className="w-10 text-center text-xs font-bold text-slate-900 bg-white rounded-lg border border-slate-200 py-0.5 focus:ring-1 focus:ring-plum focus:border-plum focus:outline-hidden"
                                         />
                                     </div>
 
@@ -753,7 +799,7 @@ export default function AdminHomepageSectionsPage() {
                                         type="button"
                                         onClick={() => handleMoveProduct(index, index - 1)}
                                         disabled={index === 0}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs"
+                                        className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
                                         title="Move Priority Up"
                                     >
                                         ▲
@@ -764,7 +810,7 @@ export default function AdminHomepageSectionsPage() {
                                         type="button"
                                         onClick={() => handleMoveProduct(index, index + 1)}
                                         disabled={index === curatedProducts.length - 1}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs"
+                                        className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
                                         title="Move Priority Down"
                                     >
                                         ▼
@@ -774,7 +820,7 @@ export default function AdminHomepageSectionsPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveProduct(prod.id)}
-                                        className="size-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs"
+                                        className="w-8 h-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs cursor-pointer"
                                         title="Remove from this showcase section"
                                     >
                                         <TrashIcon size={14} />
@@ -785,18 +831,19 @@ export default function AdminHomepageSectionsPage() {
                     </div>
                 )}
             </div>
+            {/* END: CuratedProductsSection */}
 
             {/* Product Selector Catalog Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-                    <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+                    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[#EFE0EF] flex items-center justify-between shrink-0 bg-[#FAF6FA]/50">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/40">
                             <div>
-                                <span className="text-[10px] font-black uppercase text-[#6C306E] tracking-wider">
+                                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-purple-50 text-plum font-semibold text-[10px] tracking-wide uppercase border border-purple-100">
                                     Catalog Product Selector
-                                </span>
-                                <h3 className="text-xl font-extrabold text-[#241224]">
+                                </div>
+                                <h3 className="text-xl font-bold font-display text-slate-900 mt-1">
                                     Add Products to {activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
@@ -806,14 +853,15 @@ export default function AdminHomepageSectionsPage() {
 
                             <button
                                 onClick={() => setIsAddModalOpen(false)}
-                                className="size-9 rounded-full bg-white border border-[#EFE0EF] text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs"
+                                className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                type="button"
                             >
                                 <CloseIcon size={16} />
                             </button>
                         </div>
 
                         {/* Search & Category Filter Bar */}
-                        <div className="p-4 border-b border-[#EFE0EF] bg-white flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                        <div className="p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row items-center gap-3 shrink-0">
                             <div className="relative flex-1 w-full">
                                 <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
@@ -821,7 +869,7 @@ export default function AdminHomepageSectionsPage() {
                                     value={catalogSearch}
                                     onChange={(e) => setCatalogSearch(e.target.value)}
                                     placeholder="Search products by title, UK brand origin, or category..."
-                                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20"
                                 />
                             </div>
 
@@ -830,11 +878,12 @@ export default function AdminHomepageSectionsPage() {
                                     <button
                                         key={cat}
                                         onClick={() => setCatalogCategory(cat)}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition shrink-0 cursor-pointer ${
                                             catalogCategory === cat
-                                                ? 'bg-[#6C306E] text-white shadow-2xs'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                ? 'bg-plum text-white shadow-2xs font-semibold'
+                                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                                         }`}
+                                        type="button"
                                     >
                                         {cat}
                                     </button>
@@ -852,14 +901,14 @@ export default function AdminHomepageSectionsPage() {
                                 filteredCatalog.map(prod => (
                                     <div
                                         key={prod.id}
-                                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
+                                        className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-4 ${
                                             prod.isAlreadyAdded
-                                                ? 'bg-emerald-50/30 border-emerald-200'
-                                                : 'bg-white border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA]/50'
+                                                ? 'bg-emerald-50/40 border-emerald-200'
+                                                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/40'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            <div className="size-12 rounded-xl border border-[#EFE0EF] bg-white relative shrink-0 overflow-hidden flex items-center justify-center">
+                                            <div className="w-12 h-12 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1">
                                                 {prod.images && prod.images[0] ? (
                                                     <Image
                                                         src={prod.images[0]}
@@ -874,18 +923,18 @@ export default function AdminHomepageSectionsPage() {
                                             </div>
 
                                             <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black uppercase text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-full border border-[#EFE0EF]">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-[10px] font-semibold uppercase text-plum bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
                                                         {prod.category}
                                                     </span>
-                                                    <span className="text-[10px] font-bold text-slate-400">
+                                                    <span className="text-[10px] font-medium text-slate-400">
                                                         {prod.brand || 'UK Import'}
                                                     </span>
                                                 </div>
-                                                <h4 className="font-bold text-xs text-[#241224] truncate mt-0.5">
+                                                <h4 className="font-bold text-xs text-slate-900 truncate mt-1">
                                                     {prod.name}
                                                 </h4>
-                                                <div className="text-xs font-black text-[#6C306E] mt-0.5">
+                                                <div className="text-xs font-bold text-plum mt-0.5">
                                                     {currency}{Number(prod.price || 0).toLocaleString()}
                                                 </div>
                                             </div>
@@ -894,14 +943,15 @@ export default function AdminHomepageSectionsPage() {
                                         <div className="shrink-0">
                                             {prod.isAlreadyAdded ? (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-300 shadow-2xs">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-300 shadow-2xs">
                                                         <CheckIcon size={13} />
                                                         <span>Added (Rank #{prod.currentOrder})</span>
                                                     </span>
                                                     <button
                                                         onClick={() => handleRemoveProduct(prod.id)}
-                                                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition"
+                                                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
                                                         title="Remove from section"
+                                                        type="button"
                                                     >
                                                         <TrashIcon size={14} />
                                                     </button>
@@ -909,7 +959,8 @@ export default function AdminHomepageSectionsPage() {
                                             ) : (
                                                 <button
                                                     onClick={() => handleAddProduct(prod.id)}
-                                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-2xs"
+                                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs cursor-pointer"
+                                                    type="button"
                                                 >
                                                     <PlusIcon size={14} />
                                                     <span>Add to Showcase</span>
@@ -922,13 +973,14 @@ export default function AdminHomepageSectionsPage() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 border-t border-[#EFE0EF] bg-[#FAF6FA] flex items-center justify-between shrink-0">
-                            <span className="text-xs text-slate-500 font-semibold">
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between shrink-0">
+                            <span className="text-xs text-slate-500 font-medium">
                                 {currentSectionConfig.productIds.length} products currently in this section
                             </span>
                             <button
                                 onClick={() => setIsAddModalOpen(false)}
-                                className="px-5 py-2 rounded-full text-xs font-bold text-[#6C306E] bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] transition shadow-2xs"
+                                className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs cursor-pointer"
+                                type="button"
                             >
                                 Done Selecting
                             </button>

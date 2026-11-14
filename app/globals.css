@@ -6,6 +6,15 @@
     --color-primary-dark: #3A0C38;
     --color-primary-light: #FAF6FA;
     --color-gold: #D8B56D;
+    --color-plum: #53144C;
+    --color-plum-hover: #430f3d;
+    --color-plum-light: #fbf5fb;
+    --color-plum-muted: #7C2D6D;
+    --color-plum-border: #f0dced;
+    --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+    --shadow-card: 0 4px 20px -2px rgba(83, 20, 76, 0.03), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 10px 25px -4px rgba(83, 20, 76, 0.07), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    --font-display: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
