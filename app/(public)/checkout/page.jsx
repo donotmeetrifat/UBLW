@@ -732,26 +732,59 @@ export default function CheckoutPage() {
 
                                 {/* Dynamic Official QR Code Card - Rendered ONLY if Admin has configured a QR Code */}
                                 {settings.payments[paymentMethod]?.qrCode && (
-                                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EFE0EF] shadow-2xs flex flex-col sm:flex-row items-center gap-3.5">
-                                        <div className="size-28 sm:size-32 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] p-1.5 shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
-                                            <Image
-                                                src={settings.payments[paymentMethod].qrCode}
-                                                alt={`${paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code`}
-                                                width={128}
-                                                height={128}
-                                                className="w-full h-full object-contain rounded-lg"
-                                            />
+                                    <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EFE0EF] shadow-xs space-y-4">
+                                        {/* Card Header */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-[#EFE0EF]/80">
+                                            <div>
+                                                <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-0.5 rounded-full mb-1">
+                                                    <span className="size-1.5 rounded-full bg-[#6C306E] animate-pulse" />
+                                                    Instant Scan & Pay
+                                                </div>
+                                                <h4 className="font-extrabold text-xs sm:text-sm text-[#241224]">
+                                                    Scan with your {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} App
+                                                </h4>
+                                            </div>
+                                            <div className="text-left sm:text-right">
+                                                <span className="text-[10px] text-slate-400 font-medium block">Exact Amount:</span>
+                                                <span className="text-sm sm:text-base font-black text-[#6C306E] font-mono">
+                                                    {currency}{finalTotal.toLocaleString()}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="space-y-1 text-center sm:text-left">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-0.5 rounded-full inline-block">
-                                                Instant Scan & Pay
-                                            </span>
-                                            <p className="font-extrabold text-xs text-[#241224]">
-                                                Scan with your {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} App
+
+                                        {/* Large, High-Contrast QR Code Container */}
+                                        <div className="flex flex-col items-center justify-center pt-1">
+                                            <div className="relative group p-4 sm:p-5 bg-white rounded-2xl border-2 border-[#EFE0EF] shadow-sm hover:border-[#6C306E]/40 transition-all duration-200">
+                                                <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center overflow-hidden bg-white rounded-xl">
+                                                    <Image
+                                                        src={settings.payments[paymentMethod].qrCode}
+                                                        alt={`${paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code`}
+                                                        width={320}
+                                                        height={320}
+                                                        className="w-full h-full object-contain"
+                                                        priority
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className="text-[11px] text-slate-500 text-center mt-3 max-w-sm font-medium">
+                                                Scan this official QR code using the {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} app on your phone to send <strong className="text-[#241224] font-bold">{currency}{finalTotal.toLocaleString()}</strong> instantly.
                                             </p>
-                                            <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
-                                                Scan this official QR code using the {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} mobile app to send <b>{currency}{finalTotal.toLocaleString()}</b> quickly and accurately.
-                                            </p>
+                                        </div>
+
+                                        {/* 3 Step Guide Pills */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#EFE0EF]/80 text-[10px] text-slate-600 font-medium">
+                                            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF]/80">
+                                                <span className="size-5 rounded-full bg-[#6C306E] text-white flex items-center justify-center font-bold text-[9px] shrink-0">1</span>
+                                                <span>Open {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} App</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF]/80">
+                                                <span className="size-5 rounded-full bg-[#6C306E] text-white flex items-center justify-center font-bold text-[9px] shrink-0">2</span>
+                                                <span>Tap &quot;Scan QR&quot; Camera</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF]/80">
+                                                <span className="size-5 rounded-full bg-[#6C306E] text-white flex items-center justify-center font-bold text-[9px] shrink-0">3</span>
+                                                <span>Send {currency}{finalTotal.toLocaleString()} &amp; Enter TrxID</span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
