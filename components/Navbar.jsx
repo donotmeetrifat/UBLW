@@ -250,20 +250,22 @@ const Navbar = () => {
                                 />
                             </form>
 
-                            {/* 2. Luxury Cart / Bag Button (Hidden on Mobile/Tablet where MobileBottomNav already has Bag) */}
-                            <FlowButton
-                                id="navbar-cart-icon"
-                                text="Bag"
-                                badge={currentUser ? cartCount : 0}
-                                href={currentUser ? "/cart" : undefined}
-                                onClick={(e) => {
-                                    if (!currentUser) {
-                                        if (e && e.preventDefault) e.preventDefault();
-                                        requireSignIn('Please sign in to access your shopping bag.');
-                                    }
-                                }}
-                                className={`hidden md:inline-flex ${isCartBumping ? '!scale-105 !border-[#6C306E]' : ''}`}
-                            />
+                            {/* 2. Luxury Cart / Bag Button (Desktop only: hidden on mobile/portrait devices where MobileBottomNav already has Bag) */}
+                            <div className="hidden md:block">
+                                <FlowButton
+                                    id="navbar-cart-icon"
+                                    text="Bag"
+                                    badge={currentUser ? cartCount : 0}
+                                    href={currentUser ? "/cart" : undefined}
+                                    onClick={(e) => {
+                                        if (!currentUser) {
+                                            if (e && e.preventDefault) e.preventDefault();
+                                            requireSignIn('Please sign in to access your shopping bag.');
+                                        }
+                                    }}
+                                    className={isCartBumping ? '!scale-105 !border-[#6C306E]' : ''}
+                                />
+                            </div>
 
                             {/* 3. Luxury Account Area (h-10) */}
                             {currentUser ? (
