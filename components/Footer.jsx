@@ -7,9 +7,6 @@ import {
     FacebookIcon,
     InstagramIcon,
     WhatsAppIcon,
-    PhoneIcon,
-    MailIcon,
-    MapPinIcon,
     RoyalCrownIcon
 } from "@/components/icons";
 import { SOCIAL_LINKS } from "@/lib/constants/social";
@@ -54,15 +51,6 @@ const Footer = () => {
         {
             title: "CATEGORIES",
             links: categoryLinks
-        },
-        {
-            title: "DIRECT CONTACT",
-            links: [
-                { text: "WhatsApp: +880 1959-524393", path: "https://wa.me/8801959524393", icon: WhatsAppIcon, iconColor: "#25D366" },
-                { text: "Facebook: UK Brand LOVER", path: "https://www.facebook.com/ukbrandlover", icon: FacebookIcon, iconColor: "#1877F2" },
-                { text: "Instagram: @tuhinajahantopa", path: "https://www.instagram.com/tuhinajahantopa/", icon: InstagramIcon, iconColor: "#E1306C" },
-                { text: "Mirpur, Dhaka, Bangladesh", path: "/contact", icon: MapPinIcon, iconColor: "#6C306E" }
-            ]
         }
     ];
 
@@ -112,9 +100,9 @@ const Footer = () => {
                     </div>
 
                     {/* Nav Links */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 w-full lg:w-auto text-xs sm:text-sm">
+                    <div className="grid grid-cols-2 gap-10 sm:gap-16 w-full lg:w-auto text-xs sm:text-sm">
                         {linkSections.map((section, index) => (
-                            <div key={index} className={index === 2 ? "col-span-2 sm:col-span-1 min-w-[210px]" : ""}>
+                            <div key={index} className="min-w-[140px]">
                                 <h3 className="font-extrabold text-[#241224] text-[11px] uppercase tracking-widest mb-4">
                                     {section.title}
                                 </h3>
