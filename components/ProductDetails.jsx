@@ -6,6 +6,7 @@ import {
     BagIcon, 
     CheckIcon, 
     LockIcon, 
+    ShareIcon,
     ShieldCheckIcon, 
     StarIcon, 
     TagIcon, 
@@ -15,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Counter from "./Counter";
+import ProductShareModal from "./ProductShareModal";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { MagneticButton } from "@/components/ui/magnetic-button";
@@ -30,6 +32,7 @@ const ProductDetails = ({ product }) => {
 
     const [mainImage, setMainImage] = useState(product.images[0]);
     const [isAdded, setIsAdded] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     const addToCartHandler = () => {
         if (!isClientSignedIn()) {
@@ -99,6 +102,17 @@ const ProductDetails = ({ product }) => {
                             {discountPercentage}% OFF
                         </span>
                     )}
+
+                    {/* Quick Floating Share Action */}
+                    <button
+                        type="button"
+                        onClick={() => setIsShareOpen(true)}
+                        title="Share this product"
+                        aria-label="Share product"
+                        className="absolute top-5 right-5 z-10 size-10 rounded-full bg-white/95 backdrop-blur-md border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-white text-slate-700 hover:text-[#6C306E] shadow-sm flex items-center justify-center transition-all duration-200 cursor-pointer group active:scale-95"
+                    >
+                        <ShareIcon size={16} color="#6C306E" />
+                    </button>
 
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -186,7 +200,7 @@ const ProductDetails = ({ product }) => {
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-wrap items-center gap-4 pt-2 pb-8">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2 pb-8">
                     {product.inStock === false ? (
                         <span className="px-6 h-11 sm:h-12 inline-flex items-center justify-center bg-slate-100 text-slate-500 rounded-full font-bold text-xs border border-slate-200 shadow-2xs">
                             Currently Out of Stock
@@ -244,6 +258,19 @@ const ProductDetails = ({ product }) => {
                             </MagneticButton>
                         </>
                     )}
+
+                    {/* 3. SHARE PRODUCT BUTTON */}
+                    <motion.button 
+                        whileHover={{ scale: 1.025 }}
+                        whileTap={{ scale: 0.96 }}
+                        type="button"
+                        onClick={() => setIsShareOpen(true)}
+                        title="Share this product with friends & family"
+                        className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 h-11 sm:h-12 text-xs font-bold text-[#6C306E] bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:bg-[#FAF6FA] rounded-full transition-all duration-200 shadow-2xs cursor-pointer select-none"
+                    >
+                        <ShareIcon size={16} color="#6C306E" />
+                        <span>Share</span>
+                    </motion.button>
                 </div>
 
                 {/* Clean Divider Line */}
@@ -271,6 +298,13 @@ const ProductDetails = ({ product }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Product Share Modal Dialog */}
+            <ProductShareModal
+                product={product}
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+            />
         </div>
     );
 };

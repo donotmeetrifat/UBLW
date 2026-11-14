@@ -274,6 +274,50 @@ export const OfficialInstagramIcon = ({ size = 24, className = '', ...props }) =
     </svg>
 )
 
+export const OfficialMessengerIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <defs>
+            <linearGradient id="msg-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#00C6FF" />
+                <stop offset="100%" stopColor="#0078FF" />
+            </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="24" fill="url(#msg-grad)" />
+        <path d="M24 10C16.268 10 10 15.748 10 22.84C10 26.884 11.966 30.504 15.034 32.88V38L19.9 35.328C21.206 35.692 22.58 35.88 24 35.88C31.732 35.88 38 30.132 38 23.04C38 15.948 31.732 10 24 10ZM25.26 27.46L21.46 23.4L14.04 27.46L22.2 18.78L26.08 22.84L33.42 18.78L25.26 27.46Z" fill="white" />
+    </svg>
+)
+
+export const OfficialTelegramIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="24" cy="24" r="24" fill="#229ED9" />
+        <path d="M12 23.6L33.6 15.2C34.6 14.8 35.5 15.4 35.2 16.7L31.5 34.1C31.2 35.4 30.4 35.7 29.3 35.1L23.7 31L21 33.6C20.7 33.9 20.4 34.1 19.8 34.1L20.2 28.5L30.4 19.3C30.8 18.9 30.3 18.7 29.8 19L17.2 26.9L11.8 25.2C10.6 24.8 10.6 24 12 23.6Z" fill="white" />
+    </svg>
+)
+
+export const OfficialXIcon = ({ size = 24, className = '', ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="24" cy="24" r="24" fill="#000000" />
+        <path d="M28.45 13H32.4L23.78 22.86L33.9 36H25.95L19.72 27.91L12.59 36H8.63L17.84 25.47L8.1 13H16.25L21.89 20.4L28.45 13ZM27.06 33.63H29.25L15.06 15.24H12.72L27.06 33.63Z" fill="white" />
+    </svg>
+)
+
+export const ShareIcon = ({ size = 18, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <circle cx="18" cy="5" r="3" stroke={color} strokeWidth={strokeWidth} />
+        <circle cx="6" cy="12" r="3" stroke={color} strokeWidth={strokeWidth} />
+        <circle cx="18" cy="19" r="3" stroke={color} strokeWidth={strokeWidth} />
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke={color} strokeWidth={strokeWidth} />
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke={color} strokeWidth={strokeWidth} />
+    </svg>
+)
+
+export const CopyLinkIcon = ({ size = 18, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+)
+
 // 16. User & Account
 export const UserIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
