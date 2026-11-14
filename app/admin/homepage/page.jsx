@@ -13,7 +13,6 @@ import {
     CheckIcon,
     BagIcon
 } from '@/components/icons'
-import ClassicLoader from '@/components/ui/classic-loader'
 
 const DEFAULT_SECTIONS = {
     newArrivals: {
@@ -357,17 +356,17 @@ export default function AdminHomepageSectionsPage() {
                     <button
                         onClick={handleSaveAndPublish}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition active:scale-[0.98] disabled:opacity-75 cursor-pointer shrink-0"
                         type="button"
                     >
                         {saving ? (
                             <>
-                                <ClassicLoader />
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
                                 <span>Publishing Showcase...</span>
                             </>
                         ) : (
                             <>
-                                <svg className="w-3.5 h-3.5 text-white/90" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 text-white/90 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                                 <span>Save & Publish Showcase</span>
