@@ -16,22 +16,31 @@ import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
+const FOOTER_CATEGORIES = [
+    "Skincare",
+    "Makeup",
+    "Haircare",
+    "Body Care",
+    "Bath & Shower",
+    "Fragrance & Perfumes",
+    "Personal Care",
+    "Baby Care",
+    "Beauty Accessories"
+];
+
 const Footer = () => {
     const reduxCategories = useSelector(state => state.product.categories);
 
-    const beautyCategoryLinks = (Array.isArray(reduxCategories) ? reduxCategories : [])
-        .filter(Boolean)
-        .slice(0, 8)
-        .map(name => ({
-            text: name,
-            path: `/shop?category=${encodeURIComponent(name)}`
-        }));
+    const categoriesToDisplay = (Array.isArray(reduxCategories) && reduxCategories.length > 0)
+        ? Array.from(new Set([...FOOTER_CATEGORIES, ...reduxCategories]))
+        : FOOTER_CATEGORIES;
+
+    const categoryLinks = categoriesToDisplay.map(name => ({
+        text: name,
+        path: `/shop?category=${encodeURIComponent(name)}`
+    }));
 
     const linkSections = [
-        ...(beautyCategoryLinks.length > 0 ? [{
-            title: "BEAUTY CATEGORIES",
-            links: beautyCategoryLinks
-        }] : []),
         {
             title: "CUSTOMER CARE",
             links: [
@@ -41,6 +50,10 @@ const Footer = () => {
                 { text: "Track My Order", path: '/orders' },
                 { text: "Authenticity Guarantee", path: '/#why-us' },
             ]
+        },
+        {
+            title: "CATEGORIES",
+            links: categoryLinks
         },
         {
             title: "DIRECT CONTACT",
@@ -105,7 +118,7 @@ const Footer = () => {
                                 <h3 className="font-extrabold text-[#241224] text-[11px] uppercase tracking-widest mb-4">
                                     {section.title}
                                 </h3>
-                                <ul className="space-y-3">
+                                <ul className="space-y-2.5">
                                     {section.links.map((link, i) => (
                                         <li key={i} className="flex items-center gap-2.5">
                                             {link.icon && (
