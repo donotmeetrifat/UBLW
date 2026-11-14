@@ -51,8 +51,8 @@ const Hero = () => {
 
                         <div className={`relative ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
-                                <div className='relative z-20 inline-flex items-center gap-1 bg-white text-[#6C306E] border border-[#EFE0EF] px-2 min-[380px]:px-2.5 py-0.5 rounded-full text-[8.5px] min-[380px]:text-[9px] sm:text-xs font-semibold mb-1.5 sm:mb-2.5 shadow-2xs'>
-                                    <RoyalCrownIcon size={10} color="#D8B56D" />
+                                <div className='relative z-20 hidden sm:inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-xs font-semibold mb-2 sm:mb-3 shadow-2xs'>
+                                    <RoyalCrownIcon size={12} color="#D8B56D" />
                                     <span>{mainCard.badge}</span>
                                 </div>
                             )}
@@ -87,12 +87,12 @@ const Hero = () => {
                                 )}
                             </div>
 
-                            {/* Button placed at the background layer of the woman (z-0 behind woman z-10) */}
-                            <div className="mt-2.5 sm:mt-4 relative z-0">
+                            {/* Button placed at the background layer of the woman (z-0 behind woman z-10) with generous arrow clearance */}
+                            <div className="mt-3 sm:mt-5 relative z-0">
                                 <FlowButton 
                                     text={(mainCard.buttonText || "Discover the Collection").replace(/[→\s]+$/, '')} 
                                     href={mainCard.buttonLink || "/shop"} 
-                                    className="!px-3 min-[380px]:!px-3.5 sm:!px-7 !h-7 min-[380px]:!h-7.5 sm:!h-11 text-[9.5px] min-[380px]:text-[10px] sm:text-sm font-bold shadow-xs" 
+                                    className="!px-7 sm:!px-8 !h-8 sm:!h-11 text-[10px] min-[380px]:text-[10.5px] sm:text-sm font-bold shadow-xs shrink-0" 
                                 />
                             </div>
                         </div>

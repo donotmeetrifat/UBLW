@@ -481,8 +481,8 @@ export default function AdminHeroPromotionsPage() {
 
                             <div className="relative max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md">
                                 {mainCard.badge && (
-                                    <div className="relative z-20 inline-flex items-center gap-1 bg-white text-[#6C306E] border border-[#EFE0EF] px-2 min-[380px]:px-2.5 py-0.5 rounded-full text-[8.5px] min-[380px]:text-[9px] sm:text-xs font-semibold mb-1.5 sm:mb-2.5 shadow-2xs">
-                                        <RoyalCrownIcon size={10} color="#D8B56D" />
+                                    <div className="relative z-20 hidden sm:inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-xs font-semibold mb-2 sm:mb-3 shadow-2xs">
+                                        <RoyalCrownIcon size={12} color="#D8B56D" />
                                         <span>{mainCard.badge}</span>
                                     </div>
                                 )}
@@ -517,8 +517,8 @@ export default function AdminHeroPromotionsPage() {
                                     )}
                                 </div>
 
-                                <div className="mt-2.5 sm:mt-4 relative z-0">
-                                    <span className="inline-flex items-center justify-center !px-3 min-[380px]:!px-3.5 sm:!px-7 !h-7 min-[380px]:!h-7.5 sm:!h-11 text-[9.5px] min-[380px]:text-[10px] sm:text-sm font-bold bg-[#6C306E] text-white rounded-full shadow-xs transition">
+                                <div className="mt-3 sm:mt-5 relative z-0">
+                                    <span className="inline-flex items-center justify-center !px-7 sm:!px-8 !h-8 sm:!h-11 text-[10px] min-[380px]:text-[10.5px] sm:text-sm font-bold bg-[#6C306E] text-white rounded-full shadow-xs transition">
                                         {(mainCard.buttonText || "Explore Collection").replace(/[→\s]+$/, '')}
                                     </span>
                                 </div>
