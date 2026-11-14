@@ -803,7 +803,7 @@ export default function CheckoutPage() {
                                             placeholder="e.g. BK92810X72"
                                             value={transactionId}
                                             onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
-                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider outline-none text-[#241224]"
+                                            className="w-full h-8.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider outline-none text-[#241224]"
                                             required
                                         />
                                     </div>
@@ -816,7 +816,7 @@ export default function CheckoutPage() {
                                             placeholder="e.g. 01959524393 or 017XXXXXXXX"
                                             value={senderNumber}
                                             onChange={(e) => setSenderNumber(e.target.value)}
-                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold outline-none text-[#241224]"
+                                            className="w-full h-8.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-mono font-bold outline-none text-[#241224]"
                                             required
                                         />
                                     </div>
@@ -843,7 +843,7 @@ export default function CheckoutPage() {
                                 value={customerNotes}
                                 onChange={(e) => setCustomerNotes(e.target.value)}
                                 placeholder="e.g. Deliver between 3 PM to 6 PM, please call when near the gate..."
-                                className="w-full p-3 text-xs bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-2xl outline-none resize-none min-h-[70px]"
+                                className="w-full p-2.5 text-xs bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl outline-none resize-none min-h-[56px]"
                             />
                         </div>
                     </div>
@@ -911,13 +911,13 @@ export default function CheckoutPage() {
                                 {!coupon ? (
                                     <form onSubmit={handleApplyCoupon} className="flex items-center gap-2">
                                         <div className="relative flex-1">
-                                            <TagIcon size={13} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            <TagIcon size={12} color="#6C306E" className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                             <input
                                                 type="text"
                                                 value={couponInput}
                                                 onChange={(e) => setCouponInput(e.target.value)}
                                                 placeholder="Enter coupon code"
-                                                className="w-full h-9 pl-8 pr-2 text-xs border border-[#EFE0EF] rounded-xl outline-none focus:border-[#6C306E] bg-[#FAF6FA] text-[#241224] placeholder-slate-400 font-medium transition-colors"
+                                                className="w-full h-8 pl-7 pr-2 text-[11px] border border-[#EFE0EF] rounded-xl outline-none focus:border-[#6C306E] bg-[#FAF6FA] text-[#241224] placeholder-slate-400 font-medium transition-colors"
                                             />
                                         </div>
                                         <FlowButton
@@ -925,7 +925,7 @@ export default function CheckoutPage() {
                                             disabled={isApplyingCoupon || !couponInput.trim()}
                                             text={isApplyingCoupon ? '...' : 'Apply'}
                                             activeState={!!couponInput.trim()}
-                                            className={`!h-9 !px-6 min-w-[86px] text-xs shrink-0 transition-all ${
+                                            className={`!h-8 !px-5 min-w-[76px] text-[11px] shrink-0 transition-all ${
                                                 couponInput.trim() ? 'shadow-[0_4px_16px_rgba(108,48,110,0.35)]' : ''
                                             }`}
                                         />

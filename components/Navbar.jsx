@@ -230,17 +230,17 @@ const Navbar = () => {
 
                         {/* Actions: Search, Cart, Account - Uniform Height & Pixel-Perfect Alignment */}
                         <div className="flex items-center gap-2.5 sm:gap-3">
-                            {/* 1. Smooth Expanding Search Bar (h-9) */}
+                            {/* 1. Smooth Expanding Search Bar (h-8) */}
                             <form
                                 onSubmit={handleSearch}
-                                className={`hidden sm:flex items-center text-xs gap-2 px-3 h-9 rounded-full border transition-all duration-300 select-none ${isSearchFocused
+                                className={`hidden sm:flex items-center text-xs gap-2 px-3 h-8 rounded-full border transition-all duration-300 select-none ${isSearchFocused
                                         ? 'w-52 lg:w-64 bg-[#FAF6FA] border-[#6C306E] shadow-2xs'
                                         : 'w-40 lg:w-52 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
                                     }`}
                             >
-                                <SearchIcon size={14} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
+                                <SearchIcon size={13} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
                                 <input
-                                    className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium leading-none"
+                                    className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-[11px] font-medium leading-none"
                                     type="text"
                                     placeholder="Search UK beauty..."
                                     value={search}
@@ -377,12 +377,12 @@ const Navbar = () => {
                     </div>
 
                     {/* Mobile Search Bar Row - Sleek & Compact */}
-                    <div className="sm:hidden mt-2 pb-0.5">
+                    <div className="sm:hidden mt-1.5 pb-0.5">
                         <form
                             onSubmit={handleSearch}
-                            className="w-full flex items-center text-xs gap-2 px-3 h-9 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
+                            className="w-full flex items-center text-xs gap-2 px-2.5 h-8 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
                         >
-                            <SearchIcon size={14} color="#6C306E" className="shrink-0" />
+                            <SearchIcon size={13} color="#6C306E" className="shrink-0" />
                             <input
                                 className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-[11px] font-medium leading-none"
                                 type="text"

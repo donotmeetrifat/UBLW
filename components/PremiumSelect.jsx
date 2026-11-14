@@ -24,7 +24,7 @@ const PremiumSelect = ({ value, onChange, options, placeholder = "Select an opti
             <button
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
-                className={`flex w-full items-center justify-between rounded-2xl border bg-white px-4 h-12 text-xs sm:text-sm outline-none transition-all duration-200 cursor-pointer
+                className={`flex w-full items-center justify-between rounded-xl border bg-white px-3 h-8.5 sm:h-9 text-xs outline-none transition-all duration-200 cursor-pointer
                     ${disabled 
                         ? 'border-[#EFE0EF] bg-[#FAF6FA] text-slate-400 opacity-70 cursor-not-allowed' 
                         : 'border-[#EFE0EF] text-[#241224] shadow-2xs hover:border-[#6C306E]/40 focus:border-[#6C306E] focus:bg-[#FAF6FA]'
@@ -33,11 +33,11 @@ const PremiumSelect = ({ value, onChange, options, placeholder = "Select an opti
                 <span className={`truncate ${!selectedOption ? 'text-slate-400' : 'font-semibold'}`}>
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
-                <ChevronDownIcon size={14} color="#6C306E" className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDownIcon size={13} color="#6C306E" className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && !disabled && (
-                <div className="absolute left-0 top-full z-[100] w-full mt-2 max-h-[260px] overflow-y-auto rounded-2xl border border-[#EFE0EF] bg-white py-2 shadow-[0_10px_30px_rgba(58,12,56,0.12)]">
+                <div className="absolute left-0 top-full z-[100] w-full mt-1.5 max-h-[220px] overflow-y-auto rounded-xl border border-[#EFE0EF] bg-white py-1.5 shadow-[0_10px_30px_rgba(58,12,56,0.12)]">
                     {options.map((option) => (
                         <button
                             key={option.value}
@@ -46,7 +46,7 @@ const PremiumSelect = ({ value, onChange, options, placeholder = "Select an opti
                                 onChange({ target: { name, value: option.value } })
                                 setIsOpen(false)
                             }}
-                            className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-colors cursor-pointer ${
+                            className={`w-full px-3 py-2 text-left text-xs transition-colors cursor-pointer ${
                                 value === option.value
                                     ? 'bg-[#FAF6FA] text-[#6C306E] font-bold'
                                     : 'text-[#503E50] hover:bg-[#FAF6FA] hover:text-[#6C306E]'
@@ -56,7 +56,7 @@ const PremiumSelect = ({ value, onChange, options, placeholder = "Select an opti
                         </button>
                     ))}
                     {options.length === 0 && (
-                        <div className="px-4 py-2.5 text-xs text-slate-400">
+                        <div className="px-3 py-2 text-xs text-slate-400">
                             No options available
                         </div>
                     )}

@@ -188,14 +188,14 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                 Full Name
                             </label>
                             <div className="relative">
-                                <UserIcon size={15} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <UserIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="text"
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Your Name"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
                                 />
                             </div>
                         </div>
@@ -206,12 +206,12 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                 Registered Email
                             </label>
                             <div className="relative">
-                                <MailIcon size={15} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <MailIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="email"
                                     disabled
                                     value={email}
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#EFE0EF] bg-slate-100/70 text-slate-500 outline-none text-xs cursor-not-allowed font-medium"
+                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-slate-100/70 text-slate-500 outline-none text-xs cursor-not-allowed font-medium"
                                 />
                             </div>
                         </div>
@@ -222,13 +222,13 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                 Contact Number
                             </label>
                             <div className="relative">
-                                <PhoneIcon size={15} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <PhoneIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="tel"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="01XXXXXXXXX"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
                                 />
                             </div>
                         </div>
@@ -247,7 +247,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="New Password"
-                                            className="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                            className="w-full h-8.5 pl-3 pr-8 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
                                         />
                                         <button
                                             type="button"
@@ -264,7 +264,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="Confirm Password"
-                                            className="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                            className="w-full h-8.5 pl-3 pr-8 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
                                         />
                                         <button
                                             type="button"

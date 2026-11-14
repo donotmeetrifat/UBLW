@@ -175,7 +175,7 @@ export default function CancelOrderModal({ order, isOpen, onClose, onCancelled }
                             placeholder={selectedReason.toLowerCase().includes('other')
                                 ? 'Please explain why you wish to cancel this order...'
                                 : 'Any additional details you want our dispatch team to know...'}
-                            className="w-full text-xs p-3 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] focus:border-rose-400 focus:bg-white focus:outline-none transition resize-none text-slate-800 placeholder:text-slate-400"
+                            className="w-full text-xs p-2.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] focus:border-rose-400 focus:bg-white focus:outline-none transition resize-none text-slate-800 placeholder:text-slate-400"
                         />
                     </div>
 

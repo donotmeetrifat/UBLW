@@ -322,7 +322,7 @@ export default function AccountPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your full name"
-                                    className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-medium"
+                                    className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 outline-none text-[#241224] text-xs font-medium"
                                     required
                                 />
                             </div>
@@ -339,7 +339,7 @@ export default function AccountPage() {
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="019XXXXXXXX or 017XXXXXXXX"
-                                    className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-3 outline-none text-[#241224] text-xs font-mono font-bold"
+                                    className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 outline-none text-[#241224] text-xs font-mono font-bold"
                                 />
                             </div>
                             <p className="text-[10px] text-slate-400 mt-1">Used for courier delivery updates & dispatch notices</p>
@@ -355,7 +355,7 @@ export default function AccountPage() {
                                     disabled
                                     value={email}
                                     placeholder="customer@email.com"
-                                    className="w-full bg-slate-100/70 border border-[#EFE0EF] rounded-xl pl-9 pr-9 py-3 outline-none text-slate-500 text-xs font-medium cursor-not-allowed select-none"
+                                    className="w-full h-8.5 sm:h-9 bg-slate-100/70 border border-[#EFE0EF] rounded-xl pl-9 pr-9 outline-none text-slate-500 text-xs font-medium cursor-not-allowed select-none"
                                 />
                                 <LockIcon size={13} color="#94A3B8" className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
@@ -495,7 +495,7 @@ export default function AccountPage() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="Enter at least 6 characters"
-                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 outline-none text-[#241224] text-xs font-medium"
                                             required
                                         />
                                         <button
@@ -518,7 +518,7 @@ export default function AccountPage() {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="Re-enter new password"
-                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 py-3 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 outline-none text-[#241224] text-xs font-medium"
                                             required
                                         />
                                         <button

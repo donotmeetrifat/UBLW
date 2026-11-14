@@ -239,7 +239,7 @@ const ShopFilterPanel = ({
                             value={filters.minPrice}
                             onChange={(event) => onPriceChange('minPrice', event.target.value)}
                             placeholder="0"
-                            className="mt-1 w-full rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3 py-2 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition"
+                            className="mt-1 w-full h-8 rounded-lg border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 text-[11px] text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition"
                         />
                     </label>
                     <label className="text-[11px] font-medium text-slate-500" htmlFor="maximum-price">
@@ -252,7 +252,7 @@ const ShopFilterPanel = ({
                             value={filters.maxPrice}
                             onChange={(event) => onPriceChange('maxPrice', event.target.value)}
                             placeholder="15000"
-                            className="mt-1 w-full rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3 py-2 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition"
+                            className="mt-1 w-full h-8 rounded-lg border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 text-[11px] text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition"
                         />
                     </label>
                 </div>

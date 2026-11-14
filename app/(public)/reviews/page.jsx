@@ -224,13 +224,13 @@ export default function ReviewsPage() {
 
                     {/* Search Filter Bar */}
                     <div className="relative w-full md:max-w-md">
-                        <SearchIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <SearchIcon size={13} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by product name or keywords..."
-                            className="w-full h-9.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-full pl-9.5 pr-4 py-2 text-xs outline-none shadow-2xs text-[#241224] placeholder:text-[#8A758A]"
+                            className="w-full h-8 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-full pl-8 pr-3 text-[11px] outline-none shadow-2xs text-[#241224] placeholder:text-[#8A758A]"
                         />
                     </div>
                 </div>

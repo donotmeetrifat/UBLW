@@ -303,7 +303,7 @@ export default function ContactPage() {
                                                 type="text" 
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="Enter your name" 
                                             />
                                         </div>
@@ -317,7 +317,7 @@ export default function ContactPage() {
                                                 type="email" 
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="you@example.com" 
                                             />
                                         </div>
@@ -333,7 +333,7 @@ export default function ContactPage() {
                                                 type="tel" 
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
-                                                className="w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="01XXXXXXXXX" 
                                             />
                                         </div>
@@ -347,7 +347,7 @@ export default function ContactPage() {
                                                 type="text" 
                                                 value={subject}
                                                 onChange={(e) => setSubject(e.target.value)}
-                                                className="w-full rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="e.g. Order Tracking, Shade Advice, Authenticity" 
                                             />
                                         </div>
@@ -360,10 +360,10 @@ export default function ContactPage() {
                                         </label>
                                         <textarea 
                                             required 
-                                            rows={4} 
+                                            rows={3} 
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
-                                            className="w-full resize-none rounded-2xl border border-[#EFE0EF] bg-[#FAF6FA] px-4 py-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                            className="w-full resize-none rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] p-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium min-h-[80px]" 
                                             placeholder="Write your message here... Please include order number if applicable." 
                                         />
                                     </div>

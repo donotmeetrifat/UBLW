@@ -566,8 +566,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     Full Name <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <UserIcon size={16} color="#6C306E" />
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <UserIcon size={15} color="#6C306E" />
                                     </div>
                                     <input
                                         type="text"
@@ -575,7 +575,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="e.g. Ayesha Rahman"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                 </div>
                             </motion.div>
@@ -587,8 +587,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 Email Address <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <MailIcon size={16} color="#6C306E" />
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <MailIcon size={15} color="#6C306E" />
                                 </div>
                                 <input
                                     type="email"
@@ -596,7 +596,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@example.com"
-                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                 />
                             </div>
                         </div>
@@ -613,8 +613,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     Phone Number <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <PhoneIcon size={16} color="#6C306E" />
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <PhoneIcon size={15} color="#6C306E" />
                                     </div>
                                     <input
                                         type="tel"
@@ -622,7 +622,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="01XXXXXXXXX"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-4 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                 </div>
                             </motion.div>
@@ -651,7 +651,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 </div>
                                 <div className="relative">
                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <LockIcon size={16} color="#6C306E" />
+                                        <LockIcon size={15} color="#6C306E" />
                                     </div>
                                     <input
                                         type={showPassword ? 'text' : 'password'}
@@ -659,15 +659,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-10 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-10 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                                     >
-                                        {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                                        {showPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
                                     </button>
                                 </div>
                             </div>
@@ -686,7 +686,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 </label>
                                 <div className="relative">
                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <LockIcon size={16} color="#6C306E" />
+                                        <LockIcon size={15} color="#6C306E" />
                                     </div>
                                     <input
                                         type={showConfirmPassword ? 'text' : 'password'}
@@ -694,15 +694,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl pl-10 pr-10 py-3 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-10 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                                     >
-                                        {showConfirmPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                                        {showConfirmPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
                                     </button>
                                 </div>
                             </motion.div>

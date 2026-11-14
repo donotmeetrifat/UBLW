@@ -151,7 +151,7 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                                 name="fullName"
                                 onChange={handleAddressChange}
                                 value={address.fullName}
-                                className="p-3 outline-none border border-[#EFE0EF] rounded-2xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition text-xs"
+                                className="h-8.5 sm:h-9 px-3 outline-none border border-[#EFE0EF] rounded-xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition text-xs"
                                 type="text"
                                 placeholder="Enter full name"
                                 required
@@ -164,7 +164,7 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                                 name="phoneNumber"
                                 onChange={handleAddressChange}
                                 value={address.phoneNumber}
-                                className="p-3 outline-none border border-[#EFE0EF] rounded-2xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition text-xs"
+                                className="h-8.5 sm:h-9 px-3 outline-none border border-[#EFE0EF] rounded-xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition text-xs"
                                 type="text"
                                 placeholder="e.g. 01959524393"
                                 required
@@ -211,7 +211,7 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
                                 name="address"
                                 onChange={handleAddressChange}
                                 value={address.address}
-                                className="p-3 outline-none border border-[#EFE0EF] rounded-2xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition min-h-[75px] resize-none text-xs"
+                                className="p-2.5 outline-none border border-[#EFE0EF] rounded-xl w-full focus:border-[#6C306E] bg-[#FAF6FA] text-slate-800 transition min-h-[55px] resize-none text-xs"
                                 placeholder="House / Flat no, Road name, Area landmark in Bangladesh..."
                                 required
                             />

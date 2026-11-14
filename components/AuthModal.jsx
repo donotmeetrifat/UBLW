@@ -500,7 +500,7 @@ export default function AuthModal({
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="e.g. Ayesha Rahman"
-                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                     />
                                 </div>
                             </div>
@@ -521,7 +521,7 @@ export default function AuthModal({
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@example.com"
-                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                 />
                             </div>
                         </div>
@@ -542,7 +542,7 @@ export default function AuthModal({
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="01XXXXXXXXX"
-                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none text-[#241224] font-medium placeholder:text-slate-400 transition"
+                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] font-medium placeholder:text-slate-400 transition"
                                     />
                                 </div>
                             </div>
@@ -563,7 +563,7 @@ export default function AuthModal({
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-9 py-2.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-9 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                 />
                                 <button
                                     type="button"

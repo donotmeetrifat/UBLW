@@ -353,7 +353,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                             value={review}
                             onChange={(e) => setReview(e.target.value)}
                             placeholder="Share your honest experience — how does it feel on your skin, did you check the batch code, and how was the packaging/delivery?"
-                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl p-3.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed"
+                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-2.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed min-h-[70px]"
                         />
                     </div>
 
