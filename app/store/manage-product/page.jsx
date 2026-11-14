@@ -137,6 +137,7 @@ export default function StoreManageProducts() {
                                                 <Image
                                                     width={40}
                                                     height={40}
+                                                    unoptimized={true}
                                                     className="max-h-10 w-auto object-contain"
                                                     src={imageSrc}
                                                     alt={product.name}

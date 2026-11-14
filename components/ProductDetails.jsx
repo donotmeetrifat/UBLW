@@ -86,7 +86,7 @@ const ProductDetails = ({ product }) => {
                                         : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
-                                <Image src={image} className="w-full h-full object-cover" alt="" width={88} height={88} />
+                                <Image src={image} className="w-full h-full object-cover" alt="" width={176} height={176} unoptimized={true} />
                             </motion.button>
                         );
                     })}
@@ -112,8 +112,9 @@ const ProductDetails = ({ product }) => {
                             <Image 
                                 src={mainImage} 
                                 alt={product.name} 
-                                width={540} 
-                                height={540} 
+                                width={1200} 
+                                height={1200} 
+                                unoptimized={true}
                                 className="w-full h-full object-cover" 
                                 priority
                             />

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { uploadMedia } from '@/lib/storage';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const maxDuration = 60;
+
 export async function POST(request) {
     try {
         const formData = await request.formData();

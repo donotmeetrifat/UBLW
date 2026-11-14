@@ -109,6 +109,7 @@ const OrderItem = ({ order }) => {
                                         alt={prodName}
                                         width={48}
                                         height={48}
+                                        unoptimized={true}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -327,6 +328,7 @@ const OrderItem = ({ order }) => {
                                                             alt={prodName}
                                                             width={36}
                                                             height={36}
+                                                            unoptimized={true}
                                                             className="w-full h-full object-contain"
                                                         />
                                                     </div>

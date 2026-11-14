@@ -6,6 +6,7 @@ const nextConfig = {
         optimizePackageImports: ['@/components/icons', 'framer-motion', 'recharts', 'lucide-react'],
     },
     images: {
+        unoptimized: true,
         formats: ['image/avif', 'image/webp'],
         remotePatterns: [
             {

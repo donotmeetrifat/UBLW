@@ -711,6 +711,7 @@ export default function CheckoutPage() {
                                             alt={item.name}
                                             width={48}
                                             height={48}
+                                            unoptimized={true}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
