@@ -2,7 +2,7 @@
 
 import { SparklesIcon } from "@/components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
@@ -82,40 +82,50 @@ const CategoriesMarqueeContent = () => {
         router.push(`/shop?category=${encodeURIComponent(catName)}`);
     };
 
+    // Construct perfectly balanced, seamless double-half infinite loop
+    const marqueeItems = useMemo(() => {
+        if (!categories || categories.length === 0) return [];
+        let base = [...categories];
+        while (base.length < 10) {
+            base = [...base, ...categories];
+        }
+        return [...base, ...base];
+    }, [categories]);
+
     if (!categories || categories.length === 0) {
         return null;
     }
 
     return (
-        <section aria-label="Product categories navigation" className="w-full max-w-7xl mx-auto mt-6 sm:mt-8 mb-6 sm:mb-8">
+        <section aria-label="Product categories navigation" className="w-full max-w-7xl mx-auto mt-4 sm:mt-8 mb-4 sm:mb-8">
             <div 
-                className="overflow-hidden w-full relative select-none group/marquee py-2.5 sm:py-3.5"
+                className="overflow-hidden w-full relative select-none group/marquee py-2 sm:py-3 touch-pan-y"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 onTouchStart={() => setIsPaused(true)}
                 onTouchEnd={() => setIsPaused(false)}
             >
                 {/* Edge Fades for Smooth Infinite Illusion */}
-                <div className="absolute left-0 top-0 h-full w-10 sm:w-16 z-10 pointer-events-none bg-gradient-to-r from-white via-white/80 to-transparent" />
-                <div className="absolute right-0 top-0 h-full w-10 sm:w-16 z-10 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent" />
+                <div className="absolute left-0 top-0 h-full w-8 sm:w-16 z-10 pointer-events-none bg-gradient-to-r from-white via-white/80 to-transparent" />
+                <div className="absolute right-0 top-0 h-full w-8 sm:w-16 z-10 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent" />
 
-                {/* Horizontal Navigation Track with Ample Vertical Padding */}
+                {/* Horizontal Navigation Track - Infinite Right-to-Left Marquee on All Devices (Mobile & Desktop) */}
                 <div 
-                    className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar sm:min-w-[200%] sm:animate-[marqueeScroll_38s_linear_infinite] group-hover/marquee:[animation-play-state:paused] py-2 sm:py-3 px-2"
+                    className="flex items-center gap-2.5 sm:gap-3 w-max min-w-[200%] animate-[marqueeScroll_38s_linear_infinite] group-hover/marquee:[animation-play-state:paused] py-1.5 sm:py-2 px-2 will-change-transform"
                     style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
                 >
-                    {[...categories, ...categories, ...categories].map((catName, index) => {
+                    {marqueeItems.map((catName, index) => {
                         const isActive = activeCategory.toLowerCase() === catName.toLowerCase();
 
                         return (
                             <motion.button
-                                key={index}
+                                key={`${catName}-${index}`}
                                 type="button"
                                 whileHover={{ scale: 1.04, y: -1 }}
                                 whileTap={{ scale: 0.96 }}
                                 transition={{ duration: 0.15 }}
                                 onClick={() => handleCategoryClick(catName)}
-                                className={`flex items-center gap-1.5 h-[38px] sm:h-[42px] px-4.5 sm:px-5.5 rounded-full border transition-all duration-300 shrink-0 text-xs font-bold tracking-wide whitespace-nowrap cursor-pointer ${
+                                className={`flex items-center gap-1.5 h-8 sm:h-[38px] px-3.5 sm:px-5 rounded-full border transition-all duration-300 shrink-0 text-[11px] sm:text-xs font-bold tracking-wide whitespace-nowrap cursor-pointer shadow-2xs ${
                                     isActive
                                         ? 'bg-gradient-to-r from-[#6C306E] to-[#401242] border-[#6C306E] text-white shadow-[0_4px_14px_rgba(108,48,110,0.35)] scale-102'
                                         : 'bg-white border-[#EFE0EF] text-[#3A0C38] hover:bg-[#FAF6FA] hover:border-[#6C306E]/40 hover:shadow-xs'
