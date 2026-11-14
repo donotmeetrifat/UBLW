@@ -733,12 +733,6 @@ export default function AdminProductsPage() {
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             Origin Assurance
                         </div>
-                        <div className="text-sm font-extrabold text-[#241224] mt-1">
-                            London, United Kingdom
-                        </div>
-                        <div className="text-[10px] text-[#6C306E] font-semibold mt-0.5">
-                            100% Certified Authentic
-                        </div>
                     </div>
                     <div className="size-10 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E]">
                         <SparklesIcon size={18} color="#6C306E" />
