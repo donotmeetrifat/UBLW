@@ -44,20 +44,20 @@ const Hero = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-5 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[340px] min-[400px]:min-h-[360px] sm:min-h-[380px] md:min-h-[400px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-5 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[260px] sm:min-h-[340px] md:min-h-[380px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                     >
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`z-10 ${mainCard.image ? 'max-w-[58%] min-[400px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`z-10 relative ${mainCard.image ? 'max-w-[58%] min-[400px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
-                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
-                                    <RoyalCrownIcon size={13} color="#D8B56D" />
+                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2.5 sm:mb-3 shadow-2xs'>
+                                    <RoyalCrownIcon size={12} color="#D8B56D" />
                                     <span>{mainCard.badge}</span>
                                 </div>
                             )}
 
-                            <h2 className='text-lg min-[380px]:text-xl min-[450px]:text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-snug tracking-tight'>
+                            <h2 className='text-base min-[360px]:text-lg min-[420px]:text-xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
                                 {mainCard.title} <br className='hidden sm:inline' />
                                 <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold'>
                                     {mainCard.titleHighlight}
@@ -65,38 +65,38 @@ const Hero = () => {
                             </h2>
 
                             {mainCard.description && (
-                                <p className='text-xs sm:text-sm text-slate-500 mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none'>
+                                <p className='text-[11px] sm:text-sm text-slate-500 mt-1.5 sm:mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none'>
                                     {mainCard.description}
                                 </p>
                             )}
 
                             {(mainCard.priceLabel || mainCard.priceValue) && (
-                                <div className='flex items-baseline gap-2 mt-4'>
+                                <div className='flex items-baseline gap-2 mt-3 sm:mt-4'>
                                     {mainCard.priceLabel && (
                                         <span className='text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider'>
                                             {mainCard.priceLabel}
                                         </span>
                                     )}
                                     {mainCard.priceValue && (
-                                        <span className='text-lg sm:text-2xl font-extrabold text-[#3A0C38]'>
+                                        <span className='text-base sm:text-2xl font-extrabold text-[#3A0C38]'>
                                             {currency}{mainCard.priceValue.replace(/^[৳$£\s]+/, '')}
                                         </span>
                                     )}
                                 </div>
                             )}
 
-                            <div className="mt-4 sm:mt-5">
+                            <div className="mt-3.5 sm:mt-5">
                                 <FlowButton 
                                     text={mainCard.buttonText || "Discover the Collection →"} 
                                     href={mainCard.buttonLink || "/shop"} 
-                                    className="px-5 min-[380px]:px-8 h-10 sm:h-12 text-xs sm:text-sm font-bold" 
+                                    className="px-4 min-[380px]:px-6 sm:px-8 h-9 min-[380px]:h-10 sm:h-12 text-[11px] min-[380px]:text-xs sm:text-sm font-bold shadow-xs" 
                                 />
                             </div>
                         </div>
 
                         {/* Right-Aligned Large Transparent Image */}
                         {mainCard.image ? (
-                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[50%] min-[380px]:w-[53%] min-[450px]:w-[56%] sm:w-[60%] max-w-[440px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
+                            <div className='absolute right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-r-3xl'>
                                 <div
                                     className='h-full flex items-end justify-end'
                                     style={{
@@ -105,12 +105,12 @@ const Hero = () => {
                                     }}
                                 >
                                     <Image 
-                                        className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
+                                        className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-0.5' 
                                         src={mainCard.image} 
                                         alt={mainCard.imageAlt || "Direct from the UK - Premium Beauty"} 
                                         fill={false}
-                                        width={380}
-                                        height={440}
+                                        width={500}
+                                        height={500}
                                         priority
                                         unoptimized
                                     />

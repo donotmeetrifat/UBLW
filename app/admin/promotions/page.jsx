@@ -479,15 +479,15 @@ export default function AdminHeroPromotionsPage() {
                             {/* Subtle ambient light orb */}
                             <div className="absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none" />
 
-                            <div className="z-10 max-w-[58%]">
+                            <div className="z-10 relative max-w-[58%] min-[400px]:max-w-[60%] sm:max-w-md">
                                 {mainCard.badge && (
-                                    <div className="inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs">
+                                    <div className="inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2.5 sm:mb-3 shadow-2xs">
                                         <RoyalCrownIcon size={12} color="#D8B56D" />
                                         <span>{mainCard.badge}</span>
                                     </div>
                                 )}
 
-                                <h3 className="text-lg sm:text-2xl lg:text-3xl font-extrabold text-[#241224] leading-snug tracking-tight">
+                                <h3 className="text-base min-[360px]:text-lg min-[420px]:text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight">
                                     {mainCard.title} <br className="hidden sm:inline" />
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold">
                                         {mainCard.titleHighlight}
@@ -495,13 +495,13 @@ export default function AdminHeroPromotionsPage() {
                                 </h3>
 
                                 {mainCard.description && (
-                                    <p className="text-xs sm:text-sm text-slate-500 mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none">
+                                    <p className="text-[11px] sm:text-sm text-slate-500 mt-1.5 sm:mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none">
                                         {mainCard.description}
                                     </p>
                                 )}
 
                                 {(mainCard.priceLabel || mainCard.priceValue) && (
-                                    <div className="flex items-baseline gap-2 mt-4">
+                                    <div className="flex items-baseline gap-2 mt-3 sm:mt-4">
                                         {mainCard.priceLabel && (
                                             <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
                                                 {mainCard.priceLabel}
@@ -515,14 +515,14 @@ export default function AdminHeroPromotionsPage() {
                                     </div>
                                 )}
 
-                                <div className="mt-5">
-                                    <span className="inline-flex items-center justify-center px-8 h-10 sm:h-11 text-xs sm:text-sm font-bold bg-[#6C306E] text-white rounded-full shadow-md transition">
+                                <div className="mt-3.5 sm:mt-5">
+                                    <span className="inline-flex items-center justify-center px-6 sm:px-8 h-9 sm:h-11 text-xs sm:text-sm font-bold bg-[#6C306E] text-white rounded-full shadow-md transition">
                                         {mainCard.buttonText || "Explore Collection"}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="absolute right-0 bottom-0 top-0 w-[50%] min-[450px]:w-[55%] sm:w-[60%] max-w-[420px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-br-3xl">
+                            <div className="absolute right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-r-3xl">
                                 {mainCard.image && (
                                     <div
                                         className="h-full flex items-end justify-end"
@@ -534,7 +534,7 @@ export default function AdminHeroPromotionsPage() {
                                         <img
                                             src={mainCard.image}
                                             alt="Main Card Preview"
-                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-1 transition-transform duration-100"
+                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5 transition-transform duration-100"
                                         />
                                     </div>
                                 )}
