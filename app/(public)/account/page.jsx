@@ -165,6 +165,7 @@ export default function AccountPage() {
             const res = await fetch('/api/auth/otp/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newPassword: password }),
             })
             const data = await res.json()
 
@@ -173,17 +174,10 @@ export default function AccountPage() {
                 return
             }
 
-            setOtpTarget(data.target || 'your registered contact')
+            setOtpTarget(data.target || 'your registered email')
             setOtpStep(true)
             setCountdown(60)
-            toast.success(data.message || 'Verification code dispatched!')
-            if (data.devCode) {
-                toast((t) => (
-                    <span className="text-xs">
-                        🔑 Verification Code: <strong className="font-mono text-sm text-[#6C306E]">{data.devCode}</strong>
-                    </span>
-                ), { duration: 10000 })
-            }
+            toast.success(data.message || 'Verification code sent to your email!')
         } catch {
             toast.error('Network error. Please try again.')
         } finally {
@@ -561,7 +555,7 @@ export default function AccountPage() {
                                 <div>
                                     <h2 className="text-base font-bold text-[#241224]">Enter Verification Code (OTP)</h2>
                                     <p className="text-xs text-slate-500">
-                                        We sent a 6-digit security code to <strong className="text-[#6C306E] font-mono">{otpTarget}</strong>
+                                        We sent a 6-digit security code to your email <strong className="text-[#6C306E] font-mono">{otpTarget}</strong>. Copy the code from your inbox and enter it below.
                                     </p>
                                 </div>
                             </div>

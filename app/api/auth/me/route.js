@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { getUserFromRequest, sanitizeUser, hashPassword, createSessionToken, verifyPasswordOtp } from '@/lib/auth';
+import { getUserFromRequest, sanitizeUser, hashPassword, verifyPassword, createSessionToken, verifyPasswordOtp } from '@/lib/auth';
 
 export async function GET(request) {
     try {
@@ -57,10 +57,11 @@ export async function PUT(request) {
 
         // Retrieve existing registered user to check immutable email constraint
         let currentEmail = payload.email;
+        let existingUser = null;
         if (isDatabaseConfigured()) {
-            const existingUser = await prisma.user.findUnique({
+            existingUser = await prisma.user.findUnique({
                 where: { id: payload.id },
-                select: { email: true }
+                select: { email: true, passwordHash: true }
             });
             if (existingUser?.email) {
                 currentEmail = existingUser.email;
@@ -96,11 +97,19 @@ export async function PUT(request) {
         }
 
         if (password && typeof password === 'string' && password.length >= 6) {
-            // Require verified 6-digit OTP to change account password
+            // STRICT SECURITY 1: Ensure new password is not identical to current account password
+            if (existingUser?.passwordHash && verifyPassword(password, existingUser.passwordHash)) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'New password cannot be the same as your current password. Please choose a different password.',
+                }, { status: 400 });
+            }
+
+            // STRICT SECURITY 2: Require valid 6-digit OTP from email
             if (!otp || String(otp).trim().length !== 6) {
                 return NextResponse.json({
                     success: false,
-                    message: 'A 6-digit OTP verification code is required to change your password.',
+                    message: 'A 6-digit OTP verification code from your email is required to change your password.',
                     requiresOtp: true,
                 }, { status: 400 });
             }
@@ -109,7 +118,7 @@ export async function PUT(request) {
             if (!isValidOtp) {
                 return NextResponse.json({
                     success: false,
-                    message: 'Invalid or expired OTP verification code. Please request a new code.',
+                    message: 'Invalid or expired OTP verification code. Please check your email and enter the correct code.',
                     requiresOtp: true,
                 }, { status: 400 });
             }
