@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import { useRouter } from "next/navigation"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 export default function StoreAddProduct() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -100,6 +101,7 @@ export default function StoreAddProduct() {
 
             if (data.success) {
                 toast.success("Authentic UK product published successfully!")
+                broadcastStoreChange('products', { product: data.product, action: 'create' })
                 router.push('/store/manage-product')
             } else {
                 toast.error(data.message || "Failed to publish product")

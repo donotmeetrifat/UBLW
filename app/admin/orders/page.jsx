@@ -16,6 +16,7 @@ import {
 } from "@/components/icons"
 import InvoiceModal from "@/components/InvoiceModal"
 import AdminDropdown from "@/components/admin/AdminDropdown"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 const STATUSES = [
     { key: 'ALL', label: 'All Orders' },
@@ -75,6 +76,9 @@ export default function AdminOrdersPage() {
 
     useEffect(() => {
         fetchOrders()
+        const handleOrdersUpdated = () => fetchOrders()
+        window.addEventListener('orders-updated', handleOrdersUpdated)
+        return () => window.removeEventListener('orders-updated', handleOrdersUpdated)
     }, [])
 
     const handleUpdateStatus = async (orderId, newStatus) => {
@@ -91,6 +95,7 @@ export default function AdminOrdersPage() {
                     setSelectedOrder(prev => ({ ...prev, status: newStatus }))
                 }
                 toast.success(`Order marked as ${newStatus}`)
+                broadcastStoreChange('orders', { orderId, status: newStatus })
             } else {
                 toast.error(data.message || 'Failed to update order status')
             }
@@ -127,6 +132,7 @@ export default function AdminOrdersPage() {
                     status: 'SHIPPED'
                 } : o))
                 toast.success('Steadfast consignment ID saved! Order updated to SHIPPED.')
+                broadcastStoreChange('orders', { orderId, status: 'SHIPPED', consignmentId })
             } else {
                 toast.error(data.message || 'Failed to update tracking ID')
             }

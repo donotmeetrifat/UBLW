@@ -32,6 +32,7 @@ import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFA
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 import { isClientSignedIn, requireSignIn, getClientUser } from '@/lib/clientAuth'
 import { FlowButton } from '@/components/ui/flow-button'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function CheckoutPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -91,6 +92,17 @@ export default function CheckoutPage() {
             }
         }
         fetchSettings()
+
+        const handleLiveSettings = (e) => {
+            if (e?.detail) {
+                setSettings(prev => ({
+                    delivery: e.detail.delivery ? { ...prev.delivery, ...e.detail.delivery } : prev.delivery,
+                    payments: e.detail.payments ? { ...prev.payments, ...e.detail.payments } : prev.payments,
+                }))
+            }
+        }
+        window.addEventListener('settings-updated', handleLiveSettings)
+        return () => window.removeEventListener('settings-updated', handleLiveSettings)
     }, [])
 
     // 2. Build item list from Redux cart with resilient fallback (filters by user selected items if specified)
@@ -378,6 +390,7 @@ export default function CheckoutPage() {
                     const existing = JSON.parse(localStorage.getItem('ukbl_orders') || '[]')
                     localStorage.setItem('ukbl_orders', JSON.stringify([data.order, ...existing]))
                     localStorage.removeItem('ukbl_checkout_data')
+                    broadcastStoreChange('orders', { order: data.order })
                 }
 
                 // Remove only the purchased items from bag so unselected items remain intact

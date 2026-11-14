@@ -15,6 +15,7 @@ import {
 } from '@/components/icons'
 import { DEFAULT_PROMOTIONS } from '@/lib/promotions'
 import { setPromotions as setReduxPromotions } from '@/lib/features/product/productSlice'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminHeroPromotionsPage() {
     const currency = '৳'
@@ -237,6 +238,8 @@ export default function AdminHeroPromotionsPage() {
                     } catch (syncErr) {
                         console.error('Client sync error:', syncErr)
                     }
+                    // Global Supabase Realtime broadcast to all visitors worldwide
+                    broadcastStoreChange('promotions', { promotions: data.promotions })
                 }
             } else {
                 toast.error(data.message || 'Failed to publish changes', { id: toastId })

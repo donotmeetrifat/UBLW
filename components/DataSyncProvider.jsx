@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
@@ -14,10 +14,22 @@ import {
     setPromotions 
 } from '@/lib/features/product/productSlice'
 import AuthModal from '@/components/AuthModal'
+import { subscribeToStoreSync } from '@/lib/realtimeSync'
 
 export default function DataSyncProvider({ children }) {
     const dispatch = useDispatch()
     const hasInitializedRef = useRef(false)
+    const knownVersionsRef = useRef({
+        banners: 0,
+        promotions: 0,
+        categories: 0,
+        products: 0,
+        sections: 0,
+        settings: 0,
+        coupons: 0,
+        orders: 0,
+        inquiries: 0
+    })
     const [authModal, setAuthModal] = useState({
         isOpen: false,
         mode: 'login',
@@ -331,7 +343,157 @@ export default function DataSyncProvider({ children }) {
         }
         syncHeroPromotions()
 
+        let unsubscribeRealtime = () => {}
+        let versionCheckInterval = null
+        let handleVisibilityOrFocus = () => {}
+        let checkVersionSync = async () => {}
+
         if (typeof window !== 'undefined') {
+            // A. SUPABASE REALTIME MESH LISTENER (Sub-second cross-device, global push)
+            unsubscribeRealtime = subscribeToStoreSync((payload) => {
+                if (!payload || !payload.type) return
+                const rawType = String(payload.type).trim().toLowerCase()
+                const data = payload.data || {}
+
+                if (rawType === 'banners' || rawType === 'hero_banners') {
+                    if (Array.isArray(data.banners) && data.banners.length > 0) {
+                        dispatch(setBanners(data.banners))
+                        try {
+                            localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
+                        } catch {}
+                    } else {
+                        syncHeroBanners()
+                    }
+                    if (data.settings && typeof data.settings === 'object') {
+                        dispatch(setBannerSettings(data.settings))
+                    } else if (typeof data.autoplay === 'boolean') {
+                        dispatch(setHeroBannerAutoplay(data.autoplay))
+                    }
+                    window.dispatchEvent(new CustomEvent('hero-banners-updated', { detail: data }))
+                } else if (rawType === 'hero_banner_autoplay') {
+                    if (typeof data.autoplay === 'boolean') {
+                        dispatch(setHeroBannerAutoplay(data.autoplay))
+                    } else {
+                        syncHeroBanners()
+                    }
+                    window.dispatchEvent(new CustomEvent('hero-banner-autoplay-updated', { detail: data }))
+                } else if (rawType === 'promotions' || rawType === 'hero_promotions') {
+                    if (data.promotions && typeof data.promotions === 'object') {
+                        dispatch(setPromotions(data.promotions))
+                        try {
+                            localStorage.setItem('ukbl_cached_promotions', JSON.stringify(data.promotions))
+                        } catch {}
+                    } else {
+                        syncHeroPromotions()
+                    }
+                    window.dispatchEvent(new CustomEvent('hero-promotions-updated', { detail: data }))
+                } else if (rawType === 'categories' || rawType === 'category-catalog-updated' || rawType === 'category-updated') {
+                    syncCategoryCatalog()
+                    syncProductCatalog()
+                    window.dispatchEvent(new CustomEvent('category-catalog-updated', { detail: data }))
+                } else if (rawType === 'sections' || rawType === 'homepage_sections') {
+                    if (data.sections && typeof data.sections === 'object') {
+                        dispatch(setHomepageSections(data.sections))
+                        try {
+                            localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(data.sections))
+                        } catch {}
+                    } else {
+                        syncHomepageSections()
+                    }
+                    window.dispatchEvent(new CustomEvent('homepage-sections-updated', { detail: data }))
+                } else if (rawType === 'products' || rawType === 'product') {
+                    if (data.product && data.product.id) {
+                        dispatch(setProduct([data.product]))
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                            const list = Array.isArray(cached) ? cached : []
+                            const idx = list.findIndex(p => p.id === data.product.id)
+                            if (idx >= 0) list[idx] = { ...list[idx], ...data.product }
+                            else list.unshift(data.product)
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                        } catch {}
+                    }
+                    syncProductCatalog()
+                    window.dispatchEvent(new CustomEvent('product-catalog-updated', { detail: data }))
+                } else if (rawType === 'settings') {
+                    window.dispatchEvent(new CustomEvent('settings-updated', { detail: data }))
+                } else if (rawType === 'coupons') {
+                    window.dispatchEvent(new CustomEvent('coupon-catalog-updated', { detail: data }))
+                } else if (rawType === 'orders') {
+                    window.dispatchEvent(new CustomEvent('orders-updated', { detail: data }))
+                } else if (rawType === 'inquiries') {
+                    window.dispatchEvent(new CustomEvent('inquiries-updated', { detail: data }))
+                }
+            })
+
+            // B. FALLBACK HEARTBEAT VERSION POLLER (Ensures reconnecting & sleeping clients catch up without page reload)
+            checkVersionSync = async () => {
+                try {
+                    const res = await fetch(`/api/sync/version?_t=${Date.now()}`, {
+                        cache: 'no-store',
+                        headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+                    })
+                    const data = await res.json()
+                    if (data.success && data.versions) {
+                        const v = data.versions
+                        const prev = knownVersionsRef.current
+
+                        if (prev.banners === 0) {
+                            knownVersionsRef.current = { ...v }
+                            return
+                        }
+
+                        if (v.banners > prev.banners) {
+                            syncHeroBanners()
+                            prev.banners = v.banners
+                        }
+                        if (v.promotions > prev.promotions) {
+                            syncHeroPromotions()
+                            prev.promotions = v.promotions
+                        }
+                        if (v.categories > prev.categories) {
+                            syncCategoryCatalog()
+                            prev.categories = v.categories
+                        }
+                        if (v.products > prev.products) {
+                            syncProductCatalog()
+                            prev.products = v.products
+                        }
+                        if (v.sections > prev.sections) {
+                            syncHomepageSections()
+                            prev.sections = v.sections
+                        }
+                        if (v.coupons > prev.coupons) {
+                            window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
+                            prev.coupons = v.coupons
+                        }
+                        if (v.orders > prev.orders) {
+                            window.dispatchEvent(new CustomEvent('orders-updated'))
+                            prev.orders = v.orders
+                        }
+                        if (v.inquiries > prev.inquiries) {
+                            window.dispatchEvent(new CustomEvent('inquiries-updated'))
+                            prev.inquiries = v.inquiries
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // Initial version seeding
+            checkVersionSync()
+
+            // Run heartbeat check every 25 seconds
+            versionCheckInterval = setInterval(checkVersionSync, 25000)
+
+            handleVisibilityOrFocus = () => {
+                if (document.visibilityState === 'visible') {
+                    checkVersionSync()
+                }
+            }
+            document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+            window.addEventListener('focus', handleVisibilityOrFocus)
+            window.addEventListener('online', checkVersionSync)
+
             const handleAutoplayUpdated = (e) => {
                 if (typeof e?.detail?.autoplay === 'boolean') {
                     dispatch(setHeroBannerAutoplay(e.detail.autoplay))
@@ -554,6 +716,13 @@ export default function DataSyncProvider({ children }) {
         return () => {
             window.removeEventListener('storage', handleStorageEvent)
             window.removeEventListener('auth-change', handleAuthChange)
+            if (typeof unsubscribeRealtime === 'function') unsubscribeRealtime()
+            if (versionCheckInterval) clearInterval(versionCheckInterval)
+            if (typeof window !== 'undefined') {
+                document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+                window.removeEventListener('focus', handleVisibilityOrFocus)
+                window.removeEventListener('online', checkVersionSync)
+            }
         }
     }, [dispatch])
 

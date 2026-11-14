@@ -13,6 +13,7 @@ import {
     CheckIcon,
     BagIcon
 } from '@/components/icons'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 const DEFAULT_SECTIONS = {
     newArrivals: {
@@ -293,6 +294,8 @@ export default function AdminHomepageSectionsPage() {
                     } catch (syncErr) {
                         console.error('Client sync error:', syncErr)
                     }
+                    // Global Supabase Realtime broadcast to all visitors worldwide
+                    broadcastStoreChange('sections', { sections: data.sections })
                 }
             } else {
                 toast.error(data.message || 'Failed to publish changes', { id: toastId })

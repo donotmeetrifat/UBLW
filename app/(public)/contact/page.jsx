@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 const contactChannels = [
     {
@@ -156,6 +157,7 @@ export default function ContactPage() {
                 } catch (e) {
                     // Ignore localStorage error
                 }
+                broadcastStoreChange('inquiries', { inquiry: data.inquiry })
             }
         } catch (error) {
             console.error('Error submitting inquiry:', error)

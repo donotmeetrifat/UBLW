@@ -19,6 +19,7 @@ import {
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import LuxuryDatePicker from '@/components/ui/LuxuryDatePicker'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminCouponsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -168,6 +169,7 @@ export default function AdminCouponsPage() {
                     } catch (e) {
                         // ignore BroadcastChannel errors
                     }
+                    broadcastStoreChange('coupons', { id: coupon.id, isActive: nextState })
                 }
             } else {
                 // Revert optimistic update on error
@@ -339,6 +341,7 @@ export default function AdminCouponsPage() {
                     } catch (e) {
                         // ignore
                     }
+                    broadcastStoreChange('coupons', { coupon: data.coupon })
                 }
             } else {
                 toast.error(data.message || data.error || 'Failed to save coupon')
@@ -368,6 +371,7 @@ export default function AdminCouponsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_coupons_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('coupon-catalog-updated'))
+                    broadcastStoreChange('coupons', { id: deletedId, deleted: true })
                 }
             } else {
                 toast.error(data.message || 'Failed to delete coupon')

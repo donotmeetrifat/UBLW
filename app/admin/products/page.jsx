@@ -29,6 +29,7 @@ import {
     ReviewBadgeIcon
 } from "@/components/icons"
 import AdminDropdown from "@/components/admin/AdminDropdown"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 const CATEGORIES = [
     'All',
@@ -457,6 +458,7 @@ export default function AdminProductsPage() {
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
                         } catch {}
+                        broadcastStoreChange('products', { product: data.product, action: 'update' })
 
                         // Purge Service Worker API & page caches
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -507,6 +509,7 @@ export default function AdminProductsPage() {
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
                         } catch {}
+                        broadcastStoreChange('products', { product: data.product, action: 'update' })
 
                         // Purge Service Worker API & page caches
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -546,6 +549,7 @@ export default function AdminProductsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    broadcastStoreChange('products', { productId: deletingProduct.id, action: 'delete' })
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
@@ -583,6 +587,7 @@ export default function AdminProductsPage() {
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    broadcastStoreChange('products', { productId: deletingProduct.id, action: 'delete' })
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }

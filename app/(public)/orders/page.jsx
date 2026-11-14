@@ -56,8 +56,13 @@ export default function Orders() {
     useEffect(() => {
         fetchOrders();
         const handleAuth = () => fetchOrders();
+        const handleOrdersUpdated = () => fetchOrders();
         window.addEventListener('auth-change', handleAuth);
-        return () => window.removeEventListener('auth-change', handleAuth);
+        window.addEventListener('orders-updated', handleOrdersUpdated);
+        return () => {
+            window.removeEventListener('auth-change', handleAuth);
+            window.removeEventListener('orders-updated', handleOrdersUpdated);
+        };
     }, []);
 
     const filteredOrders = orders.filter(order => {

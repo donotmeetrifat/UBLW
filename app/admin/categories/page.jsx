@@ -15,6 +15,7 @@ import {
     BagIcon,
     ArrowRightIcon
 } from "@/components/icons"
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminCategoriesPage() {
     const [categories, setCategories] = useState([])
@@ -137,6 +138,7 @@ export default function AdminCategoriesPage() {
                     bc.postMessage({ type: 'category-updated', timestamp: Date.now() })
                     bc.close()
                 } catch {}
+                broadcastStoreChange('categories', { category: data.category })
             }
         } catch (error) {
             console.error('Error saving category:', error)
@@ -172,6 +174,7 @@ export default function AdminCategoriesPage() {
                     bc.postMessage({ type: 'category-updated', timestamp: Date.now() })
                     bc.close()
                 } catch {}
+                broadcastStoreChange('categories', { category: data.category })
             }
         } catch (error) {
             toast.error('Failed to delete category')

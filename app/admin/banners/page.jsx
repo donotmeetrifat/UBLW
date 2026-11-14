@@ -19,6 +19,7 @@ import {
     UploadCloudIcon
 } from '@/components/icons'
 import ClassicLoader from '@/components/ui/classic-loader'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminHeroBannersPage() {
     const [banners, setBanners] = useState([])
@@ -200,6 +201,8 @@ export default function AdminHeroBannersPage() {
             } catch (syncErr) {
                 console.error('Broadcast sync error:', syncErr)
             }
+            // Supabase Realtime mesh broadcast to all customers worldwide
+            broadcastStoreChange('banners', { banners: newBanners })
         }
     }
 
@@ -232,6 +235,8 @@ export default function AdminHeroBannersPage() {
                         bc.postMessage({ type: 'hero-banner-autoplay-updated', autoplay: finalAutoplay })
                         bc.close()
                     } catch {}
+                    // Supabase Realtime mesh broadcast
+                    broadcastStoreChange('hero_banner_autoplay', { autoplay: finalAutoplay })
                 }
             } else {
                 setIsAutoplay(!nextState)

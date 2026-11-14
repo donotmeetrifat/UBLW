@@ -7,6 +7,7 @@ import Loading from "@/components/Loading"
 import { baseProductDummyData } from "@/assets/assets"
 import { TrashIcon, SearchIcon, SparklesIcon } from "@/components/icons"
 import Link from "next/link"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 export default function StoreManageProducts() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -43,6 +44,7 @@ export default function StoreManageProducts() {
             if (data.success) {
                 setProducts(prev => prev.map(p => p.id === productId ? { ...p, inStock: nextStock } : p))
                 toast.success(nextStock ? "Product marked In Stock" : "Product marked Out of Stock")
+                broadcastStoreChange('products', { productId, inStock: nextStock, action: 'stock' })
             } else {
                 toast.error(data.message || 'Failed to update stock')
             }
@@ -50,6 +52,7 @@ export default function StoreManageProducts() {
             // Local state fallback
             setProducts(prev => prev.map(p => p.id === productId ? { ...p, inStock: nextStock } : p))
             toast.success(nextStock ? "Product marked In Stock" : "Product marked Out of Stock")
+            broadcastStoreChange('products', { productId, inStock: nextStock, action: 'stock' })
         }
     }
 
@@ -61,10 +64,12 @@ export default function StoreManageProducts() {
             if (data.success) {
                 setProducts(prev => prev.filter(p => p.id !== productId))
                 toast.success('Product removed successfully')
+                broadcastStoreChange('products', { productId, action: 'delete' })
             }
         } catch (error) {
             setProducts(prev => prev.filter(p => p.id !== productId))
             toast.success('Product removed')
+            broadcastStoreChange('products', { productId, action: 'delete' })
         }
     }
 

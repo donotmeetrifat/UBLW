@@ -14,6 +14,7 @@ import {
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminSettingsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -152,6 +153,7 @@ export default function AdminSettingsPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success('Settings updated! Rates and payment methods are live across website.')
+                broadcastStoreChange('settings', { delivery, payments })
             } else {
                 toast.error(data.message || 'Failed to save settings')
             }

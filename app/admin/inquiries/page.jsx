@@ -15,6 +15,7 @@ import {
     PhoneIcon
 } from "@/components/icons"
 import AdminDropdown from "@/components/admin/AdminDropdown"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 const INQUIRY_STATUS_OPTIONS = [
     { value: 'UNREAD', label: 'Unread', dot: 'bg-rose-500' },
@@ -154,12 +155,14 @@ export default function AdminInquiriesPage() {
         window.addEventListener('focus', onFocus)
         window.addEventListener('storage', onStorage)
         window.addEventListener('ukbl_inquiry_updated', onCustomSync)
+        window.addEventListener('inquiries-updated', onCustomSync)
 
         return () => {
             clearInterval(interval)
             window.removeEventListener('focus', onFocus)
             window.removeEventListener('storage', onStorage)
             window.removeEventListener('ukbl_inquiry_updated', onCustomSync)
+            window.removeEventListener('inquiries-updated', onCustomSync)
         }
     }, [selectedStatus, searchQuery])
 
@@ -184,6 +187,7 @@ export default function AdminInquiriesPage() {
                     unread: newStatus === 'UNREAD' ? prev.unread + 1 : Math.max(0, prev.unread - 1),
                     resolved: newStatus === 'RESOLVED' ? prev.resolved + 1 : prev.resolved
                 }))
+                broadcastStoreChange('inquiries', { inquiryId, status: newStatus })
             } else {
                 toast.error(data.message || 'Failed to update status')
             }
@@ -228,6 +232,7 @@ export default function AdminInquiriesPage() {
                 toast.success('Inquiry deleted successfully')
                 setInquiries(prev => prev.filter(i => i.id !== inquiryId))
                 if (activeInquiry?.id === inquiryId) setActiveInquiry(null)
+                broadcastStoreChange('inquiries', { inquiryId, deleted: true })
             } else {
                 toast.error(data.message || 'Failed to delete inquiry')
             }
