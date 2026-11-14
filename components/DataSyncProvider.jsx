@@ -44,16 +44,37 @@ export default function DataSyncProvider({ children }) {
         if (hasInitializedRef.current) return
         hasInitializedRef.current = true
 
-        // Register Service Worker for Complete Offline Storefront Capability
+        // Register Service Worker with Auto-Updating & Cache Eviction
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').then((registration) => {
+                    // Force immediate update check on each load
+                    registration.update().catch(() => {});
+
+                    // Self-healing: if device holds stale sw cache from previous versions, purge immediately
+                    const currentSwVer = 'ukbl-v4';
+                    if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
+                        if (registration.active) {
+                            registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
+                        }
+                        if ('caches' in window) {
+                            caches.keys().then((keys) => {
+                                keys.forEach(key => {
+                                    if (!key.includes(currentSwVer)) {
+                                        caches.delete(key);
+                                    }
+                                });
+                            });
+                        }
+                        localStorage.setItem('ukbl_sw_installed_version', currentSwVer);
+                    }
+
                     registration.onupdatefound = () => {
                         const installingWorker = registration.installing;
                         if (installingWorker) {
                             installingWorker.onstatechange = () => {
                                 if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // New content available
+                                    installingWorker.postMessage({ type: 'CLEAR_ALL_CACHES' });
                                 }
                             };
                         }
@@ -166,7 +187,8 @@ export default function DataSyncProvider({ children }) {
                     cache: 'no-store',
                     headers: {
                         'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Expires': '0'
                     }
                 })
                 const data = await res.json()

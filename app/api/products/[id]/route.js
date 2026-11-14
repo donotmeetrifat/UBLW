@@ -5,9 +5,27 @@ import { memoryStore } from '@/lib/db/initialData';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
     try {
-        const { id } = await params;
+        let id = null;
+        if (context?.params) {
+            try {
+                const resolved = await Promise.resolve(context.params);
+                id = resolved?.id;
+            } catch {}
+        }
+        if (!id) {
+            const url = new URL(request.url);
+            const pathParts = url.pathname.split('/').filter(Boolean);
+            const prodIdx = pathParts.indexOf('products');
+            if (prodIdx !== -1 && pathParts[prodIdx + 1]) {
+                id = pathParts[prodIdx + 1].split('?')[0];
+            }
+        }
+
+        if (!id) {
+            return NextResponse.json({ success: false, message: 'Product ID required' }, { status: 400 });
+        }
 
         if (isDatabaseConfigured()) {
             let product;
@@ -72,7 +90,11 @@ export async function GET(request, { params }) {
 
             return NextResponse.json({ success: true, product: normalizedProduct }, {
                 headers: {
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'CDN-Cache-Control': 'no-store',
+                    'Vercel-CDN-Cache-Control': 'no-store'
                 }
             });
         }
@@ -83,7 +105,11 @@ export async function GET(request, { params }) {
         }
         return NextResponse.json({ success: true, product }, {
             headers: {
-                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'CDN-Cache-Control': 'no-store',
+                'Vercel-CDN-Cache-Control': 'no-store'
             }
         });
     } catch (error) {
@@ -95,9 +121,23 @@ export async function GET(request, { params }) {
     }
 }
 
-export async function PATCH(request, { params }) {
+export async function PATCH(request, context) {
     try {
-        const { id } = await params;
+        let id = null;
+        if (context?.params) {
+            try {
+                const resolved = await Promise.resolve(context.params);
+                id = resolved?.id;
+            } catch {}
+        }
+        if (!id) {
+            const url = new URL(request.url);
+            const pathParts = url.pathname.split('/').filter(Boolean);
+            const prodIdx = pathParts.indexOf('products');
+            if (prodIdx !== -1 && pathParts[prodIdx + 1]) {
+                id = pathParts[prodIdx + 1].split('?')[0];
+            }
+        }
         const updates = await request.json();
 
         // Sanitize fields before database update
@@ -231,9 +271,23 @@ export async function PATCH(request, { params }) {
     }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
     try {
-        const { id } = await params;
+        let id = null;
+        if (context?.params) {
+            try {
+                const resolved = await Promise.resolve(context.params);
+                id = resolved?.id;
+            } catch {}
+        }
+        if (!id) {
+            const url = new URL(request.url);
+            const pathParts = url.pathname.split('/').filter(Boolean);
+            const prodIdx = pathParts.indexOf('products');
+            if (prodIdx !== -1 && pathParts[prodIdx + 1]) {
+                id = pathParts[prodIdx + 1].split('?')[0];
+            }
+        }
 
         if (isDatabaseConfigured()) {
             const orderItemsCount = await prisma.orderItem.count({ where: { productId: id } });

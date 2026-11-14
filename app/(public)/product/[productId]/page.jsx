@@ -31,12 +31,30 @@ export default function Product() {
         const base = reduxProduct || {};
         const merged = { ...base, ...fresh };
 
-        const freshBenefits = Array.isArray(fresh.benefits) && fresh.benefits.length > 0
-            ? fresh.benefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
-            : [];
-        const baseBenefits = Array.isArray(base.benefits) && base.benefits.length > 0
-            ? base.benefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
-            : [];
+        const extractBenefits = (src) => {
+            if (!src) return [];
+            let raw = src.benefits;
+            if (typeof raw === 'string') {
+                try {
+                    raw = JSON.parse(raw);
+                } catch {
+                    if (raw.startsWith('{') && raw.endsWith('}')) {
+                        raw = raw.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                    } else if (raw.includes('\n')) {
+                        raw = raw.split('\n').map(s => s.trim());
+                    } else {
+                        raw = [raw.trim()];
+                    }
+                }
+            }
+            if (Array.isArray(raw)) {
+                return raw.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean);
+            }
+            return [];
+        };
+
+        const freshBenefits = extractBenefits(fresh);
+        const baseBenefits = extractBenefits(base);
         const benefits = freshBenefits.length > 0 ? freshBenefits : baseBenefits;
 
         const freshWhy = (fresh.whyYouWillLoveIt && String(fresh.whyYouWillLoveIt).trim().length > 0)
@@ -72,7 +90,8 @@ export default function Product() {
                 cache: 'no-store',
                 headers: {
                     'Pragma': 'no-cache',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate'
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Expires': '0'
                 }
             });
             const data = await res.json();

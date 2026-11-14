@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ukbl-v2';
-const STATIC_CACHE = 'ukbl-static-v2';
-const PAGES_CACHE = 'ukbl-pages-v2';
-const API_CACHE = 'ukbl-api-v2';
-const IMAGE_CACHE = 'ukbl-images-v2';
+const CACHE_NAME = 'ukbl-v4';
+const STATIC_CACHE = 'ukbl-static-v4';
+const PAGES_CACHE = 'ukbl-pages-v4';
+const API_CACHE = 'ukbl-api-v4';
+const IMAGE_CACHE = 'ukbl-images-v4';
 
 const PRECACHE_URLS = [
     '/',
@@ -46,14 +46,22 @@ self.addEventListener('activate', (event) => {
 
 // Real-time cache invalidation message listener from Admin and Client events
 self.addEventListener('message', (event) => {
-    if (event.data && (event.data.type === 'CLEAR_API_CACHE' || event.data.type === 'PRODUCT_UPDATED' || event.data.type === 'CLEAR_ALL_CACHES')) {
-        Promise.all([
-            caches.delete(API_CACHE),
-            caches.delete(PAGES_CACHE)
-        ]).then(() => {
-            // Re-open fresh empty caches
-            caches.open(API_CACHE);
+    if (event.data && (
+        event.data.type === 'CLEAR_API_CACHE' || 
+        event.data.type === 'PRODUCT_UPDATED' || 
+        event.data.type === 'CLEAR_ALL_CACHES' ||
+        event.data.type === 'FORCE_UPDATE'
+    )) {
+        caches.keys().then((keys) => {
+            return Promise.all(keys.map(k => caches.delete(k)));
+        }).then(() => {
+            caches.open(STATIC_CACHE);
             caches.open(PAGES_CACHE);
+            caches.open(API_CACHE);
+            caches.open(IMAGE_CACHE);
+            if (event.source) {
+                event.source.postMessage({ type: 'CACHES_CLEARED' });
+            }
         });
     }
 });
@@ -65,6 +73,11 @@ self.addEventListener('fetch', (event) => {
 
     // Only handle GET requests
     if (request.method !== 'GET') {
+        return;
+    }
+
+    // Never intercept or cache the service worker script itself
+    if (url.pathname === '/sw.js') {
         return;
     }
 
