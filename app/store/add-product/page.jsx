@@ -80,7 +80,7 @@ export default function StoreAddProduct() {
 
             const finalImages = uploadedImageUrls.length > 0 
                 ? uploadedImageUrls 
-                : ['/product_img1.png']
+                : []
 
             const res = await fetch('/api/products', {
                 method: 'POST',

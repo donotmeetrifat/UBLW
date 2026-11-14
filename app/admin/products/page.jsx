@@ -120,6 +120,8 @@ export default function AdminProductsPage() {
 
     const [dbCategories, setDbCategories] = useState([])
 
+    const [isDraggingOverDropzone, setIsDraggingOverDropzone] = useState(false)
+    const dropzoneDragCounter = useRef(0)
     const fileInputRef = useRef(null)
 
     // Load live categories from catalog
@@ -281,17 +283,34 @@ export default function AdminProductsPage() {
     }
 
     // Direct Image Upload Handler (Multiple Files in Full High Quality)
-    const handleImageFilesSelected = async (e) => {
-        const files = Array.from(e.target.files || [])
-        if (files.length === 0) return
+    const uploadImageFiles = async (filesToUpload) => {
+        const rawFiles = Array.from(filesToUpload || [])
+        const imageFiles = rawFiles.filter(f => {
+            if (!f) return false
+            if (f.type && f.type.startsWith('image/')) return true
+            if (f.name && /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)$/i.test(f.name)) return true
+            return false
+        })
+
+        if (imageFiles.length === 0) {
+            toast.error('Please provide valid image files (PNG, JPG, WEBP)')
+            return
+        }
 
         setIsUploadingImages(true)
-        const uploadToast = toast.loading(`Uploading ${files.length} high-resolution image(s)...`)
+        const uploadToast = toast.loading(`Uploading ${imageFiles.length} high-resolution photo(s)...`)
 
         try {
             const uploadFormData = new FormData()
-            files.forEach(file => {
-                uploadFormData.append('files', file)
+            imageFiles.forEach(file => {
+                let fileToSend = file
+                if (!file.name || file.name === 'image.png' || file.name === 'blob') {
+                    const ext = file.type ? file.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png' : 'png'
+                    fileToSend = new File([file], `pasted_photo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`, {
+                        type: file.type || 'image/png'
+                    })
+                }
+                uploadFormData.append('files', fileToSend)
             })
 
             const res = await fetch('/api/upload', {
@@ -322,6 +341,104 @@ export default function AdminProductsPage() {
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
+
+    const handleImageFilesSelected = async (e) => {
+        const files = Array.from(e.target.files || [])
+        if (files.length === 0) return
+        await uploadImageFiles(files)
+    }
+
+    // Dropzone Drag and Drop Handlers
+    const handleDropzoneDragEnter = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (draggedImageIndex !== null) return
+        dropzoneDragCounter.current += 1
+        if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+            setIsDraggingOverDropzone(true)
+        }
+    }
+
+    const handleDropzoneDragOver = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (draggedImageIndex !== null) return
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'copy'
+        }
+        if (!isDraggingOverDropzone) {
+            setIsDraggingOverDropzone(true)
+        }
+    }
+
+    const handleDropzoneDragLeave = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (draggedImageIndex !== null) return
+        dropzoneDragCounter.current -= 1
+        if (dropzoneDragCounter.current <= 0) {
+            dropzoneDragCounter.current = 0
+            setIsDraggingOverDropzone(false)
+        }
+    }
+
+    const handleDropzoneDrop = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dropzoneDragCounter.current = 0
+        setIsDraggingOverDropzone(false)
+
+        if (draggedImageIndex !== null) return
+
+        const files = Array.from(e.dataTransfer?.files || [])
+        if (files.length > 0) {
+            uploadImageFiles(files)
+        }
+    }
+
+    // Global & Modal-level Clipboard Paste Handler for Product Photos
+    useEffect(() => {
+        if (!isEditorOpen) return
+
+        const handlePaste = (e) => {
+            const clipboardData = e.clipboardData
+            if (!clipboardData) return
+
+            const imageFiles = []
+
+            // 1. Check clipboardData.files
+            if (clipboardData.files && clipboardData.files.length > 0) {
+                for (let i = 0; i < clipboardData.files.length; i++) {
+                    const file = clipboardData.files[i]
+                    if (file && (file.type?.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)$/i.test(file.name || ''))) {
+                        imageFiles.push(file)
+                    }
+                }
+            }
+
+            // 2. Check clipboardData.items (e.g. Snipping Tool, screenshot, browser right-click Copy Image)
+            if (imageFiles.length === 0 && clipboardData.items && clipboardData.items.length > 0) {
+                for (let i = 0; i < clipboardData.items.length; i++) {
+                    const item = clipboardData.items[i]
+                    if (item.type && item.type.startsWith('image/')) {
+                        const file = item.getAsFile()
+                        if (file) imageFiles.push(file)
+                    }
+                }
+            }
+
+            // Only intercept if an image was actually in the clipboard!
+            // If the user copied text (like product title or description), let default text paste proceed untouched.
+            if (imageFiles.length > 0) {
+                e.preventDefault()
+                e.stopPropagation()
+                uploadImageFiles(imageFiles)
+            }
+        }
+
+        window.addEventListener('paste', handlePaste)
+        return () => window.removeEventListener('paste', handlePaste)
+    }, [isEditorOpen])
 
     // Reorder Images (Move Left / Move Right / Set as Cover)
     const moveImage = (fromIndex, toIndex) => {
@@ -1175,7 +1292,24 @@ export default function AdminProductsPage() {
                                     {/* Upload Dropzone */}
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="border-2 border-dashed border-[#EFE0EF] hover:border-[#6C306E] bg-[#FAF6FA]/70 hover:bg-[#FAF6FA] rounded-2xl p-5 text-center cursor-pointer transition group"
+                                        onDragEnter={handleDropzoneDragEnter}
+                                        onDragOver={handleDropzoneDragOver}
+                                        onDragLeave={handleDropzoneDragLeave}
+                                        onDrop={handleDropzoneDrop}
+                                        tabIndex={0}
+                                        role="button"
+                                        aria-label="Upload product photos"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault()
+                                                fileInputRef.current?.click()
+                                            }
+                                        }}
+                                        className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition-all duration-200 group outline-none select-none ${
+                                            isDraggingOverDropzone
+                                                ? 'border-[#6C306E] bg-[#6C306E]/10 ring-4 ring-[#6C306E]/20 scale-[1.01]'
+                                                : 'border-[#EFE0EF] hover:border-[#6C306E] bg-[#FAF6FA]/70 hover:bg-[#FAF6FA] focus:border-[#6C306E] focus:ring-2 focus:ring-[#6C306E]/20'
+                                        }`}
                                     >
                                         <input
                                             ref={fileInputRef}
@@ -1185,15 +1319,31 @@ export default function AdminProductsPage() {
                                             onChange={handleImageFilesSelected}
                                             className="hidden"
                                         />
-                                        <div className="size-10 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center mx-auto mb-2 text-[#6C306E] group-hover:scale-110 transition shadow-2xs">
-                                            <UploadCloudIcon size={18} color="#6C306E" />
+                                        <div className={`size-11 rounded-full flex items-center justify-center mx-auto mb-2.5 transition shadow-2xs ${
+                                            isDraggingOverDropzone
+                                                ? 'bg-[#6C306E] text-white scale-110 shadow-md'
+                                                : 'bg-white border border-[#EFE0EF] text-[#6C306E] group-hover:scale-110'
+                                        }`}>
+                                            <UploadCloudIcon size={20} color={isDraggingOverDropzone ? '#ffffff' : '#6C306E'} />
                                         </div>
-                                        <p className="text-xs font-bold text-[#241224]">
-                                            {isUploadingImages ? 'Uploading in Full High Resolution...' : 'Click or Drag & Drop Multiple High-Res Images'}
+                                        <p className="text-xs font-black text-[#241224]">
+                                            {isUploadingImages
+                                                ? 'Uploading in Full High Resolution...'
+                                                : isDraggingOverDropzone
+                                                    ? 'Drop Photos Here to Upload'
+                                                    : 'Click, Drag & Drop, or Paste (Ctrl+V) High-Res Images'}
                                         </p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">
-                                            Supports PNG, JPG, WEBP • Direct full-quality upload to CDN
+                                        <p className="text-[10px] text-slate-400 mt-1">
+                                            Supports PNG, JPG, WEBP • Direct full-quality upload to CDN • Paste anytime with Ctrl+V
                                         </p>
+                                        <div className="flex items-center justify-center gap-2 mt-2.5">
+                                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white border border-[#EFE0EF] text-[#6C306E]">
+                                                ✓ Drag & Drop Ready
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white border border-[#EFE0EF] text-[#6C306E]">
+                                                ✓ Ctrl + V Paste Ready
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {/* Draggable Photos List with Serial Number */}
