@@ -33,10 +33,48 @@ export async function GET(request) {
             }
 
             const cartObj = (user.cart && typeof user.cart === 'object') ? user.cart : {};
+            const productIds = Object.keys(cartObj);
+
+            let cleanCart = {};
+            let isSanitized = false;
+
+            if (productIds.length > 0) {
+                // Verify all products exist and are active in the database
+                const existingProducts = await prisma.product.findMany({
+                    where: {
+                        id: { in: productIds },
+                        isActive: true
+                    },
+                    select: { id: true }
+                });
+                const validIdSet = new Set(existingProducts.map(p => p.id));
+
+                for (const [id, qty] of Object.entries(cartObj)) {
+                    if (validIdSet.has(id) && typeof qty === 'number' && qty > 0) {
+                        cleanCart[id] = qty;
+                    } else {
+                        isSanitized = true;
+                    }
+                }
+
+                // If ghost/deleted products were detected, automatically sanitize user's cart in database
+                if (isSanitized) {
+                    const cleanTotal = calculateTotal(cleanCart);
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            cart: cleanCart,
+                            abandonedCartAt: cleanTotal > 0 ? new Date() : null
+                        }
+                    });
+                }
+            }
+
+            const verifiedTotal = calculateTotal(cleanCart);
             return NextResponse.json({
                 success: true,
-                cartItems: cartObj,
-                total: calculateTotal(cartObj),
+                cartItems: cleanCart,
+                total: verifiedTotal,
                 isGuest: false,
             });
         }
@@ -79,14 +117,33 @@ export async function POST(request) {
             }
 
             const body = await request.json();
-            const cartItems = (body.cartItems && typeof body.cartItems === 'object') ? body.cartItems : {};
-            const total = typeof body.total === 'number' ? body.total : calculateTotal(cartItems);
+            const rawCart = (body.cartItems && typeof body.cartItems === 'object') ? body.cartItems : {};
+            const productIds = Object.keys(rawCart);
 
-            const hasItems = Object.keys(cartItems).length > 0 && total > 0;
+            let cleanCart = {};
+            if (productIds.length > 0) {
+                const existingProducts = await prisma.product.findMany({
+                    where: {
+                        id: { in: productIds },
+                        isActive: true
+                    },
+                    select: { id: true }
+                });
+                const validIdSet = new Set(existingProducts.map(p => p.id));
+
+                for (const [id, qty] of Object.entries(rawCart)) {
+                    if (validIdSet.has(id) && typeof qty === 'number' && qty > 0) {
+                        cleanCart[id] = qty;
+                    }
+                }
+            }
+
+            const total = calculateTotal(cleanCart);
+            const hasItems = Object.keys(cleanCart).length > 0 && total > 0;
             await prisma.user.update({
                 where: { id: user.id },
                 data: {
-                    cart: cartItems,
+                    cart: cleanCart,
                     abandonedCartAt: hasItems ? new Date() : null,
                     lastActiveAt: new Date(),
                 }
@@ -94,7 +151,7 @@ export async function POST(request) {
 
             const response = NextResponse.json({
                 success: true,
-                cartItems,
+                cartItems: cleanCart,
                 total,
                 message: 'Cart synchronized successfully'
             });

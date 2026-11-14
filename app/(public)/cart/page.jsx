@@ -3,7 +3,7 @@
 import Counter from "@/components/Counter";
 import OrderSummary from "@/components/OrderSummary";
 import PageTitle from "@/components/PageTitle";
-import { deleteItemFromCart } from "@/lib/features/cart/cartSlice";
+import { deleteItemFromCart, sanitizeCartWithProducts } from "@/lib/features/cart/cartSlice";
 import { BagIcon, TrashIcon, SparklesIcon, ArrowRightIcon, LockIcon, CheckIcon } from "@/components/icons";
 import { isClientSignedIn, requireSignIn } from "@/lib/clientAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,6 +38,7 @@ export default function Cart() {
     
     const { cartItems } = useSelector(state => state.cart);
     const products = useSelector(state => state.product.list);
+    const isProductsLoaded = useSelector(state => state.product.isLoaded);
 
     const dispatch = useDispatch();
 
@@ -62,7 +63,7 @@ export default function Cart() {
         return () => window.removeEventListener('auth-change', verifyAuth);
     }, []);
 
-    // Build cartArray and maintain selected product IDs
+    // Build cartArray, maintain selected product IDs, and prune deleted/orphan products
     useEffect(() => {
         const list = [];
         const allProducts = Array.isArray(products) ? products : [];
@@ -88,7 +89,22 @@ export default function Cart() {
             // Retain user's current selections that still exist in cart
             return prev.filter(id => validIds.includes(id));
         });
-    }, [cartItems, products]);
+
+        // Reconcile and prune any orphan/deleted products from Redux cart
+        if (isProductsLoaded && cartItems && typeof cartItems === 'object') {
+            const validKeys = new Set(allProducts.map(p => p.id));
+            let hasOrphans = false;
+            for (const [key] of Object.entries(cartItems)) {
+                if (!validKeys.has(key)) {
+                    hasOrphans = true;
+                    break;
+                }
+            }
+            if (hasOrphans || (allProducts.length === 0 && Object.keys(cartItems).length > 0)) {
+                dispatch(sanitizeCartWithProducts(allProducts));
+            }
+        }
+    }, [cartItems, products, isProductsLoaded, hasInitializedSelection, dispatch]);
 
     const handleDeleteItemFromCart = (productId) => {
         setSelectedIds(prev => prev.filter(id => id !== productId));

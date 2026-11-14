@@ -16,12 +16,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { FlowButton } from "@/components/ui/flow-button";
 import AccountModal from "@/components/AccountModal";
 import { requireSignIn } from "@/lib/clientAuth";
+import { sanitizeCartWithProducts } from "@/lib/features/cart/cartSlice";
 
 const Navbar = () => {
     const router = useRouter();
@@ -34,7 +35,48 @@ const Navbar = () => {
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
 
-    const cartCount = useSelector(state => state.cart.total);
+    const cart = useSelector(state => state.cart);
+    const products = useSelector(state => state.product.list);
+    const isProductsLoaded = useSelector(state => state.product.isLoaded);
+    const dispatch = useDispatch();
+
+    // Verify how many products really exist in the shopping bag
+    const cartCount = useMemo(() => {
+        if (!currentUser || !cart?.cartItems || typeof cart.cartItems !== 'object') {
+            return 0;
+        }
+
+        // If the live product catalog has loaded, verify strictly against real existing products
+        if (isProductsLoaded || (Array.isArray(products) && products.length > 0)) {
+            const validProductIds = new Set((products || []).map(p => p.id));
+            let verifiedTotal = 0;
+            for (const [id, qty] of Object.entries(cart.cartItems)) {
+                if (validProductIds.has(id) && typeof qty === 'number' && qty > 0) {
+                    verifiedTotal += qty;
+                }
+            }
+            return verifiedTotal;
+        }
+
+        return Math.max(0, cart.total || 0);
+    }, [currentUser, cart, products, isProductsLoaded]);
+
+    // Automatically reconcile Redux cart if deleted or nonexistent products are present
+    useEffect(() => {
+        if (isProductsLoaded && currentUser && cart?.cartItems) {
+            const validProductIds = new Set((products || []).map(p => p.id));
+            let hasOrphans = false;
+            for (const [id] of Object.entries(cart.cartItems)) {
+                if (!validProductIds.has(id)) {
+                    hasOrphans = true;
+                    break;
+                }
+            }
+            if (hasOrphans || (products.length === 0 && (cart.total > 0 || Object.keys(cart.cartItems).length > 0))) {
+                dispatch(sanitizeCartWithProducts(products));
+            }
+        }
+    }, [isProductsLoaded, products, currentUser, cart, dispatch]);
 
     // Load user from localStorage & verify session
     useEffect(() => {

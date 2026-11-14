@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useDispatch } from 'react-redux'
-import { setCart, calculateCartTotal } from '@/lib/features/cart/cartSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCart, calculateCartTotal, sanitizeCartWithProducts } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
 import { 
     setProduct, 
@@ -18,6 +18,8 @@ import { subscribeToStoreSync } from '@/lib/realtimeSync'
 
 export default function DataSyncProvider({ children }) {
     const dispatch = useDispatch()
+    const productsList = useSelector(state => state.product.list)
+    const isProductsLoaded = useSelector(state => state.product.isLoaded)
     const hasInitializedRef = useRef(false)
     const knownVersionsRef = useRef({
         banners: 0,
@@ -35,6 +37,13 @@ export default function DataSyncProvider({ children }) {
         mode: 'login',
         message: '',
     })
+
+    // Continuously verify and sanitize shopping bag whenever live product list changes
+    useEffect(() => {
+        if (isProductsLoaded) {
+            dispatch(sanitizeCartWithProducts(productsList))
+        }
+    }, [productsList, isProductsLoaded, dispatch])
 
     // Global listener to trigger Auth Modal from any component
     useEffect(() => {
@@ -213,6 +222,7 @@ export default function DataSyncProvider({ children }) {
                 const data = await res.json()
                 if (data.success && Array.isArray(data.products)) {
                     dispatch(setProduct(data.products))
+                    dispatch(sanitizeCartWithProducts(data.products))
                     if (typeof window !== 'undefined') {
                         localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
                     }
@@ -623,10 +633,16 @@ export default function DataSyncProvider({ children }) {
                                 } catch {}
                             }
 
-                            // Smart Merge: combine products, taking max quantity
-                            const mergedItems = { ...dbCartItems }
+                            // Smart Merge: combine products, taking max quantity (strictly for existing products)
+                            const validProductIds = new Set((productsList || []).map(p => p.id))
+                            const mergedItems = {}
+                            for (const [prodId, qty] of Object.entries(dbCartItems)) {
+                                if ((!isProductsLoaded || validProductIds.has(prodId)) && typeof qty === 'number' && qty > 0) {
+                                    mergedItems[prodId] = qty
+                                }
+                            }
                             for (const [prodId, qty] of Object.entries(localCartItems)) {
-                                if (typeof qty === 'number' && qty > 0) {
+                                if ((!isProductsLoaded || validProductIds.has(prodId)) && typeof qty === 'number' && qty > 0) {
                                     mergedItems[prodId] = Math.max(mergedItems[prodId] || 0, qty)
                                 }
                             }
