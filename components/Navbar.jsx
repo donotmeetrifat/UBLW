@@ -189,10 +189,11 @@ const Navbar = () => {
     return (
         <>
             <header
-                className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
-                        ? 'bg-white/95 backdrop-blur-md border-b border-[#EFE0EF]/90 shadow-[0_4px_24px_rgba(58,12,56,0.04)] py-2.5 sm:py-3'
-                        : 'bg-white border-b border-[#EFE0EF] py-3.5 sm:py-4'
-                    }`}
+                className={`sticky top-0 z-40 transition-all duration-300 backdrop-blur-xl backdrop-saturate-180 ${
+                    isScrolled
+                        ? 'bg-white/80 border-b border-[#EFE0EF]/80 shadow-[0_4px_24px_rgba(58,12,56,0.06)] py-2.5 sm:py-3'
+                        : 'bg-white/70 border-b border-[#EFE0EF]/60 shadow-[0_2px_16px_rgba(58,12,56,0.03)] py-3 sm:py-3.5'
+                }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between gap-4">
@@ -234,8 +235,8 @@ const Navbar = () => {
                             <form
                                 onSubmit={handleSearch}
                                 className={`hidden sm:flex items-center text-xs gap-2 px-3 h-8 rounded-full border transition-all duration-300 select-none ${isSearchFocused
-                                        ? 'w-52 lg:w-64 bg-[#FAF6FA] border-[#6C306E] shadow-2xs'
-                                        : 'w-40 lg:w-52 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                        ? 'w-52 lg:w-64 bg-white/95 border-[#6C306E] shadow-2xs'
+                                        : 'w-40 lg:w-52 bg-white/60 backdrop-blur-md border-[#EFE0EF]/80 hover:border-[#6C306E]/40'
                                     }`}
                             >
                                 <SearchIcon size={13} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
@@ -272,7 +273,7 @@ const Navbar = () => {
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                        className="flex items-center justify-center gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] transition-all cursor-pointer shadow-2xs select-none"
+                                        className="flex items-center justify-center gap-2 px-3.5 h-10 rounded-full bg-white/60 hover:bg-white/90 backdrop-blur-md border border-[#EFE0EF]/80 transition-all cursor-pointer shadow-2xs select-none"
                                     >
                                         <div className="size-6.5 rounded-full bg-gradient-to-br from-[#6C306E] to-[#401242] text-white flex items-center justify-center text-xs font-bold shadow-2xs shrink-0">
                                             {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
@@ -291,7 +292,7 @@ const Navbar = () => {
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                                                 transition={{ duration: 0.15 }}
-                                                className="absolute right-0 mt-2 w-60 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl p-2.5 z-50 text-xs"
+                                                className="absolute right-0 mt-2 w-60 bg-white/95 backdrop-blur-xl border border-[#EFE0EF]/90 rounded-2xl shadow-[0_12px_36px_rgba(58,12,56,0.12)] p-2.5 z-50 text-xs"
                                             >
                                                 {/* Customer Header */}
                                                 <div className="p-3 bg-[#FAF6FA] rounded-xl mb-2">
@@ -380,7 +381,7 @@ const Navbar = () => {
                     <div className="sm:hidden mt-1.5 pb-0.5">
                         <form
                             onSubmit={handleSearch}
-                            className="w-full flex items-center text-xs gap-2 px-2.5 h-8 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
+                            className="w-full flex items-center text-xs gap-2 px-2.5 h-8 rounded-full bg-white/60 focus-within:bg-white/95 backdrop-blur-md border border-[#EFE0EF]/80 focus-within:border-[#6C306E] transition-all shadow-2xs"
                         >
                             <SearchIcon size={13} color="#6C306E" className="shrink-0" />
                             <input
