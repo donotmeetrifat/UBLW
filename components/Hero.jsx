@@ -44,12 +44,12 @@ const Hero = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-4 min-[380px]:p-5 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[270px] min-[380px]:min-h-[285px] sm:min-h-[340px] md:min-h-[380px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                        className='relative flex flex-col justify-center bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-4 min-[380px]:p-5 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[270px] min-[380px]:min-h-[285px] sm:min-h-[340px] md:min-h-[380px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                     >
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`relative ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`relative my-auto flex flex-col justify-center ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
                                 <div className='relative z-20 hidden sm:inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-xs font-semibold mb-2 sm:mb-3 shadow-2xs'>
                                     <RoyalCrownIcon size={12} color="#D8B56D" />
