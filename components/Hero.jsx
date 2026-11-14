@@ -44,34 +44,34 @@ const Hero = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-5 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[260px] sm:min-h-[340px] md:min-h-[380px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-4 min-[380px]:p-5 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[270px] min-[380px]:min-h-[285px] sm:min-h-[340px] md:min-h-[380px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                     >
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`z-10 relative ${mainCard.image ? 'max-w-[58%] min-[400px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`z-10 relative ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
-                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2.5 sm:mb-3 shadow-2xs'>
+                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[9.5px] min-[380px]:text-[10px] sm:text-xs font-semibold mb-2 sm:mb-3 shadow-2xs'>
                                     <RoyalCrownIcon size={12} color="#D8B56D" />
                                     <span>{mainCard.badge}</span>
                                 </div>
                             )}
 
-                            <h2 className='text-base min-[360px]:text-lg min-[420px]:text-xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
+                            <h2 className='text-[15px] min-[360px]:text-base min-[400px]:text-lg sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
                                 {mainCard.title} <br className='hidden sm:inline' />
-                                <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold'>
+                                <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold block sm:inline mt-0.5 sm:mt-0'>
                                     {mainCard.titleHighlight}
                                 </span>
                             </h2>
 
                             {mainCard.description && (
-                                <p className='text-[11px] sm:text-sm text-slate-500 mt-1.5 sm:mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none'>
+                                <p className='text-[10.5px] min-[380px]:text-[11px] sm:text-sm text-slate-500 mt-1 sm:mt-2 font-normal leading-snug sm:leading-relaxed max-w-[210px] sm:max-w-sm line-clamp-2 sm:line-clamp-none'>
                                     {mainCard.description}
                                 </p>
                             )}
 
                             {(mainCard.priceLabel || mainCard.priceValue) && (
-                                <div className='flex items-baseline gap-2 mt-3 sm:mt-4'>
+                                <div className='flex items-baseline gap-2 mt-2.5 sm:mt-4'>
                                     {mainCard.priceLabel && (
                                         <span className='text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider'>
                                             {mainCard.priceLabel}
@@ -85,18 +85,18 @@ const Hero = () => {
                                 </div>
                             )}
 
-                            <div className="mt-3.5 sm:mt-5">
+                            <div className="mt-3 sm:mt-5">
                                 <FlowButton 
                                     text={mainCard.buttonText || "Discover the Collection →"} 
                                     href={mainCard.buttonLink || "/shop"} 
-                                    className="px-4 min-[380px]:px-6 sm:px-8 h-9 min-[380px]:h-10 sm:h-12 text-[11px] min-[380px]:text-xs sm:text-sm font-bold shadow-xs" 
+                                    className="px-3.5 min-[380px]:px-5 sm:px-8 h-8 min-[380px]:h-9 sm:h-12 text-[10.5px] min-[380px]:text-xs sm:text-sm font-bold shadow-xs" 
                                 />
                             </div>
                         </div>
 
-                        {/* Right-Aligned Large Transparent Image */}
+                        {/* Right-Aligned Large Transparent Image with Precise Edge Alignment */}
                         {mainCard.image ? (
-                            <div className='absolute right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-r-3xl'>
+                            <div className='absolute -right-12 min-[380px]:-right-10 min-[430px]:-right-6 sm:right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-r-3xl'>
                                 <div
                                     className='h-full flex items-end justify-end'
                                     style={{
