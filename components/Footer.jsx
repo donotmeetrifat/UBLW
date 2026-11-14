@@ -16,36 +16,6 @@ import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
-// Custom Clean, Premium 2D Direct Contact Icons (Brand Purple #6C306E)
-const DirectWhatsAppIcon = ({ size = 15, className = "shrink-0" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <path d="M8 1.5C4.4 1.5 1.5 4.4 1.5 8C1.5 9.2 1.8 10.3 2.4 11.2L1.5 14.5L4.9 13.6C5.8 14.1 6.9 14.5 8 14.5C11.6 14.5 14.5 11.6 14.5 8C14.5 4.4 11.6 1.5 8 1.5Z" stroke="#6C306E" strokeWidth="1.3" strokeLinejoin="round" fill="#FAF6FA"/>
-        <path d="M5.8 5.8C5.6 5.4 5.3 5.4 5 5.4H4.5C4.2 5.4 3.8 5.6 3.8 6.1C3.8 7.3 4.8 9.2 6.5 10.5C7.8 11.5 9.2 12 10.1 12C10.6 12 10.9 11.7 11.1 11.4V10.7C11.1 10.4 10.8 10.1 10.5 10L9.4 9.5C9.1 9.4 8.8 9.5 8.6 9.7L8.2 10.1C8 10.2 7.7 10.2 7.5 10C6.9 9.6 6.3 9 5.9 8.3C5.7 8.1 5.8 7.8 6 7.6L6.4 7.2C6.6 7 6.6 6.7 6.5 6.5L5.8 5.8Z" fill="#6C306E"/>
-    </svg>
-)
-
-const DirectFacebookIcon = ({ size = 15, className = "shrink-0" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <rect x="1.5" y="1.5" width="13" height="13" rx="3.5" stroke="#6C306E" strokeWidth="1.3" fill="#FAF6FA"/>
-        <path d="M9.5 8.5H11L11.5 6.5H9.5V5.2C9.5 4.7 9.8 4.5 10.3 4.5H11.5V2.7C11.1 2.6 10.4 2.5 9.7 2.5C8.2 2.5 7.2 3.4 7.2 5V6.5H5.5V8.5H7.2V14H9.5V8.5Z" fill="#6C306E"/>
-    </svg>
-)
-
-const DirectInstagramIcon = ({ size = 15, className = "shrink-0" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <rect x="2" y="2" width="12" height="12" rx="3.5" stroke="#6C306E" strokeWidth="1.3" fill="#FAF6FA"/>
-        <circle cx="8" cy="8" r="3" stroke="#6C306E" strokeWidth="1.3"/>
-        <circle cx="11.2" cy="4.8" r="0.8" fill="#6C306E"/>
-    </svg>
-)
-
-const DirectLocationIcon = ({ size = 15, className = "shrink-0" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6C3.5 9.4 7.4 13.9 7.7 14.3C7.9 14.5 8.1 14.5 8.3 14.3C8.6 13.9 12.5 9.4 12.5 6C12.5 3.5 10.5 1.5 8 1.5Z" stroke="#6C306E" strokeWidth="1.3" strokeLinejoin="round" fill="#FAF6FA"/>
-        <circle cx="8" cy="6" r="2" fill="#6C306E"/>
-    </svg>
-)
-
 const Footer = () => {
     const beautyCategoryLinks = [
         'Skincare',
@@ -79,10 +49,10 @@ const Footer = () => {
         {
             title: "DIRECT CONTACT",
             links: [
-                { text: "WhatsApp: +880 1959-524393", path: "https://wa.me/8801959524393", icon: DirectWhatsAppIcon },
-                { text: "Facebook: UK Brand LOVER", path: "https://www.facebook.com/ukbrandlover", icon: DirectFacebookIcon },
-                { text: "Instagram: @tuhinajahantopa", path: "https://www.instagram.com/tuhinajahantopa/", icon: DirectInstagramIcon },
-                { text: "Mirpur, Dhaka, Bangladesh", path: "/contact", icon: DirectLocationIcon }
+                { text: "WhatsApp: +880 1959-524393", path: "https://wa.me/8801959524393", icon: WhatsAppIcon, iconColor: "#25D366" },
+                { text: "Facebook: UK Brand LOVER", path: "https://www.facebook.com/ukbrandlover", icon: FacebookIcon, iconColor: "#1877F2" },
+                { text: "Instagram: @tuhinajahantopa", path: "https://www.instagram.com/tuhinajahantopa/", icon: InstagramIcon, iconColor: "#E1306C" },
+                { text: "Mirpur, Dhaka, Bangladesh", path: "/contact", icon: MapPinIcon, iconColor: "#6C306E" }
             ]
         }
     ];
@@ -135,22 +105,24 @@ const Footer = () => {
                     {/* Nav Links */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 w-full lg:w-auto text-xs sm:text-sm">
                         {linkSections.map((section, index) => (
-                            <div key={index}>
+                            <div key={index} className={index === 2 ? "col-span-2 sm:col-span-1 min-w-[210px]" : ""}>
                                 <h3 className="font-extrabold text-[#241224] text-[11px] uppercase tracking-widest mb-4">
                                     {section.title}
                                 </h3>
                                 <ul className="space-y-3">
                                     {section.links.map((link, i) => (
-                                        <li key={i} className="flex items-center gap-2">
+                                        <li key={i} className="flex items-center gap-2.5">
                                             {link.icon && (
-                                                <link.icon size={14} color="#6C306E" className="shrink-0" />
+                                                <div className="size-6 rounded-md bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
+                                                    <link.icon size={13} color={link.iconColor || "#6C306E"} className="shrink-0" />
+                                                </div>
                                             )}
                                             {link.path.startsWith('http') || link.path.startsWith('tel:') || link.path.startsWith('mailto:') ? (
-                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block">
+                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block whitespace-nowrap">
                                                     {link.text}
                                                 </a>
                                             ) : (
-                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block">
+                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block whitespace-nowrap">
                                                     {link.text}
                                                 </Link>
                                             )}

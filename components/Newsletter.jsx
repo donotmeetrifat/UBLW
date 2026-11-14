@@ -41,7 +41,7 @@ const Newsletter = () => {
                 <div className='size-72 rounded-full bg-[#6C306E]/4 blur-3xl absolute -top-20 -left-20 pointer-events-none' />
                 <div className='size-72 rounded-full bg-[#D8B56D]/6 blur-3xl absolute -bottom-20 -right-20 pointer-events-none' />
 
-                <div className='relative z-10 flex flex-col items-center max-w-2xl mx-auto'>
+                <div className='relative z-10 flex flex-col items-center max-w-3xl mx-auto w-full'>
                     {/* Brand Logo with Gentle Hover */}
                     <div className='mb-3'>
                         <Image 
@@ -68,24 +68,24 @@ const Newsletter = () => {
                         from people who actually use it.
                     </p>
 
-                    {/* 3 Highlights in One Unified Horizontal Row (Left to Right, Compact & Balanced) */}
-                    <div className='w-full max-w-3xl mx-auto mb-7 overflow-x-auto no-scrollbar py-0.5'>
-                        <div className='flex items-center justify-center gap-2 sm:gap-3 flex-nowrap min-w-max mx-auto px-1'>
-                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                    {/* 3 Highlights in One Unified Horizontal Row (Left to Right, Compact & Fully Visible) */}
+                    <div className='w-full mx-auto mb-7 px-1'>
+                        <div className='flex items-center justify-center gap-1.5 sm:gap-2.5 flex-nowrap'>
+                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
                                 <UKCargoIcon />
-                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
                                     FIRST ACCESS TO NEW UK CARGO
                                 </span>
                             </div>
-                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
                                 <ReviewsStarIcon />
-                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
                                     HONEST REVIEWS FROM REAL CUSTOMERS
                                 </span>
                             </div>
-                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
                                 <AdviceSparkleIcon />
-                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
                                     PERSONAL SKINCARE ADVICE
                                 </span>
                             </div>
