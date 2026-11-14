@@ -12,6 +12,7 @@ export default function AdminDropdown({
     buttonClassName = '',
     menuClassName = '',
     align = 'left',
+    direction = 'down',
     fullWidth = false
 }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -88,11 +89,13 @@ export default function AdminDropdown({
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 4, scale: 0.98 }}
+                        initial={{ opacity: 0, y: direction === 'up' ? -4 : 4, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        exit={{ opacity: 0, y: direction === 'up' ? -4 : 4, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className={`absolute z-50 mt-1.5 min-w-[160px] bg-white border border-[#EFE0EF] rounded-xl shadow-xl p-1.5 max-h-64 overflow-y-auto ${
+                        className={`absolute z-50 min-w-[160px] bg-white border border-[#EFE0EF] rounded-xl shadow-xl p-1.5 max-h-64 overflow-y-auto ${
+                            direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+                        } ${
                             align === 'right' ? 'right-0' : 'left-0'
                         } ${menuClassName}`}
                     >

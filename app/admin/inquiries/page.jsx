@@ -14,6 +14,13 @@ import {
     ArrowRightIcon,
     PhoneIcon
 } from "@/components/icons"
+import AdminDropdown from "@/components/admin/AdminDropdown"
+
+const INQUIRY_STATUS_OPTIONS = [
+    { value: 'UNREAD', label: 'Unread', dot: 'bg-rose-500' },
+    { value: 'IN_PROGRESS', label: 'In Progress', dot: 'bg-[#6C306E]' },
+    { value: 'RESOLVED', label: 'Resolved', dot: 'bg-emerald-500' }
+]
 
 export default function AdminInquiriesPage() {
     const [inquiries, setInquiries] = useState([])
@@ -277,7 +284,7 @@ export default function AdminInquiriesPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto min-h-[400px] pb-32">
                         <table className="w-full text-left text-xs">
                             <thead className="bg-[#FAF6FA] text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-[#EFE0EF]">
                                 <tr>
@@ -363,21 +370,13 @@ export default function AdminInquiriesPage() {
 
                                             {/* Status Selector Dropdown */}
                                             <td className="py-4 px-4 align-top whitespace-nowrap">
-                                                <select
+                                                <AdminDropdown
                                                     value={inq.status}
-                                                    onChange={(e) => handleUpdateStatus(inq.id, e.target.value)}
-                                                    className={`text-[11px] font-bold py-1 px-2.5 rounded-full border outline-none cursor-pointer ${
-                                                        inq.status === 'UNREAD'
-                                                            ? 'bg-rose-50 border-rose-200 text-rose-700'
-                                                            : inq.status === 'IN_PROGRESS'
-                                                            ? 'bg-purple-50 border-purple-200 text-[#6C306E]'
-                                                            : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                                    }`}
-                                                >
-                                                    <option value="UNREAD">UNREAD</option>
-                                                    <option value="IN_PROGRESS">IN PROGRESS</option>
-                                                    <option value="RESOLVED">RESOLVED</option>
-                                                </select>
+                                                    onChange={(newStatus) => handleUpdateStatus(inq.id, newStatus)}
+                                                    options={INQUIRY_STATUS_OPTIONS}
+                                                    className="w-[140px]"
+                                                    align="right"
+                                                />
                                             </td>
 
                                             {/* Quick Actions */}
@@ -536,15 +535,14 @@ export default function AdminInquiriesPage() {
                         <div className="border-t border-[#EFE0EF] pt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
                             <div className="flex items-center gap-2">
                                 <span className="font-semibold text-slate-500">Status:</span>
-                                <select
+                                <AdminDropdown
                                     value={activeInquiry.status}
-                                    onChange={(e) => handleUpdateStatus(activeInquiry.id, e.target.value)}
-                                    className="font-bold py-1 px-3 rounded-full border border-[#EFE0EF] bg-[#FAF6FA] text-[#6C306E] outline-none"
-                                >
-                                    <option value="UNREAD">UNREAD</option>
-                                    <option value="IN_PROGRESS">IN PROGRESS</option>
-                                    <option value="RESOLVED">RESOLVED</option>
-                                </select>
+                                    onChange={(newStatus) => handleUpdateStatus(activeInquiry.id, newStatus)}
+                                    options={INQUIRY_STATUS_OPTIONS}
+                                    className="w-[140px]"
+                                    direction="up"
+                                    align="left"
+                                />
                             </div>
 
                             <div className="flex items-center gap-2">
