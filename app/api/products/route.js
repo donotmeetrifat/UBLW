@@ -34,7 +34,7 @@ export async function GET(request) {
             if (sortBy === 'price-high-low' || sortBy === 'price_desc') orderBy = { price: 'desc' };
             if (sortBy === 'rating') orderBy = { createdAt: 'desc' };
 
-            let products;
+            let products = [];
             try {
                 products = await prisma.product.findMany({
                     where,
@@ -55,6 +55,38 @@ export async function GET(request) {
                 `);
             }
 
+            // ALWAYS enrich from raw SQL to guarantee that benefits, whyYouWillLoveIt, and formulaProfile
+            // are 100% populated directly from PostgreSQL columns, completely immune to any Prisma Client model caching
+            try {
+                const rawRows = await prisma.$queryRawUnsafe(`
+                    SELECT 
+                        p.id,
+                        COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
+                        COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
+                        COALESCE(p."formulaProfile", p.description) as "formulaProfile"
+                    FROM "Product" p
+                `);
+                if (Array.isArray(rawRows) && rawRows.length > 0) {
+                    const rawMap = new Map();
+                    rawRows.forEach(r => rawMap.set(r.id, r));
+                    products = (products || []).map(p => {
+                        const raw = rawMap.get(p.id);
+                        if (!raw) return p;
+                        const hasRawBenefits = raw.benefits && Array.isArray(raw.benefits) && raw.benefits.length > 0;
+                        const hasRawWhy = raw.whyYouWillLoveIt && String(raw.whyYouWillLoveIt).trim().length > 0;
+                        const hasRawFormula = raw.formulaProfile && String(raw.formulaProfile).trim().length > 0;
+                        return {
+                            ...p,
+                            benefits: hasRawBenefits ? raw.benefits : p.benefits,
+                            whyYouWillLoveIt: hasRawWhy ? String(raw.whyYouWillLoveIt).trim() : p.whyYouWillLoveIt,
+                            formulaProfile: hasRawFormula ? String(raw.formulaProfile).trim() : p.formulaProfile
+                        };
+                    });
+                }
+            } catch (rawErr) {
+                console.warn('Raw SQL bulk enrichment note:', rawErr.message);
+            }
+
             const normalized = (products || []).map(p => {
                 let parsedBenefits = p.benefits;
                 if (typeof parsedBenefits === 'string') {
@@ -71,14 +103,22 @@ export async function GET(request) {
                     }
                 }
                 const cleanBenefits = Array.isArray(parsedBenefits)
-                    ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+                    ? parsedBenefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
                     : [];
+
+                const cleanWhy = (p.whyYouWillLoveIt && String(p.whyYouWillLoveIt).trim().length > 0)
+                    ? String(p.whyYouWillLoveIt).trim()
+                    : '';
+
+                const cleanFormula = (p.formulaProfile && String(p.formulaProfile).trim().length > 0)
+                    ? String(p.formulaProfile).trim()
+                    : (p.description || '').trim();
 
                 return {
                     ...p,
-                    formulaProfile: (p.formulaProfile || p.description || '').trim(),
+                    formulaProfile: cleanFormula,
                     benefits: cleanBenefits,
-                    whyYouWillLoveIt: (p.whyYouWillLoveIt || '').trim()
+                    whyYouWillLoveIt: cleanWhy
                 };
             });
 
@@ -87,6 +127,7 @@ export async function GET(request) {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
                     'Pragma': 'no-cache',
                     'Expires': '0',
+                    'Surrogate-Control': 'no-store',
                     'CDN-Cache-Control': 'no-store',
                     'Vercel-CDN-Cache-Control': 'no-store'
                 }

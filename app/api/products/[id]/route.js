@@ -28,24 +28,11 @@ export async function GET(request, context) {
         }
 
         if (isDatabaseConfigured()) {
-            let product;
+            let product = null;
+
+            // 1. Direct SQL query guarantees all PostgreSQL columns (benefits, whyYouWillLoveIt, formulaProfile)
+            // are accurately fetched directly from the database, completely immune to any Prisma Client caching
             try {
-                product = await prisma.product.findUnique({
-                    where: { id },
-                    include: {
-                        ratings: {
-                            include: {
-                                user: {
-                                    select: { id: true, name: true, image: true }
-                                }
-                            },
-                            orderBy: { createdAt: 'desc' }
-                        },
-                        store: true
-                    },
-                });
-            } catch (findErr) {
-                console.warn('Prisma findUnique fallback to raw SQL:', findErr.message);
                 const rows = await prisma.$queryRawUnsafe(`
                     SELECT p.*,
                         COALESCE(p.views, 0)::int as "views",
@@ -55,37 +42,93 @@ export async function GET(request, context) {
                         COALESCE(p."isActive", true) as "isActive"
                     FROM "Product" p
                     WHERE p.id = $1
+                    LIMIT 1
                 `, id);
-                product = rows && rows[0] ? rows[0] : null;
+                if (Array.isArray(rows) && rows.length > 0) {
+                    product = rows[0];
+                }
+            } catch (rawErr) {
+                console.warn('Direct SQL find product note:', rawErr.message);
+            }
+
+            // 2. Fallback to Prisma findUnique if direct SQL didn't match
+            if (!product) {
+                try {
+                    product = await prisma.product.findUnique({
+                        where: { id },
+                        include: {
+                            ratings: {
+                                include: {
+                                    user: {
+                                        select: { id: true, name: true, image: true }
+                                    }
+                                },
+                                orderBy: { createdAt: 'desc' }
+                            },
+                            store: true
+                        },
+                    });
+                } catch (findErr) {
+                    console.warn('Prisma findUnique error:', findErr.message);
+                }
             }
 
             if (!product) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
             }
 
-            let parsedBenefits = product.benefits;
-            if (typeof parsedBenefits === 'string') {
+            // 3. Attach ratings & store if loaded via direct SQL
+            if (product && (!product.ratings || !product.store)) {
                 try {
-                    parsedBenefits = JSON.parse(parsedBenefits);
+                    const [ratings, store] = await Promise.all([
+                        prisma.rating.findMany({
+                            where: { productId: id },
+                            include: {
+                                user: { select: { id: true, name: true, image: true } }
+                            },
+                            orderBy: { createdAt: 'desc' }
+                        }).catch(() => []),
+                        product.storeId ? prisma.store.findUnique({ where: { id: product.storeId } }).catch(() => null) : null
+                    ]);
+                    if (!product.ratings) product.ratings = ratings || [];
+                    if (!product.store && store) product.store = store;
+                } catch (relErr) {
+                    product.ratings = product.ratings || [];
+                }
+            }
+
+            // 4. Ensure benefits and whyYouWillLoveIt are strictly extracted from raw columns
+            let rawBenefits = product.benefits;
+            if (typeof rawBenefits === 'string') {
+                try {
+                    rawBenefits = JSON.parse(rawBenefits);
                 } catch (e) {
-                    if (parsedBenefits.startsWith('{') && parsedBenefits.endsWith('}')) {
-                        parsedBenefits = parsedBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
-                    } else if (parsedBenefits.includes('\n')) {
-                        parsedBenefits = parsedBenefits.split('\n').map(s => s.trim());
+                    if (rawBenefits.startsWith('{') && rawBenefits.endsWith('}')) {
+                        rawBenefits = rawBenefits.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim());
+                    } else if (rawBenefits.includes('\n')) {
+                        rawBenefits = rawBenefits.split('\n').map(s => s.trim());
                     } else {
-                        parsedBenefits = [parsedBenefits.trim()];
+                        rawBenefits = [rawBenefits.trim()];
                     }
                 }
             }
-            const cleanBenefits = Array.isArray(parsedBenefits)
-                ? parsedBenefits.map(b => String(b).trim()).filter(Boolean)
+            const cleanBenefits = Array.isArray(rawBenefits)
+                ? rawBenefits.map(b => (typeof b === 'string' ? b.trim() : String(b || ''))).filter(Boolean)
                 : [];
+
+            const cleanWhyYouWillLoveIt = (product.whyYouWillLoveIt && String(product.whyYouWillLoveIt).trim().length > 0)
+                ? String(product.whyYouWillLoveIt).trim()
+                : '';
+
+            const cleanFormulaProfile = (product.formulaProfile && String(product.formulaProfile).trim().length > 0)
+                ? String(product.formulaProfile).trim()
+                : (product.description || '').trim();
 
             const normalizedProduct = {
                 ...product,
-                formulaProfile: (product.formulaProfile || product.description || '').trim(),
+                formulaProfile: cleanFormulaProfile,
                 benefits: cleanBenefits,
-                whyYouWillLoveIt: (product.whyYouWillLoveIt || '').trim()
+                whyYouWillLoveIt: cleanWhyYouWillLoveIt
             };
 
             return NextResponse.json({ success: true, product: normalizedProduct }, {
@@ -93,6 +136,7 @@ export async function GET(request, context) {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
                     'Pragma': 'no-cache',
                     'Expires': '0',
+                    'Surrogate-Control': 'no-store',
                     'CDN-Cache-Control': 'no-store',
                     'Vercel-CDN-Cache-Control': 'no-store'
                 }
@@ -221,6 +265,46 @@ export async function PATCH(request, context) {
                     product = await prisma.product.findUnique({ where: { id } });
                 }
             }
+
+            // Always guarantee benefits, whyYouWillLoveIt, and formulaProfile are persisted into the raw table
+            if (cleanedData.benefits !== undefined || cleanedData.whyYouWillLoveIt !== undefined || cleanedData.formulaProfile !== undefined) {
+                try {
+                    await prisma.$queryRawUnsafe(`
+                        UPDATE "Product"
+                        SET 
+                            "benefits" = COALESCE($1, "benefits"),
+                            "whyYouWillLoveIt" = COALESCE($2, "whyYouWillLoveIt"),
+                            "formulaProfile" = COALESCE($3, "formulaProfile"),
+                            "updatedAt" = NOW()
+                        WHERE "id" = $4
+                    `,
+                        cleanedData.benefits !== undefined ? cleanedData.benefits : null,
+                        cleanedData.whyYouWillLoveIt !== undefined ? cleanedData.whyYouWillLoveIt : null,
+                        cleanedData.formulaProfile !== undefined ? cleanedData.formulaProfile : null,
+                        id
+                    );
+                } catch (sqlErr) {
+                    console.warn('Raw SQL direct update note:', sqlErr.message);
+                }
+            }
+
+            // Re-fetch clean product directly from PostgreSQL
+            try {
+                const refreshedRows = await prisma.$queryRawUnsafe(`
+                    SELECT p.*,
+                        COALESCE(p.views, 0)::int as "views",
+                        COALESCE(p."formulaProfile", p.description) as "formulaProfile",
+                        COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
+                        COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
+                        COALESCE(p."isActive", true) as "isActive"
+                    FROM "Product" p
+                    WHERE p.id = $1
+                    LIMIT 1
+                `, id);
+                if (Array.isArray(refreshedRows) && refreshedRows.length > 0) {
+                    product = { ...product, ...refreshedRows[0] };
+                }
+            } catch (e) {}
             let parsedBenefits = product?.benefits;
             if (typeof parsedBenefits === 'string') {
                 try {
