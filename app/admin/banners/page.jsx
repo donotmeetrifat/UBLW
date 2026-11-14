@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -20,18 +20,10 @@ import {
 } from '@/components/icons'
 import ClassicLoader from '@/components/ui/classic-loader'
 
-const QUICK_LINKS = [
-    { label: '/shop', url: '/shop' },
-    { label: 'Skincare', url: '/shop?category=Skincare' },
-    { label: 'Makeup', url: '/shop?category=Makeup' },
-    { label: 'Haircare', url: '/shop?category=Haircare' },
-    { label: 'Fragrance', url: '/shop?category=Fragrance' },
-    { label: 'Contact', url: '/contact' }
-]
-
 export default function AdminHeroBannersPage() {
     const [banners, setBanners] = useState([])
     const [savedBanners, setSavedBanners] = useState([])
+    const [categories, setCategories] = useState([])
     const [hasPendingChanges, setHasPendingChanges] = useState(false)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -88,9 +80,88 @@ export default function AdminHeroBannersPage() {
         }
     }
 
+    // Fetch live categories from API to populate destination link suggestions
+    const fetchLiveCategories = async () => {
+        try {
+            const res = await fetch(`/api/categories?all=true&_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+            })
+            const data = await res.json()
+            if (data.success && Array.isArray(data.categories)) {
+                const active = data.categories.filter(c => c.isActive !== false && Boolean(c.name))
+                setCategories(active)
+            }
+        } catch (err) {
+            console.error('Error fetching live categories for hero banners:', err)
+        }
+    }
+
     useEffect(() => {
         fetchBanners()
+        fetchLiveCategories()
+
+        // Real-time listener for category changes from /admin/categories
+        const onCategoryUpdate = () => {
+            fetchLiveCategories()
+        }
+        const onStorage = (e) => {
+            if (e.key === 'ukbl_categories_synced') {
+                fetchLiveCategories()
+            }
+        }
+
+        window.addEventListener('category-catalog-updated', onCategoryUpdate)
+        window.addEventListener('storage', onStorage)
+
+        let bc
+        try {
+            bc = new BroadcastChannel('ukbl_catalog_channel')
+            bc.onmessage = (msg) => {
+                if (msg.data?.type === 'category-updated' || msg.data?.type === 'category-catalog-updated') {
+                    fetchLiveCategories()
+                }
+            }
+        } catch {}
+
+        return () => {
+            window.removeEventListener('category-catalog-updated', onCategoryUpdate)
+            window.removeEventListener('storage', onStorage)
+            if (bc) bc.close()
+        }
     }, [])
+
+    // Dynamic destination suggestions including /shop, all database categories, and Contact
+    const quickLinks = useMemo(() => {
+        const links = [
+            { label: '/shop', url: '/shop' }
+        ]
+
+        const seenNames = new Set()
+        categories.forEach(c => {
+            const name = (c.name || '').trim()
+            if (name && !seenNames.has(name.toLowerCase())) {
+                seenNames.add(name.toLowerCase())
+                links.push({
+                    label: name,
+                    url: `/shop?category=${encodeURIComponent(name)}`
+                })
+            }
+        })
+
+        // Default fallback if categories haven't loaded yet
+        if (links.length === 1) {
+            ['Skincare', 'Makeup', 'Haircare', 'Fragrance'].forEach(name => {
+                links.push({
+                    label: name,
+                    url: `/shop?category=${encodeURIComponent(name)}`
+                })
+            })
+        }
+
+        links.push({ label: 'Contact', url: '/contact' })
+        return links
+    }, [categories])
 
     // Preview Autoplay
     useEffect(() => {
@@ -475,7 +546,11 @@ export default function AdminHeroBannersPage() {
                             disabled={saving}
                             className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md transition cursor-pointer"
                         >
-                            {saving ? <ClassicLoader /> : <CheckIcon size={14} />}
+                            {saving ? (
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                            ) : (
+                                <CheckIcon size={14} />
+                            )}
                             <span>Save Order</span>
                         </button>
                     )}
@@ -793,7 +868,11 @@ export default function AdminHeroBannersPage() {
                                                 className="hidden"
                                             />
                                             <div className="size-9 rounded-xl bg-white border border-[#EFE0EF] flex items-center justify-center mx-auto text-[#6C306E] shadow-2xs mb-1.5 group-hover:scale-105 transition">
-                                                {isUploadingImage ? <ClassicLoader /> : <UploadCloudIcon size={18} />}
+                                                {isUploadingImage ? (
+                                                    <div className="w-4 h-4 rounded-full border-2 border-[#6C306E]/30 border-t-[#6C306E] animate-spin shrink-0" />
+                                                ) : (
+                                                    <UploadCloudIcon size={18} />
+                                                )}
                                             </div>
                                             <p className="text-xs font-extrabold text-[#241224]">
                                                 {isUploadingImage ? 'Uploading Image...' : 'Click to Upload Image(s)'}
@@ -844,28 +923,41 @@ export default function AdminHeroBannersPage() {
 
                                     {/* Destination Link */}
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Destination Link (Where click redirects)
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-bold text-slate-700">
+                                                Destination Link (Where click redirects)
+                                            </label>
+                                            <span className="text-[10px] font-semibold text-slate-400">
+                                                Click any category below to auto-fill link
+                                            </span>
+                                        </div>
                                         <input
                                             type="text"
                                             value={formData.link}
                                             onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
-                                            placeholder="e.g. /shop or https://..."
-                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            placeholder="e.g. /shop, /shop?category=Skincare or https://..."
+                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E] focus:bg-white transition"
                                         />
 
-                                        <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                                            {QUICK_LINKS.map((item, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    onClick={() => setFormData(prev => ({ ...prev, link: item.url }))}
-                                                    className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-md border border-[#EFE0EF] hover:bg-[#EFE0EF] transition cursor-pointer"
-                                                >
-                                                    {item.label}
-                                                </button>
-                                            ))}
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                            {quickLinks.map((item, idx) => {
+                                                const isSelected = formData.link === item.url
+                                                return (
+                                                    <button
+                                                        key={`${item.label}-${idx}`}
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, link: item.url }))}
+                                                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                                            isSelected
+                                                                ? 'bg-[#6C306E] text-white border-[#6C306E] shadow-2xs'
+                                                                : 'text-[#6C306E] bg-[#FAF6FA] border-[#EFE0EF] hover:bg-[#EFE0EF] hover:border-[#6C306E]/30'
+                                                        }`}
+                                                        title={`Set destination to: ${item.url}`}
+                                                    >
+                                                        {item.label}
+                                                    </button>
+                                                )
+                                            })}
                                         </div>
                                     </div>
 
@@ -972,7 +1064,7 @@ export default function AdminHeroBannersPage() {
                             >
                                 {saving ? (
                                     <>
-                                        <ClassicLoader />
+                                        <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
                                         <span>Saving...</span>
                                     </>
                                 ) : (
