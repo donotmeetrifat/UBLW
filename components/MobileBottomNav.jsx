@@ -11,7 +11,7 @@ import {
     HomeIcon,
     StoreFrontIcon
 } from '@/components/icons'
-import { motion } from 'framer-motion'
+import { motion, LayoutGroup } from 'framer-motion'
 
 export default function MobileBottomNav() {
     const pathname = usePathname()
@@ -107,73 +107,124 @@ export default function MobileBottomNav() {
     return (
         <aside
             aria-label="Mobile Navigation Bar"
-            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFE0EF] shadow-[0_-4px_24px_rgba(58,12,56,0.06)] pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-1.5 px-2 select-none"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#EFE0EF]/90 shadow-[0_-6px_28px_rgba(58,12,56,0.08)] pb-[max(0.55rem,env(safe-area-inset-bottom,0px))] pt-1.5 px-2 select-none"
         >
-            <nav className="flex items-center justify-around max-w-lg mx-auto">
-                {navItems.map((item, idx) => {
-                    const Icon = item.icon
-                    const isSelected = item.isActive
+            {/* Top luxury ambient highlight hairline */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#6C306E]/30 to-transparent pointer-events-none" />
 
-                    return (
-                        <Link
-                            key={idx}
-                            id={item.id}
-                            href={item.href}
-                            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl relative min-w-[56px] min-h-[48px] transition-all duration-200 cursor-pointer ${
-                                isSelected
-                                    ? 'text-[#6C306E]'
-                                    : 'text-slate-500 hover:text-[#241224] active:scale-95'
-                            }`}
-                        >
-                            {/* Icon Wrapper with Badge */}
-                            <div className="relative flex items-center justify-center">
-                                <motion.div
-                                    whileTap={{ scale: 0.88 }}
-                                    transition={{ duration: 0.15 }}
-                                    className={`size-7 rounded-xl flex items-center justify-center transition-all ${
-                                        isSelected
-                                            ? 'bg-[#FAF6FA] text-[#6C306E] shadow-2xs border border-[#EFE0EF]'
-                                            : 'text-slate-500'
-                                    }`}
-                                >
-                                    <Icon
-                                        size={18}
-                                        color={isSelected ? '#6C306E' : 'currentColor'}
-                                        strokeWidth={isSelected ? 2.2 : 1.8}
-                                    />
-                                </motion.div>
+            <LayoutGroup id="mobile-bottom-navigation-group">
+                <nav className="flex items-center justify-around max-w-md mx-auto relative">
+                    {navItems.map((item, idx) => {
+                        const Icon = item.icon
+                        const isSelected = item.isActive
 
-                                {/* Live Bag Badge */}
-                                {item.badge > 0 && (
-                                    <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white text-[9px] font-black flex items-center justify-center shadow-xs border border-white leading-none">
-                                        {item.badge > 99 ? '99+' : item.badge}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Label */}
-                            <span
-                                className={`text-[10px] mt-0.5 tracking-tight truncate max-w-[64px] ${
-                                    isSelected
-                                        ? 'font-extrabold text-[#6C306E]'
-                                        : 'font-medium text-slate-500'
-                                }`}
+                        return (
+                            <motion.div
+                                key={idx}
+                                whileTap={{ scale: 0.88 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                                className="relative flex-1 flex justify-center"
                             >
-                                {item.label}
-                            </span>
+                                <Link
+                                    id={item.id}
+                                    href={item.href}
+                                    className="flex flex-col items-center justify-center py-1 px-1.5 rounded-2xl relative w-full min-w-[56px] max-w-[70px] min-h-[50px] cursor-pointer group"
+                                >
+                                    {/* 1. Fluid Sliding Glass Pill Background across tabs */}
+                                    {isSelected && (
+                                        <motion.div
+                                            layoutId="activeBottomNavPill"
+                                            className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[#FAF4FA] to-[#F3E5F3] border border-[#6C306E]/20 shadow-[0_2px_10px_rgba(108,48,110,0.08)] pointer-events-none"
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 420,
+                                                damping: 32,
+                                                mass: 0.8
+                                            }}
+                                        />
+                                    )}
 
-                            {/* Active Top/Bottom Accent Dot */}
-                            {isSelected && (
-                                <motion.span
-                                    layoutId="bottomNavDot"
-                                    className="absolute -bottom-0.5 size-1 rounded-full bg-[#6C306E]"
-                                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                />
-                            )}
-                        </Link>
-                    )
-                })}
-            </nav>
+                                    {/* 2. Magnetic Bottom Accent Indicator Line */}
+                                    {isSelected && (
+                                        <motion.div
+                                            layoutId="activeBottomNavIndicator"
+                                            className="absolute -bottom-1 w-5 h-1 rounded-full bg-gradient-to-r from-[#6C306E] via-[#9B489E] to-[#401242] shadow-[0_1px_6px_rgba(108,48,110,0.45)] pointer-events-none"
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 450,
+                                                damping: 30,
+                                                mass: 0.8
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* Icon Container with Badge */}
+                                    <div className="relative flex items-center justify-center z-10">
+                                        <motion.div
+                                            animate={isSelected ? {
+                                                scale: [1, 1.15, 1.05],
+                                                y: -2,
+                                            } : {
+                                                scale: 1,
+                                                y: 0,
+                                            }}
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 450,
+                                                damping: 24,
+                                                mass: 0.7
+                                            }}
+                                            className={`size-7 rounded-xl flex items-center justify-center transition-colors duration-200 ${
+                                                isSelected
+                                                    ? 'bg-white/90 shadow-2xs text-[#6C306E]'
+                                                    : 'text-slate-400 group-hover:text-slate-600'
+                                            }`}
+                                        >
+                                            <Icon
+                                                size={18}
+                                                color={isSelected ? '#6C306E' : '#64748B'}
+                                                strokeWidth={isSelected ? 2.2 : 1.8}
+                                            />
+                                        </motion.div>
+
+                                        {/* Live Bag Badge with Pulse Spring */}
+                                        {item.badge > 0 && (
+                                            <motion.span
+                                                key={`badge-${item.badge}`}
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                                className="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white text-[9px] font-black flex items-center justify-center shadow-xs border border-white leading-none z-20 pointer-events-none"
+                                            >
+                                                {item.badge > 99 ? '99+' : item.badge}
+                                            </motion.span>
+                                        )}
+                                    </div>
+
+                                    {/* Label with Smooth Scale & Color Transition */}
+                                    <motion.span
+                                        animate={isSelected ? {
+                                            scale: 1.04,
+                                            y: -0.5,
+                                            color: '#6C306E',
+                                        } : {
+                                            scale: 1,
+                                            y: 0,
+                                            color: '#64748B',
+                                        }}
+                                        transition={{ duration: 0.2 }}
+                                        className={`text-[10px] mt-0.5 tracking-tight truncate max-w-[64px] select-none relative z-10 ${
+                                            isSelected ? 'font-black' : 'font-semibold'
+                                        }`}
+                                    >
+                                        {item.label}
+                                    </motion.span>
+                                </Link>
+                            </motion.div>
+                        )
+                    })}
+                </nav>
+            </LayoutGroup>
         </aside>
     )
 }
