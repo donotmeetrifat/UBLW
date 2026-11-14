@@ -13,11 +13,16 @@ import {
     TruckIcon,
     CheckIcon,
     RefreshIcon,
-    CalendarIcon
+    CalendarIcon,
+    ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    CloseIcon
 } from "@/components/icons"
 import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
 import toast from "react-hot-toast"
+import { motion, AnimatePresence } from "framer-motion"
 import { subscribeToStoreSync } from "@/lib/realtimeSync"
 
 const PERIOD_OPTIONS = [
@@ -182,11 +187,86 @@ export default function AdminDashboard() {
         }
     }, [fetchDashboardData])
 
+    const [isDurationOpen, setIsDurationOpen] = useState(false)
+    const [showCustomCalendar, setShowCustomCalendar] = useState(false)
+    const [calendarMonth, setCalendarMonth] = useState(() => new Date())
+    const [calendarPickingPhase, setCalendarPickingPhase] = useState('start')
+    const durationDropdownRef = useRef(null)
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (durationDropdownRef.current && !durationDropdownRef.current.contains(e.target)) {
+                setIsDurationOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
     const handleSelectPeriod = (periodId) => {
         setSelectedPeriod(periodId)
+        setIsDurationOpen(false)
+        setShowCustomCalendar(false)
         if (periodId !== 'custom') {
             fetchDashboardData(true, periodId)
         }
+    }
+
+    const handlePrevMonth = (e) => {
+        if (e) e.stopPropagation()
+        setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+    }
+
+    const handleNextMonth = (e) => {
+        if (e) e.stopPropagation()
+        setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+    }
+
+    const handleDayClick = (dayNum) => {
+        const y = calendarMonth.getFullYear()
+        const m = calendarMonth.getMonth()
+        const clickedDate = new Date(y, m, dayNum)
+        const formatted = formatDateForInput(clickedDate)
+
+        if (calendarPickingPhase === 'start' || !customStartDate) {
+            setCustomStartDate(formatted)
+            setCalendarPickingPhase('end')
+        } else {
+            if (new Date(formatted) < new Date(customStartDate)) {
+                setCustomEndDate(customStartDate)
+                setCustomStartDate(formatted)
+            } else {
+                setCustomEndDate(formatted)
+            }
+            setCalendarPickingPhase('start')
+        }
+    }
+
+    const applyPresetRange = (type) => {
+        const today = new Date()
+        const end = formatDateForInput(today)
+        let start = ''
+        if (type === '7d') {
+            const d = new Date()
+            d.setDate(d.getDate() - 6)
+            start = formatDateForInput(d)
+        } else if (type === '30d') {
+            const d = new Date()
+            d.setDate(d.getDate() - 29)
+            start = formatDateForInput(d)
+        } else if (type === 'this_month') {
+            const d = new Date(today.getFullYear(), today.getMonth(), 1)
+            start = formatDateForInput(d)
+        } else if (type === 'last_month') {
+            const s = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+            const e = new Date(today.getFullYear(), today.getMonth(), 0)
+            setCustomStartDate(formatDateForInput(s))
+            setCustomEndDate(formatDateForInput(e))
+            return
+        }
+        setCustomStartDate(start)
+        setCustomEndDate(end)
     }
 
     const handleApplyCustomDate = () => {
@@ -198,8 +278,30 @@ export default function AdminDashboard() {
             toast.error('Start date cannot be after end date')
             return
         }
+        setSelectedPeriod('custom')
+        setIsDurationOpen(false)
         fetchDashboardData(true, 'custom', customStartDate, customEndDate)
     }
+
+    const currentPeriodButtonLabel = (() => {
+        if (selectedPeriod === 'all_time') return 'All Time'
+        if (selectedPeriod === 'daily') return 'Daily (Today)'
+        if (selectedPeriod === 'three_days') return '3 Days'
+        if (selectedPeriod === 'weekly') return 'Weekly (7 Days)'
+        if (selectedPeriod === 'monthly') return 'Monthly (30 Days)'
+        if (selectedPeriod === 'three_months') return '3 Months'
+        if (selectedPeriod === 'six_months') return '6 Months'
+        if (selectedPeriod === 'one_year') return '1 Year'
+        if (selectedPeriod === 'custom') {
+            if (customStartDate && customEndDate) {
+                const s = new Date(customStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                const e = new Date(customEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                return `${s} – ${e}`
+            }
+            return 'Custom Date'
+        }
+        return 'Duration'
+    })()
 
     if (loading) return <Loading />
 
@@ -292,8 +394,232 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2.5">
-                    {/* Manual Refresh Button */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                    {/* 1. Duration Dropdown Button */}
+                    <div className="relative" ref={durationDropdownRef}>
+                        <button
+                            type="button"
+                            onClick={() => setIsDurationOpen(!isDurationOpen)}
+                            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs cursor-pointer select-none border ${
+                                selectedPeriod !== 'all_time'
+                                    ? 'bg-[#FAF6FA] text-[#6C306E] border-[#6C306E] shadow-xs'
+                                    : 'bg-white hover:bg-[#FAF6FA] text-slate-700 border-[#EFE0EF]'
+                            }`}
+                        >
+                            <CalendarIcon size={14} color={selectedPeriod !== 'all_time' ? "#6C306E" : "#64748B"} />
+                            <span>{currentPeriodButtonLabel}</span>
+                            <ChevronDownIcon size={13} color={selectedPeriod !== 'all_time' ? "#6C306E" : "#64748B"} className={`transition-transform duration-200 ${isDurationOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Duration Dropdown & Calendar UI */}
+                        <AnimatePresence>
+                            {isDurationOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute right-0 mt-2 z-50 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl w-72 sm:w-80 overflow-hidden text-xs"
+                                >
+                                    {/* Dropdown Header */}
+                                    <div className="px-3.5 py-2.5 bg-[#FAF6FA] border-b border-[#EFE0EF] flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 font-extrabold text-[#241224] text-[11px] uppercase tracking-wider">
+                                            <CalendarIcon size={13} color="#6C306E" />
+                                            <span>Select Duration</span>
+                                        </div>
+                                        {selectedPeriod !== 'all_time' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelectPeriod('all_time')}
+                                                className="text-[10px] font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                            >
+                                                Reset to All Time
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {!showCustomCalendar ? (
+                                        /* Presets List */
+                                        <div className="p-2 space-y-0.5 max-h-[380px] overflow-y-auto">
+                                            {PERIOD_OPTIONS.filter(p => p.id !== 'custom').map((p) => {
+                                                const isSelected = selectedPeriod === p.id
+                                                return (
+                                                    <button
+                                                        key={p.id}
+                                                        type="button"
+                                                        onClick={() => handleSelectPeriod(p.id)}
+                                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left ${
+                                                            isSelected
+                                                                ? 'bg-[#FAF6FA] text-[#6C306E] font-bold shadow-2xs'
+                                                                : 'text-slate-700 hover:bg-slate-50 hover:text-[#241224] font-medium'
+                                                        }`}
+                                                    >
+                                                        <span>{p.label}</span>
+                                                        {isSelected && <CheckIcon size={14} color="#6C306E" strokeWidth={2.5} />}
+                                                    </button>
+                                                )
+                                            })}
+
+                                            <div className="border-t border-[#EFE0EF] my-1 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCustomCalendar(true)}
+                                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition cursor-pointer text-left ${
+                                                        selectedPeriod === 'custom'
+                                                            ? 'bg-[#FAF6FA] text-[#6C306E] font-bold'
+                                                            : 'text-slate-700 hover:bg-slate-50 hover:text-[#241224] font-medium'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <CalendarIcon size={13} color="#6C306E" />
+                                                        <span>Custom Date Range</span>
+                                                    </div>
+                                                    <ChevronRightIcon size={13} color="#6C306E" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Clean Interactive Calendar UI View */
+                                        <div className="p-3.5 space-y-3">
+                                            {/* Calendar Header with Navigation */}
+                                            <div className="flex items-center justify-between pb-1 border-b border-[#EFE0EF]">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCustomCalendar(false)}
+                                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                                >
+                                                    <ChevronLeftIcon size={12} color="#6C306E" />
+                                                    <span>Back</span>
+                                                </button>
+                                                <span className="text-xs font-bold text-[#241224]">
+                                                    {calendarMonth.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handlePrevMonth}
+                                                        className="p-1 rounded-lg hover:bg-[#FAF6FA] text-slate-600 cursor-pointer"
+                                                        title="Previous Month"
+                                                    >
+                                                        <ChevronLeftIcon size={13} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleNextMonth}
+                                                        className="p-1 rounded-lg hover:bg-[#FAF6FA] text-slate-600 cursor-pointer"
+                                                        title="Next Month"
+                                                    >
+                                                        <ChevronRightIcon size={13} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Days of Week Header */}
+                                            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
+                                                    <div key={i} className="py-1">{d}</div>
+                                                ))}
+                                            </div>
+
+                                            {/* Calendar Days Grid */}
+                                            <div className="grid grid-cols-7 gap-1 text-center">
+                                                {Array.from({ length: new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay() }).map((_, i) => (
+                                                    <div key={`empty-${i}`} className="size-7" />
+                                                ))}
+                                                {Array.from({ length: new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0).getDate() }, (_, i) => i + 1).map(day => {
+                                                    const curDateStr = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                                    const isStart = customStartDate === curDateStr
+                                                    const isEnd = customEndDate === curDateStr
+                                                    const isInRange = customStartDate && customEndDate && curDateStr > customStartDate && curDateStr < customEndDate
+
+                                                    return (
+                                                        <button
+                                                            key={day}
+                                                            type="button"
+                                                            onClick={() => handleDayClick(day)}
+                                                            className={`size-7 rounded-lg flex items-center justify-center text-[11px] transition cursor-pointer mx-auto ${
+                                                                isStart || isEnd
+                                                                    ? 'bg-[#6C306E] text-white font-bold shadow-2xs'
+                                                                    : isInRange
+                                                                        ? 'bg-[#FAF6FA] text-[#6C306E] font-bold'
+                                                                        : 'text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] font-medium'
+                                                            }`}
+                                                        >
+                                                            {day}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+
+                                            {/* Quick Range Presets */}
+                                            <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#EFE0EF]">
+                                                {['7d', '30d', 'this_month', 'last_month'].map(preset => {
+                                                    const labels = {
+                                                        '7d': 'Last 7D',
+                                                        '30d': 'Last 30D',
+                                                        'this_month': 'This Month',
+                                                        'last_month': 'Last Month'
+                                                    }
+                                                    return (
+                                                        <button
+                                                            key={preset}
+                                                            type="button"
+                                                            onClick={() => applyPresetRange(preset)}
+                                                            className="px-2 py-1 bg-[#FAF6FA] hover:bg-[#EFE0EF] text-[#6C306E] rounded-md text-[10px] font-bold transition cursor-pointer"
+                                                        >
+                                                            {labels[preset]}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+
+                                            {/* Manual Start & End Inputs */}
+                                            <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+                                                <div>
+                                                    <span className="text-slate-500 font-semibold block mb-0.5">Start Date</span>
+                                                    <input
+                                                        type="date"
+                                                        value={customStartDate}
+                                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500 font-semibold block mb-0.5">End Date</span>
+                                                    <input
+                                                        type="date"
+                                                        value={customEndDate}
+                                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCustomCalendar(false)}
+                                                    className="w-1/2 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleApplyCustomDate}
+                                                    className="w-1/2 py-2 rounded-xl text-xs font-bold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-2xs cursor-pointer"
+                                                >
+                                                    Apply Range
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* 2. Manual Refresh Button */}
                     <button
                         type="button"
                         onClick={() => fetchDashboardData(true)}
@@ -305,6 +631,7 @@ export default function AdminDashboard() {
                         <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
                     </button>
 
+                    {/* 3. Manage Products */}
                     <Link
                         href="/admin/products"
                         className="inline-flex items-center gap-1.5 bg-[#6C306E] hover:bg-[#3A0C38] text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs"
@@ -312,6 +639,8 @@ export default function AdminDashboard() {
                         <PlusIcon size={14} />
                         <span>Manage Products</span>
                     </Link>
+
+                    {/* 4. Views Analytics */}
                     <Link
                         href="/admin/analytics"
                         className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF] px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs"
@@ -320,95 +649,6 @@ export default function AdminDashboard() {
                         <span>Views Analytics</span>
                     </Link>
                 </div>
-            </div>
-
-            {/* DURATION & TIMEFRAME SELECTOR BAR */}
-            <div className="bg-white border border-[#EFE0EF] p-4 sm:p-5 rounded-3xl shadow-2xs space-y-3.5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="size-9 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0">
-                            <CalendarIcon size={17} color="#6C306E" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-xs font-extrabold text-[#241224] uppercase tracking-wider">
-                                    Performance Duration
-                                </h3>
-                                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#6C306E] text-white shadow-2xs">
-                                    {periodLabel}
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                                Select any timeframe to track orders, sales revenue, customers, and fulfillment metrics
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Date Span Summary */}
-                    <div className="text-left md:text-right text-xs">
-                        {dashboardData.periodInfo?.startDate ? (
-                            <span className="text-[11px] text-slate-500 font-medium bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1 rounded-full inline-block">
-                                From <b className="text-[#241224]">{new Date(dashboardData.periodInfo.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</b> to <b className="text-[#241224]">{new Date(dashboardData.periodInfo.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</b>
-                            </span>
-                        ) : (
-                            <span className="text-[11px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full inline-block">
-                                Full Storefront Lifetime History
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Duration Pills */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    {PERIOD_OPTIONS.map((p) => {
-                        const isSelected = selectedPeriod === p.id
-                        return (
-                            <button
-                                key={p.id}
-                                type="button"
-                                onClick={() => handleSelectPeriod(p.id)}
-                                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                                    isSelected
-                                        ? 'bg-[#6C306E] text-white border-[#6C306E] shadow-2xs scale-[1.02]'
-                                        : 'bg-[#FAF6FA]/80 hover:bg-[#FAF6FA] text-slate-700 border-[#EFE0EF] hover:border-[#6C306E]/30'
-                                }`}
-                            >
-                                {p.label}
-                            </button>
-                        )
-                    })}
-                </div>
-
-                {/* Custom Date Range Picker */}
-                {selectedPeriod === 'custom' && (
-                    <div className="pt-3.5 border-t border-[#EFE0EF] flex flex-wrap items-center gap-3 bg-[#FAF6FA]/50 p-3.5 rounded-2xl">
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="font-bold text-slate-600">Start Date:</span>
-                            <input
-                                type="date"
-                                value={customStartDate}
-                                onChange={(e) => setCustomStartDate(e.target.value)}
-                                className="bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 outline-none"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="font-bold text-slate-600">End Date:</span>
-                            <input
-                                type="date"
-                                value={customEndDate}
-                                onChange={(e) => setCustomEndDate(e.target.value)}
-                                className="bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 outline-none"
-                            />
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleApplyCustomDate}
-                            className="bg-[#6C306E] hover:bg-[#3A0C38] text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer"
-                        >
-                            Apply Custom Date Range
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* KPI Metric Cards */}
