@@ -138,7 +138,7 @@ export async function GET(request) {
                 deliveredOrders,
                 topProducts: topProducts.map(p => ({
                     ...p,
-                    image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/product_img1.png'
+                    image: Array.isArray(p.images) && p.images[0] && !p.images[0].startsWith('/product_img') ? p.images[0] : null
                 })),
                 recentOrders: recentOrders.map(order => ({
                     ...order,

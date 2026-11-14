@@ -62,7 +62,9 @@ export async function GET(request) {
                         totalUnitsBought += qty;
 
                         if (!productsPurchasedMap[prodId]) {
-                            const prodImg = item.image || (Array.isArray(item.product?.images) && item.product.images[0]) || '/product_img1.png';
+                            const prodImg = (item.image && !item.image.startsWith('/product_img')) 
+                                ? item.image 
+                                : ((Array.isArray(item.product?.images) && item.product.images[0] && !item.product.images[0].startsWith('/product_img')) ? item.product.images[0] : null);
                             productsPurchasedMap[prodId] = {
                                 productId: item.productId,
                                 name: item.name || item.product?.name || 'UK Product',
@@ -123,7 +125,7 @@ export async function GET(request) {
                             name: it.name,
                             price: it.price,
                             quantity: it.quantity,
-                            image: it.image || '/product_img1.png'
+                            image: (it.image && !it.image.startsWith('/product_img')) ? it.image : null
                         }))
                     }))
                 };

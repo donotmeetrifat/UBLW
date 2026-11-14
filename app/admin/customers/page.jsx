@@ -305,11 +305,14 @@ export default function AdminCustomersPage() {
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0">
-                                                    <img
-                                                        src={p.image || '/product_img1.png'}
-                                                        alt={p.name}
-                                                        className="max-h-9 w-auto object-contain"
-                                                    />
+                                                    {p.image && !p.image.startsWith('/product_img') ? (
+                                                        <img
+                                                            src={p.image}
+                                                            alt={p.name || ''}
+                                                            className="max-h-9 w-auto object-contain"
+                                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                        />
+                                                    ) : null}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="font-bold text-xs text-[#241224] truncate">

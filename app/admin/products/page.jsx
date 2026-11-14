@@ -820,9 +820,10 @@ export default function AdminProductsPage() {
                                 </tr>
                             ) : (
                                 filteredProducts.map((prod) => {
-                                    const imageSrc = Array.isArray(prod.images) && prod.images[0]
-                                        ? (typeof prod.images[0] === 'string' ? prod.images[0] : (prod.images[0].src || '/product_img1.png'))
-                                        : '/product_img1.png'
+                                    const rawImg = Array.isArray(prod.images) && prod.images[0]
+                                        ? (typeof prod.images[0] === 'string' ? prod.images[0] : prod.images[0].src)
+                                        : null
+                                    const imageSrc = rawImg && !rawImg.startsWith('/product_img') ? rawImg : null
                                     const isLow = (prod.stockCount || 0) <= 10 && (prod.stockCount || 0) > 0
                                     const isOut = !prod.inStock || (prod.stockCount || 0) <= 0
 
@@ -831,12 +832,15 @@ export default function AdminProductsPage() {
                                             {/* Product Title & Thumbnail */}
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] shrink-0 overflow-hidden shadow-2xs">
-                                                        <img
-                                                            src={imageSrc}
-                                                            alt={prod.name}
-                                                            className="size-full object-cover"
-                                                        />
+                                                    <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] shrink-0 overflow-hidden shadow-2xs flex items-center justify-center">
+                                                        {imageSrc ? (
+                                                            <img
+                                                                src={imageSrc}
+                                                                alt={prod.name || ''}
+                                                                className="size-full object-cover"
+                                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                            />
+                                                        ) : null}
                                                     </div>
                                                     <div className="min-w-0 max-w-xs">
                                                         <p className="font-bold text-[#241224] text-xs line-clamp-1" title={prod.name}>

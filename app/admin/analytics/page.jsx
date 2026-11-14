@@ -158,11 +158,14 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            <img
-                                src={summary.topViewedProduct?.image || '/product_img1.png'}
-                                alt={summary.topViewedProduct?.name || 'Top Product'}
-                                className="max-h-13 w-auto object-contain"
-                            />
+                            {summary.topViewedProduct?.image && !summary.topViewedProduct.image.startsWith('/product_img') ? (
+                                <img
+                                    src={summary.topViewedProduct.image}
+                                    alt={summary.topViewedProduct.name || ''}
+                                    className="max-h-13 w-auto object-contain"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                            ) : null}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-wider block">
@@ -205,11 +208,14 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            <img
-                                src={summary.secondTopViewed?.image || '/product_img2.png'}
-                                alt={summary.secondTopViewed?.name || 'Second Top'}
-                                className="max-h-13 w-auto object-contain"
-                            />
+                            {summary.secondTopViewed?.image && !summary.secondTopViewed.image.startsWith('/product_img') ? (
+                                <img
+                                    src={summary.secondTopViewed.image}
+                                    alt={summary.secondTopViewed.name || ''}
+                                    className="max-h-13 w-auto object-contain"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                            ) : null}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
@@ -252,11 +258,14 @@ export default function AdminAnalyticsPage() {
 
                     <div className="flex items-center gap-3.5 mb-4">
                         <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] p-1.5 flex items-center justify-center shrink-0 shadow-xs">
-                            <img
-                                src={summary.thirdTopViewed?.image || '/product_img3.png'}
-                                alt={summary.thirdTopViewed?.name || 'Third Top'}
-                                className="max-h-13 w-auto object-contain"
-                            />
+                            {summary.thirdTopViewed?.image && !summary.thirdTopViewed.image.startsWith('/product_img') ? (
+                                <img
+                                    src={summary.thirdTopViewed.image}
+                                    alt={summary.thirdTopViewed.name || ''}
+                                    className="max-h-13 w-auto object-contain"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                            ) : null}
                         </div>
                         <div className="min-w-0 pr-12">
                             <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">
@@ -451,11 +460,14 @@ export default function AdminAnalyticsPage() {
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="size-11 rounded-xl bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-xs">
-                                                        <img
-                                                            src={prod.image || '/product_img1.png'}
-                                                            alt={prod.name}
-                                                            className="max-h-9 w-auto object-contain"
-                                                        />
+                                                        {prod.image && !prod.image.startsWith('/product_img') ? (
+                                                            <img
+                                                                src={prod.image}
+                                                                alt={prod.name || ''}
+                                                                className="max-h-9 w-auto object-contain"
+                                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                            />
+                                                        ) : null}
                                                     </div>
                                                     <div className="min-w-0 max-w-xs">
                                                         <p className="font-extrabold text-[#241224] text-xs line-clamp-1" title={prod.name}>
