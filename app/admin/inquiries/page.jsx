@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 import {
@@ -31,6 +31,86 @@ export default function AdminInquiriesPage() {
     const [activeInquiry, setActiveInquiry] = useState(null)
     const [adminNotesInput, setAdminNotesInput] = useState('')
     const [savingNotes, setSavingNotes] = useState(false)
+    const [isEmailMenuOpen, setIsEmailMenuOpen] = useState(false)
+    const emailMenuRef = useRef(null)
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (emailMenuRef.current && !emailMenuRef.current.contains(event.target)) {
+                setIsEmailMenuOpen(false)
+            }
+        }
+        if (isEmailMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [isEmailMenuOpen])
+
+    const handleCall = (phone) => {
+        if (!phone) {
+            toast.error('No phone number provided')
+            return
+        }
+        const clean = phone.replace(/[^0-9]/g, '')
+        if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(phone)
+        }
+        toast.success(`Copied phone: ${phone} (Dialing...)`)
+        window.location.href = `tel:${clean || phone}`
+    }
+
+    const handleWhatsApp = (phone, inquiry) => {
+        const raw = (phone || '').replace(/[^0-9]/g, '')
+        if (!raw) {
+            toast.error('No phone number available for WhatsApp')
+            return
+        }
+        const wa = raw.startsWith('880') ? raw : raw.startsWith('0') ? `880${raw.slice(1)}` : raw
+        const text = `Hello ${inquiry?.name || 'Customer'}, thank you for contacting UK Brand Lover regarding your inquiry "${inquiry?.subject || 'Support'}". How can we assist you today?`
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(text)}`, '_blank')
+    }
+
+    const handleOpenGmail = (inquiry) => {
+        if (!inquiry?.email) {
+            toast.error('No email address provided')
+            return
+        }
+        if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(inquiry.email)
+        }
+        const subject = `Re: ${inquiry.subject || 'Inquiry'} - UK Brand Lover`
+        const body = `Dear ${inquiry.name || 'Valued Customer'},\n\nThank you for reaching out to UK Brand Lover regarding your inquiry:\n"${inquiry.message}"\n\nKind regards,\nUK Brand Lover Support Team\nhttps://ukbrandlover.vercel.app`
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inquiry.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+        
+        window.open(gmailUrl, '_blank')
+        toast.success(`Opening Gmail for ${inquiry.email} (Email copied!)`)
+    }
+
+    const handleOpenMailApp = (inquiry) => {
+        if (!inquiry?.email) {
+            toast.error('No email address provided')
+            return
+        }
+        if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(inquiry.email)
+        }
+        const subject = `Re: ${inquiry.subject || 'Inquiry'} - UK Brand Lover`
+        const body = `Dear ${inquiry.name || 'Valued Customer'},\n\nThank you for reaching out to UK Brand Lover regarding your inquiry:\n"${inquiry.message}"\n\nKind regards,\nUK Brand Lover Support Team\nhttps://ukbrandlover.vercel.app`
+        const mailtoUrl = `mailto:${inquiry.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+        
+        window.location.href = mailtoUrl
+        toast.success(`Launching mail app for ${inquiry.email}`)
+    }
+
+    const handleCopyEmail = (email) => {
+        if (!email) return
+        if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(email)
+        }
+        toast.success(`Copied email: ${email}`)
+    }
 
     const fetchInquiries = async (isBackground = false) => {
         try {
@@ -384,25 +464,25 @@ export default function AdminInquiriesPage() {
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     {/* WhatsApp Contact */}
                                                     {waNumber && (
-                                                        <a
-                                                            href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello ${inq.name || 'Customer'}, thank you for contacting UK Brand Lover regarding your inquiry "${inq.subject}". How can we assist you today?`)}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleWhatsApp(waNumber, inq)}
+                                                            className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition cursor-pointer"
                                                             title="Chat on WhatsApp"
                                                         >
                                                             <WhatsAppIcon size={16} />
-                                                        </a>
+                                                        </button>
                                                     )}
 
                                                     {/* Email Contact */}
-                                                    <a
-                                                        href={`mailto:${inq.email}?subject=${encodeURIComponent(`Re: ${inq.subject} - UK Brand Lover Support`)}&body=${encodeURIComponent(`Dear ${inq.name || 'Customer'},\n\nThank you for reaching out to UK Brand Lover regarding your inquiry:\n"${inq.message}"\n\n`)}`}
-                                                        className="p-1.5 rounded-lg text-[#6C306E] hover:bg-[#FAF6FA] border border-transparent hover:border-[#EFE0EF] transition"
-                                                        title="Reply via Email"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenGmail(inq)}
+                                                        className="p-1.5 rounded-lg text-[#6C306E] hover:bg-[#FAF6FA] border border-transparent hover:border-[#EFE0EF] transition cursor-pointer"
+                                                        title="Reply via Gmail Web (Copies email to clipboard)"
                                                     >
                                                         <MailIcon size={16} color="#6C306E" />
-                                                    </a>
+                                                    </button>
 
                                                     {/* View Modal */}
                                                     <button
@@ -456,7 +536,32 @@ export default function AdminInquiriesPage() {
                             </div>
                             <div>
                                 <h3 className="text-base font-black text-[#241224]">{activeInquiry.name}</h3>
-                                <p className="text-xs text-slate-500">{activeInquiry.email} • {activeInquiry.phone || 'No phone provided'}</p>
+                                <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopyEmail(activeInquiry.email)}
+                                        className="hover:text-[#6C306E] hover:underline cursor-pointer transition"
+                                        title="Click to copy email"
+                                    >
+                                        {activeInquiry.email}
+                                    </button>
+                                    {activeInquiry.phone && (
+                                        <>
+                                            <span className="text-slate-300">•</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard?.writeText(activeInquiry.phone);
+                                                    toast.success(`Copied phone: ${activeInquiry.phone}`);
+                                                }}
+                                                className="hover:text-[#6C306E] hover:underline cursor-pointer transition font-mono"
+                                                title="Click to copy phone"
+                                            >
+                                                {activeInquiry.phone}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -546,22 +651,109 @@ export default function AdminInquiriesPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
+                                {/* Call Button */}
                                 {activeInquiry.phone && (
-                                    <a
-                                        href={`tel:${activeInquiry.phone}`}
-                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] text-slate-700 hover:text-[#6C306E] font-bold"
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCall(activeInquiry.phone)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-700 hover:text-[#6C306E] font-bold transition cursor-pointer shadow-2xs"
+                                        title="Dial phone number (Also copies to clipboard)"
                                     >
                                         <PhoneIcon size={14} color="#6C306E" />
                                         <span>Call</span>
-                                    </a>
+                                    </button>
                                 )}
-                                <a
-                                    href={`mailto:${activeInquiry.email}?subject=${encodeURIComponent(`Re: ${activeInquiry.subject} - UK Brand Lover`)}`}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6C306E] hover:bg-[#521C54] text-white font-bold shadow-xs"
-                                >
-                                    <MailIcon size={14} color="#FFFFFF" />
-                                    <span>Reply Email</span>
-                                </a>
+
+                                {/* WhatsApp Button */}
+                                {activeInquiry.phone && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleWhatsApp(activeInquiry.phone, activeInquiry)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 font-bold transition cursor-pointer shadow-2xs"
+                                        title="Chat on WhatsApp"
+                                    >
+                                        <WhatsAppIcon size={14} color="#059669" />
+                                        <span>WhatsApp</span>
+                                    </button>
+                                )}
+
+                                {/* Reply Email Dropdown Menu */}
+                                <div className="relative" ref={emailMenuRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEmailMenuOpen(!isEmailMenuOpen)}
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#6C306E] hover:bg-[#521C54] text-white font-bold transition cursor-pointer shadow-xs"
+                                    >
+                                        <MailIcon size={14} color="#FFFFFF" />
+                                        <span>Reply Email</span>
+                                        <svg
+                                            className={`size-3 text-white/80 transition-transform duration-200 ${isEmailMenuOpen ? 'rotate-180' : ''}`}
+                                            viewBox="0 0 12 12"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M2.5 4.5L6 8L9.5 4.5" />
+                                        </svg>
+                                    </button>
+
+                                    {isEmailMenuOpen && (
+                                        <div className="absolute right-0 bottom-full mb-2 w-64 bg-white border border-[#EFE0EF] rounded-2xl shadow-2xl p-1.5 z-50 text-xs">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    handleOpenGmail(activeInquiry)
+                                                    setIsEmailMenuOpen(false)
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#FAF6FA] text-slate-700 hover:text-[#6C306E] font-medium transition text-left cursor-pointer"
+                                            >
+                                                <div className="size-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                                    G
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-[#241224] text-xs">Open in Gmail</p>
+                                                    <p className="text-[10px] text-slate-400">Web browser compose (Recommended)</p>
+                                                </div>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    handleOpenMailApp(activeInquiry)
+                                                    setIsEmailMenuOpen(false)
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#FAF6FA] text-slate-700 hover:text-[#6C306E] font-medium transition text-left cursor-pointer"
+                                            >
+                                                <div className="size-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                                    <MailIcon size={12} color="#2563EB" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-[#241224] text-xs">Default Mail App</p>
+                                                    <p className="text-[10px] text-slate-400">Outlook, Apple Mail, etc.</p>
+                                                </div>
+                                            </button>
+
+                                            <div className="border-t border-[#EFE0EF] my-1"></div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    handleCopyEmail(activeInquiry.email)
+                                                    setIsEmailMenuOpen(false)
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#FAF6FA] text-slate-700 hover:text-[#6C306E] font-medium transition text-left cursor-pointer"
+                                            >
+                                                <div className="size-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                                    <CheckIcon size={12} color="#059669" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-[#241224] text-xs">Copy Email Address</p>
+                                                    <p className="text-[10px] text-slate-400 truncate">{activeInquiry.email}</p>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
