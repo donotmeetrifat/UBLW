@@ -105,6 +105,44 @@ body {
         animation: shimmerSlide 0.85s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Ambient luxury animations for touch & mobile screens with no cursor hover */
+    @media (hover: none) and (pointer: coarse) {
+        .shimmer-active::after {
+            animation: shimmerSlideMobile 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .mobile-arrow-nudge {
+            animation: arrowNudge 2.2s ease-in-out infinite;
+        }
+    }
+
+    @keyframes shimmerSlideMobile {
+        0%, 72% {
+            transform: translateX(-140%) skewX(-20deg);
+            opacity: 0;
+        }
+        75% {
+            opacity: 1;
+        }
+        88% {
+            transform: translateX(240%) skewX(-20deg);
+            opacity: 1;
+        }
+        89%, 100% {
+            transform: translateX(240%) skewX(-20deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes arrowNudge {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        50% {
+            transform: translateX(3px);
+        }
+    }
+
     .animate-wiggle-hover:hover .phone-icon-wiggle,
     .group:hover .phone-icon-wiggle {
         animation: phoneWiggle 0.85s ease-in-out infinite;

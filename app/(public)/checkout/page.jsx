@@ -924,7 +924,10 @@ export default function CheckoutPage() {
                                             type="submit"
                                             disabled={isApplyingCoupon || !couponInput.trim()}
                                             text={isApplyingCoupon ? '...' : 'Apply'}
-                                            className="!h-9 !px-4 text-xs shrink-0"
+                                            activeState={!!couponInput.trim()}
+                                            className={`!h-9 !px-4 text-xs shrink-0 transition-all ${
+                                                couponInput.trim() ? 'shadow-[0_4px_16px_rgba(108,48,110,0.35)]' : ''
+                                            }`}
                                         />
                                     </form>
                                 ) : (

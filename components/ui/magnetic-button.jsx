@@ -73,6 +73,8 @@ function MagneticButton({
           x: springX,
           y: springY
         }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
       >
         {children}
       </motion.div>
