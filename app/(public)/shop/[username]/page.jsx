@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { MailIcon, MapPinIcon } from "@/components/icons"
 import Loading from "@/components/Loading"
 import Image from "next/image"
-import { dummyStoreData, productDummyData } from "@/assets/assets"
+import { dummyStoreData } from "@/assets/assets"
 
 export default function StoreShop() {
 
@@ -16,7 +16,7 @@ export default function StoreShop() {
 
     const fetchStoreData = async () => {
         setStoreInfo(dummyStoreData)
-        setProducts(productDummyData)
+        setProducts([])
         setLoading(false)
     }
 

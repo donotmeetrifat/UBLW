@@ -76,12 +76,10 @@ function ShopContent() {
                 const activeNames = data.categories
                     .filter(c => c.isActive !== false)
                     .map(c => c.name);
-                if (activeNames.length > 0) {
-                    setShopCategories(activeNames);
-                    dispatch(setCategories(activeNames));
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
-                    }
+                setShopCategories(activeNames);
+                dispatch(setCategories(activeNames));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
                 }
             }
         } catch (e) {

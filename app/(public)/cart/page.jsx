@@ -11,7 +11,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { productDummyData } from "@/assets/assets";
 
 // Luxury Bespoke Checkbox Component
 const LuxuryCheckbox = ({ checked, onChange, ariaLabel = "Select item" }) => (
@@ -66,10 +65,10 @@ export default function Cart() {
     // Build cartArray and maintain selected product IDs
     useEffect(() => {
         const list = [];
-        const allProducts = Array.isArray(products) && products.length > 0 ? products : productDummyData;
+        const allProducts = Array.isArray(products) ? products : [];
 
         for (const [key, value] of Object.entries(cartItems || {})) {
-            const product = allProducts.find(p => p.id === key) || productDummyData.find(p => p.id === key);
+            const product = allProducts.find(p => p.id === key);
             if (product && value > 0) {
                 list.push({
                     ...product,

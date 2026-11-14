@@ -25,7 +25,7 @@ export async function GET(request) {
         const hasFilters = Boolean(category || search || inStock || (sortBy && sortBy !== 'featured'));
 
         // High-performance server memory cache (25s TTL) for default catalog
-        if (!hasFilters && productsCache.fetchedAt && Date.now() - productsCache.fetchedAt < 25000 && Array.isArray(productsCache.data) && productsCache.data.length > 0) {
+        if (!hasFilters && productsCache.fetchedAt && Date.now() - productsCache.fetchedAt < 25000 && Array.isArray(productsCache.data)) {
             return NextResponse.json(
                 { success: true, products: productsCache.data },
                 {
@@ -146,7 +146,7 @@ export async function GET(request) {
                 };
             });
 
-            if (!hasFilters && Array.isArray(normalized) && normalized.length > 0) {
+            if (!hasFilters && Array.isArray(normalized)) {
                 productsCache.data = normalized;
                 productsCache.fetchedAt = Date.now();
             }

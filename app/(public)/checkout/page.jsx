@@ -26,7 +26,6 @@ import {
 import toast from 'react-hot-toast'
 import { clearCart, removePurchasedItems } from '@/lib/features/cart/cartSlice'
 import AddressModal from '@/components/AddressModal'
-import { productDummyData } from '@/assets/assets'
 import InvoiceModal from '@/components/InvoiceModal'
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
@@ -109,7 +108,7 @@ export default function CheckoutPage() {
     useEffect(() => {
         let computedSubtotal = 0
         const itemList = []
-        const allProducts = Array.isArray(products) && products.length > 0 ? products : productDummyData
+        const allProducts = Array.isArray(products) ? products : []
 
         // Retrieve selectedItemIds saved from the shopping bag
         let selectedItemIds = null
@@ -130,7 +129,7 @@ export default function CheckoutPage() {
                 continue
             }
 
-            const product = allProducts.find(p => p.id === productId) || productDummyData.find(p => p.id === productId)
+            const product = allProducts.find(p => p.id === productId)
             if (product && qty > 0) {
                 itemList.push({
                     ...product,

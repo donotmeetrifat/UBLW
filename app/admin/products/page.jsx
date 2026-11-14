@@ -77,8 +77,13 @@ export default function AdminProductsPage() {
     const [products, setProducts] = useState(() => {
         if (typeof window !== 'undefined') {
             try {
-                const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
-                if (Array.isArray(cached) && cached.length > 0) return cached
+                const raw = localStorage.getItem('ukbl_cached_products');
+                if (raw && (raw.includes('prod_1') || raw.includes('CeraVe') || raw.includes('The Ordinary'))) {
+                    localStorage.removeItem('ukbl_cached_products');
+                    return [];
+                }
+                const cached = JSON.parse(raw || '[]');
+                if (Array.isArray(cached) && cached.length > 0) return cached;
             } catch {}
         }
         return []
@@ -193,6 +198,9 @@ export default function AdminProductsPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.products)) {
                 setProducts(data.products)
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
+                }
                 if (data.stats) setStats(data.stats)
             } else if (data.message) {
                 console.warn('Admin products fetch returned message:', data.message)
