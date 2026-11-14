@@ -20,7 +20,7 @@ import { removeAddress } from '@/lib/features/address/addressSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } from '@/lib/settings';
 import { FlowButton } from '@/components/ui/flow-button';
-import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
+import { isClientSignedIn, requireSignIn, getClientUser } from '@/lib/clientAuth';
 
 const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedCount, selectedQuantity }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';
@@ -64,12 +64,25 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
         }
     }, [addressList]);
 
-    // Live sync currently applied coupon if coupon definitions change anywhere
+    // Live sync and automatic validity check of applied coupon when subtotal or coupon catalog changes
     useEffect(() => {
+        if (!coupon?.code) return;
+
+        // Auto-remove if subtotal drops below minimum order requirement
+        if (coupon.minOrderAmount && totalPrice < coupon.minOrderAmount) {
+            const minReq = coupon.minOrderAmount;
+            const savedCode = coupon.code;
+            setCoupon(null);
+            toast.error(`Coupon ${savedCode} requires a minimum order of ${currency}${minReq.toLocaleString()}. Discount removed.`, {
+                id: `coupon-min-order-${savedCode}`
+            });
+            return;
+        }
+
         const handleCouponSync = async () => {
             if (!coupon?.code) return;
             try {
-                const currentUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('ukbl_current_user') || 'null') : null;
+                const currentUser = getClientUser();
                 const res = await fetch('/api/coupons/validate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -85,7 +98,7 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
                     setCoupon(data.coupon);
                 } else {
                     setCoupon(null);
-                    toast.error(`Coupon ${coupon.code} is no longer active.`);
+                    toast.error(data.message || `Coupon ${coupon.code} is no longer active.`);
                 }
             } catch (e) {}
         };
@@ -97,16 +110,25 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
     const handleCouponCode = async (event) => {
         event.preventDefault();
         const code = couponCodeInput.trim().toUpperCase();
-        if (!code) return;
+        if (!code) {
+            toast.error('Please enter a coupon code.');
+            return;
+        }
 
-        if (items.length === 0) {
-            toast.error('Please select products before applying a coupon.');
+        if (items.length === 0 || totalPrice <= 0) {
+            toast.error('Please select at least 1 product before applying a coupon.');
+            return;
+        }
+
+        if (coupon && coupon.code === code) {
+            toast.success(`Coupon ${code} is already applied!`);
+            setCouponCodeInput('');
             return;
         }
 
         setIsApplyingCoupon(true);
         try {
-            const currentUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('ukbl_current_user') || 'null') : null;
+            const currentUser = getClientUser();
             const res = await fetch('/api/coupons/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -114,29 +136,35 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
                     code, 
                     subtotal: totalPrice,
                     userEmail: currentUser?.email || null,
-                    userId: currentUser?.id || null
+                    userId: currentUser?.id || null,
+                    currentlyAppliedCode: coupon?.code || null
                 })
             });
             const data = await res.json();
 
             if (data.success && data.coupon) {
                 setCoupon(data.coupon);
-                const discountText = data.coupon.discountType === 'FIXED'
+                const discountText = data.coupon.formattedDiscount || (data.coupon.discountType === 'FIXED'
                     ? `${currency}${data.coupon.discount} off`
-                    : `${data.coupon.discount}% off`;
-                toast.success(`Coupon ${data.coupon.code} applied! (${discountText})`);
+                    : `${data.coupon.discount}% off`);
+                toast.success(data.message || `Coupon ${data.coupon.code} verified & applied! (${discountText})`);
                 setCouponCodeInput('');
             } else {
-                toast.error(data.message || 'Invalid or ineligible coupon code.');
+                if (data.requiresAuth) {
+                    toast.error(data.message || 'Please sign in to use this coupon.');
+                    requireSignIn(data.message);
+                } else {
+                    toast.error(data.message || 'Invalid or ineligible coupon code.');
+                }
             }
         } catch (error) {
-            toast.error('Could not validate coupon. Please try again.');
+            toast.error('Could not connect to server to verify coupon. Please try again.');
         } finally {
             setIsApplyingCoupon(false);
         }
     };
 
-    const discountAmount = coupon && items.length > 0
+    const discountAmount = coupon && items.length > 0 && (!coupon.minOrderAmount || totalPrice >= coupon.minOrderAmount)
         ? (coupon.discountType === 'FIXED'
             ? Math.min(coupon.discount, totalPrice)
             : (coupon.maxDiscount 
@@ -367,13 +395,33 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
                         />
                     </form>
                 ) : (
-                    <div className='flex items-center justify-between bg-[#FAF6FA] border border-[#EFE0EF] p-2.5 rounded-2xl text-xs mt-2'>
-                        <div>
-                            <p className='font-bold text-[#6C306E]'>{coupon.code}</p>
-                            <p className='text-[10px] text-[#7B667B]'>{coupon.description}</p>
+                    <div className='flex items-center justify-between bg-gradient-to-r from-[#FAF6FA] to-purple-50/50 border border-[#6C306E]/20 p-3 rounded-2xl text-xs mt-2 shadow-2xs'>
+                        <div className="flex items-center gap-2.5">
+                            <div className="size-8 rounded-xl bg-[#6C306E]/10 flex items-center justify-center shrink-0">
+                                <TagIcon size={14} color="#6C306E" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-1.5">
+                                    <p className='font-black text-[#6C306E] tracking-wide text-xs'>{coupon.code}</p>
+                                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
+                                        ✓ Verified
+                                    </span>
+                                </div>
+                                <p className='text-[10.5px] text-[#7B667B] font-medium line-clamp-1'>
+                                    {coupon.summary || coupon.description}
+                                </p>
+                            </div>
                         </div>
-                        <button type="button" onClick={() => setCoupon(null)} className="p-1 hover:text-red-600 transition cursor-pointer" title="Remove coupon">
-                            <CloseIcon size={14} color="currentColor" />
+                        <button 
+                            type="button" 
+                            onClick={() => {
+                                setCoupon(null);
+                                toast.success('Coupon removed.');
+                            }} 
+                            className="size-7 rounded-full hover:bg-rose-50 flex items-center justify-center text-slate-400 hover:text-rose-600 transition cursor-pointer shrink-0" 
+                            title="Remove coupon"
+                        >
+                            <CloseIcon size={13} color="currentColor" />
                         </button>
                     </div>
                 )}

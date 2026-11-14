@@ -159,7 +159,7 @@ export default function LuxuryDatePicker({
     }
 
     const formattedDisplay = selectedDate ? (
-        <span className="flex items-center gap-1 font-bold text-[#241224] text-xs whitespace-nowrap">
+        <span className="flex items-center gap-1 font-bold text-[#241224] text-[11px] sm:text-xs whitespace-nowrap">
             <span>
                 {selectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
@@ -187,11 +187,11 @@ export default function LuxuryDatePicker({
                     onClick={() => setIsOpen(!isOpen)}
                     className={`w-full flex items-center justify-between bg-white border ${
                         isOpen ? 'border-[#6C306E] ring-2 ring-[#6C306E]/15' : 'border-[#EFE0EF]'
-                    } hover:border-[#6C306E] rounded-xl px-2.5 sm:px-3 py-2 text-left transition cursor-pointer shadow-2xs group`}
+                    } hover:border-[#6C306E] rounded-xl px-2 sm:px-2.5 py-2 text-left transition cursor-pointer shadow-2xs group`}
                 >
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-visible">
                         <div className="text-[#6C306E] shrink-0">
-                            <CalendarIcon size={14} color="#6C306E" />
+                            <CalendarIcon size={13} color="#6C306E" />
                         </div>
                         <div className="min-w-0 overflow-visible">
                             {formattedDisplay}
@@ -209,9 +209,15 @@ export default function LuxuryDatePicker({
                                 ×
                             </span>
                         )}
-                        <span className="text-[9.5px] font-bold text-[#6C306E] bg-[#FAF6FA] px-1.5 py-0.5 rounded border border-[#EFE0EF] group-hover:bg-[#6C306E] group-hover:text-white transition">
-                            {isOpen ? 'Close' : 'Choose'}
-                        </span>
+                        {!selectedDate ? (
+                            <span className="text-[9.5px] font-bold text-[#6C306E] bg-[#FAF6FA] px-1.5 py-0.5 rounded border border-[#EFE0EF] group-hover:bg-[#6C306E] group-hover:text-white transition">
+                                {isOpen ? 'Close' : 'Choose'}
+                            </span>
+                        ) : (
+                            <span className="text-[9px] font-semibold text-[#6C306E]/70 group-hover:text-[#6C306E] transition">
+                                {isOpen ? '▲' : '▼'}
+                            </span>
+                        )}
                     </div>
                 </button>
             </div>

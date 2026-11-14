@@ -20,7 +20,8 @@ import {
     MapPinIcon,
     PlusIcon,
     EditIcon,
-    CloseIcon
+    CloseIcon,
+    TagIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
 import { clearCart, removePurchasedItems } from '@/lib/features/cart/cartSlice'
@@ -29,7 +30,8 @@ import { productDummyData } from '@/assets/assets'
 import InvoiceModal from '@/components/InvoiceModal'
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
-import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import { isClientSignedIn, requireSignIn, getClientUser } from '@/lib/clientAuth'
+import { FlowButton } from '@/components/ui/flow-button'
 
 export default function CheckoutPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -47,6 +49,8 @@ export default function CheckoutPage() {
     const [editingAddress, setEditingAddress] = useState(null)
 
     const [coupon, setCoupon] = useState(null)
+    const [couponInput, setCouponInput] = useState('')
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState('cod')
     const [transactionId, setTransactionId] = useState('')
     const [senderNumber, setSenderNumber] = useState('')
@@ -162,13 +166,119 @@ export default function CheckoutPage() {
         }
     }, [addressList])
 
+    // Live sync and backend verification of applied coupon on checkout
+    useEffect(() => {
+        if (!coupon?.code) return;
+
+        // Auto-remove if subtotal drops below minimum order requirement
+        if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) {
+            const minReq = coupon.minOrderAmount;
+            const savedCode = coupon.code;
+            setCoupon(null);
+            toast.error(`Coupon ${savedCode} requires a minimum order of ${currency}${minReq.toLocaleString()}. Discount removed.`, {
+                id: `checkout-coupon-min-${savedCode}`
+            });
+            return;
+        }
+
+        const verifyCoupon = async () => {
+            try {
+                const currentUser = getClientUser();
+                const res = await fetch('/api/coupons/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: coupon.code,
+                        subtotal,
+                        userEmail: currentUser?.email || null,
+                        userId: currentUser?.id || null
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.coupon) {
+                    setCoupon(data.coupon);
+                } else {
+                    setCoupon(null);
+                    toast.error(data.message || `Coupon ${coupon.code} is no longer active.`);
+                }
+            } catch (err) {
+                console.warn('Coupon verification note:', err);
+            }
+        };
+
+        verifyCoupon();
+    }, [coupon?.code, subtotal]);
+
+    const handleApplyCoupon = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const code = couponInput.trim().toUpperCase();
+        if (!code) {
+            toast.error('Please enter a coupon code.');
+            return;
+        }
+
+        if (items.length === 0 || subtotal <= 0) {
+            toast.error('Your order has no items to apply a coupon.');
+            return;
+        }
+
+        if (coupon && coupon.code === code) {
+            toast.success(`Coupon ${code} is already applied!`);
+            setCouponInput('');
+            return;
+        }
+
+        setIsApplyingCoupon(true);
+        try {
+            const currentUser = getClientUser();
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code,
+                    subtotal,
+                    userEmail: currentUser?.email || null,
+                    userId: currentUser?.id || null,
+                    currentlyAppliedCode: coupon?.code || null
+                })
+            });
+            const data = await res.json();
+
+            if (data.success && data.coupon) {
+                setCoupon(data.coupon);
+                const discountText = data.coupon.formattedDiscount || (data.coupon.discountType === 'FIXED'
+                    ? `${currency}${data.coupon.discount} off`
+                    : `${data.coupon.discount}% off`);
+                toast.success(data.message || `Coupon ${data.coupon.code} verified & applied! (${discountText})`);
+                setCouponInput('');
+                if (typeof window !== 'undefined') {
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('ukbl_checkout_data') || '{}');
+                        localStorage.setItem('ukbl_checkout_data', JSON.stringify({ ...saved, coupon: data.coupon }));
+                    } catch {}
+                }
+            } else {
+                if (data.requiresAuth) {
+                    toast.error(data.message || 'Please sign in to use this coupon.');
+                    requireSignIn(data.message);
+                } else {
+                    toast.error(data.message || 'Invalid or ineligible coupon code.');
+                }
+            }
+        } catch (error) {
+            toast.error('Could not connect to server to verify coupon.');
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
     // 4. Calculations with 100% precision
     const isDhaka = selectedAddress ? isInsideDhaka(selectedAddress) : true
     const deliveryCharge = selectedAddress 
         ? calculateDeliveryCharge(selectedAddress, subtotal, settings.delivery)
         : (settings.delivery.insideDhaka || 80)
 
-    const discountAmount = coupon 
+    const discountAmount = coupon && items.length > 0 && (!coupon.minOrderAmount || subtotal >= coupon.minOrderAmount)
         ? (coupon.discountType === 'FIXED'
             ? Math.min(coupon.discount, subtotal)
             : (coupon.maxDiscount
@@ -751,12 +861,71 @@ export default function CheckoutPage() {
                                 )}
                             </div>
 
-                            {coupon && (
-                                <div className="flex justify-between text-[#6C306E] font-bold">
-                                    <span>Discount ({coupon.code}):</span>
-                                    <span>-{currency}{discountAmount.toLocaleString()}</span>
-                                </div>
-                            )}
+                            {/* Coupon Code Section on Checkout */}
+                            <div className="pt-2 pb-1 border-t border-[#EFE0EF]">
+                                {!coupon ? (
+                                    <form onSubmit={handleApplyCoupon} className="flex items-center gap-2">
+                                        <div className="relative flex-1">
+                                            <TagIcon size={13} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                value={couponInput}
+                                                onChange={(e) => setCouponInput(e.target.value)}
+                                                placeholder="Enter coupon code"
+                                                className="w-full h-9 pl-8 pr-2 text-xs border border-[#EFE0EF] rounded-xl outline-none focus:border-[#6C306E] bg-[#FAF6FA] text-[#241224] placeholder-slate-400 font-medium transition-colors"
+                                            />
+                                        </div>
+                                        <FlowButton
+                                            type="submit"
+                                            disabled={isApplyingCoupon || !couponInput.trim()}
+                                            text={isApplyingCoupon ? '...' : 'Apply'}
+                                            className="!h-9 !px-4 text-xs shrink-0"
+                                        />
+                                    </form>
+                                ) : (
+                                    <div className="flex items-center justify-between bg-gradient-to-r from-[#FAF6FA] to-purple-50/50 border border-[#6C306E]/20 p-2.5 rounded-xl text-xs shadow-2xs">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-6 rounded-lg bg-[#6C306E]/10 flex items-center justify-center shrink-0">
+                                                <TagIcon size={12} color="#6C306E" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-black text-[#6C306E]">{coupon.code}</span>
+                                                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full">
+                                                        ✓ Verified
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-[#7B667B] font-medium line-clamp-1">
+                                                    {coupon.summary || coupon.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span className="font-extrabold text-[#6C306E]">
+                                                -{currency}{discountAmount.toLocaleString()}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCoupon(null);
+                                                    toast.success('Coupon removed');
+                                                    if (typeof window !== 'undefined') {
+                                                        try {
+                                                            const saved = JSON.parse(localStorage.getItem('ukbl_checkout_data') || '{}');
+                                                            delete saved.coupon;
+                                                            localStorage.setItem('ukbl_checkout_data', JSON.stringify(saved));
+                                                        } catch {}
+                                                    }
+                                                }}
+                                                className="size-5 rounded-full hover:bg-rose-50 flex items-center justify-center text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                                                title="Remove coupon"
+                                            >
+                                                <CloseIcon size={11} color="currentColor" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="flex justify-between items-center pt-3 border-t border-[#EFE0EF] text-sm">
                                 <span className="font-extrabold text-[#241224]">Total Payable:</span>

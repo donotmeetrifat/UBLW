@@ -154,9 +154,43 @@ export async function POST(request) {
                 const usageValid = !coupon.usageLimit || (coupon.usedCount || 0) < coupon.usageLimit;
                 
                 let userValid = true;
+                const customerEmail = (verifiedUser?.email || payload?.email || '').toLowerCase().trim();
+                const customerUserId = verifiedUser?.id || payload?.id || null;
+
                 if (Array.isArray(coupon.allowedUserEmails) && coupon.allowedUserEmails.length > 0) {
-                    const customerEmail = (verifiedUser?.email || payload.email || '').toLowerCase().trim();
                     userValid = coupon.allowedUserEmails.some(e => String(e).toLowerCase().trim() === customerEmail);
+                }
+
+                if (userValid && coupon.forNewUserOnly && isDatabaseConfigured()) {
+                    try {
+                        const priorCount = await prisma.order.count({
+                            where: {
+                                OR: [
+                                    ...(customerUserId ? [{ userId: customerUserId }] : []),
+                                    ...(customerEmail ? [{ user: { email: customerEmail } }] : [])
+                                ],
+                                status: { not: 'CANCELLED' }
+                            }
+                        });
+                        if (priorCount > 0) userValid = false;
+                    } catch {}
+                }
+
+                if (userValid && coupon.perUserLimit && isDatabaseConfigured() && (customerUserId || customerEmail)) {
+                    try {
+                        const priorUsage = await prisma.order.count({
+                            where: {
+                                isCouponUsed: true,
+                                couponCode: coupon.code,
+                                OR: [
+                                    ...(customerUserId ? [{ userId: customerUserId }] : []),
+                                    ...(customerEmail ? [{ user: { email: customerEmail } }] : [])
+                                ],
+                                status: { not: 'CANCELLED' }
+                            }
+                        });
+                        if (priorUsage >= coupon.perUserLimit) userValid = false;
+                    } catch {}
                 }
 
                 const minOrderValid = !coupon.minOrderAmount || subtotal >= coupon.minOrderAmount;

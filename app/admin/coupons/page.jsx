@@ -1231,7 +1231,7 @@ export default function AdminCouponsPage() {
                                                         <span className="text-white/50 block">Validity Period:</span>
                                                         <span className="font-bold text-white">
                                                             {formData.isLifetime
-                                                                ? '✨ Lifetime (Never Expires)'
+                                                                ? 'Lifetime (Never Expires)'
                                                                 : (formData.expiresAt
                                                                     ? `Until ${new Date(formData.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                                     : 'Set expiration date')}
