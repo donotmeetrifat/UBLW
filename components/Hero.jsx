@@ -49,54 +49,57 @@ const Hero = () => {
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`z-10 relative ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`relative ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
-                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[9.5px] min-[380px]:text-[10px] sm:text-xs font-semibold mb-2 sm:mb-3 shadow-2xs'>
-                                    <RoyalCrownIcon size={12} color="#D8B56D" />
+                                <div className='relative z-20 inline-flex items-center gap-1 bg-white text-[#6C306E] border border-[#EFE0EF] px-2 min-[380px]:px-2.5 py-0.5 rounded-full text-[8.5px] min-[380px]:text-[9px] sm:text-xs font-semibold mb-1.5 sm:mb-2.5 shadow-2xs'>
+                                    <RoyalCrownIcon size={10} color="#D8B56D" />
                                     <span>{mainCard.badge}</span>
                                 </div>
                             )}
 
-                            <h2 className='text-[15px] min-[360px]:text-base min-[400px]:text-lg sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
-                                {mainCard.title} <br className='hidden sm:inline' />
-                                <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold block sm:inline mt-0.5 sm:mt-0'>
-                                    {mainCard.titleHighlight}
-                                </span>
-                            </h2>
+                            <div className="relative z-20">
+                                <h2 className='text-[15px] min-[360px]:text-base min-[400px]:text-lg sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
+                                    {mainCard.title} <br className='hidden sm:inline' />
+                                    <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold block sm:inline mt-0.5 sm:mt-0'>
+                                        {mainCard.titleHighlight}
+                                    </span>
+                                </h2>
 
-                            {mainCard.description && (
-                                <p className='text-[10.5px] min-[380px]:text-[11px] sm:text-sm text-slate-500 mt-1 sm:mt-2 font-normal leading-snug sm:leading-relaxed max-w-[210px] sm:max-w-sm line-clamp-2 sm:line-clamp-none'>
-                                    {mainCard.description}
-                                </p>
-                            )}
+                                {mainCard.description && (
+                                    <p className='text-[10px] min-[380px]:text-[10.5px] sm:text-sm text-slate-500 mt-1 sm:mt-1.5 font-normal leading-snug sm:leading-relaxed max-w-[210px] sm:max-w-sm line-clamp-2 sm:line-clamp-none'>
+                                        {mainCard.description}
+                                    </p>
+                                )}
 
-                            {(mainCard.priceLabel || mainCard.priceValue) && (
-                                <div className='flex items-baseline gap-2 mt-2.5 sm:mt-4'>
-                                    {mainCard.priceLabel && (
-                                        <span className='text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider'>
-                                            {mainCard.priceLabel}
-                                        </span>
-                                    )}
-                                    {mainCard.priceValue && (
-                                        <span className='text-base sm:text-2xl font-extrabold text-[#3A0C38]'>
-                                            {currency}{mainCard.priceValue.replace(/^[৳$£\s]+/, '')}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
+                                {(mainCard.priceLabel || mainCard.priceValue) && (
+                                    <div className='flex items-baseline gap-2 mt-2 sm:mt-3'>
+                                        {mainCard.priceLabel && (
+                                            <span className='text-[9.5px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider'>
+                                                {mainCard.priceLabel}
+                                            </span>
+                                        )}
+                                        {mainCard.priceValue && (
+                                            <span className='text-base sm:text-2xl font-extrabold text-[#3A0C38]'>
+                                                {currency}{mainCard.priceValue.replace(/^[৳$£\s]+/, '')}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
-                            <div className="mt-3 sm:mt-5">
+                            {/* Button placed at the background layer of the woman (z-0 behind woman z-10) */}
+                            <div className="mt-2.5 sm:mt-4 relative z-0">
                                 <FlowButton 
-                                    text={mainCard.buttonText || "Discover the Collection →"} 
+                                    text={(mainCard.buttonText || "Discover the Collection").replace(/[→\s]+$/, '')} 
                                     href={mainCard.buttonLink || "/shop"} 
-                                    className="px-3.5 min-[380px]:px-5 sm:px-8 h-8 min-[380px]:h-9 sm:h-12 text-[10.5px] min-[380px]:text-xs sm:text-sm font-bold shadow-xs" 
+                                    className="!px-3 min-[380px]:!px-3.5 sm:!px-7 !h-7 min-[380px]:!h-7.5 sm:!h-11 text-[9.5px] min-[380px]:text-[10px] sm:text-sm font-bold shadow-xs" 
                                 />
                             </div>
                         </div>
 
-                        {/* Right-Aligned Large Transparent Image with Precise Edge Alignment */}
+                        {/* Right-Aligned Large Transparent Image with Precise Edge Alignment (z-10 in front of button, behind text) */}
                         {mainCard.image ? (
-                            <div className='absolute -right-12 min-[380px]:-right-10 min-[430px]:-right-6 sm:right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-r-3xl'>
+                            <div className='absolute -right-12 min-[380px]:-right-10 min-[430px]:-right-6 sm:right-0 bottom-0 top-0 h-full flex items-end justify-end pointer-events-none z-10 overflow-hidden rounded-r-3xl'>
                                 <div
                                     className='h-full flex items-end justify-end'
                                     style={{
