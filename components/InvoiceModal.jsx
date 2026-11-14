@@ -7,6 +7,21 @@ import { webLogoBase64 } from '@/assets/webLogoBase64'
 import { isInsideDhaka } from '@/lib/settings'
 import toast from 'react-hot-toast'
 
+// Helper to guarantee that spaces between words in dynamic text are never collapsed by html2canvas
+const safeText = (text) => {
+    if (!text) return ''
+    return String(text).replace(/ /g, '\u00A0')
+}
+
+// For multi-word text that may need wrapping on long lines (like product names or long addresses):
+const safeWrapText = (text) => {
+    if (!text) return ''
+    return String(text)
+        .trim()
+        .split(/\s+/)
+        .join('\u00A0<wbr>')
+}
+
 // Helper to construct a clean, self-contained, isolated HTML invoice document
 const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
     const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
@@ -55,25 +70,26 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
 
     const itemRowsHtml = items.length > 0 
         ? items.map(item => {
-            const prodName = item.name || item.product?.name || 'UK Beauty Product'
+            const rawName = item.name || item.product?.name || 'UK Beauty Product'
+            const prodName = safeWrapText(rawName)
             const price = Number(item.price || 0)
             const qty = Number(item.quantity || 1)
             const lineTotal = price * qty
             return `
                 <tr style="color: #111827;">
-                    <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px; line-height: 1.4;">${prodName}</td>
+                    <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px; line-height: 1.45; text-align: left;">${prodName}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #374151; font-size: 12px;">${qty}</td>
-                    <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px;">${currency}${price.toLocaleString()}</td>
-                    <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px;">${currency}${lineTotal.toLocaleString()}</td>
+                    <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px; white-space: nowrap;">${currency}&nbsp;${price.toLocaleString()}</td>
+                    <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px; white-space: nowrap;">${currency}&nbsp;${lineTotal.toLocaleString()}</td>
                 </tr>
             `
         }).join('')
         : `
             <tr style="color: #111827;">
-                <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px;">100% Original UK Imported Cosmetics Order</td>
+                <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px; line-height: 1.45;">100%&nbsp;Original&nbsp;UK&nbsp;Imported&nbsp;Cosmetics&nbsp;Order</td>
                 <td style="padding: 12px 8px; text-align: center; color: #374151; font-size: 12px;">1</td>
-                <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px;">${currency}${subtotal.toLocaleString()}</td>
-                <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px;">${currency}${subtotal.toLocaleString()}</td>
+                <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px; white-space: nowrap;">${currency}&nbsp;${subtotal.toLocaleString()}</td>
+                <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px; white-space: nowrap;">${currency}&nbsp;${subtotal.toLocaleString()}</td>
             </tr>
         `
 
@@ -83,6 +99,9 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
         <head>
             <meta charset="utf-8" />
             <title>UKBL_Invoice_${orderNo}</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
                 @page {
                     size: A4 portrait;
@@ -92,6 +111,8 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     box-sizing: border-box;
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
+                    word-spacing: normal;
+                    letter-spacing: 0.01em;
                 }
                 html, body {
                     margin: 0;
@@ -101,7 +122,10 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     height: 297mm;
                     max-height: 297mm;
                     overflow: hidden;
-                    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: 'Poppins', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                    text-rendering: optimizeLegibility;
                 }
                 .invoice-container {
                     width: 210mm;
@@ -115,6 +139,14 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     overflow: hidden;
                     page-break-after: avoid;
                     break-after: avoid;
+                    font-family: 'Poppins', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+                th, td {
+                    font-family: inherit;
                 }
             </style>
         </head>
@@ -128,7 +160,7 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                         style="height: 44px; width: auto; object-fit: contain; margin: 0 auto; display: block;"
                     />
                     <div style="font-size: 10px; color: #9CA3AF; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;">
-                        100% ORIGINAL UK IMPORTED PRODUCTS
+                        100%&nbsp;ORIGINAL&nbsp;UK&nbsp;IMPORTED&nbsp;PRODUCTS
                     </div>
                 </div>
 
@@ -137,15 +169,15 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     <!-- Left: Invoice To -->
                     <div style="max-width: 55%;">
                         <div style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">
-                            INVOICE TO :
+                            INVOICE&nbsp;TO&nbsp;:
                         </div>
                         <div style="font-size: 17px; font-weight: 600; color: #111827; line-height: 1.3;">
-                            ${custName}
+                            ${safeWrapText(custName)}
                         </div>
-                        <div style="font-size: 12px; color: #6B7280; line-height: 1.5; margin-top: 4px;">
-                            <div>${custPhone}</div>
+                        <div style="font-size: 12px; color: #6B7280; line-height: 1.55; margin-top: 4px;">
+                            <div>${safeText(custPhone)}</div>
                             ${custEmail ? `<div>${custEmail}</div>` : ''}
-                            <div style="max-width: 290px;">${custAddr}</div>
+                            <div style="max-width: 290px;">${safeWrapText(custAddr)}</div>
                         </div>
                     </div>
 
@@ -156,12 +188,12 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                         </div>
                         <div style="font-size: 12px; color: #4B5563; line-height: 1.6;">
                             <div>
-                                <span style="color: #6B7280;">Invoice no : </span>
-                                <strong style="color: #111827; font-family: monospace;">${orderNo}</strong>
+                                <span style="color: #6B7280;">Invoice&nbsp;no&nbsp;:&nbsp;</span>
+                                <strong style="color: #111827; font-family: 'Poppins', monospace; letter-spacing: 0.5px;">${safeText(orderNo)}</strong>
                             </div>
                             <div>
-                                <span style="color: #6B7280;">Invoice Date : </span>
-                                <span style="color: #111827; font-weight: 500;">${formattedDate}</span>
+                                <span style="color: #6B7280;">Invoice&nbsp;Date&nbsp;:&nbsp;</span>
+                                <span style="color: #111827; font-weight: 500;">${safeText(formattedDate)}</span>
                             </div>
                         </div>
                     </div>
@@ -172,7 +204,7 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="border-top: 2px solid #111827; border-bottom: 1px solid #111827; font-size: 11px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 1px;">
-                                <th style="padding: 12px 8px 12px 0; text-align: left;">ITEM DESCRIPTION</th>
+                                <th style="padding: 12px 8px 12px 0; text-align: left;">ITEM&nbsp;DESCRIPTION</th>
                                 <th style="padding: 12px 8px; text-align: center; width: 64px;">QTY</th>
                                 <th style="padding: 12px 8px; text-align: right; width: 110px;">PRICE</th>
                                 <th style="padding: 12px 0 12px 8px; text-align: right; width: 110px;">TOTAL</th>
@@ -194,30 +226,30 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     <!-- Left: Contact Information -->
                     <div style="color: #4B5563; line-height: 1.7;">
                         <div style="font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 6px;">
-                            Contact :
+                            Contact&nbsp;:
                         </div>
                         <div>
-                            <span style="color: #6B7280;">Hotline : </span>
-                            <strong style="color: #111827;">+880 1959-524393</strong>
+                            <span style="color: #6B7280;">Hotline&nbsp;:&nbsp;</span>
+                            <strong style="color: #111827;">+880&nbsp;1959-524393</strong>
                         </div>
                         <div>
-                            <span style="color: #6B7280;">Email : </span>
+                            <span style="color: #6B7280;">Email&nbsp;:&nbsp;</span>
                             <strong style="color: #111827;">support@ukbrandlover.com</strong>
                         </div>
                         <div>
-                            <span style="color: #6B7280;">Payment : </span>
-                            <strong style="color: #111827;">${paymentLabel}</strong>
+                            <span style="color: #6B7280;">Payment&nbsp;:&nbsp;</span>
+                            <strong style="color: #111827;">${safeWrapText(paymentLabel)}</strong>
                         </div>
                         ${order.transactionId ? `
                             <div>
-                                <span style="color: #6B7280;">TrxID : </span>
-                                <strong style="color: #111827; font-family: monospace;">${order.transactionId}</strong>
+                                <span style="color: #6B7280;">TrxID&nbsp;:&nbsp;</span>
+                                <strong style="color: #111827; font-family: 'Poppins', monospace;">${safeText(order.transactionId)}</strong>
                             </div>
                         ` : ''}
                         ${order.senderNumber ? `
                             <div>
-                                <span style="color: #6B7280;">Sender : </span>
-                                <strong style="color: #111827; font-family: monospace;">${order.senderNumber}</strong>
+                                <span style="color: #6B7280;">Sender&nbsp;:&nbsp;</span>
+                                <strong style="color: #111827; font-family: 'Poppins', monospace;">${safeText(order.senderNumber)}</strong>
                             </div>
                         ` : ''}
                     </div>
@@ -225,22 +257,22 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     <!-- Right: Summary Totals -->
                     <div style="width: 220px; font-size: 12px; text-align: right; line-height: 1.8;">
                         <div style="display: flex; justify-content: space-between; color: #4B5563;">
-                            <span style="color: #6B7280;">Sub-total :</span>
-                            <strong style="color: #111827;">${currency}${subtotal.toLocaleString()}</strong>
+                            <span style="color: #6B7280;">Sub-total&nbsp;:</span>
+                            <strong style="color: #111827;">${currency}&nbsp;${subtotal.toLocaleString()}</strong>
                         </div>
                         ${discount > 0 ? `
                             <div style="display: flex; justify-content: space-between; color: #4B5563;">
-                                <span style="color: #6B7280;">Discount :</span>
-                                <strong style="color: #111827;">-${currency}${discount.toLocaleString()}</strong>
+                                <span style="color: #6B7280;">Discount&nbsp;:</span>
+                                <strong style="color: #111827;">-${currency}&nbsp;${discount.toLocaleString()}</strong>
                             </div>
                         ` : ''}
                         <div style="display: flex; justify-content: space-between; color: #4B5563;">
-                            <span style="color: #6B7280;">Delivery :</span>
-                            <strong style="color: #111827;">${deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}</strong>
+                            <span style="color: #6B7280;">Delivery&nbsp;:</span>
+                            <strong style="color: #111827;">${deliveryFee === 0 ? 'FREE' : `${currency}&nbsp;${deliveryFee.toLocaleString()}`}</strong>
                         </div>
                         <div style="border-top: 1px solid #111827; margin-top: 8px; padding-top: 10px; display: flex; justify-content: space-between; align-items: baseline;">
-                            <strong style="font-size: 13px; color: #111827;">Total :</strong>
-                            <strong style="font-size: 17px; color: #111827;">${currency}${totalAmount.toLocaleString()}</strong>
+                            <strong style="font-size: 13px; color: #111827;">Total&nbsp;:</strong>
+                            <strong style="font-size: 17px; color: #111827;">${currency}&nbsp;${totalAmount.toLocaleString()}</strong>
                         </div>
                     </div>
                 </div>
@@ -336,12 +368,14 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             const iframe = document.createElement('iframe')
             iframe.id = 'ukbl-invoice-print-frame'
             iframe.style.position = 'fixed'
-            iframe.style.right = '0'
-            iframe.style.bottom = '0'
-            iframe.style.width = '0'
-            iframe.style.height = '0'
+            iframe.style.top = '0'
+            iframe.style.left = '0'
+            iframe.style.width = '794px'
+            iframe.style.height = '1123px'
             iframe.style.border = '0'
-            iframe.style.visibility = 'hidden'
+            iframe.style.opacity = '0'
+            iframe.style.pointerEvents = 'none'
+            iframe.style.zIndex = '-9999'
             document.body.appendChild(iframe)
 
             const printDoc = iframe.contentWindow.document
@@ -349,7 +383,12 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             printDoc.write(buildInvoiceHtml(order, accountUser, currency))
             printDoc.close()
 
-            setTimeout(() => {
+            setTimeout(async () => {
+                try {
+                    if (printDoc.fonts) {
+                        await printDoc.fonts.ready
+                    }
+                } catch {}
                 try {
                     iframe.contentWindow.focus()
                     iframe.contentWindow.print()
@@ -362,14 +401,14 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         if (f) f.remove()
                     }, 3000)
                 }
-            }, 250)
+            }, 300)
         } catch (e) {
             console.error('Print trigger error:', e)
             window.print()
         }
     }
 
-    // Direct High-Resolution Single-Page A4 PDF File Download
+    // Direct High-Resolution Single-Page A4 PDF File Download (Ultra-Sharp ~300 DPI)
     const handleDownloadInvoice = async () => {
         try {
             setIsDownloading(true)
@@ -381,12 +420,14 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             // Render invoice in an isolated sandbox iframe of exact A4 aspect ratio (794px x 1123px)
             const iframe = document.createElement('iframe')
             iframe.style.position = 'fixed'
-            iframe.style.top = '-99999px'
-            iframe.style.left = '-99999px'
+            iframe.style.top = '0'
+            iframe.style.left = '0'
             iframe.style.width = '794px'
             iframe.style.height = '1123px'
             iframe.style.border = '0'
-            iframe.style.visibility = 'hidden'
+            iframe.style.opacity = '0'
+            iframe.style.pointerEvents = 'none'
+            iframe.style.zIndex = '-9999'
             document.body.appendChild(iframe)
 
             const sandboxDoc = iframe.contentWindow.document
@@ -394,13 +435,22 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             sandboxDoc.write(buildInvoiceHtml(order, accountUser, currency))
             sandboxDoc.close()
 
-            // Wait for DOM & images to settle
-            await new Promise(r => setTimeout(r, 200))
+            // Ensure all web fonts are loaded in the iframe
+            try {
+                if (sandboxDoc.fonts) {
+                    await sandboxDoc.fonts.ready
+                }
+            } catch (fontErr) {
+                console.warn('Font ready promise error:', fontErr)
+            }
+            // Small cushion for layout & image rendering to settle
+            await new Promise(r => setTimeout(r, 350))
 
             const targetElement = sandboxDoc.body.querySelector('.invoice-container') || sandboxDoc.body
 
+            // Ultra-sharp 300 DPI canvas rendering (scale: 3 for 794px gives 2382px width)
             const canvas = await html2canvas(targetElement, {
-                scale: 2, // 200+ DPI crisp vector clarity
+                scale: 3,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#ffffff',
@@ -408,7 +458,9 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 height: 1123,
                 windowWidth: 794,
                 windowHeight: 1123,
-                logging: false
+                letterRendering: true,
+                logging: false,
+                imageTimeout: 0
             })
 
             // Clean up temporary sandbox iframe
@@ -422,8 +474,8 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 compress: true
             })
 
-            // Add image to Page 1
-            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST')
+            // Add image to Page 1 with high quality (omit 'FAST')
+            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'SLOW')
 
             // STRICT SINGLE-PAGE ENFORCEMENT: delete any secondary page
             while (pdf.internal.getNumberOfPages() > 1) {
@@ -651,10 +703,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                                     {qty}
                                                 </td>
                                                 <td className="py-3.5 px-2 text-right text-neutral-700">
-                                                    {currency}{price.toLocaleString()}
+                                                    {currency}&nbsp;{price.toLocaleString()}
                                                 </td>
                                                 <td className="py-3.5 pl-2 text-right font-normal text-neutral-900">
-                                                    {currency}{lineTotal.toLocaleString()}
+                                                    {currency}&nbsp;{lineTotal.toLocaleString()}
                                                 </td>
                                             </tr>
                                         )
@@ -663,8 +715,8 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                     <tr className="text-neutral-800">
                                         <td className="py-3.5 font-normal text-neutral-900">100% Original UK Imported Cosmetics Order</td>
                                         <td className="py-3.5 text-center text-neutral-700 font-normal">1</td>
-                                        <td className="py-3.5 text-right text-neutral-700">{currency}{subtotal.toLocaleString()}</td>
-                                        <td className="py-3.5 text-right font-normal text-neutral-900">{currency}{subtotal.toLocaleString()}</td>
+                                        <td className="py-3.5 text-right text-neutral-700">{currency}&nbsp;{subtotal.toLocaleString()}</td>
+                                        <td className="py-3.5 text-right font-normal text-neutral-900">{currency}&nbsp;{subtotal.toLocaleString()}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -714,20 +766,20 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             <div className="w-full max-w-[210px] space-y-1.5 text-right">
                                 <div className="flex justify-between text-neutral-600">
                                     <span className="text-neutral-500">Sub-total :</span>
-                                    <span className="font-medium text-neutral-900">{currency}{subtotal.toLocaleString()}</span>
+                                    <span className="font-medium text-neutral-900">{currency}&nbsp;{subtotal.toLocaleString()}</span>
                                 </div>
 
                                 {discount > 0 && (
                                     <div className="flex justify-between text-neutral-600">
                                         <span className="text-neutral-500">Discount :</span>
-                                        <span className="font-medium text-neutral-900">-{currency}{discount.toLocaleString()}</span>
+                                        <span className="font-medium text-neutral-900">-{currency}&nbsp;{discount.toLocaleString()}</span>
                                     </div>
                                 )}
 
                                 <div className="flex justify-between text-neutral-600">
                                     <span className="text-neutral-500">Delivery :</span>
                                     <span className="font-medium text-neutral-900">
-                                        {deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}
+                                        {deliveryFee === 0 ? 'FREE' : `${currency}\u00A0${deliveryFee.toLocaleString()}`}
                                     </span>
                                 </div>
 
@@ -735,7 +787,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                 <div className="border-t border-neutral-900 pt-2.5 mt-2 flex justify-between items-baseline">
                                     <span className="font-bold text-neutral-900 text-xs">Total :</span>
                                     <span className="font-bold text-neutral-900 text-base">
-                                        {currency}{totalAmount.toLocaleString()}
+                                        {currency}&nbsp;{totalAmount.toLocaleString()}
                                     </span>
                                 </div>
                             </div>
