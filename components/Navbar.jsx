@@ -230,15 +230,15 @@ const Navbar = () => {
 
                         {/* Actions: Search, Cart, Account - Uniform Height & Pixel-Perfect Alignment */}
                         <div className="flex items-center gap-2.5 sm:gap-3">
-                            {/* 1. Smooth Expanding Search Bar (h-10) */}
+                            {/* 1. Smooth Expanding Search Bar (h-9) */}
                             <form
                                 onSubmit={handleSearch}
-                                className={`hidden sm:flex items-center text-xs gap-2 px-3.5 h-10 rounded-full border transition-all duration-300 select-none ${isSearchFocused
-                                        ? 'w-56 lg:w-68 bg-[#FAF6FA] border-[#6C306E] shadow-2xs'
-                                        : 'w-44 lg:w-56 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                className={`hidden sm:flex items-center text-xs gap-2 px-3 h-9 rounded-full border transition-all duration-300 select-none ${isSearchFocused
+                                        ? 'w-52 lg:w-64 bg-[#FAF6FA] border-[#6C306E] shadow-2xs'
+                                        : 'w-40 lg:w-52 bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40'
                                     }`}
                             >
-                                <SearchIcon size={16} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
+                                <SearchIcon size={14} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
                                 <input
                                     className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium leading-none"
                                     type="text"
@@ -250,7 +250,7 @@ const Navbar = () => {
                                 />
                             </form>
 
-                            {/* 2. Luxury Cart / Bag Button (Exact FlowButton Design & Animation) */}
+                            {/* 2. Luxury Cart / Bag Button (Hidden on Mobile/Tablet where MobileBottomNav already has Bag) */}
                             <FlowButton
                                 id="navbar-cart-icon"
                                 text="Bag"
@@ -262,7 +262,7 @@ const Navbar = () => {
                                         requireSignIn('Please sign in to access your shopping bag.');
                                     }
                                 }}
-                                className={isCartBumping ? '!scale-105 !border-[#6C306E]' : ''}
+                                className={`hidden md:inline-flex ${isCartBumping ? '!scale-105 !border-[#6C306E]' : ''}`}
                             />
 
                             {/* 3. Luxury Account Area (h-10) */}
@@ -374,17 +374,17 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Mobile Search Bar Row - Full Width */}
-                    <div className="sm:hidden mt-2.5 pb-1">
+                    {/* Mobile Search Bar Row - Sleek & Compact */}
+                    <div className="sm:hidden mt-2 pb-0.5">
                         <form
                             onSubmit={handleSearch}
-                            className="w-full flex items-center text-xs gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
+                            className="w-full flex items-center text-xs gap-2 px-3 h-9 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
                         >
-                            <SearchIcon size={15} color="#6C306E" className="shrink-0" />
+                            <SearchIcon size={14} color="#6C306E" className="shrink-0" />
                             <input
-                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-xs font-medium leading-none"
+                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-[11px] font-medium leading-none"
                                 type="text"
-                                placeholder="Search 100% authentic UK products..."
+                                placeholder="Search authentic UK beauty..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -395,7 +395,7 @@ const Navbar = () => {
                                     className="p-1 rounded-full text-slate-400 hover:text-slate-600 transition cursor-pointer shrink-0"
                                     aria-label="Clear search"
                                 >
-                                    <CloseIcon size={12} />
+                                    <CloseIcon size={11} />
                                 </button>
                             )}
                         </form>

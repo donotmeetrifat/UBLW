@@ -119,15 +119,15 @@ export default function Orders() {
                 />
 
                 {/* Tracking Search Bar */}
-                <div className="mt-6 mb-8 max-w-xl">
+                <div className="mt-4 mb-6 max-w-md">
                     <div className="relative">
-                        <SearchIcon size={16} color="#6C306E" className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <SearchIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Track by Order # (e.g. UKBL-2026-1001) or phone number..."
-                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-full pl-11 pr-5 py-3 text-xs outline-none shadow-2xs text-[#241224]"
+                            placeholder="Track by Order # or phone number..."
+                            className="w-full h-9.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-full pl-9.5 pr-4 py-2 text-xs outline-none shadow-2xs text-[#241224] placeholder:text-[#8A758A]"
                         />
                     </div>
                 </div>

@@ -376,22 +376,22 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
 
                 {/* Coupon Code Input */}
                 {!coupon ? (
-                    <form onSubmit={handleCouponCode} className='flex items-center gap-2 mt-3 pt-2'>
+                    <form onSubmit={handleCouponCode} className='flex items-center gap-2 mt-2.5 pt-1'>
                         <div className="relative flex-1">
-                            <TagIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <TagIcon size={13} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                                 onChange={(e) => setCouponCodeInput(e.target.value)}
                                 value={couponCodeInput}
                                 type="text"
-                                placeholder='Coupon (NEW20, OFF10)'
-                                className='h-10 border border-[#EFE0EF] pl-9 pr-3 rounded-full text-xs w-full outline-none focus:border-[#6C306E] bg-[#FAF6FA] placeholder-[#8A758A] text-[#241224] font-medium transition-colors'
+                                placeholder='Enter coupon code'
+                                className='h-9 border border-[#EFE0EF] pl-8 pr-3 rounded-full text-xs w-full outline-none focus:border-[#6C306E] bg-[#FAF6FA] placeholder-[#8A758A] text-[#241224] font-medium transition-colors'
                             />
                         </div>
                         <FlowButton
                             type="submit"
                             disabled={isApplyingCoupon || items.length === 0}
                             text={isApplyingCoupon ? '...' : 'Apply'}
-                            className="!h-10 !px-5 shrink-0"
+                            className="!h-9 !px-4 shrink-0 text-xs"
                         />
                     </form>
                 ) : (

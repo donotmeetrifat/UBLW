@@ -620,12 +620,18 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Printable Invoice (Borderless, Full-Width Professional Document Format) */}
-                <div 
-                    id="printable-invoice-content" 
-                    className="clean-invoice-font bg-white text-neutral-900 w-full"
-                    style={{ border: 'none', boxShadow: 'none', borderRadius: '0' }}
-                >
+                {/* Mobile Scroll Hint */}
+                <div className="sm:hidden text-center text-[10px] text-neutral-400 font-semibold mb-3 flex items-center justify-center gap-1.5 print-hidden-bar">
+                    <span>← Swipe horizontally to view full desktop invoice →</span>
+                </div>
+
+                {/* Printable Invoice (Borderless Desktop Document Viewport, Scrollable on Mobile) */}
+                <div className="w-full overflow-x-auto pb-2 -mx-1 px-1 sm:overflow-visible">
+                    <div 
+                        id="printable-invoice-content" 
+                        className="clean-invoice-font bg-white text-neutral-900 w-full min-w-[580px] sm:min-w-0"
+                        style={{ border: 'none', boxShadow: 'none', borderRadius: '0' }}
+                    >
                     {/* 1. Header Centered Logo & Subtitle */}
                     <div className="text-center pt-1 pb-8">
                         <div className="flex flex-col items-center justify-center">
@@ -798,6 +804,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     <div className="pt-8 pb-3 text-center">
                         <ThankYouSignature className="w-56 sm:w-64 mx-auto text-[#242424]" />
                     </div>
+                </div>
                 </div>
             </div>
         </div>

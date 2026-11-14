@@ -68,24 +68,24 @@ const Newsletter = () => {
                         from people who actually use it.
                     </p>
 
-                    {/* 3 Highlights in One Unified Horizontal Row (Left to Right, Compact & Fully Visible) */}
+                    {/* 3 Highlights (Wrapped & Fully Visible Across All Device Screen Sizes) */}
                     <div className='w-full mx-auto mb-7 px-1'>
-                        <div className='flex items-center justify-center gap-1.5 sm:gap-2.5 flex-nowrap'>
-                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
+                        <div className='flex flex-wrap items-center justify-center gap-2 sm:gap-2.5'>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2.5 sm:px-3 py-1.5 rounded-full shadow-2xs shrink-0'>
                                 <UKCargoIcon />
-                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
+                                <span className='text-[9.5px] sm:text-[10.5px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase'>
                                     FIRST ACCESS TO NEW UK CARGO
                                 </span>
                             </div>
-                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2.5 sm:px-3 py-1.5 rounded-full shadow-2xs shrink-0'>
                                 <ReviewsStarIcon />
-                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
+                                <span className='text-[9.5px] sm:text-[10.5px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase'>
                                     HONEST REVIEWS FROM REAL CUSTOMERS
                                 </span>
                             </div>
-                            <div className='inline-flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs shrink-0'>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-2.5 sm:px-3 py-1.5 rounded-full shadow-2xs shrink-0'>
                                 <AdviceSparkleIcon />
-                                <span className='text-[8.5px] min-[400px]:text-[9.5px] sm:text-[10px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase whitespace-nowrap'>
+                                <span className='text-[9.5px] sm:text-[10.5px] md:text-[11px] font-semibold text-[#3A0C38] tracking-wide uppercase'>
                                     PERSONAL SKINCARE ADVICE
                                 </span>
                             </div>

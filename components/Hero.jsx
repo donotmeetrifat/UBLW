@@ -44,12 +44,12 @@ const Hero = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-4 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-5 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[340px] min-[400px]:min-h-[360px] sm:min-h-[380px] md:min-h-[400px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                     >
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`z-10 ${mainCard.image ? 'max-w-[58%] min-[450px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`z-10 ${mainCard.image ? 'max-w-[58%] min-[400px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
                                 <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
                                     <RoyalCrownIcon size={13} color="#D8B56D" />
@@ -96,7 +96,7 @@ const Hero = () => {
 
                         {/* Right-Aligned Large Transparent Image */}
                         {mainCard.image ? (
-                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[50%] min-[450px]:w-[55%] sm:w-[60%] max-w-[420px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
+                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[50%] min-[380px]:w-[53%] min-[450px]:w-[56%] sm:w-[60%] max-w-[440px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
                                 <div
                                     className='h-full flex items-end justify-end'
                                     style={{

@@ -8,7 +8,7 @@ import {
     BagIcon,
     TruckIcon,
     UserIcon,
-    SparklesIcon,
+    HomeIcon,
     StoreFrontIcon
 } from '@/components/icons'
 import { motion } from 'framer-motion'
@@ -73,13 +73,13 @@ export default function MobileBottomNav() {
         {
             label: 'Home',
             href: '/',
-            icon: StoreFrontIcon,
+            icon: HomeIcon,
             isActive: pathname === '/'
         },
         {
             label: 'Shop',
             href: '/shop',
-            icon: SparklesIcon,
+            icon: StoreFrontIcon,
             isActive: pathname === '/shop' || (pathname.startsWith('/product') && !pathname.includes('admin'))
         },
         {
