@@ -152,14 +152,14 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
     return (
         <AnimatePresence>
             <div 
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md select-none transition-all duration-300"
+                className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto transition-all duration-300"
             >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
                     transition={{ duration: 0.2 }}
-                    className="relative w-full max-w-md bg-white rounded-3xl border border-[#EFE0EF] shadow-2xl p-6 sm:p-8 overflow-hidden text-xs"
+                    className="relative w-full max-w-md bg-white rounded-3xl border border-[#EFE0EF] shadow-2xl p-5 sm:p-8 my-auto sm:my-6 max-h-[92vh] overflow-y-auto text-xs"
                 >
                     {/* Close button */}
                     <button

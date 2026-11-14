@@ -412,25 +412,25 @@ export default function AdminDashboard() {
             </div>
 
             {/* KPI Metric Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
                 {kpiCards.map((card, idx) => (
                     <Link
                         key={idx}
                         href={card.href}
-                        className="block bg-white border border-[#EFE0EF] p-4 rounded-2xl shadow-2xs hover:border-[#6C306E]/40 hover:shadow-xs transition group"
+                        className="block bg-white border border-[#EFE0EF] p-3 sm:p-4 rounded-2xl shadow-2xs hover:border-[#6C306E]/40 hover:shadow-xs transition group"
                     >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
                                 {card.title}
                             </span>
-                            <div className={`size-7 rounded-lg ${card.bg} border border-[#EFE0EF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-                                <card.icon size={13} color={card.color} />
+                            <div className={`size-6 sm:size-7 rounded-lg ${card.bg} border border-[#EFE0EF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                                <card.icon size={12} color={card.color} />
                             </div>
                         </div>
-                        <div className="text-lg sm:text-xl font-black text-[#241224] tracking-tight">
+                        <div className="text-base sm:text-xl font-black text-[#241224] tracking-tight">
                             {card.value}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-medium mt-1 truncate" title={card.subtext}>
+                        <div className="text-[9.5px] sm:text-[10px] text-slate-400 font-medium mt-1 truncate" title={card.subtext}>
                             {card.subtext}
                         </div>
                     </Link>
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="overflow-x-auto flex-1">
-                        <table className="w-full text-left border-collapse text-xs">
+                        <table className="w-full min-w-[620px] text-left border-collapse text-xs">
                             <thead>
                                 <tr className="border-b border-[#EFE0EF] bg-[#FAF6FA]/60 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                     <th className="py-3 px-4">Order #</th>

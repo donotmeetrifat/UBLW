@@ -280,11 +280,11 @@ const OrderItem = ({ order }) => {
                                             const isRightConnectorActive = idx < activeIndex;
 
                                             return (
-                                                <div key={stage.key} className="flex flex-col items-center relative">
+                                                <div key={stage.key} className="flex flex-col items-center relative px-0.5">
                                                     {/* Left Connector Line */}
                                                     {idx > 0 && (
                                                         <div 
-                                                            className={`absolute top-4 left-0 right-[calc(50%+16px)] h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-l-full ${
+                                                            className={`absolute top-3.5 sm:top-4 left-0 right-[calc(50%+14px)] sm:right-[calc(50%+16px)] h-[2.5px] sm:h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-l-full ${
                                                                 isLeftConnectorActive ? 'bg-[#6C306E]' : 'bg-[#F0E6F0]'
                                                             }`} 
                                                         />
@@ -293,7 +293,7 @@ const OrderItem = ({ order }) => {
                                                     {/* Right Connector Line */}
                                                     {idx < STAGES.length - 1 && (
                                                         <div 
-                                                            className={`absolute top-4 left-[calc(50%+16px)] right-0 h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-r-full ${
+                                                            className={`absolute top-3.5 sm:top-4 left-[calc(50%+14px)] sm:left-[calc(50%+16px)] right-0 h-[2.5px] sm:h-[3px] -translate-y-1/2 transition-colors duration-500 rounded-r-full ${
                                                                 isRightConnectorActive ? 'bg-[#6C306E]' : 'bg-[#F0E6F0]'
                                                             }`} 
                                                         />
@@ -301,25 +301,25 @@ const OrderItem = ({ order }) => {
 
                                                     {/* Node Circle */}
                                                     <div 
-                                                        className={`size-8 rounded-full flex items-center justify-center transition-all duration-300 relative z-10 ${
+                                                        className={`size-7 sm:size-8 rounded-full flex items-center justify-center transition-all duration-300 relative z-10 shrink-0 ${
                                                             isStepDone
-                                                                ? 'bg-gradient-to-tr from-[#6C306E] to-[#9956A1] text-white shadow-xs ring-4 ring-white'
+                                                                ? 'bg-gradient-to-tr from-[#6C306E] to-[#9956A1] text-white shadow-xs ring-2 sm:ring-4 ring-white'
                                                                 : isStepCurrent
-                                                                ? 'bg-white border-2 border-[#6C306E] text-[#6C306E] shadow-sm ring-4 ring-[#6C306E]/15'
-                                                                : 'bg-white border-2 border-[#E9DFE9] text-slate-300 ring-4 ring-white'
+                                                                ? 'bg-white border-2 border-[#6C306E] text-[#6C306E] shadow-sm ring-2 sm:ring-4 ring-[#6C306E]/15'
+                                                                : 'bg-white border-2 border-[#E9DFE9] text-slate-300 ring-2 sm:ring-4 ring-white'
                                                         }`}
                                                     >
                                                         {isStepDone ? (
-                                                            <CheckIcon size={13} color="#FFFFFF" strokeWidth={2.75} />
+                                                            <CheckIcon size={12} color="#FFFFFF" strokeWidth={2.75} />
                                                         ) : isStepCurrent ? (
-                                                            <span className="size-2.5 rounded-full bg-gradient-to-tr from-[#6C306E] to-[#9956A1] animate-pulse" />
+                                                            <span className="size-2 sm:size-2.5 rounded-full bg-gradient-to-tr from-[#6C306E] to-[#9956A1] animate-pulse" />
                                                         ) : (
                                                             <span className="size-1.5 rounded-full bg-slate-300" />
                                                         )}
                                                     </div>
 
                                                     {/* Label & Description */}
-                                                    <p className={`text-[11px] font-extrabold mt-2.5 truncate w-full transition-colors ${
+                                                    <p className={`text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-extrabold mt-1.5 sm:mt-2.5 break-words sm:truncate w-full leading-tight transition-colors ${
                                                         isStepCurrent
                                                             ? 'text-[#3A0C38]'
                                                             : isStepDone

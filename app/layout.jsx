@@ -4,6 +4,15 @@ import DataSyncProvider from "@/components/DataSyncProvider";
 import OfflineNotice from "@/components/OfflineNotice";
 import "./globals.css";
 
+export const viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    themeColor: "#6C306E",
+    viewportFit: "cover",
+};
+
 export const metadata = {
     title: {
         default: "UK Brand LOVER | Authentic UK-Imported Skincare & Beauty — Bangladesh",

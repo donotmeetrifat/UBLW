@@ -89,13 +89,13 @@ export default function CancelOrderModal({ order, isOpen, onClose, onCancelled }
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+            <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-[#EFE0EF] relative my-6 text-slate-800"
+                    className="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-7 shadow-2xl border border-[#EFE0EF] relative my-auto sm:my-6 max-h-[92vh] overflow-y-auto text-slate-800"
                 >
                     {/* Header Strip */}
                     <div className="flex items-start justify-between gap-3 pb-4 border-b border-[#EFE0EF]">

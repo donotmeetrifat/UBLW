@@ -100,26 +100,26 @@ const Footer = () => {
                     </div>
 
                     {/* Nav Links */}
-                    <div className="grid grid-cols-2 gap-10 sm:gap-16 w-full lg:w-auto text-xs sm:text-sm">
+                    <div className="grid grid-cols-2 gap-6 sm:gap-16 w-full lg:w-auto text-xs sm:text-sm">
                         {linkSections.map((section, index) => (
-                            <div key={index} className="min-w-[140px]">
+                            <div key={index} className="min-w-0">
                                 <h3 className="font-extrabold text-[#241224] text-[11px] uppercase tracking-widest mb-4">
                                     {section.title}
                                 </h3>
                                 <ul className="space-y-2.5">
                                     {section.links.map((link, i) => (
-                                        <li key={i} className="flex items-center gap-2.5">
+                                        <li key={i} className="flex items-start sm:items-center gap-2">
                                             {link.icon && (
-                                                <div className="size-6 rounded-md bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
+                                                <div className="size-6 rounded-md bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
                                                     <link.icon size={13} color={link.iconColor || "#6C306E"} className="shrink-0" />
                                                 </div>
                                             )}
                                             {link.path.startsWith('http') || link.path.startsWith('tel:') || link.path.startsWith('mailto:') ? (
-                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block whitespace-nowrap">
+                                                <a href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block break-words">
                                                     {link.text}
                                                 </a>
                                             ) : (
-                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block whitespace-nowrap">
+                                                <Link href={link.path} className="hover:text-[#6C306E] transition text-slate-600 text-xs sm:text-sm hover:translate-x-0.5 inline-block break-words">
                                                     {link.text}
                                                 </Link>
                                             )}
@@ -132,9 +132,9 @@ const Footer = () => {
                 </div>
 
                 {/* Subfooter */}
-                <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 text-center sm:text-left">
                     <p>© 2026 UK Brand LOVER — Bringing Real UK Beauty to Bangladesh.</p>
-                    <p className="font-medium text-[#6C306E] flex items-center gap-1.5">
+                    <p className="font-medium text-[#6C306E] flex items-center gap-1.5 justify-center sm:justify-end">
                         <RoyalCrownIcon size={14} color="#6C306E" />
                         Authenticity. Transparency. Trust.
                     </p>

@@ -335,7 +335,7 @@ export default function AdminOrdersPage() {
             {/* Orders Table */}
             <div className="bg-white border border-[#EFE0EF] rounded-2xl shadow-2xs overflow-hidden">
                 <div className="overflow-x-auto min-h-[400px] pb-32">
-                    <table className="w-full text-left border-collapse text-xs">
+                    <table className="w-full min-w-[880px] text-left border-collapse text-xs">
                         <thead>
                             <tr className="border-b border-[#EFE0EF] bg-[#FAF6FA]/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                 <th className="py-3.5 px-4">Order / Date</th>

@@ -344,7 +344,7 @@ export default function AdminCategoriesPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full min-w-[650px] text-left text-xs">
                             <thead className="bg-[#FAF6FA] text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-[#EFE0EF]">
                                 <tr>
                                     <th className="py-3.5 px-4">Order</th>

@@ -44,20 +44,20 @@ const Hero = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
+                        className='relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-4 min-[380px]:p-6 sm:p-8 md:p-10 border border-[#EFE0EF] overflow-hidden group/hero hover:border-[#6C306E]/30 transition-all duration-300 min-h-[250px] min-[420px]:min-h-[270px] sm:min-h-[360px] shadow-[0_4px_24px_rgba(58,12,56,0.03)]'
                     >
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className={`z-10 ${mainCard.image ? 'max-w-[56%] min-[450px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
+                        <div className={`z-10 ${mainCard.image ? 'max-w-[58%] min-[450px]:max-w-[60%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
-                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
+                                <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-2.5 min-[380px]:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
                                     <RoyalCrownIcon size={13} color="#D8B56D" />
                                     <span>{mainCard.badge}</span>
                                 </div>
                             )}
 
-                            <h2 className='text-xl min-[400px]:text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-snug tracking-tight'>
+                            <h2 className='text-lg min-[380px]:text-xl min-[450px]:text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-snug tracking-tight'>
                                 {mainCard.title} <br className='hidden sm:inline' />
                                 <span className='text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold'>
                                     {mainCard.titleHighlight}
@@ -85,11 +85,11 @@ const Hero = () => {
                                 </div>
                             )}
 
-                            <div className="mt-5">
+                            <div className="mt-4 sm:mt-5">
                                 <FlowButton 
                                     text={mainCard.buttonText || "Discover the Collection →"} 
                                     href={mainCard.buttonLink || "/shop"} 
-                                    className="px-8 h-11 sm:h-12 text-xs sm:text-sm font-bold" 
+                                    className="px-5 min-[380px]:px-8 h-10 sm:h-12 text-xs sm:text-sm font-bold" 
                                 />
                             </div>
                         </div>
@@ -133,18 +133,18 @@ const Hero = () => {
                         >
                             <Link 
                                 href={sideCardTop.buttonLink || "/shop"} 
-                                className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
+                                className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-4 min-[380px]:p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[150px] min-[400px]:min-h-[160px] sm:min-h-[175px]'
                             >
-                                <div className={`z-10 ${sideCardTop.image ? 'max-w-[54%] pr-1' : 'w-full'}`}>
+                                <div className={`z-10 ${sideCardTop.image ? 'max-w-[56%] pr-1' : 'w-full'}`}>
                                     {sideCardTop.tag && (
                                         <span className='text-[9px] sm:text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1'>
                                             {sideCardTop.tag}
                                         </span>
                                     )}
-                                    <h3 className='text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
+                                    <h3 className='text-base min-[380px]:text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
                                         {sideCardTop.title}
                                     </h3>
-                                    <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
+                                    <p className='inline-flex items-center gap-1.5 mt-2.5 sm:mt-3 text-xs font-bold text-[#6C306E]'>
                                         {sideCardTop.buttonText || "Shop Now →"} 
                                         <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                     </p>
@@ -185,18 +185,18 @@ const Hero = () => {
                         >
                             <Link 
                                 href={sideCardBottom.buttonLink || "/shop"} 
-                                className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
+                                className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-4 min-[380px]:p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[150px] min-[400px]:min-h-[160px] sm:min-h-[175px]'
                             >
-                                <div className={`z-10 ${sideCardBottom.image ? 'max-w-[54%] pr-1' : 'w-full'}`}>
+                                <div className={`z-10 ${sideCardBottom.image ? 'max-w-[56%] pr-1' : 'w-full'}`}>
                                     {sideCardBottom.tag && (
                                         <span className='text-[9px] sm:text-[10px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1'>
                                             {sideCardBottom.tag}
                                         </span>
                                     )}
-                                    <h3 className='text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
+                                    <h3 className='text-base min-[380px]:text-lg sm:text-2xl font-bold text-[#241224] tracking-tight'>
                                         {sideCardBottom.title}
                                     </h3>
-                                    <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
+                                    <p className='inline-flex items-center gap-1.5 mt-2.5 sm:mt-3 text-xs font-bold text-[#6C306E]'>
                                         {sideCardBottom.buttonText || "Shop Now →"} 
                                         <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                     </p>

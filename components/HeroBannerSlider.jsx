@@ -338,7 +338,7 @@ const HeroBannerSlider = () => {
                                 aria-hidden={!isActive}
                                 title={hasLink ? `Click to visit: ${slide.link}` : (slide.title || 'UK Brand Lover')}
                             >
-                                <div className="relative w-full aspect-[21/9] sm:aspect-[24/9] md:aspect-[26/9] min-h-[160px] max-h-[520px]">
+                                <div className="relative w-full aspect-[16/8] sm:aspect-[21/9] md:aspect-[26/9] min-h-[175px] max-h-[520px]">
                                     <Image
                                         src={slide.image}
                                         alt={slide.imageAlt || slide.title || 'UK Brand Lover promotional banner'}

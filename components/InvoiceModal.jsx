@@ -443,7 +443,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/50 backdrop-blur-sm overflow-y-auto transition-all duration-300"
+            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2.5 sm:p-6 bg-black/55 backdrop-blur-sm overflow-y-auto transition-all duration-300"
         >
             <style>{`
                 .clean-invoice-font {
@@ -514,17 +514,25 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             `}</style>
 
             {/* Modal Container: borderless professional document viewport */}
-            <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-6 border-0">
+            <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-auto sm:my-6 border-0">
                 
                 {/* Screen Action Bar (Invoice # on Left, Print, Download & Close on Right) */}
-                <div className="print-hidden-bar flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
+                <div className="print-hidden-bar flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
+                    <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
                         <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3.5 py-1.5 rounded-full border border-[#EFE0EF]">
                             Invoice: #{orderNo}
                         </span>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="sm:hidden p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#241224] transition cursor-pointer"
+                            aria-label="Close invoice"
+                        >
+                            <CloseIcon size={16} />
+                        </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
                         <button
                             type="button"
                             onClick={handlePrintInvoice}
@@ -546,13 +554,13 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             ) : (
                                 <DownloadIcon size={14} color="#FFFFFF" />
                             )}
-                            <span>{isDownloading ? 'Downloading...' : 'Download Invoice (PDF)'}</span>
+                            <span>{isDownloading ? 'Downloading...' : 'Download (PDF)'}</span>
                         </button>
 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#241224] transition cursor-pointer"
+                            className="hidden sm:inline-flex p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#241224] transition cursor-pointer"
                             aria-label="Close invoice"
                         >
                             <CloseIcon size={16} />

@@ -435,7 +435,7 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[780px] text-left text-xs">
                         <thead className="bg-[#FAF6FA] text-[#241224] font-extrabold uppercase tracking-wider text-[11px] border-b border-[#EFE0EF]">
                             <tr>
                                 <th className="px-5 py-4 text-center">Rank</th>

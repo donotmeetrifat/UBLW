@@ -397,7 +397,7 @@ export default function AdminInquiriesPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto min-h-[400px] pb-32">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full min-w-[720px] text-left text-xs">
                             <thead className="bg-[#FAF6FA] text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-[#EFE0EF]">
                                 <tr>
                                     <th className="py-3.5 px-4">Customer Account</th>

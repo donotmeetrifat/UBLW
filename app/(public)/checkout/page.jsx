@@ -755,7 +755,7 @@ export default function CheckoutPage() {
                                         {/* Large, High-Contrast QR Code Container */}
                                         <div className="flex flex-col items-center justify-center pt-1">
                                             <div className="relative group p-4 sm:p-5 bg-white rounded-2xl border-2 border-[#EFE0EF] shadow-sm hover:border-[#6C306E]/40 transition-all duration-200">
-                                                <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center overflow-hidden bg-white rounded-xl">
+                                                <div className="max-w-full w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 flex items-center justify-center overflow-hidden bg-white rounded-xl">
                                                     <Image
                                                         src={settings.payments[paymentMethod].qrCode}
                                                         alt={`${paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code`}

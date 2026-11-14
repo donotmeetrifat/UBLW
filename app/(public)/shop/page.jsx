@@ -203,8 +203,8 @@ function ShopContent() {
     }, [products, search, filters, sortBy])
 
     return (
-        <div className="min-h-[70vh] px-4 sm:px-8 max-w-7xl mx-auto">
-            <div className="pt-6 sm:pt-10 pb-24">
+        <div className="min-h-[70vh] px-3 sm:px-8 max-w-7xl mx-auto">
+            <div className="pt-5 sm:pt-10 pb-24">
                 {/* Header */}
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#EFE0EF] pb-6">
                     <div>
@@ -303,7 +303,7 @@ function ShopContent() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.4 }}
-                                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6"
+                                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-5 lg:gap-6"
                             >
                                 {filteredProducts.map((product) => (
                                     <ProductCard key={product.id} product={product} />

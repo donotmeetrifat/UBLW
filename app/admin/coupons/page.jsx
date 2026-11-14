@@ -606,7 +606,7 @@ export default function AdminCouponsPage() {
 
                 {/* Coupons Data Table */}
                 <div className="overflow-x-auto rounded-2xl border border-[#EFE0EF]">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[850px] text-left text-xs">
                         <thead className="bg-[#FAF6FA] border-b border-[#EFE0EF] text-slate-500 font-extrabold uppercase tracking-wider text-[10px]">
                             <tr>
                                 <th className="py-3 px-4">Coupon Code & Campaign</th>

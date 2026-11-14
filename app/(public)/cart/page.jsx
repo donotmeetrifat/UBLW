@@ -233,7 +233,98 @@ export default function Cart() {
                 </div>
 
                 <div className="flex items-start justify-between gap-8 max-lg:flex-col mt-4">
-                    <div className="w-full max-w-4xl overflow-x-auto">
+                    {/* 1. Mobile Card View (Optimized for Phones & Small Tablets) */}
+                    <div className="block md:hidden w-full space-y-3.5">
+                        <AnimatePresence>
+                            {cartArray.map((item, index) => {
+                                const isSelected = selectedIds.includes(item.id);
+                                return (
+                                    <motion.div
+                                        key={item.id || index}
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                                        className={`p-3.5 rounded-2xl bg-white border transition-all duration-200 shadow-2xs ${
+                                            isSelected ? 'border-[#EFE0EF]' : 'border-[#EFE0EF]/80 opacity-70 bg-[#FAF6FA]/30'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            {/* Selection Checkbox */}
+                                            <div className="pt-1 shrink-0">
+                                                <LuxuryCheckbox
+                                                    checked={isSelected}
+                                                    onChange={() => handleToggleItem(item.id)}
+                                                    ariaLabel={`Select ${item.name}`}
+                                                />
+                                            </div>
+
+                                            {/* Thumbnail */}
+                                            <div 
+                                                onClick={() => handleToggleItem(item.id)}
+                                                className="size-18 rounded-xl bg-white border border-[#EFE0EF] shrink-0 overflow-hidden cursor-pointer shadow-2xs"
+                                            >
+                                                <Image 
+                                                    src={item.images[0]} 
+                                                    className="w-full h-full object-cover" 
+                                                    alt={item.name} 
+                                                    width={72} 
+                                                    height={72} 
+                                                    unoptimized={true}
+                                                />
+                                            </div>
+
+                                            {/* Product Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <Link href={`/product/${item.id}`} className="font-bold text-[#241224] text-xs hover:text-[#6C306E] transition line-clamp-2 leading-snug">
+                                                    {item.name}
+                                                </Link>
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                    <span className="text-[9px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full inline-block uppercase">
+                                                        {item.category}
+                                                    </span>
+                                                    {!isSelected && (
+                                                        <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full inline-block">
+                                                            Excluded
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 font-medium mt-1">
+                                                    Unit: <span className="text-[#3A0C38] font-bold">{currency}{item.price.toLocaleString()}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Mobile Bottom Row: Counter + Subtotal + Remove Button */}
+                                        <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#EFE0EF]/80 gap-2">
+                                            <Counter productId={item.id} />
+
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-right">
+                                                    <span className="text-[10px] text-slate-400 block font-medium">Subtotal</span>
+                                                    <span className={`font-black text-sm ${isSelected ? 'text-[#3A0C38]' : 'text-slate-400 line-through'}`}>
+                                                        {currency}{(item.price * item.quantity).toLocaleString()}
+                                                    </span>
+                                                </div>
+
+                                                <motion.button 
+                                                    whileTap={{ scale: 0.88 }}
+                                                    onClick={() => handleDeleteItemFromCart(item.id)} 
+                                                    className="size-8 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer"
+                                                    title="Remove item"
+                                                    aria-label="Remove item"
+                                                >
+                                                    <TrashIcon size={15} color="currentColor" />
+                                                </motion.button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* 2. Desktop Table View */}
+                    <div className="hidden md:block w-full max-w-4xl overflow-x-auto">
                         <table className="w-full text-slate-600 text-sm">
                             <thead>
                                 <tr className="border-b border-[#EFE0EF] text-xs uppercase tracking-wider text-[#7B667B] font-bold">
@@ -243,7 +334,7 @@ export default function Cart() {
                                     <th className="text-left pb-4">Product Details</th>
                                     <th className="pb-4 text-center">Quantity</th>
                                     <th className="pb-4 text-right">Subtotal</th>
-                                    <th className="pb-4 text-center max-md:hidden">Remove</th>
+                                    <th className="pb-4 text-center">Remove</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#EFE0EF]/60">
@@ -329,7 +420,7 @@ export default function Cart() {
                                                 </td>
 
                                                 {/* Remove Trash Button */}
-                                                <td className="py-4 text-center max-md:hidden">
+                                                <td className="py-4 text-center">
                                                     <motion.button 
                                                         whileHover={{ scale: 1.15, rotate: 6 }}
                                                         whileTap={{ scale: 0.88 }}

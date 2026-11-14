@@ -113,7 +113,7 @@ const AddressModal = ({ setShowAddressModal, editingAddress = null }) => {
 
     return (
         <div 
-            className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md h-screen flex items-center justify-center p-4 transition-all duration-300"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm h-screen flex items-center justify-center p-3 sm:p-4 transition-all duration-300"
         >
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}

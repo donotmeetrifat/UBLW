@@ -206,7 +206,7 @@ const Navbar = () => {
                                 <Image
                                     src={assets.webLogo}
                                     alt="UK Brand Lover Logo"
-                                    className="h-9 sm:h-11 w-auto object-contain"
+                                    className="h-8 min-[360px]:h-9 sm:h-11 w-auto object-contain"
                                     priority
                                 />
                             </motion.div>
