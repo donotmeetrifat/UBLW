@@ -1,37 +1,22 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import {
-    RoyalCrownIcon,
     ArrowRightIcon,
-    CloseIcon,
     CheckIcon,
     RefreshIcon,
     StoreFrontIcon,
-    UploadCloudIcon,
-    TagIcon,
-    SparklesIcon,
-    CameraIcon,
-    TrashIcon,
-    EyeIcon
+    CameraIcon
 } from '@/components/icons'
 import { DEFAULT_PROMOTIONS } from '@/lib/promotions'
-
-const QUICK_LINKS = [
-    { label: 'All Shop Catalog', url: '/shop' },
-    { label: 'Skincare Collection', url: '/shop?category=Skincare' },
-    { label: 'Makeup & Cosmetics', url: '/shop?category=Makeup' },
-    { label: 'Haircare Treatments', url: '/shop?category=Haircare' },
-    { label: 'Fragrance & Body', url: '/shop?category=Fragrance' },
-    { label: 'Contact Advisory', url: '/contact' }
-]
 
 export default function AdminHeroPromotionsPage() {
     const currency = '৳'
     const [promotions, setPromotions] = useState(DEFAULT_PROMOTIONS)
+    const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('mainCard') // 'mainCard' | 'sideCardTop' | 'sideCardBottom'
@@ -67,9 +52,82 @@ export default function AdminHeroPromotionsPage() {
         }
     }
 
+    // 2. Fetch live shop categories for quick destination link auto-fill
+    const fetchLiveCategories = async () => {
+        try {
+            const res = await fetch(`/api/categories?all=true&_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+            })
+            const data = await res.json()
+            if (data.success && Array.isArray(data.categories)) {
+                setCategories(data.categories.filter(c => c.isActive !== false && Boolean(c.name)))
+            }
+        } catch (err) {
+            console.error('Error fetching categories in promotions:', err)
+        }
+    }
+
     useEffect(() => {
         fetchPromotions()
+        fetchLiveCategories()
+
+        // Real-time synchronization when categories change in /admin/categories
+        const onCategoryUpdate = () => fetchLiveCategories()
+        const onStorage = (e) => {
+            if (e.key === 'ukbl_categories_synced') fetchLiveCategories()
+        }
+
+        window.addEventListener('category-catalog-updated', onCategoryUpdate)
+        window.addEventListener('storage', onStorage)
+
+        let bc
+        try {
+            bc = new BroadcastChannel('ukbl_catalog_channel')
+            bc.onmessage = (msg) => {
+                if (msg.data?.type === 'category-updated' || msg.data?.type === 'category-catalog-updated') {
+                    fetchLiveCategories()
+                }
+            }
+        } catch {}
+
+        return () => {
+            window.removeEventListener('category-catalog-updated', onCategoryUpdate)
+            window.removeEventListener('storage', onStorage)
+            if (bc) bc.close()
+        }
     }, [])
+
+    // Dynamic destination suggestions including /shop, all database categories, and Contact
+    const quickLinks = useMemo(() => {
+        const links = [
+            { label: '/shop', url: '/shop' }
+        ]
+
+        const seenNames = new Set()
+        categories.forEach(c => {
+            const name = (c.name || '').trim()
+            if (name && !seenNames.has(name.toLowerCase())) {
+                seenNames.add(name.toLowerCase())
+                links.push({
+                    label: name,
+                    url: `/shop?category=${encodeURIComponent(name)}`
+                })
+            }
+        })
+
+        if (links.length === 1) {
+            ['Skincare', 'Makeup', 'Haircare', 'Fragrance'].forEach(name => {
+                links.push({
+                    label: name,
+                    url: `/shop?category=${encodeURIComponent(name)}`
+                })
+            })
+        }
+
+        links.push({ label: 'Contact', url: '/contact' })
+        return links
+    }, [categories])
 
     // --- Update Handler for Any Field in Any of the 3 Cards ---
     const handleUpdateCardField = (cardKey, field, value) => {
@@ -88,7 +146,7 @@ export default function AdminHeroPromotionsPage() {
 
         try {
             setUploadingTarget(cardKey)
-            const uploadToast = toast.loading('Uploading card image in full high resolution...')
+            const uploadToast = toast.loading('Uploading card image in full resolution...')
 
             const uploadData = new FormData()
             uploadData.append('file', file)
@@ -162,36 +220,28 @@ export default function AdminHeroPromotionsPage() {
     const handleResetDefaults = () => {
         if (confirm('Reset all 3 hero promotional cards to original UK Brand Lover default text and images?')) {
             setPromotions(DEFAULT_PROMOTIONS)
-            toast.success('Reset to default values. Click "Save & Publish" to commit.')
+            toast.success('Reset to default values. Click "Save & Publish All" to commit.')
         }
     }
 
     const { mainCard, sideCardTop, sideCardBottom } = promotions
+    const currentCard = promotions[activeTab] || mainCard
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-16">
             {/* Header with Title and Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-subtle">
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-[#6C306E] bg-[#FAF6FA] px-2.5 py-1 rounded-full border border-[#EFE0EF]">
-                            Hero Promotional Studio
-                        </span>
-                        <span className="text-slate-400 text-xs">• Live Database Sync</span>
-                    </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight">
-                        Hero Promotional Boxes Management
+                    <h1 className="text-xl sm:text-2xl font-bold font-display text-slate-900 tracking-tight">
+                        Hero Promotional Boxes
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-                        Edit all images, campaign titles, subtitles, price tags, button names, and click redirect URLs for the 3 homepage feature boxes. All changes publish live across the entire website instantly.
-                    </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                     <Link
                         href="/"
                         target="_blank"
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:text-[#6C306E] transition shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 h-9 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition shadow-2xs shrink-0"
                     >
                         <StoreFrontIcon size={14} color="#6C306E" />
                         <span>View Storefront</span>
@@ -199,8 +249,9 @@ export default function AdminHeroPromotionsPage() {
                     </Link>
 
                     <button
+                        type="button"
                         onClick={handleResetDefaults}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-[#EFE0EF] transition"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 h-9 rounded-xl text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 transition shadow-2xs cursor-pointer shrink-0"
                         title="Reset to default brand layout"
                     >
                         <RefreshIcon size={14} />
@@ -208,18 +259,19 @@ export default function AdminHeroPromotionsPage() {
                     </button>
 
                     <button
+                        type="button"
                         onClick={handleSaveAndPublish}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 h-10 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-75 shrink-0"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2 h-9 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-sm disabled:opacity-75 cursor-pointer shrink-0 min-w-[150px]"
                     >
                         {saving ? (
                             <>
                                 <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
-                                <span>Publishing to Website...</span>
+                                <span>Publishing...</span>
                             </>
                         ) : (
                             <>
-                                <CheckIcon size={15} className="shrink-0" />
+                                <CheckIcon size={14} className="shrink-0" />
                                 <span>Save & Publish All</span>
                             </>
                         )}
@@ -227,266 +279,122 @@ export default function AdminHeroPromotionsPage() {
                 </div>
             </div>
 
-            {/* 1:1 LIVE STOREFRONT INTERACTIVE PREVIEW */}
-            <div className="bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-base sm:text-lg font-extrabold text-[#241224]">
-                                1:1 Live Storefront Preview
-                            </h2>
-                            <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                Real-Time Simulation
-                            </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                            Exact representation of the 3 promotional feature boxes as seen by visiting customers.
-                        </p>
-                    </div>
-
-                    <div className="text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3 py-1 rounded-full border border-[#EFE0EF]">
-                        Interactive Card Links Active
-                    </div>
-                </div>
-
-                {/* THE 3 STOREFRONT BOXES PREVIEW */}
-                <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5 pt-1">
-                    {/* 1. Large Feature Card Preview */}
-                    <div className="relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 border border-[#EFE0EF] overflow-hidden min-h-[260px] sm:min-h-[320px] shadow-sm">
-                        <div className="z-10 max-w-[58%]">
-                            {mainCard.badge && (
-                                <div className="inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs">
-                                    <RoyalCrownIcon size={12} color="#D8B56D" />
-                                    <span>{mainCard.badge}</span>
-                                </div>
-                            )}
-
-                            <h3 className="text-lg sm:text-2xl lg:text-3xl font-extrabold text-[#241224] leading-snug tracking-tight">
-                                {mainCard.title} <br className="hidden sm:inline" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1]">
-                                    {mainCard.titleHighlight}
-                                </span>
-                            </h3>
-
-                            {mainCard.description && (
-                                <p className="text-xs text-slate-500 mt-2 font-normal leading-relaxed line-clamp-2">
-                                    {mainCard.description}
-                                </p>
-                            )}
-
-                            {(mainCard.priceLabel || mainCard.priceValue) && (
-                                <div className="flex items-baseline gap-2 mt-3">
-                                    {mainCard.priceLabel && (
-                                        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                                            {mainCard.priceLabel}
-                                        </span>
-                                    )}
-                                    {mainCard.priceValue && (
-                                        <span className="text-base sm:text-xl font-extrabold text-[#3A0C38]">
-                                            {currency}{mainCard.priceValue.replace(/^[৳$£\s]+/, '')}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="mt-4">
-                                <span className="inline-flex items-center justify-center px-6 h-10 rounded-full text-xs font-bold text-white bg-linear-to-r from-[#6C306E] to-[#401242] shadow-sm">
-                                    {mainCard.buttonText || 'Explore Collection'} →
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Large Image on Right */}
-                        <div className="absolute right-0 bottom-0 top-0 w-[42%] max-w-[280px] flex items-end justify-end pointer-events-none z-0 overflow-hidden">
-                            {mainCard.image ? (
-                                <Image
-                                    className="h-full max-h-full w-auto object-contain object-right-bottom"
-                                    src={mainCard.image}
-                                    alt={mainCard.imageAlt || 'Hero Feature'}
-                                    width={260}
-                                    height={320}
-                                    unoptimized
-                                />
-                            ) : (
-                                <div className="text-slate-300 text-xs p-4">No Image</div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 2 & 3. Secondary Side Cards Preview */}
-                    <div className="flex flex-col gap-4 justify-between">
-                        {/* Top Side Card */}
-                        <div className="flex items-center justify-between w-full bg-[#FAF6FA] rounded-3xl p-5 border border-[#EFE0EF] min-h-[145px] relative overflow-hidden">
-                            <div className="z-10 max-w-[55%] pr-1">
-                                {sideCardTop.tag && (
-                                    <span className="text-[9px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1">
-                                        {sideCardTop.tag}
-                                    </span>
-                                )}
-                                <h4 className="text-base sm:text-xl font-bold text-[#241224] tracking-tight">
-                                    {sideCardTop.title}
-                                </h4>
-                                <p className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-[#6C306E]">
-                                    <span>{sideCardTop.buttonText || 'Shop Skincare'}</span>
-                                    <ArrowRightIcon size={12} color="#6C306E" />
-                                </p>
-                            </div>
-
-                            <div className="w-[45%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none">
-                                {sideCardTop.image ? (
-                                    <Image
-                                        className="h-full max-h-full w-auto object-contain object-right-bottom"
-                                        src={sideCardTop.image}
-                                        alt={sideCardTop.title || 'Side Card 1'}
-                                        width={140}
-                                        height={130}
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <div className="text-slate-300 text-xs">No Image</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Bottom Side Card */}
-                        <div className="flex items-center justify-between w-full bg-[#FAF6FA] rounded-3xl p-5 border border-[#EFE0EF] min-h-[145px] relative overflow-hidden">
-                            <div className="z-10 max-w-[55%] pr-1">
-                                {sideCardBottom.tag && (
-                                    <span className="text-[9px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1">
-                                        {sideCardBottom.tag}
-                                    </span>
-                                )}
-                                <h4 className="text-base sm:text-xl font-bold text-[#241224] tracking-tight">
-                                    {sideCardBottom.title}
-                                </h4>
-                                <p className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-[#6C306E]">
-                                    <span>{sideCardBottom.buttonText || 'Shop Makeup'}</span>
-                                    <ArrowRightIcon size={12} color="#6C306E" />
-                                </p>
-                            </div>
-
-                            <div className="w-[45%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none">
-                                {sideCardBottom.image ? (
-                                    <Image
-                                        className="h-full max-h-full w-auto object-contain object-right-bottom"
-                                        src={sideCardBottom.image}
-                                        alt={sideCardBottom.title || 'Side Card 2'}
-                                        width={140}
-                                        height={130}
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <div className="text-slate-300 text-xs">No Image</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Categories Marquee Quick Status Banner */}
-                <div className="mt-4 p-4 rounded-2xl bg-[#FAF6FA]/70 border border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2.5">
-                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                        <span className="text-slate-600 font-semibold">
-                            <strong>Running Category Slider:</strong> Placed directly beneath these 3 boxes. All categories update automatically from the Category Catalog.
-                        </span>
-                    </div>
-                    <Link
-                        href="/admin/categories"
-                        className="inline-flex items-center gap-1 font-bold text-[#6C306E] hover:underline shrink-0"
-                    >
-                        <span>Manage Categories & Order</span>
-                        <ArrowRightIcon size={12} />
-                    </Link>
-                </div>
-            </div>
-
             {/* CARD SELECTOR TABS */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <button
+                    type="button"
                     onClick={() => setActiveTab('mainCard')}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                         activeTab === 'mainCard'
-                            ? 'bg-white border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/20'
-                            : 'bg-white/80 border-[#EFE0EF] hover:bg-white'
+                            ? 'bg-white border-2 border-plum shadow-card'
+                            : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className="flex items-center gap-2">
-                        <span className="size-6 rounded-lg bg-[#6C306E] text-white flex items-center justify-center font-bold text-xs">
-                            1
-                        </span>
-                        <span className="font-extrabold text-sm text-[#241224]">
-                            Main Feature Box
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
+                                activeTab === 'mainCard' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                                1
+                            </span>
+                            <span className="font-display font-bold text-sm text-slate-900">
+                                Main Feature Box
+                            </span>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            mainCard.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                            {mainCard.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                        {mainCard.title} {mainCard.titleHighlight}
+                    <p className="text-xs text-slate-500 mt-2 truncate">
+                        {mainCard.title || 'Curated UK Beauty'} {mainCard.titleHighlight || ''}
                     </p>
                 </button>
 
                 <button
+                    type="button"
                     onClick={() => setActiveTab('sideCardTop')}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                         activeTab === 'sideCardTop'
-                            ? 'bg-white border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/20'
-                            : 'bg-white/80 border-[#EFE0EF] hover:bg-white'
+                            ? 'bg-white border-2 border-plum shadow-card'
+                            : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className="flex items-center gap-2">
-                        <span className="size-6 rounded-lg bg-[#6C306E] text-white flex items-center justify-center font-bold text-xs">
-                            2
-                        </span>
-                        <span className="font-extrabold text-sm text-[#241224]">
-                            Top Side Box
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
+                                activeTab === 'sideCardTop' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                                2
+                            </span>
+                            <span className="font-display font-bold text-sm text-slate-900">
+                                Top Side Box
+                            </span>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            sideCardTop.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                            {sideCardTop.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                        {sideCardTop.tag} • {sideCardTop.title}
+                    <p className="text-xs text-slate-500 mt-2 truncate">
+                        {sideCardTop.tag ? `${sideCardTop.tag} • ` : ''}{sideCardTop.title || 'Skincare'}
                     </p>
                 </button>
 
                 <button
+                    type="button"
                     onClick={() => setActiveTab('sideCardBottom')}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                         activeTab === 'sideCardBottom'
-                            ? 'bg-white border-[#6C306E] shadow-sm ring-2 ring-[#6C306E]/20'
-                            : 'bg-white/80 border-[#EFE0EF] hover:bg-white'
+                            ? 'bg-white border-2 border-plum shadow-card'
+                            : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className="flex items-center gap-2">
-                        <span className="size-6 rounded-lg bg-[#6C306E] text-white flex items-center justify-center font-bold text-xs">
-                            3
-                        </span>
-                        <span className="font-extrabold text-sm text-[#241224]">
-                            Bottom Side Box
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
+                                activeTab === 'sideCardBottom' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                                3
+                            </span>
+                            <span className="font-display font-bold text-sm text-slate-900">
+                                Bottom Side Box
+                            </span>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            sideCardBottom.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                            {sideCardBottom.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                        {sideCardBottom.tag} • {sideCardBottom.title}
+                    <p className="text-xs text-slate-500 mt-2 truncate">
+                        {sideCardBottom.tag ? `${sideCardBottom.tag} • ` : ''}{sideCardBottom.title || 'Cosmetics'}
                     </p>
                 </button>
             </div>
 
             {/* TAB CONTENT EDITORS */}
-            <div className="bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs space-y-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-subtle space-y-6">
                 {/* 1. MAIN LARGE FEATURE CARD EDITOR */}
                 {activeTab === 'mainCard' && (
                     <div className="space-y-5">
-                        <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <h3 className="text-base font-extrabold text-[#241224]">
+                                <h3 className="text-base font-bold font-display text-slate-900">
                                     Edit Main Feature Box (Large Left Card)
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Prominently displays your British heritage guarantee, headline copy, starting price, and collection CTA button.
+                                    Headline copy, sub-headline, price badge, and collection CTA button.
                                 </p>
                             </div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
                                     checked={mainCard.isActive !== false}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'isActive', e.target.checked)}
-                                    className="accent-[#6C306E] size-4 rounded"
+                                    className="w-4 h-4 rounded text-plum accent-plum focus:ring-plum/30 border-slate-300 transition cursor-pointer"
                                 />
                                 <span>Visible on Storefront</span>
                             </label>
@@ -495,7 +403,7 @@ export default function AdminHeroPromotionsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Badge */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Top Badge Tag
                                 </label>
                                 <input
@@ -503,13 +411,13 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.badge || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'badge', e.target.value)}
                                     placeholder="e.g. 100% Original UK Imports"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             {/* Headline Line 1 */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Main Headline (Line 1) *
                                 </label>
                                 <input
@@ -517,13 +425,13 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.title || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'title', e.target.value)}
                                     placeholder="e.g. Curated UK Beauty."
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             {/* Headline Line 2 Highlight */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Highlighted Sub-Headline (Gradient Line 2)
                                 </label>
                                 <input
@@ -531,14 +439,14 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.titleHighlight || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'titleHighlight', e.target.value)}
                                     placeholder="e.g. Delivered in Bangladesh."
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#6C306E] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             {/* Starting Price Value */}
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                                         Price Tag Label
                                     </label>
                                     <input
@@ -546,11 +454,11 @@ export default function AdminHeroPromotionsPage() {
                                         value={mainCard.priceLabel || ''}
                                         onChange={(e) => handleUpdateCardField('mainCard', 'priceLabel', e.target.value)}
                                         placeholder="e.g. Prices start at"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                                         Starting Price Amount (৳)
                                     </label>
                                     <input
@@ -558,7 +466,7 @@ export default function AdminHeroPromotionsPage() {
                                         value={mainCard.priceValue || ''}
                                         onChange={(e) => handleUpdateCardField('mainCard', 'priceValue', e.target.value)}
                                         placeholder="e.g. 1,650"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-black text-[#6C306E] focus:outline-hidden focus:border-[#6C306E]"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                     />
                                 </div>
                             </div>
@@ -566,7 +474,7 @@ export default function AdminHeroPromotionsPage() {
 
                         {/* Description */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">
                                 Description Paragraph
                             </label>
                             <textarea
@@ -574,14 +482,14 @@ export default function AdminHeroPromotionsPage() {
                                 value={mainCard.description || ''}
                                 onChange={(e) => handleUpdateCardField('mainCard', 'description', e.target.value)}
                                 placeholder="e.g. Authentic dermatological skincare, cult cosmetics, and hair perfectors imported directly from the UK."
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                             />
                         </div>
 
                         {/* Button Configuration */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Button Text Label
                                 </label>
                                 <input
@@ -589,32 +497,58 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'buttonText', e.target.value)}
                                     placeholder="e.g. Explore Collection"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    Button Target Redirect URL (When user clicks)
-                                </label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700">
+                                        Button Target Redirect URL
+                                    </label>
+                                    <span className="text-[10px] text-slate-400">
+                                        Click suggestion to auto-fill
+                                    </span>
+                                </div>
                                 <input
                                     type="text"
                                     value={mainCard.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop or /shop?category=Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
+
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                    {quickLinks.map((item, idx) => {
+                                        const isSelected = (mainCard.buttonLink || '') === item.url
+                                        return (
+                                            <button
+                                                key={`${item.label}-${idx}`}
+                                                type="button"
+                                                onClick={() => handleUpdateCardField('mainCard', 'buttonLink', item.url)}
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-plum text-white border-plum shadow-2xs'
+                                                        : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
+                                                }`}
+                                                title={`Set URL to: ${item.url}`}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
 
                         {/* Image Upload for Main Card */}
-                        <div className="p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] space-y-3">
-                            <label className="block text-xs font-bold text-slate-700">
+                        <div className="p-4 rounded-xl bg-slate-50/60 border border-slate-200/80 space-y-3">
+                            <label className="block text-xs font-semibold text-slate-700">
                                 Feature Card Image (Model Photo or Transparent PNG)
                             </label>
 
                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <div className="w-24 h-24 rounded-2xl bg-white border border-[#EFE0EF] relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs">
+                                <div className="w-20 h-20 rounded-xl bg-white border border-slate-200 relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs p-1">
                                     {mainCard.image ? (
                                         <Image
                                             src={mainCard.image}
@@ -641,14 +575,14 @@ export default function AdminHeroPromotionsPage() {
                                             type="button"
                                             onClick={() => mainFileInputRef.current?.click()}
                                             disabled={uploadingTarget === 'mainCard'}
-                                            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-2xs disabled:opacity-50"
+                                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs disabled:opacity-50 cursor-pointer"
                                         >
                                             {uploadingTarget === 'mainCard' ? 'Uploading...' : 'Upload New Image'}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleUpdateCardField('mainCard', 'image', '/images/hero/hero_card_img1.png')}
-                                            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition"
+                                            className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
                                             Restore Default
                                         </button>
@@ -658,7 +592,7 @@ export default function AdminHeroPromotionsPage() {
                                         value={mainCard.image || ''}
                                         onChange={(e) => handleUpdateCardField('mainCard', 'image', e.target.value)}
                                         placeholder="Or paste direct image URL (e.g. /images/hero/hero_card_img1.png)"
-                                        className="w-full px-3 py-1.5 rounded-xl border border-[#EFE0EF] bg-white text-xs text-slate-600 focus:outline-hidden"
+                                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-600 focus:outline-hidden focus:border-plum"
                                     />
                                 </div>
                             </div>
@@ -669,21 +603,21 @@ export default function AdminHeroPromotionsPage() {
                 {/* 2. TOP SMALL SIDE CARD EDITOR */}
                 {activeTab === 'sideCardTop' && (
                     <div className="space-y-5">
-                        <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <h3 className="text-base font-extrabold text-[#241224]">
-                                    Edit Top Side Box (e.g. Skincare)
+                                <h3 className="text-base font-bold font-display text-slate-900">
+                                    Edit Top Side Box
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Appears in the upper right position of the hero secondary section.
+                                    Appears in the upper right position of the hero promotional section.
                                 </p>
                             </div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
                                     checked={sideCardTop.isActive !== false}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'isActive', e.target.checked)}
-                                    className="accent-[#6C306E] size-4 rounded"
+                                    className="w-4 h-4 rounded text-plum accent-plum focus:ring-plum/30 border-slate-300 transition cursor-pointer"
                                 />
                                 <span>Visible on Storefront</span>
                             </label>
@@ -691,7 +625,7 @@ export default function AdminHeroPromotionsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Eyebrow Tag
                                 </label>
                                 <input
@@ -699,12 +633,12 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.tag || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'tag', e.target.value)}
                                     placeholder="e.g. TOP SELECTED"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#6C306E] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Card Title *
                                 </label>
                                 <input
@@ -712,12 +646,12 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.title || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'title', e.target.value)}
                                     placeholder="e.g. Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-extrabold text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Button / Link Text
                                 </label>
                                 <input
@@ -725,32 +659,58 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'buttonText', e.target.value)}
                                     placeholder="e.g. Shop Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    Button Target Redirect URL
-                                </label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700">
+                                        Button Target Redirect URL
+                                    </label>
+                                    <span className="text-[10px] text-slate-400">
+                                        Click suggestion to auto-fill
+                                    </span>
+                                </div>
                                 <input
                                     type="text"
                                     value={sideCardTop.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop?category=Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
+
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                    {quickLinks.map((item, idx) => {
+                                        const isSelected = (sideCardTop.buttonLink || '') === item.url
+                                        return (
+                                            <button
+                                                key={`${item.label}-${idx}`}
+                                                type="button"
+                                                onClick={() => handleUpdateCardField('sideCardTop', 'buttonLink', item.url)}
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-plum text-white border-plum shadow-2xs'
+                                                        : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
+                                                }`}
+                                                title={`Set URL to: ${item.url}`}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
 
                         {/* Image Upload for Top Side Card */}
-                        <div className="p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] space-y-3">
-                            <label className="block text-xs font-bold text-slate-700">
+                        <div className="p-4 rounded-xl bg-slate-50/60 border border-slate-200/80 space-y-3">
+                            <label className="block text-xs font-semibold text-slate-700">
                                 Card Product Image
                             </label>
 
                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <div className="w-24 h-24 rounded-2xl bg-white border border-[#EFE0EF] relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs">
+                                <div className="w-20 h-20 rounded-xl bg-white border border-slate-200 relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs p-1">
                                     {sideCardTop.image ? (
                                         <Image
                                             src={sideCardTop.image}
@@ -777,14 +737,14 @@ export default function AdminHeroPromotionsPage() {
                                             type="button"
                                             onClick={() => topFileInputRef.current?.click()}
                                             disabled={uploadingTarget === 'sideCardTop'}
-                                            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-2xs disabled:opacity-50"
+                                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs disabled:opacity-50 cursor-pointer"
                                         >
                                             {uploadingTarget === 'sideCardTop' ? 'Uploading...' : 'Upload New Image'}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleUpdateCardField('sideCardTop', 'image', '/images/hero/hero_card_img2.png')}
-                                            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition"
+                                            className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
                                             Restore Default
                                         </button>
@@ -794,7 +754,7 @@ export default function AdminHeroPromotionsPage() {
                                         value={sideCardTop.image || ''}
                                         onChange={(e) => handleUpdateCardField('sideCardTop', 'image', e.target.value)}
                                         placeholder="Or paste direct image URL (e.g. /images/hero/hero_card_img2.png)"
-                                        className="w-full px-3 py-1.5 rounded-xl border border-[#EFE0EF] bg-white text-xs text-slate-600 focus:outline-hidden"
+                                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-600 focus:outline-hidden focus:border-plum"
                                     />
                                 </div>
                             </div>
@@ -805,21 +765,21 @@ export default function AdminHeroPromotionsPage() {
                 {/* 3. BOTTOM SMALL SIDE CARD EDITOR */}
                 {activeTab === 'sideCardBottom' && (
                     <div className="space-y-5">
-                        <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <h3 className="text-base font-extrabold text-[#241224]">
-                                    Edit Bottom Side Box (e.g. Cosmetics)
+                                <h3 className="text-base font-bold font-display text-slate-900">
+                                    Edit Bottom Side Box
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Appears in the lower right position of the hero secondary section.
+                                    Appears in the lower right position of the hero promotional section.
                                 </p>
                             </div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
                                     checked={sideCardBottom.isActive !== false}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'isActive', e.target.checked)}
-                                    className="accent-[#6C306E] size-4 rounded"
+                                    className="w-4 h-4 rounded text-plum accent-plum focus:ring-plum/30 border-slate-300 transition cursor-pointer"
                                 />
                                 <span>Visible on Storefront</span>
                             </label>
@@ -827,7 +787,7 @@ export default function AdminHeroPromotionsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Eyebrow Tag
                                 </label>
                                 <input
@@ -835,12 +795,12 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.tag || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'tag', e.target.value)}
                                     placeholder="e.g. EXCLUSIVE DEALS"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#D8B56D] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Card Title *
                                 </label>
                                 <input
@@ -848,12 +808,12 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.title || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'title', e.target.value)}
                                     placeholder="e.g. Cosmetics"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-extrabold text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Button / Link Text
                                 </label>
                                 <input
@@ -861,32 +821,58 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'buttonText', e.target.value)}
                                     placeholder="e.g. Shop Makeup"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs font-bold text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    Button Target Redirect URL
-                                </label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700">
+                                        Button Target Redirect URL
+                                    </label>
+                                    <span className="text-[10px] text-slate-400">
+                                        Click suggestion to auto-fill
+                                    </span>
+                                </div>
                                 <input
                                     type="text"
                                     value={sideCardBottom.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop?category=Makeup"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
+
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                    {quickLinks.map((item, idx) => {
+                                        const isSelected = (sideCardBottom.buttonLink || '') === item.url
+                                        return (
+                                            <button
+                                                key={`${item.label}-${idx}`}
+                                                type="button"
+                                                onClick={() => handleUpdateCardField('sideCardBottom', 'buttonLink', item.url)}
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-plum text-white border-plum shadow-2xs'
+                                                        : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
+                                                }`}
+                                                title={`Set URL to: ${item.url}`}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
 
                         {/* Image Upload for Bottom Side Card */}
-                        <div className="p-4 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] space-y-3">
-                            <label className="block text-xs font-bold text-slate-700">
+                        <div className="p-4 rounded-xl bg-slate-50/60 border border-slate-200/80 space-y-3">
+                            <label className="block text-xs font-semibold text-slate-700">
                                 Card Product Image
                             </label>
 
                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <div className="w-24 h-24 rounded-2xl bg-white border border-[#EFE0EF] relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs">
+                                <div className="w-20 h-20 rounded-xl bg-white border border-slate-200 relative shrink-0 overflow-hidden flex items-center justify-center shadow-2xs p-1">
                                     {sideCardBottom.image ? (
                                         <Image
                                             src={sideCardBottom.image}
@@ -913,14 +899,14 @@ export default function AdminHeroPromotionsPage() {
                                             type="button"
                                             onClick={() => bottomFileInputRef.current?.click()}
                                             disabled={uploadingTarget === 'sideCardBottom'}
-                                            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-2xs disabled:opacity-50"
+                                            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs disabled:opacity-50 cursor-pointer"
                                         >
                                             {uploadingTarget === 'sideCardBottom' ? 'Uploading...' : 'Upload New Image'}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleUpdateCardField('sideCardBottom', 'image', '/images/hero/hero_card_img3.png')}
-                                            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition"
+                                            className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
                                             Restore Default
                                         </button>
@@ -930,28 +916,13 @@ export default function AdminHeroPromotionsPage() {
                                         value={sideCardBottom.image || ''}
                                         onChange={(e) => handleUpdateCardField('sideCardBottom', 'image', e.target.value)}
                                         placeholder="Or paste direct image URL (e.g. /images/hero/hero_card_img3.png)"
-                                        className="w-full px-3 py-1.5 rounded-xl border border-[#EFE0EF] bg-white text-xs text-slate-600 focus:outline-hidden"
+                                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-600 focus:outline-hidden focus:border-plum"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-
-                {/* Quick Link Pills Bar */}
-                <div className="pt-2 border-t border-[#EFE0EF] flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-500">Quick Destination Links:</span>
-                    {QUICK_LINKS.map((item, idx) => (
-                        <button
-                            key={idx}
-                            type="button"
-                            onClick={() => handleUpdateCardField(activeTab, 'buttonLink', item.url)}
-                            className="text-[11px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#FAF6FA]/80 px-2.5 py-1 rounded-lg border border-[#EFE0EF] transition"
-                        >
-                            {item.label} ({item.url})
-                        </button>
-                    ))}
-                </div>
             </div>
         </div>
     )
