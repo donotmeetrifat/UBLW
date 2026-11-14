@@ -517,7 +517,7 @@ export default function AdminHeroBannersPage() {
                     <Link
                         href="/"
                         target="_blank"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:text-[#6C306E] transition shadow-2xs"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 h-9 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:text-[#6C306E] transition shadow-2xs shrink-0"
                     >
                         <StoreFrontIcon size={14} color="#6C306E" />
                         <span>View Store</span>
@@ -528,7 +528,7 @@ export default function AdminHeroBannersPage() {
                         type="button"
                         onClick={handleToggleAutoplay}
                         disabled={isTogglingAutoplay}
-                        className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-bold transition shadow-2xs border cursor-pointer ${
+                        className={`inline-flex items-center gap-2 px-3.5 py-2 h-9 rounded-full text-xs font-bold transition shadow-2xs border cursor-pointer shrink-0 ${
                             isAutoplay
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
                                 : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
@@ -544,20 +544,25 @@ export default function AdminHeroBannersPage() {
                             type="button"
                             onClick={() => handleSaveAllBanners()}
                             disabled={saving}
-                            className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md transition cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2 h-9 min-w-[120px] rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md transition cursor-pointer shrink-0 disabled:opacity-75"
                         >
                             {saving ? (
-                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                                <>
+                                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                                    <span>Saving...</span>
+                                </>
                             ) : (
-                                <CheckIcon size={14} />
+                                <>
+                                    <CheckIcon size={14} className="shrink-0" />
+                                    <span>Save Order</span>
+                                </>
                             )}
-                            <span>Save Order</span>
                         </button>
                     )}
 
                     <button
                         onClick={handleOpenAddModal}
-                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#4A1D4C] shadow-md shadow-[#6C306E]/20 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-5 py-2 h-9 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#4A1D4C] shadow-md shadow-[#6C306E]/20 transition cursor-pointer shrink-0"
                     >
                         <PlusIcon size={14} />
                         <span>Add Banner</span>

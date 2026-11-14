@@ -18,7 +18,6 @@ import {
     TrashIcon,
     EyeIcon
 } from '@/components/icons'
-import ClassicLoader from '@/components/ui/classic-loader'
 import { DEFAULT_PROMOTIONS } from '@/lib/promotions'
 
 const QUICK_LINKS = [
@@ -211,16 +210,16 @@ export default function AdminHeroPromotionsPage() {
                     <button
                         onClick={handleSaveAndPublish}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 h-10 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-75 shrink-0"
                     >
                         {saving ? (
                             <>
-                                <ClassicLoader />
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
                                 <span>Publishing to Website...</span>
                             </>
                         ) : (
                             <>
-                                <CheckIcon size={15} />
+                                <CheckIcon size={15} className="shrink-0" />
                                 <span>Save & Publish All</span>
                             </>
                         )}
