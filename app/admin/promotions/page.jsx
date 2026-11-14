@@ -17,6 +17,140 @@ import { DEFAULT_PROMOTIONS } from '@/lib/promotions'
 import { setPromotions as setReduxPromotions } from '@/lib/features/product/productSlice'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
 
+function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
+    const scale = cardData.imageScale || 100
+    const offsetY = cardData.imageOffsetY || 0
+
+    return (
+        <div className="mt-3 p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Image Size / Scale Adjustment
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#6C306E] text-white">
+                        {scale}%
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => {
+                        onUpdate(cardKey, 'imageScale', 100)
+                        onUpdate(cardKey, 'imageOffsetY', 0)
+                    }}
+                    className="text-[11px] font-semibold text-[#6C306E] hover:underline cursor-pointer"
+                >
+                    Reset to 100%
+                </button>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+                Adjust the size of the image/model inside this box. The card dimensions stay strictly fixed while the image scales larger or smaller.
+            </p>
+
+            {/* Slider and - / + Nudge Controls */}
+            <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={() => onUpdate(cardKey, 'imageScale', Math.max(50, scale - 5))}
+                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-sm shrink-0"
+                    title="Make image 5% smaller"
+                >
+                    -
+                </button>
+
+                <input
+                    type="range"
+                    min="50"
+                    max="250"
+                    step="1"
+                    value={scale}
+                    onChange={(e) => onUpdate(cardKey, 'imageScale', Number(e.target.value))}
+                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6C306E]"
+                />
+
+                <button
+                    type="button"
+                    onClick={() => onUpdate(cardKey, 'imageScale', Math.min(250, scale + 5))}
+                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-sm shrink-0"
+                    title="Make image 5% larger"
+                >
+                    +
+                </button>
+
+                <div className="flex items-center gap-1 w-20 shrink-0">
+                    <input
+                        type="number"
+                        min="50"
+                        max="250"
+                        value={scale}
+                        onChange={(e) => onUpdate(cardKey, 'imageScale', Math.max(50, Math.min(250, Number(e.target.value) || 100)))}
+                        className="w-14 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-center text-[#241224] focus:outline-none focus:border-[#6C306E]"
+                    />
+                    <span className="text-xs text-slate-500 font-bold">%</span>
+                </div>
+            </div>
+
+            {/* Quick Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Presets:</span>
+                {[
+                    { label: '75% Small', val: 75 },
+                    { label: '100% Default', val: 100 },
+                    { label: '125% Medium', val: 125 },
+                    { label: '150% Large', val: 150 },
+                    { label: '175% Extra Large', val: 175 },
+                    { label: '200% Maximum', val: 200 }
+                ].map((p) => (
+                    <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => onUpdate(cardKey, 'imageScale', p.val)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer border ${
+                            scale === p.val
+                                ? 'bg-[#6C306E] text-white border-[#6C306E] shadow-2xs'
+                                : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+                        }`}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Vertical Position Fine-tuning */}
+            <div className="pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-600">Vertical Alignment:</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500">
+                        {offsetY > 0 ? `+${offsetY}% (Down)` : offsetY < 0 ? `${offsetY}% (Up)` : '0% (Standard)'}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
+                    <span className="text-[10px] text-slate-400 font-semibold">Up</span>
+                    <input
+                        type="range"
+                        min="-40"
+                        max="40"
+                        step="1"
+                        value={offsetY}
+                        onChange={(e) => onUpdate(cardKey, 'imageOffsetY', Number(e.target.value))}
+                        className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6C306E]"
+                    />
+                    <span className="text-[10px] text-slate-400 font-semibold">Down</span>
+                    <button
+                        type="button"
+                        onClick={() => onUpdate(cardKey, 'imageOffsetY', 0)}
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-600 px-1"
+                        title="Reset vertical shift"
+                    >
+                        0
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default function AdminHeroPromotionsPage() {
     const currency = '৳'
     const dispatch = useDispatch()
@@ -390,13 +524,21 @@ export default function AdminHeroPromotionsPage() {
                                 </div>
                             </div>
 
-                            <div className="absolute right-0 bottom-0 top-0 w-[45%] max-w-[320px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl">
+                            <div className="absolute right-0 bottom-0 top-0 w-[50%] min-[450px]:w-[55%] sm:w-[60%] max-w-[420px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-br-3xl">
                                 {mainCard.image && (
-                                    <img
-                                        src={mainCard.image}
-                                        alt="Main Card Preview"
-                                        className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-1"
-                                    />
+                                    <div
+                                        className="h-full flex items-end justify-end"
+                                        style={{
+                                            transform: `scale(${(mainCard.imageScale || 100) / 100}) translateY(${mainCard.imageOffsetY || 0}%)`,
+                                            transformOrigin: 'right bottom'
+                                        }}
+                                    >
+                                        <img
+                                            src={mainCard.image}
+                                            alt="Main Card Preview"
+                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-1 transition-transform duration-100"
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -427,13 +569,21 @@ export default function AdminHeroPromotionsPage() {
                                     </p>
                                 </div>
 
-                                <div className="w-[44%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
+                                <div className="w-[48%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
                                     {sideCardTop.image && (
-                                        <img
-                                            src={sideCardTop.image}
-                                            alt="Top Card Preview"
-                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5"
-                                        />
+                                        <div
+                                            className="h-full flex items-end justify-end"
+                                            style={{
+                                                transform: `scale(${(sideCardTop.imageScale || 100) / 100}) translateY(${sideCardTop.imageOffsetY || 0}%)`,
+                                                transformOrigin: 'right bottom'
+                                            }}
+                                        >
+                                            <img
+                                                src={sideCardTop.image}
+                                                alt="Top Card Preview"
+                                                className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5 transition-transform duration-100"
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -462,13 +612,21 @@ export default function AdminHeroPromotionsPage() {
                                     </p>
                                 </div>
 
-                                <div className="w-[44%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
+                                <div className="w-[48%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
                                     {sideCardBottom.image && (
-                                        <img
-                                            src={sideCardBottom.image}
-                                            alt="Bottom Card Preview"
-                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5"
-                                        />
+                                        <div
+                                            className="h-full flex items-end justify-end"
+                                            style={{
+                                                transform: `scale(${(sideCardBottom.imageScale || 100) / 100}) translateY(${sideCardBottom.imageOffsetY || 0}%)`,
+                                                transformOrigin: 'right bottom'
+                                            }}
+                                        >
+                                            <img
+                                                src={sideCardBottom.image}
+                                                alt="Bottom Card Preview"
+                                                className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5 transition-transform duration-100"
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -795,6 +953,9 @@ export default function AdminHeroPromotionsPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Image Size / Scale Adjustment */}
+                        <ImageScaleControlSection cardKey="mainCard" cardData={mainCard} onUpdate={handleUpdateCardField} />
                     </div>
                 )}
 
@@ -957,6 +1118,9 @@ export default function AdminHeroPromotionsPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Image Size / Scale Adjustment */}
+                        <ImageScaleControlSection cardKey="sideCardTop" cardData={sideCardTop} onUpdate={handleUpdateCardField} />
                     </div>
                 )}
 
@@ -1119,6 +1283,9 @@ export default function AdminHeroPromotionsPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Image Size / Scale Adjustment */}
+                        <ImageScaleControlSection cardKey="sideCardBottom" cardData={sideCardBottom} onUpdate={handleUpdateCardField} />
                     </div>
                 )}
             </div>

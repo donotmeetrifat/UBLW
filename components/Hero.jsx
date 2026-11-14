@@ -96,17 +96,25 @@ const Hero = () => {
 
                         {/* Right-Aligned Large Transparent Image */}
                         {mainCard.image ? (
-                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
-                                <Image 
-                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
-                                    src={mainCard.image} 
-                                    alt={mainCard.imageAlt || "Direct from the UK - Premium Beauty"} 
-                                    fill={false}
-                                    width={320}
-                                    height={380}
-                                    priority
-                                    unoptimized
-                                />
+                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[50%] min-[450px]:w-[55%] sm:w-[60%] max-w-[420px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
+                                <div
+                                    className='h-full flex items-end justify-end'
+                                    style={{
+                                        transform: `scale(${(mainCard.imageScale || 100) / 100}) translateY(${mainCard.imageOffsetY || 0}%)`,
+                                        transformOrigin: 'right bottom'
+                                    }}
+                                >
+                                    <Image 
+                                        className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
+                                        src={mainCard.image} 
+                                        alt={mainCard.imageAlt || "Direct from the UK - Premium Beauty"} 
+                                        fill={false}
+                                        width={380}
+                                        height={440}
+                                        priority
+                                        unoptimized
+                                    />
+                                </div>
                             </div>
                         ) : null}
                     </motion.div>
@@ -143,15 +151,23 @@ const Hero = () => {
                                 </div>
 
                                 {sideCardTop.image ? (
-                                    <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
-                                        <Image 
-                                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
-                                            src={sideCardTop.image} 
-                                            alt={sideCardTop.imageAlt || sideCardTop.title || "Category Showcase"} 
-                                            width={180}
-                                            height={160}
-                                            unoptimized
-                                        />
+                                    <div className='w-[48%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                                        <div
+                                            className='h-full flex items-end justify-end'
+                                            style={{
+                                                transform: `scale(${(sideCardTop.imageScale || 100) / 100}) translateY(${sideCardTop.imageOffsetY || 0}%)`,
+                                                transformOrigin: 'right bottom'
+                                            }}
+                                        >
+                                            <Image 
+                                                className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                                src={sideCardTop.image} 
+                                                alt={sideCardTop.imageAlt || sideCardTop.title || "Category Showcase"} 
+                                                width={200}
+                                                height={180}
+                                                unoptimized
+                                            />
+                                        </div>
                                     </div>
                                 ) : null}
                             </Link>
@@ -187,15 +203,23 @@ const Hero = () => {
                                 </div>
 
                                 {sideCardBottom.image ? (
-                                    <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
-                                        <Image 
-                                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
-                                            src={sideCardBottom.image} 
-                                            alt={sideCardBottom.imageAlt || sideCardBottom.title || "Promo Showcase"} 
-                                            width={180}
-                                            height={160}
-                                            unoptimized
-                                        />
+                                    <div className='w-[48%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                                        <div
+                                            className='h-full flex items-end justify-end'
+                                            style={{
+                                                transform: `scale(${(sideCardBottom.imageScale || 100) / 100}) translateY(${sideCardBottom.imageOffsetY || 0}%)`,
+                                                transformOrigin: 'right bottom'
+                                            }}
+                                        >
+                                            <Image 
+                                                className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                                src={sideCardBottom.image} 
+                                                alt={sideCardBottom.imageAlt || sideCardBottom.title || "Promo Showcase"} 
+                                                width={200}
+                                                height={180}
+                                                unoptimized
+                                            />
+                                        </div>
                                     </div>
                                 ) : null}
                             </Link>
