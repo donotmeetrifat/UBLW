@@ -236,7 +236,7 @@ export default function DataSyncProvider({ children }) {
         // 2b. FETCH LIVE CATEGORY CATALOG SITE-WIDE
         const syncCategoryCatalog = async () => {
             try {
-                const res = await fetch(`/api/categories?_t=${Date.now()}`, {
+                const res = await fetch(`/api/categories?all=true&_t=${Date.now()}`, {
                     cache: 'no-store',
                     headers: {
                         'Pragma': 'no-cache',
@@ -244,15 +244,14 @@ export default function DataSyncProvider({ children }) {
                     }
                 })
                 const data = await res.json()
-                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                if (data.success && Array.isArray(data.categories)) {
                     const activeNames = data.categories
                         .filter(c => c.isActive !== false)
                         .map(c => c.name)
-                    if (activeNames.length > 0) {
-                        dispatch(setCategories(activeNames))
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
-                        }
+                        .filter(Boolean)
+                    dispatch(setCategories(activeNames))
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
                     }
                 }
             } catch (e) {
@@ -387,10 +386,11 @@ export default function DataSyncProvider({ children }) {
                         syncHeroPromotions()
                     }
                     window.dispatchEvent(new CustomEvent('hero-promotions-updated', { detail: data }))
-                } else if (rawType === 'categories' || rawType === 'category-catalog-updated' || rawType === 'category-updated') {
+                } else if (rawType === 'categories' || rawType === 'category-catalog-updated' || rawType === 'category-updated' || rawType === 'categories-updated') {
                     syncCategoryCatalog()
                     syncProductCatalog()
                     window.dispatchEvent(new CustomEvent('category-catalog-updated', { detail: data }))
+                    window.dispatchEvent(new CustomEvent('categories-updated', { detail: data }))
                 } else if (rawType === 'sections' || rawType === 'homepage_sections') {
                     if (data.sections && typeof data.sections === 'object') {
                         dispatch(setHomepageSections(data.sections))
@@ -482,8 +482,8 @@ export default function DataSyncProvider({ children }) {
             // Initial version seeding
             checkVersionSync()
 
-            // Run heartbeat check every 25 seconds
-            versionCheckInterval = setInterval(checkVersionSync, 25000)
+            // Run heartbeat check every 6 seconds for rapid real-time updates across all networks
+            versionCheckInterval = setInterval(checkVersionSync, 6000)
 
             handleVisibilityOrFocus = () => {
                 if (document.visibilityState === 'visible') {

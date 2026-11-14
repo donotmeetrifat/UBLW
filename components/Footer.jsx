@@ -17,25 +17,21 @@ import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
 const Footer = () => {
-    const beautyCategoryLinks = [
-        'Skincare',
-        'Makeup',
-        'Haircare',
-        'Body Care',
-        'Lip Care',
-        'Winter Essentials',
-        'Baby Care',
-        'Eye Care'
-    ].map(name => ({
-        text: name,
-        path: `/shop?category=${encodeURIComponent(name)}`
-    }));
+    const reduxCategories = useSelector(state => state.product.categories);
+
+    const beautyCategoryLinks = (Array.isArray(reduxCategories) ? reduxCategories : [])
+        .filter(Boolean)
+        .slice(0, 8)
+        .map(name => ({
+            text: name,
+            path: `/shop?category=${encodeURIComponent(name)}`
+        }));
 
     const linkSections = [
-        {
+        ...(beautyCategoryLinks.length > 0 ? [{
             title: "BEAUTY CATEGORIES",
             links: beautyCategoryLinks
-        },
+        }] : []),
         {
             title: "CUSTOMER CARE",
             links: [

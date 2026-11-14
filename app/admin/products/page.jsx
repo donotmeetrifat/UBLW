@@ -29,24 +29,7 @@ import {
     ReviewBadgeIcon
 } from "@/components/icons"
 import AdminDropdown from "@/components/admin/AdminDropdown"
-import { broadcastStoreChange } from "@/lib/realtimeSync"
-
-const CATEGORIES = [
-    'All',
-    'Skincare',
-    'Makeup & Cult Beauty',
-    'Haircare',
-    'Fragrance',
-    'Body & Wellness'
-]
-
-const FORM_CATEGORIES = [
-    'Skincare',
-    'Makeup & Cult Beauty',
-    'Haircare',
-    'Fragrance',
-    'Body & Wellness'
-]
+import { broadcastStoreChange, subscribeToStoreSync } from "@/lib/realtimeSync"
 
 const STOCK_OPTIONS = [
     { value: 'all', label: 'All Stock Status' },
@@ -135,33 +118,38 @@ export default function AdminProductsPage() {
         sizeVolume: 'Standard'
     })
 
-    const [dbCategories, setDbCategories] = useState([
-        'Skincare',
-        'Makeup',
-        'Haircare',
-        'Fragrance',
-        'Body Care',
-        'Beauty Tools'
-    ])
+    const [dbCategories, setDbCategories] = useState([])
 
     const fileInputRef = useRef(null)
 
     // Load live categories from catalog
     useEffect(() => {
-        const loadCategories = () => {
-            fetch('/api/categories?all=true&_t=' + Date.now(), { cache: 'no-store' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-                        setDbCategories(data.categories.map(c => c.name))
-                    }
+        const loadCategories = async () => {
+            try {
+                const res = await fetch('/api/categories?all=true&_t=' + Date.now(), {
+                    cache: 'no-store',
+                    headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
                 })
-                .catch(() => {})
+                const data = await res.json()
+                if (data.success && Array.isArray(data.categories)) {
+                    const activeNames = data.categories
+                        .filter(c => c.isActive !== false)
+                        .map(c => c.name)
+                        .filter(Boolean)
+                    setDbCategories(activeNames)
+                }
+            } catch (err) {
+                console.error('Error fetching categories in products page:', err)
+            }
         }
         loadCategories()
 
         if (typeof window !== 'undefined') {
-            window.addEventListener('category-catalog-updated', loadCategories)
+            const onCatUpdate = () => loadCategories()
+            window.addEventListener('category-catalog-updated', onCatUpdate)
+            window.addEventListener('categories-updated', onCatUpdate)
+            window.addEventListener('category-updated', onCatUpdate)
+
             const onStorage = (e) => {
                 if (e.key === 'ukbl_categories_synced') loadCategories()
             }
@@ -171,16 +159,27 @@ export default function AdminProductsPage() {
             try {
                 bc = new BroadcastChannel('ukbl_catalog_channel')
                 bc.onmessage = (msg) => {
-                    if (msg.data?.type === 'category-updated' || msg.data?.type === 'category-catalog-updated') {
+                    const t = msg.data?.type || ''
+                    if (t.includes('categor')) {
                         loadCategories()
                     }
                 }
             } catch {}
 
+            // Real-time cross-device Supabase sync listener
+            const unsubscribeSync = subscribeToStoreSync((payload) => {
+                if (payload?.type === 'categories') {
+                    loadCategories()
+                }
+            })
+
             return () => {
-                window.removeEventListener('category-catalog-updated', loadCategories)
+                window.removeEventListener('category-catalog-updated', onCatUpdate)
+                window.removeEventListener('categories-updated', onCatUpdate)
+                window.removeEventListener('category-updated', onCatUpdate)
                 window.removeEventListener('storage', onStorage)
                 if (bc) bc.close()
+                if (typeof unsubscribeSync === 'function') unsubscribeSync()
             }
         }
     }, [])
@@ -221,7 +220,7 @@ export default function AdminProductsPage() {
         setEditingProduct(null)
         setFormData({
             name: '',
-            category: dbCategories[0] || 'Skincare',
+            category: dbCategories[0] || '',
             brand: 'UK Import',
             price: '',
             mrp: '',
@@ -263,7 +262,7 @@ export default function AdminProductsPage() {
 
         setFormData({
             name: prod.name || '',
-            category: prod.category || 'Skincare',
+            category: prod.category || dbCategories[0] || '',
             brand: prod.brand || 'UK Import',
             price: prod.price || '',
             mrp: prod.mrp || prod.price || '',
@@ -1063,12 +1062,37 @@ export default function AdminProductsPage() {
                                             <label className="block text-xs font-bold text-[#241224] mb-1.5">
                                                 Category <span className="text-red-500">*</span>
                                             </label>
-                                            <AdminDropdown
-                                                value={formData.category}
-                                                onChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
-                                                options={dbCategories.map(cat => ({ value: cat, label: cat }))}
-                                                fullWidth
-                                            />
+                                            {dbCategories.length > 0 ? (
+                                                <AdminDropdown
+                                                    value={formData.category}
+                                                    onChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
+                                                    options={dbCategories.map(cat => ({ value: cat, label: cat }))}
+                                                    placeholder="Select Category"
+                                                    fullWidth
+                                                />
+                                            ) : (
+                                                <div className="space-y-1.5">
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.category}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                                                        placeholder="Enter category name or create in Categories"
+                                                        className="w-full bg-[#FAF6FA]/60 border border-amber-300 focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                                    />
+                                                    <div className="flex items-center justify-between text-[10px] text-amber-700 px-1">
+                                                        <span>No categories in catalog yet.</span>
+                                                        <a
+                                                            href="/admin/categories"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-bold text-[#6C306E] hover:underline"
+                                                        >
+                                                            + Add in Category Catalog ↗
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div>

@@ -100,7 +100,12 @@ export default function AdminDropdown({
                         } ${menuClassName}`}
                     >
                         <div className="space-y-0.5">
-                            {normalizedOptions.map((opt) => {
+                            {normalizedOptions.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-slate-400 italic text-center">
+                                    No options available
+                                </div>
+                            ) : (
+                                normalizedOptions.map((opt) => {
                                 const isSelected = String(opt.value) === String(value);
                                 return (
                                     <button
@@ -129,7 +134,7 @@ export default function AdminDropdown({
                                         )}
                                     </button>
                                 );
-                            })}
+                            }))}
                         </div>
                     </motion.div>
                 )}

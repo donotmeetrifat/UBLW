@@ -161,18 +161,6 @@ export default function AdminHeroPromotionsPage() {
             }
         })
 
-        // Also ensure baseline defaults exist
-        const defaults = ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools']
-        defaults.forEach(name => {
-            if (!seenNames.has(name.toLowerCase())) {
-                seenNames.add(name.toLowerCase())
-                links.push({
-                    label: name,
-                    url: `/shop?category=${encodeURIComponent(name)}`
-                })
-            }
-        })
-
         links.push({ label: 'Contact', url: '/contact' })
         return links
     }, [categories, reduxCategories])
