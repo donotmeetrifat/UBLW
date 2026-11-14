@@ -374,11 +374,11 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Mobile Search Bar Row - Uniform Height & Alignment */}
-                    <div className="sm:hidden mt-2.5 pb-1 flex items-center gap-2">
+                    {/* Mobile Search Bar Row - Full Width */}
+                    <div className="sm:hidden mt-2.5 pb-1">
                         <form
                             onSubmit={handleSearch}
-                            className="flex-1 flex items-center text-xs gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
+                            className="w-full flex items-center text-xs gap-2 px-3.5 h-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] focus-within:border-[#6C306E] focus-within:bg-white transition-all shadow-2xs"
                         >
                             <SearchIcon size={15} color="#6C306E" className="shrink-0" />
                             <input
@@ -388,14 +388,17 @@ const Navbar = () => {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearch('')}
+                                    className="p-1 rounded-full text-slate-400 hover:text-slate-600 transition cursor-pointer shrink-0"
+                                    aria-label="Clear search"
+                                >
+                                    <CloseIcon size={12} />
+                                </button>
+                            )}
                         </form>
-                        <Link
-                            href="/orders"
-                            className="size-10 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center hover:bg-[#EFE0EF] transition-colors shadow-2xs shrink-0"
-                            aria-label="Track orders"
-                        >
-                            <TruckIcon size={16} color="#6C306E" />
-                        </Link>
                     </div>
                 </div>
             </header>
