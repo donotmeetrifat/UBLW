@@ -86,12 +86,12 @@ export default function AdminDashboard() {
     useEffect(() => {
         fetchDashboardData()
 
-        // 1. Auto-refresh live data every 8 seconds
+        // 1. Auto-refresh live data periodically (45s background sync)
         const intervalId = setInterval(() => {
             if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
                 fetchDashboardData(false)
             }
-        }, 8000)
+        }, 45000)
 
         // 2. Immediate refresh on storage events from any storefront tab
         const handleStorageSync = (e) => {

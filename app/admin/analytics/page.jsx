@@ -54,12 +54,12 @@ export default function AdminAnalyticsPage() {
     useEffect(() => {
         fetchAnalytics()
 
-        // 1. Auto-refresh live analytics every 8 seconds
+        // 1. Auto-refresh live analytics periodically (45s background sync)
         const intervalId = setInterval(() => {
             if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
                 fetchAnalytics(false)
             }
-        }, 8000)
+        }, 45000)
 
         // 2. Storage synchronization across tabs
         const handleStorageSync = (e) => {

@@ -575,6 +575,7 @@ export default function AdminProductsPage() {
                     toast.success('Product updated successfully!', { id: toastId })
                     if (data.product) {
                         dispatch(updateReduxProduct([data.product]))
+                        setProducts(prev => prev.map(p => p.id === data.product.id ? { ...p, ...data.product } : p))
                     }
                     if (typeof window !== 'undefined') {
                         try {
@@ -602,16 +603,9 @@ export default function AdminProductsPage() {
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
                         }
-                        if ('caches' in window) {
-                            caches.delete('ukbl-api-v1').catch(() => { })
-                            caches.delete('ukbl-api-v2').catch(() => { })
-                            caches.delete('ukbl-pages-v1').catch(() => { })
-                            caches.delete('ukbl-pages-v2').catch(() => { })
-                        }
                     }
                     setIsEditorOpen(false)
                     setEditingProduct(null)
-                    fetchProducts()
                 } else {
                     toast.error(data.message || 'Failed to update product', { id: toastId })
                 }
@@ -626,6 +620,8 @@ export default function AdminProductsPage() {
                     toast.success('New product listed successfully in catalog!', { id: toastId })
                     if (data.product) {
                         dispatch(updateReduxProduct([data.product]))
+                        setProducts(prev => [data.product, ...prev])
+                        setStats(prev => ({ ...prev, totalProducts: (prev.totalProducts || 0) + 1, inStockCount: (prev.inStockCount || 0) + 1 }))
                     }
                     if (typeof window !== 'undefined') {
                         try {
@@ -647,21 +643,15 @@ export default function AdminProductsPage() {
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
                         } catch { }
-                        broadcastStoreChange('products', { product: data.product, action: 'update' })
+                        broadcastStoreChange('products', { product: data.product, action: 'create' })
 
                         // Purge Service Worker API & page caches
                         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
                         }
-                        if ('caches' in window) {
-                            caches.delete('ukbl-api-v1').catch(() => { })
-                            caches.delete('ukbl-api-v2').catch(() => { })
-                            caches.delete('ukbl-pages-v1').catch(() => { })
-                            caches.delete('ukbl-pages-v2').catch(() => { })
-                        }
                     }
                     setIsEditorOpen(false)
-                    fetchProducts()
+                    setEditingProduct(null)
                 } else {
                     toast.error(data.message || 'Failed to list product', { id: toastId })
                 }
@@ -684,22 +674,19 @@ export default function AdminProductsPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success(data.message || 'Product removed successfully')
+                const removedId = deletingProduct.id
+                setProducts(prev => prev.filter(p => p.id !== removedId))
+                setStats(prev => ({ ...prev, totalProducts: Math.max(0, (prev.totalProducts || 1) - 1) }))
+                setDeletingProduct(null)
+
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
-                    broadcastStoreChange('products', { productId: deletingProduct.id, action: 'delete' })
+                    broadcastStoreChange('products', { productId: removedId, action: 'delete' })
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
-                    if ('caches' in window) {
-                        caches.delete('ukbl-api-v1').catch(() => { })
-                        caches.delete('ukbl-api-v2').catch(() => { })
-                        caches.delete('ukbl-pages-v1').catch(() => { })
-                        caches.delete('ukbl-pages-v2').catch(() => { })
-                    }
                 }
-                setDeletingProduct(null)
-                fetchProducts()
             } else {
                 toast.error(data.message || 'Failed to remove product')
             }
@@ -713,6 +700,13 @@ export default function AdminProductsPage() {
 
     const toggleQuickStock = async (prod) => {
         const nextState = !prod.inStock
+        // Optimistic UI: update immediately on click
+        setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, inStock: nextState } : p))
+        setStats(prev => ({
+            ...prev,
+            inStockCount: nextState ? (prev.inStockCount || 0) + 1 : Math.max(0, (prev.inStockCount || 1) - 1)
+        }))
+
         try {
             const res = await fetch(`/api/products/${prod.id}`, {
                 method: 'PATCH',
@@ -721,22 +715,19 @@ export default function AdminProductsPage() {
             })
             const data = await res.json()
             if (data.success) {
-                setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, inStock: nextState } : p))
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
-                    broadcastStoreChange('products', { productId: deletingProduct.id, action: 'delete' })
+                    broadcastStoreChange('products', { product: { ...prod, inStock: nextState }, action: 'update' })
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
-                    if ('caches' in window) {
-                        caches.delete('ukbl-api-v1').catch(() => { })
-                        caches.delete('ukbl-api-v2').catch(() => { })
-                        caches.delete('ukbl-pages-v1').catch(() => { })
-                        caches.delete('ukbl-pages-v2').catch(() => { })
-                    }
                 }
                 toast.success(nextState ? 'Marked In Stock' : 'Marked Out of Stock')
+            } else {
+                // Rollback on server failure
+                setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, inStock: !nextState } : p))
+                toast.error(data.message || 'Failed to update stock')
             }
         } catch (error) {
             toast.error('Failed to update stock state')

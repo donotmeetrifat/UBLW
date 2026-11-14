@@ -6,6 +6,8 @@ import { randomUUID } from 'crypto';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+let cachedStoreId = null;
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -51,6 +53,7 @@ export async function GET(request) {
                 if (sort === 'price-low') orderSql = 'ORDER BY p.price ASC';
                 if (sort === 'stock') orderSql = 'ORDER BY p."stockCount" ASC';
 
+                // High-performance query with LEFT JOINs instead of slow correlated N+1 subqueries
                 const sql = `
                     SELECT 
                         p.*,
@@ -59,10 +62,20 @@ export async function GET(request) {
                         COALESCE(p.benefits, ARRAY[]::text[]) as "benefits",
                         COALESCE(p."whyYouWillLoveIt", '') as "whyYouWillLoveIt",
                         COALESCE(p."isActive", true) as "isActive",
-                        COALESCE((SELECT SUM(oi.quantity)::int FROM "OrderItem" oi WHERE oi."productId" = p.id), 0) as "unitsSold",
-                        COALESCE((SELECT AVG(r.rating) FROM "Rating" r WHERE r."productId" = p.id), 5.0)::float as "ratingScore",
-                        COALESCE((SELECT COUNT(*)::int FROM "Rating" r WHERE r."productId" = p.id), 0) as "reviewsCount"
+                        COALESCE(oi_agg.units_sold, 0)::int as "unitsSold",
+                        COALESCE(r_agg.rating_score, 5.0)::float as "ratingScore",
+                        COALESCE(r_agg.reviews_count, 0)::int as "reviewsCount"
                     FROM "Product" p
+                    LEFT JOIN (
+                        SELECT "productId", SUM(quantity)::int as units_sold
+                        FROM "OrderItem"
+                        GROUP BY "productId"
+                    ) oi_agg ON oi_agg."productId" = p.id
+                    LEFT JOIN (
+                        SELECT "productId", AVG(rating)::float as rating_score, COUNT(*)::int as reviews_count
+                        FROM "Rating"
+                        GROUP BY "productId"
+                    ) r_agg ON r_agg."productId" = p.id
                     ${whereSql}
                     ${orderSql}
                 `;
@@ -199,34 +212,39 @@ export async function POST(request) {
         const parsedStock = stockCount !== undefined ? parseInt(stockCount, 10) : 50;
         const imageList = Array.isArray(images) && images.length > 0
             ? images.filter(Boolean)
-            : ['/product_img1.png'];
+            : [];
         const cleanBenefits = Array.isArray(benefits) ? benefits.map(b => String(b).trim()).filter(Boolean) : [];
 
         if (isDatabaseConfigured()) {
-            let store = await prisma.store.findFirst();
-            if (!store) {
-                let adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
-                if (!adminUser) {
-                    adminUser = await prisma.user.create({
+            let storeId = cachedStoreId;
+            if (!storeId) {
+                let store = await prisma.store.findFirst();
+                if (!store) {
+                    let adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+                    if (!adminUser) {
+                        adminUser = await prisma.user.create({
+                            data: {
+                                name: 'UK Brand Lover Admin',
+                                email: 'admin@ukbrandlover.com',
+                                role: 'ADMIN'
+                            }
+                        });
+                    }
+                    store = await prisma.store.create({
                         data: {
-                            name: 'UK Brand Lover Admin',
+                            userId: adminUser.id,
+                            name: 'UK Brand Lover Flagship',
+                            username: 'ukbrandlover-official',
+                            description: 'Official 100% Authentic UK Imported Skincare & Cosmetics Flagship',
+                            address: 'Dhaka, Bangladesh',
+                            contact: '+8801959524393',
                             email: 'admin@ukbrandlover.com',
-                            role: 'ADMIN'
+                            logo: '/logo.png',
                         }
                     });
                 }
-                store = await prisma.store.create({
-                    data: {
-                        userId: adminUser.id,
-                        name: 'UK Brand Lover Flagship',
-                        username: 'ukbrandlover-official',
-                        description: 'Official 100% Authentic UK Imported Skincare & Cosmetics Flagship',
-                        address: 'Dhaka, Bangladesh',
-                        contact: '+8801959524393',
-                        email: 'admin@ukbrandlover.com',
-                        logo: '/logo.png',
-                    }
-                });
+                cachedStoreId = store.id;
+                storeId = store.id;
             }
 
             const cleanDescription = (description || formulaProfile || '').trim();
@@ -249,7 +267,7 @@ export async function POST(request) {
                         stockCount: isNaN(parsedStock) ? 50 : parsedStock,
                         inStock: inStock !== undefined ? Boolean(inStock) : true,
                         images: imageList,
-                        storeId: store.id,
+                        storeId: storeId,
                         isActive: true
                     }
                 });
@@ -303,7 +321,7 @@ export async function POST(request) {
                         inStock: inStock !== undefined ? Boolean(inStock) : true,
                         stockCount: isNaN(parsedStock) ? 50 : parsedStock,
                         images: imageList,
-                        storeId: store.id,
+                        storeId: storeId,
                         views: 0,
                         isActive: true
                     };

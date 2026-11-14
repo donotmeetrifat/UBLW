@@ -141,9 +141,13 @@ export default function AdminCategoriesPage() {
             }
 
             toast.success(data.message || (isEditing ? 'Category updated!' : 'Category created!'))
+            if (isEditing && data.category) {
+                setCategories(prev => prev.map(c => c.id === data.category.id ? { ...c, ...data.category } : c))
+            } else if (data.category) {
+                setCategories(prev => [data.category, ...prev])
+            }
             setIsAddModalOpen(false)
             setEditingCategory(null)
-            fetchCategories()
 
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('category-catalog-updated'))
@@ -170,16 +174,20 @@ export default function AdminCategoriesPage() {
         }
 
         try {
+            // Optimistic UI: remove immediately
+            setCategories(prev => prev.filter(c => c.id !== cat.id))
+
             const res = await fetch(`/api/categories/${cat.id}`, { method: 'DELETE' })
             const data = await res.json()
 
             if (!res.ok || !data.success) {
+                // Rollback if failed
+                setCategories(prev => [cat, ...prev])
                 toast.error(data.message || 'Failed to delete category')
                 return
             }
 
             toast.success(data.message || 'Category deleted successfully')
-            fetchCategories()
 
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('category-catalog-updated'))
@@ -189,9 +197,10 @@ export default function AdminCategoriesPage() {
                     bc.postMessage({ type: 'category-updated', timestamp: Date.now() })
                     bc.close()
                 } catch {}
-                broadcastStoreChange('categories', { category: data.category })
+                broadcastStoreChange('categories', { category: cat, action: 'delete' })
             }
         } catch (error) {
+            setCategories(prev => [cat, ...prev])
             toast.error('Failed to delete category')
         }
     }

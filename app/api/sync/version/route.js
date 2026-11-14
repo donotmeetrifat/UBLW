@@ -27,10 +27,15 @@ let memoryVersions = {
     inquiries: Date.now()
 }
 
+let lastVersionLoadTime = 0;
+
 /**
  * Loads persisted versions from database Setting table
  */
 async function loadPersistedVersions() {
+    if (Date.now() - lastVersionLoadTime < 15000) {
+        return memoryVersions;
+    }
     if (!isDatabaseConfigured() || !prisma?.setting) return memoryVersions
     try {
         const row = await prisma.setting.findUnique({
@@ -42,6 +47,7 @@ async function loadPersistedVersions() {
                 memoryVersions = { ...memoryVersions, ...parsed }
             }
         }
+        lastVersionLoadTime = Date.now();
     } catch (e) {
         // Fallback to memory
     }

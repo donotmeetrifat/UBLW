@@ -54,6 +54,11 @@ export default function AdminLayout({ children }) {
             const data = await res.json()
             if (data.success && data.user?.role === 'ADMIN') {
                 setIsAdmin(true)
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    } catch {}
+                }
             } else {
                 setIsAdmin(false)
             }
