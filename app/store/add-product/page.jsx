@@ -5,11 +5,14 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import { useRouter } from "next/navigation"
+import { useDispatch } from "react-redux"
+import { upsertProduct } from "@/lib/features/product/productSlice"
 import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 export default function StoreAddProduct() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
     const router = useRouter()
+    const dispatch = useDispatch()
 
     const [beautyCategories, setBeautyCategories] = useState([
         "Skincare",
@@ -101,6 +104,22 @@ export default function StoreAddProduct() {
 
             if (data.success) {
                 toast.success("Authentic UK product published successfully!")
+                if (data.product) {
+                    dispatch(upsertProduct(data.product))
+                    if (typeof window !== 'undefined') {
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                            const list = Array.isArray(cached) ? cached : []
+                            const idx = list.findIndex(p => p.id === data.product?.id)
+                            if (idx >= 0) list[idx] = { ...list[idx], ...data.product }
+                            else list.unshift(data.product)
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                        } catch {}
+                        localStorage.setItem('ukbl_products_synced', Date.now().toString())
+                        window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
+                        window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                    }
+                }
                 broadcastStoreChange('products', { product: data.product, action: 'create' })
                 router.push('/store/manage-product')
             } else {

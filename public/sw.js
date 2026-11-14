@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ukbl-v6';
-const STATIC_CACHE = 'ukbl-static-v6';
-const PAGES_CACHE = 'ukbl-pages-v6';
-const API_CACHE = 'ukbl-api-v6';
-const IMAGE_CACHE = 'ukbl-images-v6';
+const CACHE_NAME = 'ukbl-v7';
+const STATIC_CACHE = 'ukbl-static-v7';
+const PAGES_CACHE = 'ukbl-pages-v7';
+const API_CACHE = 'ukbl-api-v7';
+const IMAGE_CACHE = 'ukbl-images-v7';
 
 const PRECACHE_URLS = [
     '/',

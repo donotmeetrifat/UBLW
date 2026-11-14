@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
-import { invalidateProductsCache } from '../route';
+import { invalidateProductsCache } from '@/lib/productsCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

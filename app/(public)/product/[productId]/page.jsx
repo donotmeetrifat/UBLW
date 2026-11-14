@@ -7,7 +7,7 @@ import Loading from "@/components/Loading";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setProduct as updateReduxProduct } from "@/lib/features/product/productSlice";
+import { upsertProduct } from "@/lib/features/product/productSlice";
 import { SparklesIcon, ChevronRightIcon, BagIcon } from "@/components/icons";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -105,8 +105,8 @@ export default function Product() {
             const data = await res.json();
             if (data.success && data.product) {
                 setLiveProduct(data.product);
-                // Synchronize latest database fields into Redux store
-                dispatch(updateReduxProduct([data.product]));
+                // Synchronize latest database fields into Redux store without wiping the catalog
+                dispatch(upsertProduct(data.product));
 
                 // Update localStorage cache so subsequent navigations and page reloads have the latest specs
                 if (typeof window !== 'undefined') {

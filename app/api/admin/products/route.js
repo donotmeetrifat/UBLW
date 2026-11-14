@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { randomUUID } from 'crypto';
+import { invalidateProductsCache } from '@/lib/productsCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -299,7 +300,7 @@ export async function POST(request) {
                     inStock !== undefined ? Boolean(inStock) : true,
                     isNaN(parsedStock) ? 50 : parsedStock,
                     imageList,
-                    store.id,
+                    storeId,
                     0,
                     true
                 );
@@ -353,6 +354,7 @@ export async function POST(request) {
                 whyYouWillLoveIt: (created?.whyYouWillLoveIt || cleanWhyYouWillLoveIt || '').trim()
             };
 
+            invalidateProductsCache();
             return NextResponse.json({ success: true, product: normalizedProduct }, {
                 status: 201,
                 headers: {
@@ -378,6 +380,7 @@ export async function POST(request) {
             views: 0
         });
 
+        invalidateProductsCache();
         return NextResponse.json({ success: true, product: memProduct }, { status: 201 });
     } catch (error) {
         console.error('Error in admin product POST:', error);

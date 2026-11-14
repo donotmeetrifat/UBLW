@@ -8,7 +8,7 @@ import { ArrowLeftIcon, CloseIcon, FilterIcon, SparklesIcon } from "@/components
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector, useDispatch } from "react-redux"
-import { setCategories } from "@/lib/features/product/productSlice"
+import { setCategories, setProduct, upsertProduct, removeProduct } from "@/lib/features/product/productSlice"
 
 const emptyFilters = {
     categories: [],
@@ -87,15 +87,50 @@ function ShopContent() {
         }
     }, [dispatch]);
 
+    // Fetch and sync products if Redux list is not yet populated or upon product updates
+    const loadProducts = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/products?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            const data = await res.json();
+            if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+                dispatch(setProduct(data.products));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products));
+                }
+            }
+        } catch (e) {
+            console.warn('Error syncing products on shop page:', e);
+        }
+    }, [dispatch]);
+
     useEffect(() => {
         loadLiveCategories();
+        if (!products || products.length === 0) {
+            loadProducts();
+        }
 
         const onCategoryUpdate = () => loadLiveCategories();
+        const onProductUpdate = (e) => {
+            if (e?.detail?.product) {
+                dispatch(upsertProduct(e.detail.product));
+            } else {
+                loadProducts();
+            }
+        };
         const onStorage = (e) => {
             if (e.key === 'ukbl_categories_synced') loadLiveCategories();
+            if (e.key === 'ukbl_products_synced') loadProducts();
         };
 
         window.addEventListener('category-catalog-updated', onCategoryUpdate);
+        window.addEventListener('product-updated', onProductUpdate);
+        window.addEventListener('product-catalog-updated', onProductUpdate);
         window.addEventListener('storage', onStorage);
 
         try {
@@ -104,19 +139,30 @@ function ShopContent() {
                 if (msg.data?.type === 'category-updated') {
                     loadLiveCategories();
                 }
+                if (msg.data?.type === 'product-updated' && msg.data?.product) {
+                    dispatch(upsertProduct(msg.data.product));
+                } else if (msg.data?.type === 'product-deleted' && msg.data?.productId) {
+                    dispatch(removeProduct(msg.data.productId));
+                } else if (msg.data?.type === 'product-updated' || msg.data?.type === 'product-catalog-updated') {
+                    loadProducts();
+                }
             };
             return () => {
                 bc.close();
                 window.removeEventListener('category-catalog-updated', onCategoryUpdate);
+                window.removeEventListener('product-updated', onProductUpdate);
+                window.removeEventListener('product-catalog-updated', onProductUpdate);
                 window.removeEventListener('storage', onStorage);
             };
         } catch {
             return () => {
                 window.removeEventListener('category-catalog-updated', onCategoryUpdate);
+                window.removeEventListener('product-updated', onProductUpdate);
+                window.removeEventListener('product-catalog-updated', onProductUpdate);
                 window.removeEventListener('storage', onStorage);
             };
         }
-    }, [loadLiveCategories]);
+    }, [loadLiveCategories, loadProducts, products?.length, dispatch]);
 
     useEffect(() => {
         if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {

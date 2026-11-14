@@ -7,6 +7,8 @@ import { setCart, calculateCartTotal, sanitizeCartWithProducts } from '@/lib/fea
 import { setAddresses } from '@/lib/features/address/addressSlice'
 import { 
     setProduct, 
+    upsertProduct,
+    removeProduct,
     setCategories, 
     setHomepageSections, 
     setBanners, 
@@ -87,7 +89,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v6';
+                    const currentSwVer = 'ukbl-v7';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -442,19 +444,27 @@ export default function DataSyncProvider({ children }) {
                     }
                     window.dispatchEvent(new CustomEvent('homepage-sections-updated', { detail: data }))
                 } else if (rawType === 'products' || rawType === 'product') {
-                    if (data.product && data.product.id) {
-                        dispatch(setProduct([data.product]))
+                    if (data.action === 'delete' && (data.productId || data.id)) {
+                        const delId = data.productId || data.id;
+                        dispatch(removeProduct(delId));
                         try {
-                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
-                            const list = Array.isArray(cached) ? cached : []
-                            const idx = list.findIndex(p => p.id === data.product.id)
-                            if (idx >= 0) list[idx] = { ...list[idx], ...data.product }
-                            else list.unshift(data.product)
-                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                            const list = Array.isArray(cached) ? cached.filter(p => p.id !== delId) : [];
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
+                        } catch {}
+                    } else if (data.product && data.product.id) {
+                        dispatch(upsertProduct(data.product));
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                            const list = Array.isArray(cached) ? cached : [];
+                            const idx = list.findIndex(p => p.id === data.product.id);
+                            if (idx >= 0) list[idx] = { ...list[idx], ...data.product };
+                            else list.unshift(data.product);
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
                         } catch {}
                     }
-                    syncProductCatalog()
-                    window.dispatchEvent(new CustomEvent('product-catalog-updated', { detail: data }))
+                    syncProductCatalog();
+                    window.dispatchEvent(new CustomEvent('product-catalog-updated', { detail: data }));
                 } else if (rawType === 'settings') {
                     window.dispatchEvent(new CustomEvent('settings-updated', { detail: data }))
                 } else if (rawType === 'coupons') {
@@ -553,6 +563,15 @@ export default function DataSyncProvider({ children }) {
                 }
             }
 
+            const handleProductUpdated = (e) => {
+                if (e?.detail?.product) {
+                    dispatch(upsertProduct(e.detail.product))
+                } else {
+                    syncProductCatalog()
+                }
+            }
+
+            window.addEventListener('product-updated', handleProductUpdated)
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
             window.addEventListener('homepage-sections-updated', syncHomepageSections)
@@ -617,17 +636,25 @@ export default function DataSyncProvider({ children }) {
                         syncProductCatalog()
                     }
                     if (msg.data?.type === 'product-updated' && msg.data?.product) {
-                        dispatch(setProduct([msg.data.product]))
+                        dispatch(upsertProduct(msg.data.product));
                         try {
-                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
-                            const list = Array.isArray(cached) ? cached : []
-                            const idx = list.findIndex(p => p.id === msg.data.product.id)
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                            const list = Array.isArray(cached) ? cached : [];
+                            const idx = list.findIndex(p => p.id === msg.data.product.id);
                             if (idx >= 0) {
-                                list[idx] = { ...list[idx], ...msg.data.product }
+                                list[idx] = { ...list[idx], ...msg.data.product };
                             } else {
-                                list.unshift(msg.data.product)
+                                list.unshift(msg.data.product);
                             }
-                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
+                        } catch {}
+                    }
+                    if (msg.data?.type === 'product-deleted' && msg.data?.productId) {
+                        dispatch(removeProduct(msg.data.productId));
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                            const list = Array.isArray(cached) ? cached.filter(p => p.id !== msg.data.productId) : [];
+                            localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
                         } catch {}
                     }
                     if (msg.data?.type === 'category-updated') {
@@ -762,6 +789,8 @@ export default function DataSyncProvider({ children }) {
         return () => {
             window.removeEventListener('storage', handleStorageEvent)
             window.removeEventListener('auth-change', handleAuthChange)
+            window.removeEventListener('product-updated', handleProductUpdated)
+            window.removeEventListener('product-catalog-updated', syncProductCatalog)
             if (typeof unsubscribeRealtime === 'function') unsubscribeRealtime()
             if (versionCheckInterval) clearInterval(versionCheckInterval)
             if (typeof window !== 'undefined') {

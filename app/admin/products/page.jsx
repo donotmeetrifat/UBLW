@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useDispatch } from "react-redux"
-import { setProduct as updateReduxProduct } from "@/lib/features/product/productSlice"
+import { setProduct, upsertProduct, removeProduct } from "@/lib/features/product/productSlice"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 import {
@@ -61,10 +61,6 @@ export default function AdminProductsPage() {
         if (typeof window !== 'undefined') {
             try {
                 const raw = localStorage.getItem('ukbl_cached_products');
-                if (raw && (raw.includes('prod_1') || raw.includes('CeraVe') || raw.includes('The Ordinary'))) {
-                    localStorage.removeItem('ukbl_cached_products');
-                    return [];
-                }
                 const cached = JSON.parse(raw || '[]');
                 if (Array.isArray(cached) && cached.length > 0) return cached;
             } catch { }
@@ -199,7 +195,7 @@ export default function AdminProductsPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.products)) {
                 setProducts(data.products)
-                if (typeof window !== 'undefined') {
+                if (typeof window !== 'undefined' && (selectedCategory === 'all' || !selectedCategory) && !searchQuery) {
                     localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
                 }
                 if (data.stats) setStats(data.stats)
@@ -574,7 +570,7 @@ export default function AdminProductsPage() {
                 if (data.success) {
                     toast.success('Product updated successfully!', { id: toastId })
                     if (data.product) {
-                        dispatch(updateReduxProduct([data.product]))
+                        dispatch(upsertProduct(data.product))
                         setProducts(prev => prev.map(p => p.id === data.product.id ? { ...p, ...data.product } : p))
                     }
                     if (typeof window !== 'undefined') {
@@ -619,7 +615,7 @@ export default function AdminProductsPage() {
                 if (data.success) {
                     toast.success('New product listed successfully in catalog!', { id: toastId })
                     if (data.product) {
-                        dispatch(updateReduxProduct([data.product]))
+                        dispatch(upsertProduct(data.product))
                         setProducts(prev => [data.product, ...prev])
                         setStats(prev => ({ ...prev, totalProducts: (prev.totalProducts || 0) + 1, inStockCount: (prev.inStockCount || 0) + 1 }))
                     }
@@ -676,10 +672,16 @@ export default function AdminProductsPage() {
                 toast.success(data.message || 'Product removed successfully')
                 const removedId = deletingProduct.id
                 setProducts(prev => prev.filter(p => p.id !== removedId))
+                dispatch(removeProduct(removedId))
                 setStats(prev => ({ ...prev, totalProducts: Math.max(0, (prev.totalProducts || 1) - 1) }))
                 setDeletingProduct(null)
 
                 if (typeof window !== 'undefined') {
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                        const list = Array.isArray(cached) ? cached.filter(p => p.id !== removedId) : []
+                        localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                    } catch {}
                     localStorage.setItem('ukbl_products_synced', Date.now().toString())
                     window.dispatchEvent(new CustomEvent('product-catalog-updated'))
                     broadcastStoreChange('products', { productId: removedId, action: 'delete' })

@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { getProductsCache, setProductsCache, invalidateProductsCache } from '@/lib/productsCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-let productsCache = {
-    data: null,
-    fetchedAt: 0
-};
-
-export function invalidateProductsCache() {
-    productsCache = { data: null, fetchedAt: 0 };
-}
 
 export async function GET(request) {
     try {
@@ -23,11 +15,17 @@ export async function GET(request) {
         const sortBy = searchParams.get('sortBy') || 'featured';
 
         const hasFilters = Boolean(category || search || inStock || (sortBy && sortBy !== 'featured'));
+        const isBypassCache = searchParams.has('_t') || 
+                              searchParams.has('nocache') || 
+                              searchParams.has('fresh') ||
+                              request.headers.get('pragma')?.includes('no-cache') ||
+                              request.headers.get('cache-control')?.includes('no-cache');
 
-        // High-performance server memory cache (25s TTL) for default catalog
-        if (!hasFilters && productsCache.fetchedAt && Date.now() - productsCache.fetchedAt < 25000 && Array.isArray(productsCache.data)) {
+        // Short-lived server memory cache (3s TTL) for unparameterized repeated hits
+        const cache = getProductsCache();
+        if (!isBypassCache && !hasFilters && cache.fetchedAt && Date.now() - cache.fetchedAt < 3000 && Array.isArray(cache.data)) {
             return NextResponse.json(
-                { success: true, products: productsCache.data },
+                { success: true, products: cache.data },
                 {
                     headers: {
                         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -147,8 +145,7 @@ export async function GET(request) {
             });
 
             if (!hasFilters && Array.isArray(normalized)) {
-                productsCache.data = normalized;
-                productsCache.fetchedAt = Date.now();
+                setProductsCache(normalized);
             }
 
             return NextResponse.json({ success: true, products: normalized }, {

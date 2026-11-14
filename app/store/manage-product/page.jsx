@@ -7,17 +7,23 @@ import Loading from "@/components/Loading"
 import { baseProductDummyData } from "@/assets/assets"
 import { TrashIcon, SearchIcon, SparklesIcon } from "@/components/icons"
 import Link from "next/link"
+import { useDispatch } from "react-redux"
+import { removeProduct } from "@/lib/features/product/productSlice"
 import { broadcastStoreChange } from "@/lib/realtimeSync"
 
 export default function StoreManageProducts() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
+    const dispatch = useDispatch()
     const [loading, setLoading] = useState(true)
     const [products, setProducts] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('/api/products')
+            const res = await fetch('/api/products?_t=' + Date.now(), {
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+            })
             const data = await res.json()
             if (data.success && Array.isArray(data.products)) {
                 setProducts(data.products)
@@ -63,6 +69,16 @@ export default function StoreManageProducts() {
             const data = await res.json()
             if (data.success) {
                 setProducts(prev => prev.filter(p => p.id !== productId))
+                dispatch(removeProduct(productId))
+                if (typeof window !== 'undefined') {
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                        const list = Array.isArray(cached) ? cached.filter(p => p.id !== productId) : []
+                        localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
+                    } catch {}
+                    localStorage.setItem('ukbl_products_synced', Date.now().toString())
+                    window.dispatchEvent(new CustomEvent('product-catalog-updated'))
+                }
                 toast.success('Product removed successfully')
                 broadcastStoreChange('products', { productId, action: 'delete' })
             }
