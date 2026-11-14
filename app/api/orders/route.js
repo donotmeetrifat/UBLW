@@ -306,6 +306,31 @@ export async function POST(request) {
                     }
                 });
 
+                // Deduct stock count for each purchased product
+                for (const item of resolvedOrderItems) {
+                    if (item.productId) {
+                        try {
+                            const currentProd = await prisma.product.findUnique({
+                                where: { id: item.productId },
+                                select: { id: true, stockCount: true }
+                            });
+                            if (currentProd) {
+                                const currentStock = currentProd.stockCount !== null && currentProd.stockCount !== undefined ? currentProd.stockCount : 50;
+                                const newStock = Math.max(0, currentStock - (item.quantity || 1));
+                                await prisma.product.update({
+                                    where: { id: item.productId },
+                                    data: {
+                                        stockCount: newStock,
+                                        inStock: newStock > 0
+                                    }
+                                });
+                            }
+                        } catch (stockErr) {
+                            console.warn('Stock decrement note for product', item.productId, stockErr.message);
+                        }
+                    }
+                }
+
                 // If a coupon was successfully redeemed, increment its usage counter
                 if (isCouponUsed && appliedCouponId) {
                     try {

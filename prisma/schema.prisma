@@ -170,6 +170,8 @@ model Order {
     customerNotes  String?
     isCouponUsed   Boolean       @default(false)
     couponCode     String?
+    cancelReason   String?       // Reason provided when order was cancelled
+    cancelledAt    DateTime?     // Timestamp of cancellation
     createdAt      DateTime      @default(now())
     updatedAt      DateTime      @updatedAt
 

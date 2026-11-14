@@ -44,8 +44,75 @@ export async function PATCH(request, { params }) {
         const updates = await request.json();
 
         if (isDatabaseConfigured()) {
+            const prevOrder = await prisma.order.findFirst({
+                where: { OR: [{ id }, { orderNumber: id }] },
+                include: { orderItems: true }
+            });
+
+            if (!prevOrder) {
+                return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+            }
+
+            // If transitioning to CANCELLED from an active status, restore stock
+            if (updates.status === 'CANCELLED' && prevOrder.status !== 'CANCELLED') {
+                for (const item of prevOrder.orderItems) {
+                    if (item.productId) {
+                        try {
+                            const currentProd = await prisma.product.findUnique({
+                                where: { id: item.productId },
+                                select: { id: true, stockCount: true }
+                            });
+                            if (currentProd) {
+                                const currentStock = currentProd.stockCount !== null && currentProd.stockCount !== undefined ? currentProd.stockCount : 50;
+                                const newStock = currentStock + (item.quantity || 1);
+                                await prisma.product.update({
+                                    where: { id: item.productId },
+                                    data: {
+                                        stockCount: newStock,
+                                        inStock: true
+                                    }
+                                });
+                            }
+                        } catch (stockErr) {
+                            console.warn('Stock restore error during PATCH:', item.productId, stockErr.message);
+                        }
+                    }
+                }
+                if (!updates.cancelledAt) updates.cancelledAt = new Date();
+                if (!updates.cancelReason && !prevOrder.cancelReason) {
+                    updates.cancelReason = 'Cancelled by administrator';
+                }
+            }
+
+            // If transitioning FROM CANCELLED back to active, re-deduct stock
+            if (prevOrder.status === 'CANCELLED' && updates.status && updates.status !== 'CANCELLED') {
+                for (const item of prevOrder.orderItems) {
+                    if (item.productId) {
+                        try {
+                            const currentProd = await prisma.product.findUnique({
+                                where: { id: item.productId },
+                                select: { id: true, stockCount: true }
+                            });
+                            if (currentProd) {
+                                const currentStock = currentProd.stockCount !== null && currentProd.stockCount !== undefined ? currentProd.stockCount : 50;
+                                const newStock = Math.max(0, currentStock - (item.quantity || 1));
+                                await prisma.product.update({
+                                    where: { id: item.productId },
+                                    data: {
+                                        stockCount: newStock,
+                                        inStock: newStock > 0
+                                    }
+                                });
+                            }
+                        } catch (stockErr) {
+                            console.warn('Stock deduction error during PATCH:', item.productId, stockErr.message);
+                        }
+                    }
+                }
+            }
+
             const order = await prisma.order.update({
-                where: { id },
+                where: { id: prevOrder.id },
                 data: updates,
                 include: {
                     orderItems: true,
