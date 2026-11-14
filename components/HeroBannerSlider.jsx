@@ -54,7 +54,7 @@ const HeroBannerSlider = () => {
                     }
                 })
                 const data = await res.json()
-                if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+                if (data.success && Array.isArray(data.banners)) {
                     setLocalBanners(data.banners)
                     try {
                         localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
@@ -73,7 +73,7 @@ const HeroBannerSlider = () => {
         }
 
         const handleBannersUpdated = (e) => {
-            if (Array.isArray(e?.detail?.banners) && e.detail.banners.length > 0) {
+            if (Array.isArray(e?.detail?.banners)) {
                 setLocalBanners(e.detail.banners)
             } else {
                 fetchFreshBanners()

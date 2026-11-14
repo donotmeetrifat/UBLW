@@ -73,7 +73,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v4';
+                    const currentSwVer = 'ukbl-v5';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -87,6 +87,12 @@ export default function DataSyncProvider({ children }) {
                                 });
                             });
                         }
+                        try {
+                            const cachedPromos = localStorage.getItem('ukbl_cached_promotions');
+                            if (cachedPromos && (cachedPromos.includes('hero_card_img') || cachedPromos.includes('product_img'))) {
+                                localStorage.removeItem('ukbl_cached_promotions');
+                            }
+                        } catch {}
                         localStorage.setItem('ukbl_sw_installed_version', currentSwVer);
                     }
 
@@ -157,7 +163,13 @@ export default function DataSyncProvider({ children }) {
                     try {
                         const parsedPromos = JSON.parse(storedPromos)
                         if (parsedPromos && typeof parsedPromos === 'object') {
-                            dispatch(setPromotions(parsedPromos))
+                            if (parsedPromos.mainCard?.image?.includes('hero_card_img1.png') || 
+                                parsedPromos.sideCardTop?.image?.includes('hero_card_img2.png') ||
+                                parsedPromos.sideCardBottom?.image?.includes('hero_card_img3.png')) {
+                                localStorage.removeItem('ukbl_cached_promotions')
+                            } else {
+                                dispatch(setPromotions(parsedPromos))
+                            }
                         }
                     } catch (e) {}
                 }

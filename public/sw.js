@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ukbl-v4';
-const STATIC_CACHE = 'ukbl-static-v4';
-const PAGES_CACHE = 'ukbl-pages-v4';
-const API_CACHE = 'ukbl-api-v4';
-const IMAGE_CACHE = 'ukbl-images-v4';
+const CACHE_NAME = 'ukbl-v5';
+const STATIC_CACHE = 'ukbl-static-v5';
+const PAGES_CACHE = 'ukbl-pages-v5';
+const API_CACHE = 'ukbl-api-v5';
+const IMAGE_CACHE = 'ukbl-images-v5';
 
 const PRECACHE_URLS = [
     '/',
@@ -50,6 +50,8 @@ self.addEventListener('message', (event) => {
         event.data.type === 'CLEAR_API_CACHE' || 
         event.data.type === 'PRODUCT_UPDATED' || 
         event.data.type === 'CLEAR_ALL_CACHES' ||
+        event.data.type === 'CLEAR_IMAGE_CACHE' ||
+        event.data.type === 'STORE_UPDATED' ||
         event.data.type === 'FORCE_UPDATE'
     )) {
         caches.keys().then((keys) => {
@@ -202,28 +204,36 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 4. Images, Logos, and Banners: Cache-First
+    // 4. Images, Logos, and Banners: Network-First with Offline Cache Fallback (Ensures fresh live images & no ghost cached images)
     if (request.destination === 'image' || 
         url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|gif)$/i) || 
         url.pathname.startsWith('/banner/') || 
-        url.pathname.startsWith('/images/')) {
+        url.pathname.startsWith('/images/') ||
+        url.pathname.startsWith('/uploads/')) {
+        
         event.respondWith(
-            caches.match(request).then(async (cachedImage) => {
-                if (cachedImage) return cachedImage;
-
-                try {
-                    const networkImage = await fetch(request);
-                    if (networkImage && networkImage.status === 200) {
-                        const copy = networkImage.clone();
-                        caches.open(IMAGE_CACHE).then((cache) => cache.put(request, copy));
+            fetch(request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const copy = networkResponse.clone();
+                        caches.open(IMAGE_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+                        return networkResponse;
                     }
-                    return networkImage;
-                } catch (err) {
-                    // Fallback to cached default logo if available
+                    if (networkResponse && (networkResponse.status === 404 || networkResponse.status === 410)) {
+                        // Image deleted or not found on server: immediately purge from cache so it never shows stale
+                        caches.open(IMAGE_CACHE).then((cache) => cache.delete(request)).catch(() => {});
+                        return networkResponse;
+                    }
+                    return networkResponse;
+                })
+                .catch(async () => {
+                    // Offline fallback: when device has no connection, serve cached image
+                    const cachedImage = await caches.match(request);
+                    if (cachedImage) return cachedImage;
+
                     const fallbackLogo = await caches.match('/icon.png');
                     return fallbackLogo || Response.error();
-                }
-            })
+                })
         );
         return;
     }

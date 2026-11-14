@@ -67,7 +67,7 @@ export default function AdminProductsPage() {
                 }
                 const cached = JSON.parse(raw || '[]');
                 if (Array.isArray(cached) && cached.length > 0) return cached;
-            } catch {}
+            } catch { }
         }
         return []
     })
@@ -164,7 +164,7 @@ export default function AdminProductsPage() {
                         loadCategories()
                     }
                 }
-            } catch {}
+            } catch { }
 
             // Real-time cross-device Supabase sync listener
             const unsubscribeSync = subscribeToStoreSync((payload) => {
@@ -470,7 +470,7 @@ export default function AdminProductsPage() {
                                 list.unshift(data.product)
                             }
                             localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
-                        } catch {}
+                        } catch { }
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
@@ -478,7 +478,7 @@ export default function AdminProductsPage() {
                             const bc = new BroadcastChannel('ukbl_catalog_channel')
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
-                        } catch {}
+                        } catch { }
                         broadcastStoreChange('products', { product: data.product, action: 'update' })
 
                         // Purge Service Worker API & page caches
@@ -486,10 +486,10 @@ export default function AdminProductsPage() {
                             navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
                         }
                         if ('caches' in window) {
-                            caches.delete('ukbl-api-v1').catch(() => {})
-                            caches.delete('ukbl-api-v2').catch(() => {})
-                            caches.delete('ukbl-pages-v1').catch(() => {})
-                            caches.delete('ukbl-pages-v2').catch(() => {})
+                            caches.delete('ukbl-api-v1').catch(() => { })
+                            caches.delete('ukbl-api-v2').catch(() => { })
+                            caches.delete('ukbl-pages-v1').catch(() => { })
+                            caches.delete('ukbl-pages-v2').catch(() => { })
                         }
                     }
                     setIsEditorOpen(false)
@@ -521,7 +521,7 @@ export default function AdminProductsPage() {
                                 list.unshift(data.product)
                             }
                             localStorage.setItem('ukbl_cached_products', JSON.stringify(list))
-                        } catch {}
+                        } catch { }
                         localStorage.setItem('ukbl_products_synced', Date.now().toString())
                         window.dispatchEvent(new CustomEvent('product-updated', { detail: { product: data.product } }))
                         window.dispatchEvent(new CustomEvent('product-catalog-updated'))
@@ -529,7 +529,7 @@ export default function AdminProductsPage() {
                             const bc = new BroadcastChannel('ukbl_catalog_channel')
                             bc.postMessage({ type: 'product-updated', product: data.product })
                             bc.close()
-                        } catch {}
+                        } catch { }
                         broadcastStoreChange('products', { product: data.product, action: 'update' })
 
                         // Purge Service Worker API & page caches
@@ -537,10 +537,10 @@ export default function AdminProductsPage() {
                             navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE', productId: data.product?.id })
                         }
                         if ('caches' in window) {
-                            caches.delete('ukbl-api-v1').catch(() => {})
-                            caches.delete('ukbl-api-v2').catch(() => {})
-                            caches.delete('ukbl-pages-v1').catch(() => {})
-                            caches.delete('ukbl-pages-v2').catch(() => {})
+                            caches.delete('ukbl-api-v1').catch(() => { })
+                            caches.delete('ukbl-api-v2').catch(() => { })
+                            caches.delete('ukbl-pages-v1').catch(() => { })
+                            caches.delete('ukbl-pages-v2').catch(() => { })
                         }
                     }
                     setIsEditorOpen(false)
@@ -575,10 +575,10 @@ export default function AdminProductsPage() {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
                     if ('caches' in window) {
-                        caches.delete('ukbl-api-v1').catch(() => {})
-                        caches.delete('ukbl-api-v2').catch(() => {})
-                        caches.delete('ukbl-pages-v1').catch(() => {})
-                        caches.delete('ukbl-pages-v2').catch(() => {})
+                        caches.delete('ukbl-api-v1').catch(() => { })
+                        caches.delete('ukbl-api-v2').catch(() => { })
+                        caches.delete('ukbl-pages-v1').catch(() => { })
+                        caches.delete('ukbl-pages-v2').catch(() => { })
                     }
                 }
                 setDeletingProduct(null)
@@ -613,10 +613,10 @@ export default function AdminProductsPage() {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
                     if ('caches' in window) {
-                        caches.delete('ukbl-api-v1').catch(() => {})
-                        caches.delete('ukbl-api-v2').catch(() => {})
-                        caches.delete('ukbl-pages-v1').catch(() => {})
-                        caches.delete('ukbl-pages-v2').catch(() => {})
+                        caches.delete('ukbl-api-v1').catch(() => { })
+                        caches.delete('ukbl-api-v2').catch(() => { })
+                        caches.delete('ukbl-pages-v1').catch(() => { })
+                        caches.delete('ukbl-pages-v2').catch(() => { })
                     }
                 }
                 toast.success(nextState ? 'Marked In Stock' : 'Marked Out of Stock')
@@ -876,13 +876,12 @@ export default function AdminProductsPage() {
                                             <td className="px-4 py-3.5 text-center whitespace-nowrap">
                                                 <div className="inline-flex flex-col items-center gap-0.5">
                                                     <span
-                                                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                                                            isOut
-                                                                ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                                                : isLow
+                                                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${isOut
+                                                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                                            : isLow
                                                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
                                                                 : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {isOut ? 'Out of Stock' : `${prod.stockCount || 50} in stock`}
                                                     </span>
@@ -956,11 +955,10 @@ export default function AdminProductsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setModalViewMode('split')}
-                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-                                            modalViewMode === 'split'
-                                                ? 'bg-[#6C306E] text-white shadow-xs'
-                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
-                                        }`}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${modalViewMode === 'split'
+                                            ? 'bg-[#6C306E] text-white shadow-xs'
+                                            : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                            }`}
                                         title="Split Screen: Form and Customer Preview side-by-side"
                                     >
                                         Split View
@@ -968,11 +966,10 @@ export default function AdminProductsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setModalViewMode('form')}
-                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-                                            modalViewMode === 'form'
-                                                ? 'bg-[#6C306E] text-white shadow-xs'
-                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
-                                        }`}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${modalViewMode === 'form'
+                                            ? 'bg-[#6C306E] text-white shadow-xs'
+                                            : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                            }`}
                                         title="Form Editor Only"
                                     >
                                         Form Only
@@ -980,11 +977,10 @@ export default function AdminProductsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setModalViewMode('preview')}
-                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                                            modalViewMode === 'preview'
-                                                ? 'bg-[#6C306E] text-white shadow-xs'
-                                                : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
-                                        }`}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${modalViewMode === 'preview'
+                                            ? 'bg-[#6C306E] text-white shadow-xs'
+                                            : 'text-slate-500 hover:text-[#241224] hover:bg-[#FAF6FA]'
+                                            }`}
                                         title="Full-Width Live Customer Preview"
                                     >
                                         <EyeIcon size={13} />
@@ -1008,18 +1004,16 @@ export default function AdminProductsPage() {
                             <button
                                 type="button"
                                 onClick={() => setModalViewMode('form')}
-                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer ${
-                                    modalViewMode !== 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
-                                }`}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer ${modalViewMode !== 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
+                                    }`}
                             >
                                 1. Form Editor
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setModalViewMode('preview')}
-                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer flex items-center justify-center gap-1.5 ${
-                                    modalViewMode === 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
-                                }`}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer flex items-center justify-center gap-1.5 ${modalViewMode === 'preview' ? 'bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]' : 'text-slate-500'
+                                    }`}
                             >
                                 <EyeIcon size={12} />
                                 <span>2. Live Preview</span>
@@ -1032,9 +1026,8 @@ export default function AdminProductsPage() {
                             <form
                                 onSubmit={handleSaveProduct}
                                 id="productForm"
-                                className={`${
-                                    modalViewMode === 'preview' ? 'hidden' : modalViewMode === 'form' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
-                                } p-5 sm:p-6 space-y-6`}
+                                className={`${modalViewMode === 'preview' ? 'hidden' : modalViewMode === 'form' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
+                                    } p-5 sm:p-6 space-y-6`}
                             >
                                 {/* SECTION 1: CORE INFORMATION */}
                                 <div className="space-y-4">
@@ -1225,19 +1218,17 @@ export default function AdminProductsPage() {
                                                             onDragStart={(e) => handleDragStart(e, idx)}
                                                             onDragOver={(e) => handleDragOver(e, idx)}
                                                             onDrop={(e) => handleDrop(e, idx)}
-                                                            className={`relative rounded-2xl border bg-white p-2 flex flex-col justify-between group transition-all cursor-grab active:cursor-grabbing ${
-                                                                isCover
-                                                                    ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
-                                                                    : 'border-[#EFE0EF] hover:border-slate-300'
-                                                            }`}
+                                                            className={`relative rounded-2xl border bg-white p-2 flex flex-col justify-between group transition-all cursor-grab active:cursor-grabbing ${isCover
+                                                                ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
+                                                                : 'border-[#EFE0EF] hover:border-slate-300'
+                                                                }`}
                                                         >
                                                             {/* Serial Number Badge */}
                                                             <div className="flex items-center justify-between mb-1.5">
-                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                                                    isCover
-                                                                        ? 'bg-[#6C306E] text-white'
-                                                                        : 'bg-slate-100 text-slate-600'
-                                                                }`}>
+                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isCover
+                                                                    ? 'bg-[#6C306E] text-white'
+                                                                    : 'bg-slate-100 text-slate-600'
+                                                                    }`}>
                                                                     {isCover ? '★ #1 Cover' : `#${idx + 1}`}
                                                                 </span>
 
@@ -1393,9 +1384,8 @@ export default function AdminProductsPage() {
                             </form>
 
                             {/* RIGHT COLUMN: 1:1 LIVE WEBSITE PREVIEW (Matches Storefront Details Page) */}
-                            <div className={`${
-                                modalViewMode === 'form' ? 'hidden' : modalViewMode === 'preview' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
-                            } bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto`}>
+                            <div className={`${modalViewMode === 'form' ? 'hidden' : modalViewMode === 'preview' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
+                                } bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto`}>
                                 {/* Preview Card Frame */}
                                 <div className="bg-white border border-[#EFE0EF] rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
                                     {/* Breadcrumbs Preview */}
@@ -1423,11 +1413,10 @@ export default function AdminProductsPage() {
                                                             key={i}
                                                             type="button"
                                                             onClick={() => setActivePreviewImage(i)}
-                                                            className={`size-12 rounded-xl border p-0 bg-white overflow-hidden transition cursor-pointer ${
-                                                                activePreviewImage === i
-                                                                    ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
-                                                                    : 'border-[#EFE0EF] hover:border-slate-300'
-                                                            }`}
+                                                            className={`size-12 rounded-xl border p-0 bg-white overflow-hidden transition cursor-pointer ${activePreviewImage === i
+                                                                ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20 shadow-xs'
+                                                                : 'border-[#EFE0EF] hover:border-slate-300'
+                                                                }`}
                                                         >
                                                             <img
                                                                 src={img}
@@ -1556,22 +1545,20 @@ export default function AdminProductsPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setPreviewTab('details')}
-                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer ${
-                                                    previewTab === 'details'
-                                                        ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
-                                                        : 'text-slate-400 hover:text-slate-600'
-                                                }`}
+                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer ${previewTab === 'details'
+                                                    ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
+                                                    : 'text-slate-400 hover:text-slate-600'
+                                                    }`}
                                             >
                                                 Product Details & Specs
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setPreviewTab('reviews')}
-                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer flex items-center gap-1 ${
-                                                    previewTab === 'reviews'
-                                                        ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
-                                                        : 'text-slate-400 hover:text-slate-600'
-                                                }`}
+                                                className={`text-xs font-bold pb-2 -mb-2.5 transition cursor-pointer flex items-center gap-1 ${previewTab === 'reviews'
+                                                    ? 'text-[#6C306E] border-b-2 border-[#6C306E]'
+                                                    : 'text-slate-400 hover:text-slate-600'
+                                                    }`}
                                             >
                                                 <span>Customer Reviews (24)</span>
                                             </button>

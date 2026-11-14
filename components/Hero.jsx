@@ -49,7 +49,7 @@ const Hero = () => {
                         {/* Subtle ambient light orb */}
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
-                        <div className='z-10 max-w-[56%] min-[450px]:max-w-[58%] sm:max-w-md'>
+                        <div className={`z-10 ${mainCard.image ? 'max-w-[56%] min-[450px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
                             {mainCard.badge && (
                                 <div className='inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs'>
                                     <RoyalCrownIcon size={13} color="#D8B56D" />
@@ -95,18 +95,20 @@ const Hero = () => {
                         </div>
 
                         {/* Right-Aligned Large Transparent Image */}
-                        <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
-                            <Image 
-                                className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
-                                src={mainCard.image || assets.hero_card_img1} 
-                                alt={mainCard.imageAlt || "Direct from the UK - Premium Beauty"} 
-                                fill={false}
-                                width={320}
-                                height={380}
-                                priority
-                                unoptimized
-                            />
-                        </div>
+                        {mainCard.image ? (
+                            <div className='absolute right-0 min-[400px]:right-1 sm:right-2 bottom-0 top-0 w-[44%] min-[450px]:w-[48%] sm:w-[50%] max-w-[340px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl'>
+                                <Image 
+                                    className='h-full max-h-full w-auto object-contain object-right-bottom group-hover/hero:scale-104 transition-transform duration-700 ease-out translate-y-1' 
+                                    src={mainCard.image} 
+                                    alt={mainCard.imageAlt || "Direct from the UK - Premium Beauty"} 
+                                    fill={false}
+                                    width={320}
+                                    height={380}
+                                    priority
+                                    unoptimized
+                                />
+                            </div>
+                        ) : null}
                     </motion.div>
                 )}
 
@@ -122,10 +124,10 @@ const Hero = () => {
                             className="flex-1"
                         >
                             <Link 
-                                href={sideCardTop.buttonLink || "/shop?category=Skincare"} 
+                                href={sideCardTop.buttonLink || "/shop"} 
                                 className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
                             >
-                                <div className='z-10 max-w-[54%] pr-1'>
+                                <div className={`z-10 ${sideCardTop.image ? 'max-w-[54%] pr-1' : 'w-full'}`}>
                                     {sideCardTop.tag && (
                                         <span className='text-[9px] sm:text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1'>
                                             {sideCardTop.tag}
@@ -135,21 +137,23 @@ const Hero = () => {
                                         {sideCardTop.title}
                                     </h3>
                                     <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
-                                        {sideCardTop.buttonText || "Shop Skincare →"} 
+                                        {sideCardTop.buttonText || "Shop Now →"} 
                                         <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                     </p>
                                 </div>
 
-                                <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
-                                    <Image 
-                                        className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
-                                        src={sideCardTop.image || assets.hero_card_img2} 
-                                        alt={sideCardTop.imageAlt || sideCardTop.title || "Skincare Top Selected"} 
-                                        width={180}
-                                        height={160}
-                                        unoptimized
-                                    />
-                                </div>
+                                {sideCardTop.image ? (
+                                    <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                                        <Image 
+                                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                            src={sideCardTop.image} 
+                                            alt={sideCardTop.imageAlt || sideCardTop.title || "Category Showcase"} 
+                                            width={180}
+                                            height={160}
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : null}
                             </Link>
                         </motion.div>
                     )}
@@ -164,10 +168,10 @@ const Hero = () => {
                             className="flex-1"
                         >
                             <Link 
-                                href={sideCardBottom.buttonLink || "/shop?category=Makeup"} 
+                                href={sideCardBottom.buttonLink || "/shop"} 
                                 className='flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border border-[#EFE0EF] hover:border-[#6C306E]/30 transition-all duration-300 group relative overflow-hidden min-h-[160px] sm:min-h-[175px]'
                             >
-                                <div className='z-10 max-w-[54%] pr-1'>
+                                <div className={`z-10 ${sideCardBottom.image ? 'max-w-[54%] pr-1' : 'w-full'}`}>
                                     {sideCardBottom.tag && (
                                         <span className='text-[9px] sm:text-[10px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1'>
                                             {sideCardBottom.tag}
@@ -182,16 +186,18 @@ const Hero = () => {
                                     </p>
                                 </div>
 
-                                <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
-                                    <Image 
-                                        className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
-                                        src={sideCardBottom.image || assets.hero_card_img3} 
-                                        alt={sideCardBottom.imageAlt || sideCardBottom.title || "Cosmetics Exclusive Deals"} 
-                                        width={180}
-                                        height={160}
-                                        unoptimized
-                                    />
-                                </div>
+                                {sideCardBottom.image ? (
+                                    <div className='w-[46%] h-full flex items-end justify-end relative shrink-0 overflow-hidden pointer-events-none'>
+                                        <Image 
+                                            className='h-full max-h-full w-auto object-contain object-right-bottom group-hover:scale-106 transition-transform duration-500 ease-out translate-y-0.5' 
+                                            src={sideCardBottom.image} 
+                                            alt={sideCardBottom.imageAlt || sideCardBottom.title || "Promo Showcase"} 
+                                            width={180}
+                                            height={160}
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : null}
                             </Link>
                         </motion.div>
                     )}

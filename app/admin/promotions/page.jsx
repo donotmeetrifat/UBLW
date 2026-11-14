@@ -779,10 +779,10 @@ export default function AdminHeroPromotionsPage() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleUpdateCardField('mainCard', 'image', '/images/hero/hero_card_img1.png')}
+                                            onClick={() => handleUpdateCardField('mainCard', 'image', '')}
                                             className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
-                                            Restore Default
+                                            Remove Image
                                         </button>
                                     </div>
                                     <input
@@ -941,10 +941,10 @@ export default function AdminHeroPromotionsPage() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleUpdateCardField('sideCardTop', 'image', '/images/hero/hero_card_img2.png')}
+                                            onClick={() => handleUpdateCardField('sideCardTop', 'image', '')}
                                             className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
-                                            Restore Default
+                                            Remove Image
                                         </button>
                                     </div>
                                     <input
@@ -1103,10 +1103,10 @@ export default function AdminHeroPromotionsPage() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleUpdateCardField('sideCardBottom', 'image', '/images/hero/hero_card_img3.png')}
+                                            onClick={() => handleUpdateCardField('sideCardBottom', 'image', '')}
                                             className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                                         >
-                                            Restore Default
+                                            Remove Image
                                         </button>
                                     </div>
                                     <input
