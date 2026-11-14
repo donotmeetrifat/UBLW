@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCart, calculateCartTotal, sanitizeCartWithProducts } from '@/lib/features/cart/cartSlice'
 import { setAddresses } from '@/lib/features/address/addressSlice'
@@ -17,6 +18,7 @@ import AuthModal from '@/components/AuthModal'
 import { subscribeToStoreSync } from '@/lib/realtimeSync'
 
 export default function DataSyncProvider({ children }) {
+    const router = useRouter()
     const dispatch = useDispatch()
     const productsList = useSelector(state => state.product.list)
     const isProductsLoaded = useSelector(state => state.product.isLoaded)
@@ -44,6 +46,18 @@ export default function DataSyncProvider({ children }) {
             dispatch(sanitizeCartWithProducts(productsList))
         }
     }, [productsList, isProductsLoaded, dispatch])
+
+    // Prefetch all public store pages for instant 0ms offline navigation
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const routes = ['/shop', '/cart', '/checkout', '/orders', '/contact', '/reviews', '/account'];
+            routes.forEach(route => {
+                try {
+                    router.prefetch(route);
+                } catch (e) {}
+            });
+        }
+    }, [router])
 
     // Global listener to trigger Auth Modal from any component
     useEffect(() => {
@@ -73,7 +87,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v5';
+                    const currentSwVer = 'ukbl-v6';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -176,20 +190,15 @@ export default function DataSyncProvider({ children }) {
                     } catch (e) {}
                 }
 
-                // Hydrate Products for 0ms instantaneous render
+                // Hydrate Products for 0ms instantaneous render & full offline access
                 const storedProds = localStorage.getItem('ukbl_cached_products')
                 if (storedProds) {
-                    if (storedProds.includes('prod_1') || storedProds.includes('CeraVe') || storedProds.includes('The Ordinary')) {
-                        localStorage.removeItem('ukbl_cached_products')
-                        dispatch(setProduct([]))
-                    } else {
-                        try {
-                            const parsedProds = JSON.parse(storedProds)
-                            if (Array.isArray(parsedProds)) {
-                                dispatch(setProduct(parsedProds))
-                            }
-                        } catch (e) {}
-                    }
+                    try {
+                        const parsedProds = JSON.parse(storedProds)
+                        if (Array.isArray(parsedProds) && parsedProds.length > 0) {
+                            dispatch(setProduct(parsedProds))
+                        }
+                    } catch (e) {}
                 }
 
                 const currentUser = localStorage.getItem('ukbl_current_user')
@@ -222,7 +231,7 @@ export default function DataSyncProvider({ children }) {
             }
         }
 
-        // 2. FETCH LIVE PRODUCT CATALOG
+        // 2. FETCH LIVE PRODUCT CATALOG & PRE-WARM CACHES FOR OFFLINE USE
         const syncProductCatalog = async () => {
             try {
                 const res = await fetch(`/api/products?_t=${Date.now()}`, {
@@ -239,6 +248,23 @@ export default function DataSyncProvider({ children }) {
                     dispatch(sanitizeCartWithProducts(data.products))
                     if (typeof window !== 'undefined') {
                         localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
+
+                        // Pre-warm product images & routes into cache for offline viewing
+                        try {
+                            data.products.forEach(p => {
+                                const imgs = Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []);
+                                imgs.forEach(imgSrc => {
+                                    if (imgSrc && typeof imgSrc === 'string' && !imgSrc.startsWith('data:')) {
+                                        const pre = new Image();
+                                        pre.src = imgSrc;
+                                    }
+                                });
+                                // Prefetch product route
+                                if (p.id) {
+                                    router.prefetch(`/product/${p.id}`);
+                                }
+                            });
+                        } catch (e) {}
                     }
                 }
             } catch (e) {

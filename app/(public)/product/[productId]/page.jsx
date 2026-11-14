@@ -19,9 +19,16 @@ export default function Product() {
     const dispatch = useDispatch();
     const products = useSelector(state => state.product.list);
     
-    // 1. Optimistic immediate lookup from Redux store for 0ms initial render
-    const reduxProduct = products.find((p) => p.id === productId);
-    const [liveProduct, setLiveProduct] = useState(null);
+    // 1. Optimistic immediate lookup from Redux store OR local cached products for 0ms initial render & 100% offline access
+    const cachedProduct = typeof window !== 'undefined' ? (() => {
+        try {
+            const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+            return Array.isArray(cached) ? cached.find(p => p.id === productId) : null;
+        } catch { return null; }
+    })() : null;
+
+    const reduxProduct = products.find((p) => p.id === productId) || cachedProduct;
+    const [liveProduct, setLiveProduct] = useState(cachedProduct || null);
     const [loading, setLoading] = useState(!reduxProduct);
 
     // Reactive single source of truth:
@@ -115,15 +122,30 @@ export default function Product() {
                         localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
                     } catch {}
                 }
+            } else if (reduxProduct) {
+                setLiveProduct(reduxProduct);
             }
         } catch (error) {
-            console.error('Error fetching fresh product:', error);
+            // When offline, seamlessly fall back to reduxProduct or cached product
+            if (reduxProduct) {
+                setLiveProduct(reduxProduct);
+            } else if (typeof window !== 'undefined') {
+                try {
+                    const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]');
+                    const found = Array.isArray(cached) ? cached.find(p => p.id === productId) : null;
+                    if (found) setLiveProduct(found);
+                } catch (e) {}
+            }
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        if (reduxProduct) {
+            setLiveProduct(reduxProduct);
+            setLoading(false);
+        }
         fetchProduct();
 
         // Track verified product impression in database and broadcast live analytics update

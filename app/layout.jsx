@@ -1,7 +1,6 @@
 import CustomToaster from "@/components/CustomToaster";
 import StoreProvider from "@/app/StoreProvider";
 import DataSyncProvider from "@/components/DataSyncProvider";
-import OfflineNotice from "@/components/OfflineNotice";
 import "./globals.css";
 
 export const viewport = {
@@ -61,7 +60,6 @@ export default function RootLayout({ children }) {
                 <StoreProvider>
                     <DataSyncProvider>
                         <CustomToaster />
-                        <OfflineNotice />
                         {children}
                     </DataSyncProvider>
                 </StoreProvider>
