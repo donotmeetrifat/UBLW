@@ -8,10 +8,31 @@ import { insertCategoryWithOrder } from '@/lib/db/categoryOrdering';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+let categoriesCache = {
+    all: null,
+    active: null,
+    fetchedAt: 0
+};
+
+export function invalidateCategoriesCache() {
+    categoriesCache = { all: null, active: null, fetchedAt: 0 };
+}
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const includeAll = searchParams.get('all') === 'true';
+
+        // High-performance server memory cache (25s TTL)
+        if (categoriesCache.fetchedAt && Date.now() - categoriesCache.fetchedAt < 25000) {
+            const cachedList = includeAll ? categoriesCache.all : categoriesCache.active;
+            if (Array.isArray(cachedList) && cachedList.length > 0) {
+                return NextResponse.json(
+                    { success: true, categories: cachedList },
+                    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+                );
+            }
+        }
 
         if (isDatabaseConfigured()) {
             const where = includeAll ? {} : { isActive: true };
@@ -61,6 +82,14 @@ export async function GET(request) {
                     updatedAt: c.updatedAt
                 };
             });
+
+            if (includeAll) {
+                categoriesCache.all = formatted;
+                categoriesCache.active = formatted.filter(c => c.isActive !== false);
+            } else {
+                categoriesCache.active = formatted;
+            }
+            categoriesCache.fetchedAt = Date.now();
 
             return NextResponse.json(
                 { success: true, categories: formatted },
@@ -154,6 +183,7 @@ export async function POST(request) {
         });
 
         try {
+            invalidateCategoriesCache();
             revalidatePath('/');
             revalidatePath('/shop');
             revalidatePath('/admin/categories');

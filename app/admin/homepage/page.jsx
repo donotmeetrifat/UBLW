@@ -36,9 +36,36 @@ export default function AdminHomepageSectionsPage() {
     const currency = '৳'
 
     const [activeTab, setActiveTab] = useState('newArrivals') // 'newArrivals' | 'bestSelling'
-    const [sections, setSections] = useState(DEFAULT_SECTIONS)
-    const [allProducts, setAllProducts] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [sections, setSections] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_homepage_sections') || '{}')
+                if (cached && cached.newArrivals) {
+                    return {
+                        newArrivals: { ...DEFAULT_SECTIONS.newArrivals, ...(cached.newArrivals || {}) },
+                        bestSelling: { ...DEFAULT_SECTIONS.bestSelling, ...(cached.bestSelling || {}) }
+                    }
+                }
+            } catch {}
+        }
+        return DEFAULT_SECTIONS
+    })
+    const [allProducts, setAllProducts] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_homepage_sections')
+            if (cached && cached !== '{}') return false
+        }
+        return true
+    })
     const [saving, setSaving] = useState(false)
     const [draggedIndex, setDraggedIndex] = useState(null)
 
@@ -53,7 +80,7 @@ export default function AdminHomepageSectionsPage() {
     // 1. Fetch initial configuration & product catalog
     const fetchSectionsAndProducts = async () => {
         try {
-            setLoading(true)
+            if (allProducts.length === 0) setLoading(true)
             const res = await fetch(`/api/admin/homepage-sections?_t=${Date.now()}`, {
                 cache: 'no-store'
             })

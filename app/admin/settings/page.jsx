@@ -19,7 +19,13 @@ import { broadcastStoreChange } from '@/lib/realtimeSync'
 export default function AdminSettingsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_settings')
+            if (cached && cached !== '{}') return false
+        }
+        return true
+    })
     const [saving, setSaving] = useState(false)
     const [uploadingQr, setUploadingQr] = useState(null) // 'bkash' | 'nagad' | 'rocket' | null
 
@@ -126,6 +132,11 @@ export default function AdminSettingsPage() {
             if (data.success) {
                 if (data.delivery) setDelivery(prev => ({ ...prev, ...data.delivery }))
                 if (data.payments) setPayments(prev => ({ ...prev, ...data.payments }))
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem('ukbl_cached_settings', JSON.stringify({ delivery: data.delivery, payments: data.payments }))
+                    } catch {}
+                }
             }
         } catch (error) {
             console.error('Error fetching settings:', error)

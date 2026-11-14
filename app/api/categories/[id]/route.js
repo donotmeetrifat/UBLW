@@ -4,6 +4,7 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getUserFromRequest } from '@/lib/auth';
 import { updateCategoryWithOrder, deleteCategoryWithOrder } from '@/lib/db/categoryOrdering';
+import { invalidateCategoriesCache } from '../route';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -84,6 +85,7 @@ export async function PUT(request, { params }) {
         }
 
         try {
+            invalidateCategoriesCache();
             revalidatePath('/');
             revalidatePath('/shop');
             revalidatePath('/admin/categories');
@@ -126,6 +128,7 @@ export async function DELETE(request, { params }) {
         }
 
         try {
+            invalidateCategoriesCache();
             revalidatePath('/');
             revalidatePath('/shop');
             revalidatePath('/admin/categories');

@@ -24,9 +24,31 @@ const INQUIRY_STATUS_OPTIONS = [
 ]
 
 export default function AdminInquiriesPage() {
-    const [inquiries, setInquiries] = useState([])
-    const [stats, setStats] = useState({ total: 0, unread: 0, inProgress: 0, resolved: 0 })
-    const [loading, setLoading] = useState(true)
+    const [inquiries, setInquiries] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_inquiries') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [stats, setStats] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_inquiries_stats') || '{}')
+                if (cached && cached.total !== undefined) return cached
+            } catch {}
+        }
+        return { total: 0, unread: 0, inProgress: 0, resolved: 0 }
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_admin_inquiries')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedStatus, setSelectedStatus] = useState('ALL') // 'ALL' | 'UNREAD' | 'IN_PROGRESS' | 'RESOLVED'
     const [activeInquiry, setActiveInquiry] = useState(null)
@@ -84,7 +106,7 @@ export default function AdminInquiriesPage() {
         const subject = `Re: ${inquiry.subject || 'Inquiry'} - UK Brand Lover`
         const body = `Dear ${inquiry.name || 'Valued Customer'},\n\nThank you for reaching out to UK Brand Lover regarding your inquiry:\n"${inquiry.message}"\n\nKind regards,\nUK Brand Lover Support Team\nhttps://ukbrandlover.vercel.app`
         const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inquiry.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-        
+
         window.open(gmailUrl, '_blank')
         toast.success(`Opening Gmail for ${inquiry.email} (Email copied!)`)
     }
@@ -100,7 +122,7 @@ export default function AdminInquiriesPage() {
         const subject = `Re: ${inquiry.subject || 'Inquiry'} - UK Brand Lover`
         const body = `Dear ${inquiry.name || 'Valued Customer'},\n\nThank you for reaching out to UK Brand Lover regarding your inquiry:\n"${inquiry.message}"\n\nKind regards,\nUK Brand Lover Support Team\nhttps://ukbrandlover.vercel.app`
         const mailtoUrl = `mailto:${inquiry.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-        
+
         window.location.href = mailtoUrl
         toast.success(`Launching mail app for ${inquiry.email}`)
     }
@@ -115,7 +137,7 @@ export default function AdminInquiriesPage() {
 
     const fetchInquiries = async (isBackground = false) => {
         try {
-            if (!isBackground) setLoading(true)
+            if (!isBackground && inquiries.length === 0) setLoading(true)
             const params = new URLSearchParams()
             if (selectedStatus !== 'ALL') params.set('status', selectedStatus)
             if (searchQuery.trim()) params.set('search', searchQuery.trim())
@@ -125,6 +147,12 @@ export default function AdminInquiriesPage() {
             if (data.success && Array.isArray(data.inquiries)) {
                 setInquiries(data.inquiries)
                 if (data.stats) setStats(data.stats)
+                if (typeof window !== 'undefined' && selectedStatus === 'ALL' && !searchQuery.trim()) {
+                    try {
+                        localStorage.setItem('ukbl_cached_admin_inquiries', JSON.stringify(data.inquiries))
+                        if (data.stats) localStorage.setItem('ukbl_cached_admin_inquiries_stats', JSON.stringify(data.stats))
+                    } catch {}
+                }
             } else {
                 if (!isBackground) setInquiries([])
             }
@@ -344,11 +372,10 @@ export default function AdminInquiriesPage() {
                             key={tab.value}
                             type="button"
                             onClick={() => setSelectedStatus(tab.value)}
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                                selectedStatus === tab.value
-                                    ? 'bg-[#6C306E] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-[#6C306E]'
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${selectedStatus === tab.value
+                                ? 'bg-[#6C306E] text-white shadow-xs'
+                                : 'text-slate-600 hover:text-[#6C306E]'
+                                }`}
                         >
                             {tab.label}
                         </button>
@@ -383,18 +410,17 @@ export default function AdminInquiriesPage() {
                             <tbody className="divide-y divide-[#EFE0EF]/60">
                                 {filteredInquiries.map((inq) => {
                                     const senderCleanPhone = (inq.phone || inq.user?.phone || '').replace(/[^0-9]/g, '');
-                                    const waNumber = senderCleanPhone.startsWith('880') 
-                                        ? senderCleanPhone 
-                                        : senderCleanPhone.startsWith('0') 
-                                        ? `880${senderCleanPhone.slice(1)}` 
-                                        : senderCleanPhone;
+                                    const waNumber = senderCleanPhone.startsWith('880')
+                                        ? senderCleanPhone
+                                        : senderCleanPhone.startsWith('0')
+                                            ? `880${senderCleanPhone.slice(1)}`
+                                            : senderCleanPhone;
 
                                     return (
-                                        <tr 
+                                        <tr
                                             key={inq.id}
-                                            className={`hover:bg-[#FAF6FA]/60 transition-colors ${
-                                                inq.status === 'UNREAD' ? 'bg-amber-50/20 font-medium' : ''
-                                            }`}
+                                            className={`hover:bg-[#FAF6FA]/60 transition-colors ${inq.status === 'UNREAD' ? 'bg-amber-50/20 font-medium' : ''
+                                                }`}
                                         >
                                             {/* Customer Account Details */}
                                             <td className="py-4 px-4 align-top">

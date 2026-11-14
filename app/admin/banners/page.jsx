@@ -22,8 +22,24 @@ import ClassicLoader from '@/components/ui/classic-loader'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminHeroBannersPage() {
-    const [banners, setBanners] = useState([])
-    const [savedBanners, setSavedBanners] = useState([])
+    const [banners, setBanners] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_hero_banners') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [savedBanners, setSavedBanners] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_hero_banners') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
     const [categories, setCategories] = useState(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -34,7 +50,13 @@ export default function AdminHeroBannersPage() {
         return []
     })
     const [hasPendingChanges, setHasPendingChanges] = useState(false)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_hero_banners')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [saving, setSaving] = useState(false)
     const [draggedIndex, setDraggedIndex] = useState(null)
 
@@ -63,7 +85,7 @@ export default function AdminHeroBannersPage() {
     // Fetch live banners from API
     const fetchBanners = async () => {
         try {
-            setLoading(true)
+            if (banners.length === 0) setLoading(true)
             const res = await fetch(`/api/admin/banners?_t=${Date.now()}`, {
                 cache: 'no-store',
                 headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }

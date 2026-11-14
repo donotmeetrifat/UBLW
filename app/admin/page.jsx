@@ -20,24 +20,37 @@ import Link from "next/link"
 export default function AdminDashboard() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
-    const [loading, setLoading] = useState(true)
+    const [dashboardData, setDashboardData] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_dashboard') || '{}')
+                if (cached && (cached.products || cached.revenue)) return cached
+            } catch {}
+        }
+        return {
+            products: 0,
+            revenue: '0.00',
+            orders: 0,
+            customers: 0,
+            totalViews: 0,
+            todayOrders: 0,
+            todayRevenue: '0.00',
+            pendingOrders: 0,
+            deliveredOrders: 0,
+            topProducts: [],
+            recentOrders: [],
+        }
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_admin_dashboard')
+            if (cached && cached !== '{}') return false
+        }
+        return true
+    })
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [lastSyncTime, setLastSyncTime] = useState(null)
     const isFirstLoad = useRef(true)
-
-    const [dashboardData, setDashboardData] = useState({
-        products: 0,
-        revenue: '0.00',
-        orders: 0,
-        customers: 0,
-        totalViews: 0,
-        todayOrders: 0,
-        todayRevenue: '0.00',
-        pendingOrders: 0,
-        deliveredOrders: 0,
-        topProducts: [],
-        recentOrders: [],
-    })
 
     const fetchDashboardData = useCallback(async (isManual = false) => {
         try {
@@ -53,6 +66,11 @@ export default function AdminDashboard() {
             if (data.success && data.dashboardData) {
                 setDashboardData(data.dashboardData)
                 setLastSyncTime(new Date())
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem('ukbl_cached_admin_dashboard', JSON.stringify(data.dashboardData))
+                    } catch {}
+                }
             }
         } catch (error) {
             console.error('Error fetching admin dashboard real data:', error)

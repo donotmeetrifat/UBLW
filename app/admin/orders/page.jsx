@@ -40,8 +40,22 @@ const ORDER_STATUS_OPTIONS = [
 export default function AdminOrdersPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
-    const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [orders, setOrders] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_orders') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_admin_orders')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('ALL')
     const [selectedOrder, setSelectedOrder] = useState(null)
@@ -52,11 +66,16 @@ export default function AdminOrdersPage() {
 
     const fetchOrders = async () => {
         try {
-            setLoading(true)
+            if (orders.length === 0) setLoading(true)
             const res = await fetch('/api/orders')
             const data = await res.json()
             if (data.success && Array.isArray(data.orders)) {
                 setOrders(data.orders)
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem('ukbl_cached_admin_orders', JSON.stringify(data.orders))
+                    } catch {}
+                }
                 const initialInputs = {}
                 data.orders.forEach(o => {
                     initialInputs[o.id] = o.consignmentId || ''

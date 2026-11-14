@@ -24,15 +24,37 @@ import { broadcastStoreChange } from '@/lib/realtimeSync'
 export default function AdminCouponsPage() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
-    const [coupons, setCoupons] = useState([])
-    const [customers, setCustomers] = useState([])
-    const [stats, setStats] = useState({
-        totalCoupons: 0,
-        activeCoupons: 0,
-        totalRedemptions: 0,
-        registeredUsers: 0
+    const [coupons, setCoupons] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_coupons') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
     })
-    const [loading, setLoading] = useState(true)
+    const [customers, setCustomers] = useState([])
+    const [stats, setStats] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_admin_coupons_stats') || '{}')
+                if (cached && cached.totalCoupons !== undefined) return cached
+            } catch {}
+        }
+        return {
+            totalCoupons: 0,
+            activeCoupons: 0,
+            totalRedemptions: 0,
+            registeredUsers: 0
+        }
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_admin_coupons')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [searchQuery, setSearchQuery] = useState('')
     const [filterTab, setFilterTab] = useState('ALL') // 'ALL' | 'ACTIVE' | 'LIFETIME' | 'RESTRICTED' | 'EXPIRED'
 
@@ -67,7 +89,7 @@ export default function AdminCouponsPage() {
 
     const fetchCoupons = async () => {
         try {
-            setLoading(true)
+            if (coupons.length === 0) setLoading(true)
             const res = await fetch('/api/admin/coupons?_t=' + Date.now(), {
                 cache: 'no-store',
                 headers: {
@@ -81,6 +103,12 @@ export default function AdminCouponsPage() {
                 setCoupons(data.coupons || [])
                 setCustomers(data.customers || [])
                 if (data.stats) setStats(data.stats)
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem('ukbl_cached_admin_coupons', JSON.stringify(data.coupons || []))
+                        if (data.stats) localStorage.setItem('ukbl_cached_admin_coupons_stats', JSON.stringify(data.stats))
+                    } catch {}
+                }
             } else {
                 toast.error(data.message || 'Failed to load coupons')
             }

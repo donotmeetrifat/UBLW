@@ -5,6 +5,15 @@ import { memoryStore } from '@/lib/db/initialData';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+let productsCache = {
+    data: null,
+    fetchedAt: 0
+};
+
+export function invalidateProductsCache() {
+    productsCache = { data: null, fetchedAt: 0 };
+}
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -12,6 +21,21 @@ export async function GET(request) {
         const search = searchParams.get('search');
         const inStock = searchParams.get('inStock');
         const sortBy = searchParams.get('sortBy') || 'featured';
+
+        const hasFilters = Boolean(category || search || inStock || (sortBy && sortBy !== 'featured'));
+
+        // High-performance server memory cache (25s TTL) for default catalog
+        if (!hasFilters && productsCache.fetchedAt && Date.now() - productsCache.fetchedAt < 25000 && Array.isArray(productsCache.data) && productsCache.data.length > 0) {
+            return NextResponse.json(
+                { success: true, products: productsCache.data },
+                {
+                    headers: {
+                        'Cache-Control': 'no-store, no-cache, must-revalidate',
+                        'X-Cache': 'HIT'
+                    }
+                }
+            );
+        }
 
         if (isDatabaseConfigured()) {
             const where = {};
@@ -121,6 +145,11 @@ export async function GET(request) {
                     whyYouWillLoveIt: cleanWhy
                 };
             });
+
+            if (!hasFilters && Array.isArray(normalized) && normalized.length > 0) {
+                productsCache.data = normalized;
+                productsCache.fetchedAt = Date.now();
+            }
 
             return NextResponse.json({ success: true, products: normalized }, {
                 headers: {
@@ -248,6 +277,8 @@ export async function POST(request) {
                     storeId: store.id,
                 },
             });
+
+            invalidateProductsCache();
 
             const normalizedProduct = {
                 ...product,

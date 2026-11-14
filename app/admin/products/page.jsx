@@ -74,8 +74,22 @@ export default function AdminProductsPage() {
     const dispatch = useDispatch()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [products, setProducts] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_products') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_products')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [stats, setStats] = useState({
         totalProducts: 0,
         totalViews: 0,
@@ -168,7 +182,7 @@ export default function AdminProductsPage() {
 
     const fetchProducts = async () => {
         try {
-            setLoading(true)
+            if (products.length === 0) setLoading(true)
             const res = await fetch(`/api/admin/products?sort=${sortBy}&category=${encodeURIComponent(selectedCategory)}&_t=${Date.now()}`, {
                 cache: 'no-store',
                 headers: {

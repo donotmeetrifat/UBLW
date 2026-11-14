@@ -18,8 +18,22 @@ import {
 import { broadcastStoreChange } from '@/lib/realtimeSync'
 
 export default function AdminCategoriesPage() {
-    const [categories, setCategories] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [categories, setCategories] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories_full') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_categories_full') || localStorage.getItem('ukbl_cached_categories')
+            if (cached && cached !== '[]') return false
+        }
+        return true
+    })
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('ALL') // 'ALL' | 'ACTIVE' | 'INACTIVE'
     
@@ -37,7 +51,7 @@ export default function AdminCategoriesPage() {
 
     const fetchCategories = async () => {
         try {
-            setLoading(true)
+            if (categories.length === 0) setLoading(true)
             const res = await fetch('/api/categories?all=true&_t=' + Date.now(), { cache: 'no-store' })
             const data = await res.json()
             if (data.success && Array.isArray(data.categories)) {
@@ -45,6 +59,7 @@ export default function AdminCategoriesPage() {
                 if (typeof window !== 'undefined') {
                     const activeNames = data.categories.filter(c => c.isActive !== false).map(c => c.name)
                     localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
+                    localStorage.setItem('ukbl_cached_categories_full', JSON.stringify(data.categories))
                 }
             } else {
                 setCategories([])

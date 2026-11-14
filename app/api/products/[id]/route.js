@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { invalidateProductsCache } from '../route';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -131,6 +132,7 @@ export async function GET(request, context) {
                 whyYouWillLoveIt: cleanWhyYouWillLoveIt
             };
 
+            invalidateProductsCache();
             return NextResponse.json({ success: true, product: normalizedProduct }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
@@ -330,6 +332,7 @@ export async function PATCH(request, context) {
                 whyYouWillLoveIt: (product?.whyYouWillLoveIt || '').trim()
             };
 
+            invalidateProductsCache();
             return NextResponse.json({ success: true, product: normalizedProduct }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -374,6 +377,7 @@ export async function DELETE(request, context) {
         }
 
         if (isDatabaseConfigured()) {
+            invalidateProductsCache();
             const orderItemsCount = await prisma.orderItem.count({ where: { productId: id } });
             if (orderItemsCount > 0) {
                 // Preserve historical order records by soft-deleting

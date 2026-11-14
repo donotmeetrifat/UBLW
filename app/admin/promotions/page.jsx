@@ -21,7 +21,15 @@ export default function AdminHeroPromotionsPage() {
     const currency = '৳'
     const dispatch = useDispatch()
     const reduxCategories = useSelector(state => state.product?.categories)
-    const [promotions, setPromotions] = useState(DEFAULT_PROMOTIONS)
+    const [promotions, setPromotions] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_promotions') || '{}')
+                if (cached && cached.mainCard) return cached
+            } catch {}
+        }
+        return DEFAULT_PROMOTIONS
+    })
     const [categories, setCategories] = useState(() => {
         if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
             return reduxCategories
@@ -34,7 +42,13 @@ export default function AdminHeroPromotionsPage() {
         }
         return []
     })
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('ukbl_cached_promotions')
+            if (cached && cached !== '{}') return false
+        }
+        return true
+    })
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('mainCard') // 'mainCard' | 'sideCardTop' | 'sideCardBottom'
 
@@ -47,7 +61,8 @@ export default function AdminHeroPromotionsPage() {
     // 1. Fetch initial promotions from API
     const fetchPromotions = async () => {
         try {
-            setLoading(true)
+            // Only show initial spinner if no cache is present
+            if (!promotions?.mainCard) setLoading(true)
             const res = await fetch(`/api/admin/promotions?_t=${Date.now()}`, {
                 cache: 'no-store'
             })

@@ -8,8 +8,30 @@ import AdminNavbar from "./AdminNavbar"
 import AdminSidebar from "./AdminSidebar"
 
 export default function AdminLayout({ children }) {
-    const [isAdmin, setIsAdmin] = useState(false)
-    const [loading, setLoading] = useState(true)
+    const [isAdmin, setIsAdmin] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('ukbl_current_user')
+                if (saved) {
+                    const user = JSON.parse(saved)
+                    return user?.role === 'ADMIN'
+                }
+            } catch (e) {}
+        }
+        return false
+    })
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('ukbl_current_user')
+                if (saved) {
+                    const user = JSON.parse(saved)
+                    if (user?.role === 'ADMIN') return false
+                }
+            } catch (e) {}
+        }
+        return true
+    })
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
     const fetchIsAdmin = async () => {

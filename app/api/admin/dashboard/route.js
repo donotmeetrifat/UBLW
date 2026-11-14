@@ -5,8 +5,29 @@ import { memoryStore } from '@/lib/db/initialData';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+let dashboardCache = {
+    data: null,
+    fetchedAt: 0
+};
+
+export async function GET(request) {
     try {
+        const url = request ? new URL(request.url) : null;
+        const forceRefresh = url?.searchParams.get('refresh') === 'true';
+
+        // High-performance server memory cache (15s TTL)
+        if (!forceRefresh && dashboardCache.fetchedAt && Date.now() - dashboardCache.fetchedAt < 15000 && dashboardCache.data) {
+            return NextResponse.json(
+                { success: true, dashboardData: dashboardCache.data },
+                {
+                    headers: {
+                        'Cache-Control': 'no-store, no-cache, must-revalidate',
+                        'X-Cache': 'HIT'
+                    }
+                }
+            );
+        }
+
         if (isDatabaseConfigured()) {
             const now = new Date();
             const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -105,29 +126,34 @@ export async function GET() {
                 }
             });
 
+            const dashboardResultData = {
+                products: productsCount,
+                revenue: revenue.toFixed(2),
+                orders: totalOrdersCount,
+                customers: customersCount,
+                totalViews: totalViewsAgg._sum?.views || 0,
+                todayOrders: todayOrdersCount,
+                todayRevenue: todayRevenue.toFixed(2),
+                pendingOrders,
+                deliveredOrders,
+                topProducts: topProducts.map(p => ({
+                    ...p,
+                    image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/product_img1.png'
+                })),
+                recentOrders: recentOrders.map(order => ({
+                    ...order,
+                    customerName: order.address?.fullName || order.user?.name || 'Valued Customer',
+                    customerContact: order.address?.phoneNumber || order.user?.phone || order.user?.email || 'Direct Order'
+                })),
+            };
+
+            dashboardCache.data = dashboardResultData;
+            dashboardCache.fetchedAt = Date.now();
+
             return NextResponse.json({
                 success: true,
                 timestamp: Date.now(),
-                dashboardData: {
-                    products: productsCount,
-                    revenue: revenue.toFixed(2),
-                    orders: totalOrdersCount,
-                    customers: customersCount,
-                    totalViews: totalViewsAgg._sum?.views || 0,
-                    todayOrders: todayOrdersCount,
-                    todayRevenue: todayRevenue.toFixed(2),
-                    pendingOrders,
-                    deliveredOrders,
-                    topProducts: topProducts.map(p => ({
-                        ...p,
-                        image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/product_img1.png'
-                    })),
-                    recentOrders: recentOrders.map(order => ({
-                        ...order,
-                        customerName: order.address?.fullName || order.user?.name || 'Valued Customer',
-                        customerContact: order.address?.phoneNumber || order.user?.phone || order.user?.email || 'Direct Order'
-                    })),
-                }
+                dashboardData: dashboardResultData
             }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
