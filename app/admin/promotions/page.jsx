@@ -106,11 +106,10 @@ function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
                         key={p.val}
                         type="button"
                         onClick={() => onUpdate(cardKey, 'imageScale', p.val)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer border ${
-                            scale === p.val
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer border ${scale === p.val
                                 ? 'bg-[#6C306E] text-white border-[#6C306E] shadow-2xs'
                                 : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
-                        }`}
+                            }`}
                     >
                         {p.label}
                     </button>
@@ -160,7 +159,7 @@ export default function AdminHeroPromotionsPage() {
             try {
                 const cached = JSON.parse(localStorage.getItem('ukbl_cached_promotions') || '{}')
                 if (cached && cached.mainCard) return cached
-            } catch {}
+            } catch { }
         }
         return DEFAULT_PROMOTIONS
     })
@@ -172,7 +171,7 @@ export default function AdminHeroPromotionsPage() {
             try {
                 const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]')
                 if (Array.isArray(cached) && cached.length > 0) return cached
-            } catch {}
+            } catch { }
         }
         return []
     })
@@ -266,7 +265,7 @@ export default function AdminHeroPromotionsPage() {
                     fetchLiveCategories()
                 }
             }
-        } catch {}
+        } catch { }
 
         return () => {
             window.removeEventListener('category-catalog-updated', onCategoryUpdate)
@@ -472,11 +471,10 @@ export default function AdminHeroPromotionsPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5 pt-1">
                     {/* 1. Large Feature Card Preview */}
                     {mainCard?.isActive !== false && (
-                        <div 
+                        <div
                             onClick={() => setActiveTab('mainCard')}
-                            className={`relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border overflow-hidden min-h-[260px] sm:min-h-[340px] shadow-sm cursor-pointer transition-all duration-300 ${
-                                activeTab === 'mainCard' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
-                            }`}
+                            className={`relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border overflow-hidden min-h-[260px] sm:min-h-[340px] shadow-sm cursor-pointer transition-all duration-300 ${activeTab === 'mainCard' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                }`}
                         >
                             {/* Subtle ambient light orb */}
                             <div className="absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none" />
@@ -548,11 +546,10 @@ export default function AdminHeroPromotionsPage() {
                     <div className="flex flex-col gap-4 text-xs justify-between">
                         {/* Top Side Card */}
                         {sideCardTop?.isActive !== false && (
-                            <div 
+                            <div
                                 onClick={() => setActiveTab('sideCardTop')}
-                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${
-                                    activeTab === 'sideCardTop' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
-                                }`}
+                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${activeTab === 'sideCardTop' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                    }`}
                             >
                                 <div className="z-10 max-w-[56%] pr-1">
                                     {sideCardTop.tag && (
@@ -591,11 +588,10 @@ export default function AdminHeroPromotionsPage() {
 
                         {/* Bottom Side Card */}
                         {sideCardBottom?.isActive !== false && (
-                            <div 
+                            <div
                                 onClick={() => setActiveTab('sideCardBottom')}
-                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${
-                                    activeTab === 'sideCardBottom' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
-                                }`}
+                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${activeTab === 'sideCardBottom' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                    }`}
                             >
                                 <div className="z-10 max-w-[56%] pr-1">
                                     {sideCardBottom.tag && (
@@ -640,26 +636,23 @@ export default function AdminHeroPromotionsPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('mainCard')}
-                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                        activeTab === 'mainCard'
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${activeTab === 'mainCard'
                             ? 'bg-white border-2 border-plum shadow-card'
                             : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
-                                activeTab === 'mainCard' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${activeTab === 'mainCard' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                                }`}>
                                 1
                             </span>
                             <span className="font-display font-bold text-sm text-slate-900">
                                 Main Feature Box
                             </span>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            mainCard.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${mainCard.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                            }`}>
                             {mainCard.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
@@ -671,26 +664,23 @@ export default function AdminHeroPromotionsPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('sideCardTop')}
-                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                        activeTab === 'sideCardTop'
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${activeTab === 'sideCardTop'
                             ? 'bg-white border-2 border-plum shadow-card'
                             : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
-                                activeTab === 'sideCardTop' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${activeTab === 'sideCardTop' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                                }`}>
                                 2
                             </span>
                             <span className="font-display font-bold text-sm text-slate-900">
                                 Top Side Box
                             </span>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            sideCardTop.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sideCardTop.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                            }`}>
                             {sideCardTop.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
@@ -702,26 +692,23 @@ export default function AdminHeroPromotionsPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('sideCardBottom')}
-                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                        activeTab === 'sideCardBottom'
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${activeTab === 'sideCardBottom'
                             ? 'bg-white border-2 border-plum shadow-card'
                             : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${
-                                activeTab === 'sideCardBottom' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs ${activeTab === 'sideCardBottom' ? 'bg-plum text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                                }`}>
                                 3
                             </span>
                             <span className="font-display font-bold text-sm text-slate-900">
                                 Bottom Side Box
                             </span>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            sideCardBottom.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sideCardBottom.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                            }`}>
                             {sideCardBottom.isActive !== false ? 'Active' : 'Hidden'}
                         </span>
                     </div>
@@ -882,11 +869,10 @@ export default function AdminHeroPromotionsPage() {
                                                 key={`${item.label}-${idx}`}
                                                 type="button"
                                                 onClick={() => handleUpdateCardField('mainCard', 'buttonLink', item.url)}
-                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                                                    isSelected
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isSelected
                                                         ? 'bg-plum text-white border-plum shadow-2xs'
                                                         : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
-                                                }`}
+                                                    }`}
                                                 title={`Set URL to: ${item.url}`}
                                             >
                                                 {item.label}
@@ -1047,11 +1033,10 @@ export default function AdminHeroPromotionsPage() {
                                                 key={`${item.label}-${idx}`}
                                                 type="button"
                                                 onClick={() => handleUpdateCardField('sideCardTop', 'buttonLink', item.url)}
-                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                                                    isSelected
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isSelected
                                                         ? 'bg-plum text-white border-plum shadow-2xs'
                                                         : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
-                                                }`}
+                                                    }`}
                                                 title={`Set URL to: ${item.url}`}
                                             >
                                                 {item.label}
@@ -1212,11 +1197,10 @@ export default function AdminHeroPromotionsPage() {
                                                 key={`${item.label}-${idx}`}
                                                 type="button"
                                                 onClick={() => handleUpdateCardField('sideCardBottom', 'buttonLink', item.url)}
-                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                                                    isSelected
+                                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isSelected
                                                         ? 'bg-plum text-white border-plum shadow-2xs'
                                                         : 'text-plum bg-purple-50/60 border-purple-100 hover:bg-purple-100 hover:border-plum/30'
-                                                }`}
+                                                    }`}
                                                 title={`Set URL to: ${item.url}`}
                                             >
                                                 {item.label}
