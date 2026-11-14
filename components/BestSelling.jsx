@@ -52,7 +52,7 @@ const BestSelling = () => {
             .slice(0, displayQuantity)
     }, [products, bestSellingConfig, displayQuantity])
 
-    if (bestSellingConfig?.enabled === false) {
+    if (bestSellingConfig?.enabled === false || displayedProducts.length === 0) {
         return null
     }
 

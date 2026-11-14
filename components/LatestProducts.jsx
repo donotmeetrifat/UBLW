@@ -52,7 +52,7 @@ const LatestProducts = () => {
             .slice(0, displayQuantity)
     }, [products, newArrivalsConfig, displayQuantity])
 
-    if (newArrivalsConfig?.enabled === false) {
+    if (newArrivalsConfig?.enabled === false || displayedProducts.length === 0) {
         return null
     }
 

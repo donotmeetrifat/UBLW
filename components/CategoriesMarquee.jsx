@@ -6,14 +6,7 @@ import React, { Suspense, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
-const DEFAULT_CATEGORIES = [
-    "Skincare",
-    "Makeup",
-    "Haircare",
-    "Fragrance",
-    "Body Care",
-    "Beauty Tools"
-];
+const DEFAULT_CATEGORIES = [];
 
 const CategoriesMarqueeContent = () => {
     const router = useRouter();
@@ -36,15 +29,13 @@ const CategoriesMarqueeContent = () => {
         fetch('/api/categories?_t=' + Date.now(), { cache: 'no-store' })
             .then(res => res.json())
             .then(data => {
-                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                if (data.success && Array.isArray(data.categories)) {
                     const activeNames = data.categories
                         .filter(c => c.isActive !== false)
                         .map(c => c.name);
-                    if (activeNames.length > 0) {
-                        setCategories(activeNames);
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
-                        }
+                    setCategories(activeNames);
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames));
                     }
                 }
             })
@@ -90,6 +81,10 @@ const CategoriesMarqueeContent = () => {
     const handleCategoryClick = (catName) => {
         router.push(`/shop?category=${encodeURIComponent(catName)}`);
     };
+
+    if (!categories || categories.length === 0) {
+        return null;
+    }
 
     return (
         <section aria-label="Product categories navigation" className="w-full max-w-7xl mx-auto mt-6 sm:mt-8 mb-6 sm:mb-8">

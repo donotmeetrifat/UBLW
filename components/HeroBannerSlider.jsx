@@ -9,16 +9,7 @@ import { useSelector } from 'react-redux'
 
 const AUTOPLAY_DELAY = 5000
 
-const DEFAULT_SLIDES = [
-    { id: 'def-1', image: '/banner/1.png', imageAlt: 'UK Brand Lover curated skincare banner 1', link: '/shop', isActive: true },
-    { id: 'def-2', image: '/banner/2.jpg', imageAlt: 'UK Brand Lover luxury skincare banner 2', link: '/shop?category=Skincare', isActive: true },
-    { id: 'def-3', image: '/banner/3.jpg', imageAlt: 'UK Brand Lover premium beauty banner 3', link: '/shop?category=Makeup', isActive: true },
-    { id: 'def-4', image: '/banner/4.jpg', imageAlt: 'UK Brand Lover authentic cosmetics banner 4', link: '/shop?category=Haircare', isActive: true },
-    { id: 'def-5', image: '/banner/5.jpg', imageAlt: 'UK Brand Lover direct UK imports banner 5', link: '/shop', isActive: true },
-    { id: 'def-6', image: '/banner/6.jpg', imageAlt: 'UK Brand Lover hair repair treatment banner 6', link: '/shop', isActive: true },
-    { id: 'def-7', image: '/banner/7.jpg', imageAlt: 'UK Brand Lover luxury fragrance banner 7', link: '/shop?category=Fragrance', isActive: true },
-    { id: 'def-8', image: '/banner/8.jpg', imageAlt: 'UK Brand Lover beauty deals banner 8', link: '/shop', isActive: true }
-]
+const DEFAULT_SLIDES = []
 
 const HeroBannerSlider = () => {
     const router = useRouter()
