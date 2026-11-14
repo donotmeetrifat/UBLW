@@ -24,6 +24,7 @@ const HeroBannerSlider = () => {
     const router = useRouter()
     const reduxBanners = useSelector(state => state.product.banners)
     const bannerSettings = useSelector(state => state.product.bannerSettings)
+    const [localBanners, setLocalBanners] = useState(null)
 
     // Storefront Autoplay resolution (true by default unless disabled by admin)
     const [liveAutoplay, setLiveAutoplay] = useState(
@@ -36,11 +37,55 @@ const HeroBannerSlider = () => {
         }
     }, [bannerSettings])
 
-    // Real-time synchronization when admin toggles autoplay on/off storewide
+    // Instant local hydration & real-time synchronization across all devices and browsers
     useEffect(() => {
+        // 1. Instant 0ms hydration from cache
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('ukbl_cached_hero_banners')
+                if (cached) {
+                    const parsed = JSON.parse(cached)
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        setLocalBanners(parsed)
+                    }
+                }
+            } catch {}
+        }
+
+        // 2. Fetch fresh live banners from database
+        const fetchFreshBanners = async () => {
+            try {
+                const res = await fetch(`/api/banners?_t=${Date.now()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Pragma': 'no-cache',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                const data = await res.json()
+                if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+                    setLocalBanners(data.banners)
+                    try {
+                        localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
+                    } catch {}
+                }
+            } catch (err) {}
+        }
+
+        fetchFreshBanners()
+
+        // 3. Multi-channel real-time synchronization when admin updates banners or toggles autoplay
         const handleAutoplayChange = (e) => {
             if (typeof e?.detail?.autoplay === 'boolean') {
                 setLiveAutoplay(e.detail.autoplay)
+            }
+        }
+
+        const handleBannersUpdated = (e) => {
+            if (Array.isArray(e?.detail?.banners) && e.detail.banners.length > 0) {
+                setLocalBanners(e.detail.banners)
+            } else {
+                fetchFreshBanners()
             }
         }
 
@@ -53,9 +98,22 @@ const HeroBannerSlider = () => {
                     }
                 } catch {}
             }
+            if (e.key === 'ukbl_banners_synced' || e.key === 'ukbl_cached_hero_banners') {
+                try {
+                    const parsed = JSON.parse(e.newValue || '[]')
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        setLocalBanners(parsed)
+                    } else {
+                        fetchFreshBanners()
+                    }
+                } catch {
+                    fetchFreshBanners()
+                }
+            }
         }
 
         window.addEventListener('hero-banner-autoplay-updated', handleAutoplayChange)
+        window.addEventListener('hero-banners-updated', handleBannersUpdated)
         window.addEventListener('storage', handleStorage)
 
         let bc
@@ -65,11 +123,19 @@ const HeroBannerSlider = () => {
                 if (msg.data?.type === 'hero-banner-autoplay-updated' && typeof msg.data?.autoplay === 'boolean') {
                     setLiveAutoplay(msg.data.autoplay)
                 }
+                if (msg.data?.type === 'hero-banners-updated') {
+                    if (Array.isArray(msg.data?.banners) && msg.data.banners.length > 0) {
+                        setLocalBanners(msg.data.banners)
+                    } else {
+                        fetchFreshBanners()
+                    }
+                }
             }
         } catch {}
 
         return () => {
             window.removeEventListener('hero-banner-autoplay-updated', handleAutoplayChange)
+            window.removeEventListener('hero-banners-updated', handleBannersUpdated)
             window.removeEventListener('storage', handleStorage)
             if (bc) bc.close()
         }
@@ -77,14 +143,20 @@ const HeroBannerSlider = () => {
 
     // Compute active slides from Redux / Live database, with default fallback
     const slides = useMemo(() => {
-        if (Array.isArray(reduxBanners) && reduxBanners.length > 0) {
-            const active = reduxBanners
+        const source = (Array.isArray(reduxBanners) && reduxBanners.length > 0)
+            ? reduxBanners
+            : (Array.isArray(localBanners) && localBanners.length > 0)
+                ? localBanners
+                : null
+
+        if (source) {
+            const active = source
                 .filter(b => b && b.isActive !== false && b.image)
                 .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
             if (active.length > 0) return active
         }
         return DEFAULT_SLIDES
-    }, [reduxBanners])
+    }, [reduxBanners, localBanners])
 
     const [activeIndex, setActiveIndex] = useState(0)
     const [isPaused, setIsPaused] = useState(false)

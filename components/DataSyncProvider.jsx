@@ -340,10 +340,21 @@ export default function DataSyncProvider({ children }) {
                 }
             }
 
+            const handleBannersUpdated = (e) => {
+                if (Array.isArray(e?.detail?.banners) && e.detail.banners.length > 0) {
+                    dispatch(setBanners(e.detail.banners))
+                    try {
+                        localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(e.detail.banners))
+                    } catch {}
+                } else {
+                    syncHeroBanners()
+                }
+            }
+
             window.addEventListener('product-catalog-updated', syncProductCatalog)
             window.addEventListener('category-catalog-updated', syncCategoryCatalog)
             window.addEventListener('homepage-sections-updated', syncHomepageSections)
-            window.addEventListener('hero-banners-updated', syncHeroBanners)
+            window.addEventListener('hero-banners-updated', handleBannersUpdated)
             window.addEventListener('hero-banner-autoplay-updated', handleAutoplayUpdated)
             window.addEventListener('hero-promotions-updated', syncHeroPromotions)
             window.addEventListener('storage', (e) => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -17,8 +17,7 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     StoreFrontIcon,
-    UploadCloudIcon,
-    EyeIcon
+    UploadCloudIcon
 } from '@/components/icons'
 import ClassicLoader from '@/components/ui/classic-loader'
 
@@ -33,8 +32,11 @@ const DEFAULT_BANNER_SUGGESTIONS = [
 
 export default function AdminHeroBannersPage() {
     const [banners, setBanners] = useState([])
+    const [savedBanners, setSavedBanners] = useState([])
+    const [hasPendingChanges, setHasPendingChanges] = useState(false)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [lastSavedAt, setLastSavedAt] = useState(null)
     const [draggedIndex, setDraggedIndex] = useState(null)
 
     // Interactive Storefront Preview & Global Store Autoplay State
@@ -64,11 +66,14 @@ export default function AdminHeroBannersPage() {
         try {
             setLoading(true)
             const res = await fetch(`/api/admin/banners?_t=${Date.now()}`, {
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
             })
             const data = await res.json()
             if (data.success && Array.isArray(data.banners)) {
                 setBanners(data.banners)
+                setSavedBanners(data.banners)
+                setHasPendingChanges(false)
                 if (data.settings && typeof data.settings.autoplay === 'boolean') {
                     setIsAutoplay(data.settings.autoplay)
                 } else if (typeof data.autoplay === 'boolean') {
@@ -88,6 +93,45 @@ export default function AdminHeroBannersPage() {
     useEffect(() => {
         fetchBanners()
     }, [])
+
+    // Autoplay for the Live Storefront Preview slider on the admin page (strictly syncs with isAutoplay)
+    useEffect(() => {
+        if (!isAutoplay || banners.length <= 1) return
+        const timer = setInterval(() => {
+            setPreviewActiveIndex(prev => (prev + 1) % banners.length)
+        }, 4500)
+        return () => clearInterval(timer)
+    }, [isAutoplay, banners.length])
+
+    // Multi-channel real-time synchronization broadcast across all devices, browsers, and workers
+    const syncBroadcast = (newBanners) => {
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(newBanners))
+                localStorage.setItem('ukbl_banners_synced', Date.now().toString())
+                window.dispatchEvent(new CustomEvent('hero-banners-updated', { detail: { banners: newBanners } }))
+
+                const bc = new BroadcastChannel('ukbl_catalog_channel')
+                bc.postMessage({
+                    type: 'hero-banners-updated',
+                    banners: newBanners,
+                    timestamp: Date.now()
+                })
+                bc.close()
+            } catch (syncErr) {
+                console.error('Broadcast sync error:', syncErr)
+            }
+
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
+                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ALL_CACHES' })
+            }
+            if ('caches' in window) {
+                caches.delete('ukbl-api-v1').catch(() => {})
+                caches.delete('ukbl-api-v2').catch(() => {})
+            }
+        }
+    }
 
     // Real-time Autoplay Toggle handler - updates DB, server, and all users instantly
     const handleToggleAutoplay = async () => {
@@ -117,7 +161,6 @@ export default function AdminHeroBannersPage() {
                     { id: toastId }
                 )
 
-                // Multi-channel real-time synchronization across frontend, backend, server, and all users
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_cached_hero_banner_settings', JSON.stringify({ autoplay: finalAutoplay, delay: 5000 }))
                     localStorage.setItem('ukbl_banners_synced', Date.now().toString())
@@ -134,10 +177,6 @@ export default function AdminHeroBannersPage() {
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_API_CACHE' })
                     }
-                    if ('caches' in window) {
-                        caches.delete('ukbl-api-v1').catch(() => {})
-                        caches.delete('ukbl-api-v2').catch(() => {})
-                    }
                 }
             } else {
                 setIsAutoplay(!nextState)
@@ -152,14 +191,54 @@ export default function AdminHeroBannersPage() {
         }
     }
 
-    // Autoplay for the Live Storefront Preview slider on the admin page (strictly syncs with isAutoplay)
-    useEffect(() => {
-        if (!isAutoplay || banners.length <= 1) return
-        const timer = setInterval(() => {
-            setPreviewActiveIndex(prev => (prev + 1) % banners.length)
-        }, 4500)
-        return () => clearInterval(timer)
-    }, [isAutoplay, banners.length])
+    // --- Master Save All Banners to Database and Storefront ---
+    const handleSaveAllBanners = async (customList = null) => {
+        const listToSave = customList || banners
+        if (!Array.isArray(listToSave)) return
+
+        // Normalize display order sequentially
+        const normalized = listToSave.map((b, idx) => ({
+            ...b,
+            displayOrder: idx + 1
+        }))
+
+        try {
+            setSaving(true)
+            const toastId = toast.loading('Saving hero banners to database & publishing storewide...')
+
+            const res = await fetch('/api/admin/banners', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ banners: normalized })
+            })
+            const data = await res.json()
+
+            if (data.success && Array.isArray(data.banners)) {
+                setBanners(data.banners)
+                setSavedBanners(data.banners)
+                setHasPendingChanges(false)
+                setLastSavedAt(new Date().toLocaleTimeString())
+
+                syncBroadcast(data.banners)
+                toast.success('All hero banner updates saved to database & published live storewide across all devices!', { id: toastId, duration: 4000 })
+            } else {
+                toast.error(data.message || 'Failed to save banners', { id: toastId })
+            }
+        } catch (err) {
+            console.error('Failed to save banners:', err)
+            toast.error('Network error saving banners to server')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    // --- Discard Pending Changes and revert to server state ---
+    const handleDiscardChanges = () => {
+        if (!confirm('Discard all unsaved banner changes and restore the live saved slides?')) return
+        setBanners([...savedBanners])
+        setHasPendingChanges(false)
+        toast.success('Unsaved changes discarded.')
+    }
 
     // --- Modal Openers ---
     const handleOpenAddModal = () => {
@@ -171,7 +250,7 @@ export default function AdminHeroBannersPage() {
             imageAlt: '',
             link: '/shop',
             isActive: true,
-            displayOrder: 1 // Default to 1st (fast) position as requested
+            displayOrder: 1
         })
         setIsModalOpen(true)
     }
@@ -226,83 +305,84 @@ export default function AdminHeroBannersPage() {
         }
     }
 
-    // --- Save Single Banner (Add or Edit) ---
-    const handleSaveBannerModal = async (e) => {
-        e.preventDefault()
-
+    // --- Save or Apply from Modal ---
+    const handleApplyBannerModal = async (publishImmediately = false) => {
         if (!formData.image.trim()) {
             toast.error('Please upload or provide a banner image URL')
             return
         }
 
-        try {
-            setSaving(true)
-            const toastId = toast.loading(editingBanner ? 'Updating hero banner...' : 'Publishing new hero banner...')
+        let updatedList = [...banners]
+        const targetOrder = Math.max(1, Number(formData.displayOrder) || (updatedList.length + 1))
 
-            let res
-            if (editingBanner) {
-                // Update
-                res = await fetch('/api/admin/banners', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: editingBanner.id,
-                        ...formData
-                    })
-                })
-            } else {
-                // Create
-                res = await fetch('/api/admin/banners', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                })
+        if (editingBanner) {
+            // Edit existing banner
+            const existingIndex = updatedList.findIndex(b => b.id === editingBanner.id)
+            if (existingIndex >= 0) {
+                const updatedItem = {
+                    ...updatedList[existingIndex],
+                    ...formData,
+                    id: editingBanner.id
+                }
+                updatedList.splice(existingIndex, 1)
+                const targetIdx = Math.min(targetOrder - 1, updatedList.length)
+                updatedList.splice(targetIdx, 0, updatedItem)
             }
-
-            const data = await res.json()
-
-            if (data.success && Array.isArray(data.banners)) {
-                setBanners(data.banners)
-                setIsModalOpen(false)
-                toast.success(data.message || 'Banner saved successfully!', { id: toastId })
-                syncBroadcast(data.banners)
-            } else {
-                toast.error(data.message || 'Failed to save banner', { id: toastId })
+        } else {
+            // Add new banner
+            const newId = `hero-banner-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+            const newBanner = {
+                id: newId,
+                title: formData.title.trim(),
+                subtitle: formData.subtitle.trim(),
+                image: formData.image.trim(),
+                imageAlt: formData.imageAlt.trim() || formData.title.trim() || 'UK Brand Lover banner promotion',
+                link: formData.link.trim(),
+                isActive: formData.isActive !== false,
+                displayOrder: targetOrder
             }
-        } catch (err) {
-            console.error('Error saving banner:', err)
-            toast.error('Failed to save banner')
-        } finally {
-            setSaving(false)
+            const targetIdx = Math.min(targetOrder - 1, updatedList.length)
+            updatedList.splice(targetIdx, 0, newBanner)
+        }
+
+        const normalized = updatedList.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
+        setBanners(normalized)
+        setIsModalOpen(false)
+
+        if (publishImmediately) {
+            await handleSaveAllBanners(normalized)
+        } else {
+            setHasPendingChanges(true)
+            toast.success(editingBanner 
+                ? 'Slide updated! Click "Save Updates" to publish storewide.' 
+                : 'New slide added! Click "Save Updates" to publish storewide.')
         }
     }
 
     // --- Delete Banner ---
-    const handleDeleteBanner = async (bannerId) => {
-        if (!confirm('Are you sure you want to permanently delete this hero banner?')) return
+    const handleDeleteBanner = (bannerId) => {
+        if (!confirm('Are you sure you want to remove this hero banner? Click "Save Updates" to commit changes live storewide.')) return
+        const updated = banners.filter(b => b.id !== bannerId).map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
+        setBanners(updated)
+        setHasPendingChanges(true)
+        toast.success('Slide removed from list. Click "Save Updates" to publish changes live storewide!')
+    }
 
-        try {
-            const toastId = toast.loading('Deleting banner...')
-            const res = await fetch(`/api/admin/banners?id=${encodeURIComponent(bannerId)}`, {
-                method: 'DELETE'
-            })
-            const data = await res.json()
-
-            if (data.success && Array.isArray(data.banners)) {
-                setBanners(data.banners)
-                toast.success('Hero banner deleted successfully!', { id: toastId })
-                syncBroadcast(data.banners)
-            } else {
-                toast.error(data.message || 'Failed to delete banner', { id: toastId })
-            }
-        } catch (err) {
-            console.error('Error deleting banner:', err)
-            toast.error('Failed to delete banner')
-        }
+    // --- Toggle Row Active Status ---
+    const handleToggleActiveRow = (bannerId) => {
+        const updated = banners.map(b => b.id === bannerId ? { ...b, isActive: !b.isActive } : b)
+        setBanners(updated)
+        setHasPendingChanges(true)
+        const target = updated.find(b => b.id === bannerId)
+        toast.info(target?.isActive 
+            ? 'Banner marked Active. Click "Save Updates" to publish.' 
+            : 'Banner marked Hidden. Click "Save Updates" to publish.', 
+            { id: 'banner-active-toggle' }
+        )
     }
 
     // --- Shift and Reorder Actions ---
-    const handleMoveBanner = async (fromIndex, toIndex) => {
+    const handleMoveBanner = (fromIndex, toIndex) => {
         if (toIndex < 0 || toIndex >= banners.length) return
         const updated = [...banners]
         const [moved] = updated.splice(fromIndex, 1)
@@ -310,10 +390,11 @@ export default function AdminHeroBannersPage() {
 
         const normalized = updated.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
         setBanners(normalized)
-        await persistReorderedBanners(normalized)
+        setHasPendingChanges(true)
+        toast.info(`Moved to #${toIndex + 1}. Click "Save Updates" to publish live.`, { id: 'banner-reorder' })
     }
 
-    const handleDirectOrderChange = async (fromIndex, targetRankStr) => {
+    const handleDirectOrderChange = (fromIndex, targetRankStr) => {
         const targetRank = parseInt(targetRankStr, 10)
         if (isNaN(targetRank)) return
         const toIndex = Math.max(0, Math.min(targetRank - 1, banners.length - 1))
@@ -325,8 +406,8 @@ export default function AdminHeroBannersPage() {
 
         const normalized = updated.map((b, idx) => ({ ...b, displayOrder: idx + 1 }))
         setBanners(normalized)
-        await persistReorderedBanners(normalized)
-        toast.success(`Banner moved to rank #${toIndex + 1}!`)
+        setHasPendingChanges(true)
+        toast.info(`Moved to #${toIndex + 1}. Click "Save Updates" to publish live.`, { id: 'banner-reorder' })
     }
 
     // Drag and Drop
@@ -340,61 +421,21 @@ export default function AdminHeroBannersPage() {
         e.dataTransfer.dropEffect = 'move'
     }
 
-    const handleDrop = async (e, targetIndex) => {
+    const handleDrop = (e, targetIndex) => {
         e.preventDefault()
         if (draggedIndex === null || draggedIndex === targetIndex) {
             setDraggedIndex(null)
             return
         }
-        await handleMoveBanner(draggedIndex, targetIndex)
+        handleMoveBanner(draggedIndex, targetIndex)
         setDraggedIndex(null)
-        toast.success(`Banner prioritized to position #${targetIndex + 1}`)
-    }
-
-    // Persist bulk reordered list to backend & DB
-    const persistReorderedBanners = async (reorderedList) => {
-        try {
-            setSaving(true)
-            const res = await fetch('/api/admin/banners', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ banners: reorderedList })
-            })
-            const data = await res.json()
-            if (data.success && Array.isArray(data.banners)) {
-                syncBroadcast(data.banners)
-            }
-        } catch (err) {
-            console.error('Failed to sync banner reorder:', err)
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    // Synchronize to local storage, custom event, and BroadcastChannel
-    const syncBroadcast = (newBanners) => {
-        if (typeof window !== 'undefined') {
-            try {
-                localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(newBanners))
-                localStorage.setItem('ukbl_banners_synced', Date.now().toString())
-                window.dispatchEvent(new CustomEvent('hero-banners-updated'))
-
-                const bc = new BroadcastChannel('ukbl_catalog_channel')
-                bc.postMessage({
-                    type: 'hero-banners-updated',
-                    banners: newBanners
-                })
-            } catch (syncErr) {
-                console.error('Broadcast sync error:', syncErr)
-            }
-        }
     }
 
     // Current active banner in preview
     const activePreviewBanner = banners[previewActiveIndex] || banners[0]
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-16">
+        <div className="space-y-6 max-w-7xl mx-auto pb-24">
             {/* Header with Title and Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EFE0EF] shadow-2xs">
                 <div>
@@ -403,12 +444,17 @@ export default function AdminHeroBannersPage() {
                             Homepage Hero Studio
                         </span>
                         <span className="text-slate-400 text-xs">• Live Database Sync</span>
+                        {hasPendingChanges && (
+                            <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 animate-pulse">
+                                Unsaved Changes Pending
+                            </span>
+                        )}
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] tracking-tight">
                         Hero Banner Slider Management
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-                        Add, edit, delete, and reorder homepage promotional slider images. Set exact serial positions (#1, #2, #3...) and attach custom click redirect URLs. All updates go live instantly across the entire store.
+                        Add, edit, delete, and reorder homepage promotional slider images. Set exact serial positions (#1, #2, #3...) and attach custom click redirect URLs. All updates go live instantly across the entire store after clicking &quot;Save Updates&quot;.
                     </p>
                 </div>
 
@@ -425,15 +471,46 @@ export default function AdminHeroBannersPage() {
 
                     <button
                         onClick={fetchBanners}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-[#FAF6FA] border border-[#EFE0EF] hover:bg-[#FAF6FA]/80 transition"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-[#FAF6FA] border border-[#EFE0EF] hover:bg-[#FAF6FA]/80 transition cursor-pointer"
+                        title="Reload clean state from database"
                     >
                         <RefreshIcon size={14} />
                         <span>Refresh</span>
                     </button>
 
+                    {/* Prominent Master Save Updates Button in Header */}
+                    <button
+                        type="button"
+                        onClick={() => handleSaveAllBanners()}
+                        disabled={saving}
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold transition shadow-md cursor-pointer ${
+                            hasPendingChanges
+                                ? 'bg-linear-to-r from-[#6C306E] to-[#4A1D4C] text-white hover:from-[#5A255C] hover:to-[#381439] ring-4 ring-[#6C306E]/20 animate-pulse'
+                                : 'bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF] hover:bg-[#EFE0EF]'
+                        }`}
+                        title={hasPendingChanges ? 'You have unsaved changes. Click to publish live storewide.' : 'All changes are saved. Click anytime to re-sync across all devices.'}
+                    >
+                        {saving ? (
+                            <>
+                                <ClassicLoader />
+                                <span>Saving to Database...</span>
+                            </>
+                        ) : hasPendingChanges ? (
+                            <>
+                                <span className="size-2 rounded-full bg-amber-300 animate-ping" />
+                                <span>Save All Changes (Unsaved Pending)</span>
+                            </>
+                        ) : (
+                            <>
+                                <CheckIcon size={14} />
+                                <span>Save Updates {lastSavedAt ? `(Saved ${lastSavedAt})` : ''}</span>
+                            </>
+                        )}
+                    </button>
+
                     <button
                         onClick={handleOpenAddModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition cursor-pointer"
                     >
                         <PlusIcon size={15} />
                         <span>Add New Hero Banner</span>
@@ -481,7 +558,7 @@ export default function AdminHeroBannersPage() {
 
                 {banners.length === 0 ? (
                     <div className="py-12 text-center text-slate-400 text-xs">
-                        No hero banners available. Click "+ Add New Hero Banner" to create your first slide.
+                        No hero banners available. Click &quot;+ Add New Hero Banner&quot; to create your first slide.
                     </div>
                 ) : (
                     <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-sm select-none">
@@ -522,7 +599,7 @@ export default function AdminHeroBannersPage() {
                         <button
                             type="button"
                             onClick={() => setPreviewActiveIndex((previewActiveIndex - 1 + banners.length) % banners.length)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer"
                             title="Previous slide"
                         >
                             <ChevronLeftIcon size={16} color="#6C306E" />
@@ -531,7 +608,7 @@ export default function AdminHeroBannersPage() {
                         <button
                             type="button"
                             onClick={() => setPreviewActiveIndex((previewActiveIndex + 1) % banners.length)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 size-9 rounded-full bg-white/90 backdrop-blur-md border border-white/50 text-[#6C306E] flex items-center justify-center shadow-md transition hover:scale-110 cursor-pointer"
                             title="Next slide"
                         >
                             <ChevronRightIcon size={16} color="#6C306E" />
@@ -543,7 +620,7 @@ export default function AdminHeroBannersPage() {
                                 <button
                                     key={idx}
                                     onClick={() => setPreviewActiveIndex(idx)}
-                                    className={`transition-all rounded-full ${
+                                    className={`transition-all rounded-full cursor-pointer ${
                                         previewActiveIndex === idx
                                             ? 'w-5 h-2 bg-white'
                                             : 'size-2 bg-white/60 hover:bg-white'
@@ -561,24 +638,46 @@ export default function AdminHeroBannersPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-lg font-extrabold text-[#241224]">
-                                Hero Banner Slides & Display Priorities
+                                Hero Banner Slides &amp; Display Priorities
                             </h2>
                             <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF]">
                                 {banners.length} Total Banners
                             </span>
+                            {hasPendingChanges && (
+                                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                    ● Unsaved Reorder / Edits
+                                </span>
+                            )}
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Banners slide on the storefront in the exact serial order shown below. Drag rows or use the Move buttons / Serial numbers to customize order.
+                            Banners slide on the storefront in the exact serial order shown below. Drag rows or use Move buttons / Serial numbers, then click &quot;Save Updates&quot; to commit.
                         </p>
                     </div>
 
-                    <button
-                        onClick={handleOpenAddModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] shadow-xs transition shrink-0"
-                    >
-                        <PlusIcon size={14} />
-                        <span>Add New Slide</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Section Header Save Updates Button */}
+                        <button
+                            type="button"
+                            onClick={() => handleSaveAllBanners()}
+                            disabled={saving}
+                            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-extrabold transition shadow-xs cursor-pointer ${
+                                hasPendingChanges
+                                    ? 'bg-[#6C306E] text-white hover:bg-[#4A1D4C] ring-2 ring-[#6C306E]/30'
+                                    : 'bg-[#FAF6FA] text-slate-700 border border-[#EFE0EF] hover:bg-slate-100'
+                            }`}
+                        >
+                            {saving ? <ClassicLoader /> : <CheckIcon size={13} />}
+                            <span>{hasPendingChanges ? 'Save Banner Updates' : 'Save Updates'}</span>
+                        </button>
+
+                        <button
+                            onClick={handleOpenAddModal}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] shadow-xs transition cursor-pointer shrink-0"
+                        >
+                            <PlusIcon size={14} />
+                            <span>Add New Slide</span>
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -599,7 +698,7 @@ export default function AdminHeroBannersPage() {
                         </p>
                         <button
                             onClick={handleOpenAddModal}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-xs mt-2"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold text-white bg-[#6C306E] hover:bg-[#3A0C38] transition shadow-xs mt-2 cursor-pointer"
                         >
                             <PlusIcon size={14} />
                             <span>Add Your First Banner</span>
@@ -656,13 +755,18 @@ export default function AdminHeroBannersPage() {
 
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                                banner.isActive !== false
-                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                    : 'bg-slate-100 text-slate-500 border border-slate-200'
-                                            }`}>
-                                                {banner.isActive !== false ? 'Active on Storefront' : 'Hidden / Inactive'}
-                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleActiveRow(banner.id)}
+                                                className={`text-[10px] font-black px-2.5 py-0.5 rounded-full cursor-pointer transition ${
+                                                    banner.isActive !== false
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                                        : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
+                                                }`}
+                                                title="Click to toggle active on storefront"
+                                            >
+                                                {banner.isActive !== false ? '● Active on Storefront' : '○ Hidden / Inactive'}
+                                            </button>
                                             {index === 0 && (
                                                 <span className="text-[10px] font-extrabold text-[#D8B56D] bg-[#FAF6FA] px-2 py-0.5 rounded-full border border-[#EFE0EF]">
                                                     ★ First Visible Slide
@@ -719,7 +823,7 @@ export default function AdminHeroBannersPage() {
                                         type="button"
                                         onClick={() => handleMoveBanner(index, index - 1)}
                                         disabled={index === 0}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs"
+                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs cursor-pointer"
                                         title="Move Priority Up"
                                     >
                                         ▲
@@ -730,7 +834,7 @@ export default function AdminHeroBannersPage() {
                                         type="button"
                                         onClick={() => handleMoveBanner(index, index + 1)}
                                         disabled={index === banners.length - 1}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs"
+                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-sm transition shadow-2xs cursor-pointer"
                                         title="Move Priority Down"
                                     >
                                         ▼
@@ -740,7 +844,7 @@ export default function AdminHeroBannersPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleOpenEditModal(banner)}
-                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-[#6C306E] flex items-center justify-center transition shadow-2xs"
+                                        className="size-8 rounded-xl border border-[#EFE0EF] bg-white hover:bg-[#FAF6FA] text-[#6C306E] flex items-center justify-center transition shadow-2xs cursor-pointer"
                                         title="Edit Slide & Target URL"
                                     >
                                         <EditIcon size={14} />
@@ -750,7 +854,7 @@ export default function AdminHeroBannersPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleDeleteBanner(banner.id)}
-                                        className="size-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs"
+                                        className="size-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs cursor-pointer"
                                         title="Delete Banner Slide"
                                     >
                                         <TrashIcon size={14} />
@@ -761,6 +865,55 @@ export default function AdminHeroBannersPage() {
                     </div>
                 )}
             </div>
+
+            {/* STICKY FLOATING ACTION BAR FOR PENDING CHANGES */}
+            {hasPendingChanges && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-3xl bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-[#6C306E] shadow-2xl shadow-[#6C306E]/30 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center font-black text-lg shrink-0 shadow-2xs">
+                            💾
+                        </div>
+                        <div>
+                            <p className="text-xs sm:text-sm font-extrabold text-[#241224]">
+                                You have unsaved changes in hero banner slides!
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                                Click &quot;Save Updates &amp; Publish Storewide&quot; to commit changes to the database and update all visitors instantly.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-end">
+                        <button
+                            type="button"
+                            onClick={handleDiscardChanges}
+                            disabled={saving}
+                            className="px-4 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                        >
+                            Discard
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleSaveAllBanners()}
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-lg shadow-[#6C306E]/25 transition cursor-pointer"
+                        >
+                            {saving ? (
+                                <>
+                                    <ClassicLoader />
+                                    <span>Saving to Database...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckIcon size={14} />
+                                    <span>Save Updates &amp; Publish Storewide</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ADD / EDIT BANNER SLIDE MODAL WITH LIVE PREVIEW */}
             {isModalOpen && (
@@ -782,14 +935,14 @@ export default function AdminHeroBannersPage() {
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="size-9 rounded-full bg-white border border-[#EFE0EF] text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs"
+                                className="size-9 rounded-full bg-white border border-[#EFE0EF] text-slate-400 hover:text-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer"
                             >
                                 <CloseIcon size={16} />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <form onSubmit={handleSaveBannerModal} className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <form onSubmit={(e) => { e.preventDefault(); handleApplyBannerModal(false); }} className="flex-1 overflow-y-auto p-6 space-y-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Left Column: Inputs */}
                                 <div className="space-y-4">
@@ -817,7 +970,7 @@ export default function AdminHeroBannersPage() {
                                                 {isUploadingImage ? 'Uploading Image...' : 'Click to Upload High-Res Banner'}
                                             </p>
                                             <p className="text-[10px] text-slate-400 mt-0.5">
-                                                Supports PNG, JPG, WEBP • Uploads directly to CDN
+                                                Supports PNG, JPG, WEBP • Direct CDN Upload
                                             </p>
                                         </div>
 
@@ -882,7 +1035,7 @@ export default function AdminHeroBannersPage() {
                                                     key={idx}
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({ ...prev, link: item.url }))}
-                                                    className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#FAF6FA]/80 px-2 py-0.5 rounded-md border border-[#EFE0EF] transition"
+                                                    className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#FAF6FA]/80 px-2 py-0.5 rounded-md border border-[#EFE0EF] transition cursor-pointer"
                                                 >
                                                     {item.label}
                                                 </button>
@@ -914,7 +1067,7 @@ export default function AdminHeroBannersPage() {
                                                     type="checkbox"
                                                     checked={formData.isActive}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                                    className="accent-[#6C306E] size-4 rounded"
+                                                    className="accent-[#6C306E] size-4 rounded cursor-pointer"
                                                 />
                                                 <span>Active on Storefront</span>
                                             </label>
@@ -974,33 +1127,46 @@ export default function AdminHeroBannersPage() {
                                 </div>
                             </div>
 
-                            {/* Modal Footer */}
-                            <div className="p-4 border-t border-[#EFE0EF] bg-[#FAF6FA] -mx-6 -mb-6 flex items-center justify-between shrink-0 mt-6">
+                            {/* Modal Footer with Choice: Apply Staged vs Save & Publish Immediately */}
+                            <div className="p-4 border-t border-[#EFE0EF] bg-[#FAF6FA] -mx-6 -mb-6 flex flex-wrap items-center justify-between gap-3 shrink-0 mt-6">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-5 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition shadow-2xs"
+                                    className="px-5 py-2.5 rounded-full text-xs font-bold text-slate-600 bg-white border border-[#EFE0EF] hover:bg-slate-50 transition shadow-2xs cursor-pointer"
                                 >
                                     Cancel
                                 </button>
 
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-50"
-                                >
-                                    {saving ? (
-                                        <>
-                                            <ClassicLoader />
-                                            <span>Saving to Database...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <CheckIcon size={14} />
-                                            <span>{editingBanner ? 'Update Banner' : 'Publish Banner to Storefront'}</span>
-                                        </>
-                                    )}
-                                </button>
+                                <div className="flex items-center gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleApplyBannerModal(false)}
+                                        disabled={saving}
+                                        className="px-5 py-2.5 rounded-full text-xs font-extrabold text-[#6C306E] bg-white border border-[#6C306E]/30 hover:bg-[#FAF6FA] transition shadow-2xs cursor-pointer"
+                                        title="Keep changes in stage list and publish together with Master Save"
+                                    >
+                                        <span>{editingBanner ? 'Apply Changes' : 'Add to Slider'}</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleApplyBannerModal(true)}
+                                        disabled={saving}
+                                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold text-white bg-linear-to-r from-[#6C306E] to-[#4A1D4C] hover:from-[#5A255C] hover:to-[#381439] shadow-md shadow-[#6C306E]/20 transition disabled:opacity-50 cursor-pointer"
+                                    >
+                                        {saving ? (
+                                            <>
+                                                <ClassicLoader />
+                                                <span>Saving to Database...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckIcon size={14} />
+                                                <span>Save &amp; Publish Storewide</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -1009,4 +1175,3 @@ export default function AdminHeroBannersPage() {
         </div>
     )
 }
-

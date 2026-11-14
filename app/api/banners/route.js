@@ -18,7 +18,12 @@ export async function GET() {
             autoplay: settings?.autoplay !== false
         }, {
             headers: {
-                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'Surrogate-Control': 'no-store',
+                'CDN-Cache-Control': 'no-store',
+                'Vercel-CDN-Cache-Control': 'no-store'
             }
         });
     } catch (error) {
