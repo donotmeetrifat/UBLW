@@ -36,7 +36,7 @@ const HeroBannerSlider = () => {
                 const cached = localStorage.getItem('ukbl_cached_hero_banners')
                 if (cached) {
                     const parsed = JSON.parse(cached)
-                    if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (Array.isArray(parsed)) {
                         setLocalBanners(parsed)
                     }
                 }
@@ -92,7 +92,7 @@ const HeroBannerSlider = () => {
             if (e.key === 'ukbl_banners_synced' || e.key === 'ukbl_cached_hero_banners') {
                 try {
                     const parsed = JSON.parse(e.newValue || '[]')
-                    if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (Array.isArray(parsed)) {
                         setLocalBanners(parsed)
                     } else {
                         fetchFreshBanners()
@@ -115,7 +115,7 @@ const HeroBannerSlider = () => {
                     setLiveAutoplay(msg.data.autoplay)
                 }
                 if (msg.data?.type === 'hero-banners-updated') {
-                    if (Array.isArray(msg.data?.banners) && msg.data.banners.length > 0) {
+                    if (Array.isArray(msg.data?.banners)) {
                         setLocalBanners(msg.data.banners)
                     } else {
                         fetchFreshBanners()

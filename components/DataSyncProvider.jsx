@@ -118,10 +118,12 @@ export default function DataSyncProvider({ children }) {
                 // Hydrate Categories for 0ms instantaneous render
                 const storedCats = localStorage.getItem('ukbl_cached_categories')
                 if (storedCats) {
-                    const parsedCats = JSON.parse(storedCats)
-                    if (Array.isArray(parsedCats) && parsedCats.length > 0) {
-                        dispatch(setCategories(parsedCats))
-                    }
+                    try {
+                        const parsedCats = JSON.parse(storedCats)
+                        if (Array.isArray(parsedCats)) {
+                            dispatch(setCategories(parsedCats))
+                        }
+                    } catch {}
                 }
 
                 // Hydrate Homepage Sections for 0ms instantaneous render
@@ -140,7 +142,7 @@ export default function DataSyncProvider({ children }) {
                 if (storedBanners) {
                     try {
                         const parsedBanners = JSON.parse(storedBanners)
-                        if (Array.isArray(parsedBanners) && parsedBanners.length > 0) {
+                        if (Array.isArray(parsedBanners)) {
                             dispatch(setBanners(parsedBanners))
                         }
                     } catch (e) {}
@@ -307,7 +309,7 @@ export default function DataSyncProvider({ children }) {
                 })
                 const data = await res.json()
                 if (data.success) {
-                    if (Array.isArray(data.banners) && data.banners.length > 0) {
+                    if (Array.isArray(data.banners)) {
                         dispatch(setBanners(data.banners))
                         if (typeof window !== 'undefined') {
                             localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
@@ -367,7 +369,7 @@ export default function DataSyncProvider({ children }) {
                 const data = payload.data || {}
 
                 if (rawType === 'banners' || rawType === 'hero_banners') {
-                    if (Array.isArray(data.banners) && data.banners.length > 0) {
+                    if (Array.isArray(data.banners)) {
                         dispatch(setBanners(data.banners))
                         try {
                             localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(data.banners))
@@ -515,7 +517,7 @@ export default function DataSyncProvider({ children }) {
             }
 
             const handleBannersUpdated = (e) => {
-                if (Array.isArray(e?.detail?.banners) && e.detail.banners.length > 0) {
+                if (Array.isArray(e?.detail?.banners)) {
                     dispatch(setBanners(e.detail.banners))
                     try {
                         localStorage.setItem('ukbl_cached_hero_banners', JSON.stringify(e.detail.banners))
