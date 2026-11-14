@@ -1372,42 +1372,6 @@ export default function AdminProductsPage() {
                             <div className={`${
                                 modalViewMode === 'form' ? 'hidden' : modalViewMode === 'preview' ? 'lg:col-span-12 max-w-4xl mx-auto w-full' : 'lg:col-span-6'
                             } bg-[#FAF6FA]/40 p-5 sm:p-6 lg:overflow-y-auto`}>
-                                <div className="sticky top-0 z-10 flex items-center justify-between pb-3 mb-4 border-b border-[#EFE0EF] bg-white/90 backdrop-blur-xs p-2.5 rounded-2xl shadow-2xs">
-                                    <div className="flex items-center gap-2">
-                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span className="text-[11px] font-extrabold text-[#6C306E] uppercase tracking-wider">
-                                            Live Website Preview
-                                        </span>
-                                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                            Real-Time 1:1 Sync
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] text-slate-400 hidden sm:inline">
-                                            Exact Customer View
-                                        </span>
-                                        {modalViewMode !== 'preview' ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => setModalViewMode('preview')}
-                                                className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-2.5 py-1 rounded-xl border border-[#EFE0EF] transition cursor-pointer"
-                                                title="Expand preview to full width"
-                                            >
-                                                Expand Fullscreen
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setModalViewMode('split')}
-                                                className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white px-2.5 py-1 rounded-xl border border-[#EFE0EF] transition cursor-pointer"
-                                                title="Return to side-by-side split screen"
-                                            >
-                                                Return to Split View
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
                                 {/* Preview Card Frame */}
                                 <div className="bg-white border border-[#EFE0EF] rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
                                     {/* Breadcrumbs Preview */}
