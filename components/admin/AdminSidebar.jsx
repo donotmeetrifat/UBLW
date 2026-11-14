@@ -143,28 +143,18 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {} })
 
             {/* Sidebar Footer with Admin Profile */}
             <div className="p-3 border-t border-[#EFE0EF] bg-[#FAF6FA]/40 shrink-0">
-                <div className="flex items-center justify-between p-2 rounded-2xl bg-white border border-[#EFE0EF]">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <div className="size-8 rounded-full bg-[#6C306E] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-[#D8B56D]/40">
-                            A
+                <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white border border-[#EFE0EF]">
+                    <div className="size-8 rounded-full bg-[#6C306E] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-[#D8B56D]/40">
+                        A
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-[#241224] truncate">
+                            Admin Flagship
                         </div>
-                        <div className="min-w-0">
-                            <div className="text-xs font-bold text-[#241224] truncate">
-                                Admin Flagship
-                            </div>
-                            <div className="text-[10px] text-slate-400 truncate">
-                                admin@ukbrandlover.com
-                            </div>
+                        <div className="text-[10px] text-slate-400 truncate">
+                            admin@ukbrandlover.com
                         </div>
                     </div>
-                    <Link
-                        href="/"
-                        target="_blank"
-                        className="text-[10px] font-bold text-[#6C306E] hover:underline bg-[#FAF6FA] px-2 py-1 rounded-md border border-[#EFE0EF] shrink-0"
-                        title="View Live Storefront"
-                    >
-                        Store ↗
-                    </Link>
                 </div>
             </div>
         </aside>
