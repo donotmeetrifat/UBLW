@@ -4,45 +4,90 @@ import React from 'react'
 import Title from './Title'
 import { motion } from 'framer-motion'
 
-// Custom Inline Brand SVGs (Brand Color: #6C306E)
+// Custom Premium 2D Luxury SVGs (Brand Color: #6C306E with subtle luxury gold #D8B56D)
 const ReceiptIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Receipt body */}
-        <rect x="8" y="4" width="24" height="30" rx="3" stroke="#6C306E" strokeWidth="2" fill="none"/>
-        {/* Receipt zigzag bottom */}
-        <path d="M8 34 L11 31 L14 34 L17 31 L20 34 L23 31 L26 34 L29 31 L32 34" stroke="#6C306E" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        {/* Lines on receipt */}
-        <line x1="13" y1="12" x2="27" y2="12" stroke="#6C306E" strokeWidth="2" strokeLinecap="round"/>
-        <line x1="13" y1="17" x2="27" y2="17" stroke="#6C306E" strokeWidth="2" strokeLinecap="round"/>
-        <line x1="13" y1="22" x2="21" y2="22" stroke="#6C306E" strokeWidth="2" strokeLinecap="round"/>
-        {/* Checkmark circle */}
-        <circle cx="30" cy="10" r="7" fill="#6C306E"/>
-        <path d="M26.5 10 L29 12.5 L33.5 7.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <svg width="34" height="34" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Receipt Document Base */}
+        <path 
+            d="M7 4.5C7 3.67 7.67 3 8.5 3H18.5L24 8.5V28L21.5 26.5L19 28L16.5 26.5L14 28L11.5 26.5L9 28L7 26.8V4.5Z" 
+            stroke="#6C306E" 
+            strokeWidth="1.6" 
+            strokeLinejoin="round" 
+            fill="#FAF6FA"
+        />
+        {/* Folded Top-Right Corner */}
+        <path 
+            d="M18.5 3V8.5H24" 
+            stroke="#6C306E" 
+            strokeWidth="1.6" 
+            strokeLinejoin="round"
+        />
+        {/* UK Store Receipt Lines */}
+        <line x1="10.5" y1="12" x2="16.5" y2="12" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="10.5" y1="15.5" x2="20.5" y2="15.5" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="10.5" y1="19" x2="15" y2="19" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
+        {/* Verified Stamp Seal */}
+        <circle cx="21" cy="21.5" r="4.5" fill="#6C306E" stroke="#FFFFFF" strokeWidth="1.2"/>
+        <path d="M19.2 21.5L20.4 22.7L22.8 20.3" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 )
 
 const DiamondIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Diamond main shape */}
-        <path d="M20 6 L34 16 L20 36 L6 16 Z" stroke="#6C306E" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-        {/* Diamond top facets */}
-        <path d="M6 16 L13 10 L20 6 L27 10 L34 16" stroke="#6C306E" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-        {/* Diamond center line */}
-        <line x1="13" y1="10" x2="13" y2="16" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="27" y1="10" x2="27" y2="16" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="6" y1="16" x2="34" y2="16" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        {/* Sparkle top right */}
-        <line x1="34" y1="5" x2="34" y2="9" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="32" y1="7" x2="36" y2="7" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
+    <svg width="34" height="34" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Top Flat Table */}
+        <polygon 
+            points="11,7 21,7 26,13 6,13" 
+            stroke="#6C306E" 
+            strokeWidth="1.6" 
+            strokeLinejoin="round" 
+            fill="#FAF6FA"
+        />
+        {/* Bottom Pointed Pavilion */}
+        <polygon 
+            points="6,13 26,13 16,28" 
+            stroke="#6C306E" 
+            strokeWidth="1.6" 
+            strokeLinejoin="round" 
+            fill="#FAF6FA"
+        />
+        {/* Center Triangular Facet */}
+        <polygon 
+            points="11,13 21,13 16,28" 
+            stroke="#6C306E" 
+            strokeWidth="1.4" 
+            strokeLinejoin="round"
+        />
+        {/* Top-To-Bottom Internal Facet Lines */}
+        <line x1="11" y1="7" x2="11" y2="13" stroke="#6C306E" strokeWidth="1.4"/>
+        <line x1="21" y1="7" x2="21" y2="13" stroke="#6C306E" strokeWidth="1.4"/>
+        {/* Luxury Gold Sparkle */}
+        <path d="M25 4V8M23 6H27" stroke="#D8B56D" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
 )
 
 const SupportHeartIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Chat bubble */}
-        <path d="M6 8 C6 6 8 4 10 4 L30 4 C32 4 34 6 34 8 L34 24 C34 26 32 28 30 28 L14 28 L8 34 L8 28 L10 28 C8 28 6 26 6 24 Z" stroke="#6C306E" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-        {/* Heart inside chat */}
-        <path d="M20 21 C20 21 13 17 13 13 C13 11 14.5 10 16.5 10 C18 10 19.5 11 20 12 C20.5 11 22 10 23.5 10 C25.5 10 27 11 27 13 C27 17 20 21 20 21 Z" fill="#6C306E"/>
+    <svg width="34" height="34" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Secondary Messenger Bubble */}
+        <path 
+            d="M17 7H23C25.2 7 27 8.8 27 11V16C27 18.2 25.2 20 23 20H22.5V23.5L19 20H17" 
+            stroke="#D8B56D" 
+            strokeWidth="1.4" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+        />
+        {/* Primary Dialog Bubble */}
+        <path 
+            d="M6 10C6 7.8 7.8 6 10 6H18C20.2 6 22 7.8 22 10V18C22 20.2 20.2 22 18 22H13L8 25.5V22H10C7.8 22 6 20.2 6 18V10Z" 
+            stroke="#6C306E" 
+            strokeWidth="1.6" 
+            strokeLinejoin="round" 
+            fill="#FAF6FA"
+        />
+        {/* Genuine Heart in Dialog */}
+        <path 
+            d="M14 16.2C14 16.2 10 13.8 10 11.8C10 10.6 10.9 9.8 12.1 9.8C12.8 9.8 13.5 10.2 14 10.7C14.5 10.2 15.2 9.8 15.9 9.8C17.1 9.8 18 10.6 18 11.8C18 13.8 14 16.2 14 16.2Z" 
+            fill="#6C306E"
+        />
     </svg>
 )
 

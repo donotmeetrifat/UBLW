@@ -7,37 +7,23 @@ import { assets } from '@/assets/assets'
 import { motion } from 'framer-motion'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 
-// Custom Inline Brand SVGs (Brand Color: #6C306E)
+// Custom Premium 2D Luxury SVGs (Brand Color: #6C306E)
 const UKCargoIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-        {/* Simple UK flag / plane icon */}
-        <rect x="1" y="4" width="16" height="10" rx="2" stroke="#6C306E" strokeWidth="1.5" fill="none"/>
-        <line x1="1" y1="4" x2="17" y2="14" stroke="#6C306E" strokeWidth="1"/>
-        <line x1="17" y1="4" x2="1" y2="14" stroke="#6C306E" strokeWidth="1"/>
-        <line x1="9" y1="4" x2="9" y2="14" stroke="#6C306E" strokeWidth="1.5"/>
-        <line x1="1" y1="9" x2="17" y2="9" stroke="#6C306E" strokeWidth="1.5"/>
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        <path d="M1.5 8L14.5 2.5L9.5 14.5L7.5 9.5L1.5 8Z" stroke="#6C306E" strokeWidth="1.4" strokeLinejoin="round" fill="#FAF6FA"/>
+        <path d="M7.5 9.5L14.5 2.5" stroke="#6C306E" strokeWidth="1.3" strokeLinecap="round"/>
     </svg>
 )
 
 const ReviewsStarIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-        <path d="M9 2 L10.8 7H16L11.6 10.1L13.4 15.1L9 12L4.6 15.1L6.4 10.1L2 7H7.2Z" stroke="#6C306E" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        <path d="M8 1.5L9.9 5.8L14.5 6.3L11.1 9.4L12.1 14L8 11.6L3.9 14L4.9 9.4L1.5 6.3L6.1 5.8L8 1.5Z" stroke="#6C306E" strokeWidth="1.4" strokeLinejoin="round" fill="#FAF6FA"/>
     </svg>
 )
 
 const AdviceSparkleIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-        {/* Sparkle / wand */}
-        <line x1="9" y1="1" x2="9" y2="5" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="9" y1="13" x2="9" y2="17" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="1" y1="9" x2="5" y2="9" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="13" y1="9" x2="17" y2="9" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="3" y1="3" x2="6" y2="6" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="12" y1="12" x2="15" y2="15" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="15" y1="3" x2="12" y2="6" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="6" y1="12" x2="3" y2="15" stroke="#6C306E" strokeWidth="1.5" strokeLinecap="round"/>
-        {/* Center circle */}
-        <circle cx="9" cy="9" r="2.5" stroke="#6C306E" strokeWidth="1.5" fill="none"/>
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        <path d="M8 1C8 4.8 4.8 8 1 8C4.8 8 8 11.2 8 15C8 11.2 11.2 8 15 8C11.2 8 8 4.8 8 1Z" stroke="#6C306E" strokeWidth="1.4" strokeLinejoin="round" fill="#FAF6FA"/>
     </svg>
 )
 
@@ -82,25 +68,27 @@ const Newsletter = () => {
                         from people who actually use it.
                     </p>
 
-                    {/* 3 Organized Luxury Tags (Small, Balanced & Clean) */}
-                    <div className='flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 max-w-lg mx-auto mb-7'>
-                        <div className='inline-flex items-center justify-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
-                            <UKCargoIcon />
-                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
-                                FIRST ACCESS TO NEW UK CARGO
-                            </span>
-                        </div>
-                        <div className='inline-flex items-center justify-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
-                            <ReviewsStarIcon />
-                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
-                                HONEST REVIEWS FROM REAL CUSTOMERS
-                            </span>
-                        </div>
-                        <div className='inline-flex items-center justify-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
-                            <AdviceSparkleIcon />
-                            <span className='text-[10px] sm:text-[11px] font-bold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
-                                PERSONAL SKINCARE ADVICE
-                            </span>
+                    {/* 3 Highlights in One Unified Horizontal Row (Left to Right, Compact & Balanced) */}
+                    <div className='w-full max-w-3xl mx-auto mb-7 overflow-x-auto no-scrollbar py-0.5'>
+                        <div className='flex items-center justify-center gap-2 sm:gap-3 flex-nowrap min-w-max mx-auto px-1'>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                                <UKCargoIcon />
+                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                    FIRST ACCESS TO NEW UK CARGO
+                                </span>
+                            </div>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                                <ReviewsStarIcon />
+                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                    HONEST REVIEWS FROM REAL CUSTOMERS
+                                </span>
+                            </div>
+                            <div className='inline-flex items-center gap-1.5 bg-white/95 border border-[#EFE0EF] hover:border-[#6C306E]/40 px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(108,48,110,0.03)] hover:shadow-[0_4px_12px_rgba(108,48,110,0.08)] transition-all duration-300'>
+                                <AdviceSparkleIcon />
+                                <span className='text-[10px] sm:text-[11px] font-semibold text-[#3A0C38] tracking-wider uppercase whitespace-nowrap'>
+                                    PERSONAL SKINCARE ADVICE
+                                </span>
+                            </div>
                         </div>
                     </div>
 
