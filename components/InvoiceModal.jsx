@@ -1,46 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CloseIcon, DownloadIcon } from '@/components/icons'
-import ThankYouSignature from '@/components/ThankYouSignature'
+import { CloseIcon, DownloadIcon, PrinterIcon } from '@/components/icons'
+import ThankYouSignature, { THANK_YOU_PATH } from '@/components/ThankYouSignature'
 import { webLogoBase64 } from '@/assets/webLogoBase64'
 import { isInsideDhaka } from '@/lib/settings'
 import toast from 'react-hot-toast'
 
-const InvoiceModal = ({ order, isOpen, onClose }) => {
-    const [isDownloading, setIsDownloading] = useState(false)
-    const [accountUser, setAccountUser] = useState(null)
-
-    // Load actual registered account user from localStorage
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            try {
-                const saved = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null')
-                if (saved) setAccountUser(saved)
-            } catch {}
-        }
-    }, [])
-
-    if (!isOpen || !order) return null
-
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
+// Helper to construct a clean, self-contained, isolated HTML invoice document
+const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
     const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
 
-    // Customer Name: prioritize authenticated account name, then order address name
     const custName = order.user?.name || 
         (accountUser?.name && accountUser.name !== 'Valued Customer' ? accountUser.name : '') || 
         (order.address?.fullName && order.address.fullName !== 'Customer' ? order.address.fullName : '') || 
         (order.address?.name && order.address.name !== 'Customer' ? order.address.name : '') || 
         'Valued Customer'
 
-    // Customer Phone: prioritize order address phone, then account phone
     const custPhone = order.address?.phoneNumber || 
         order.address?.phone || 
         accountUser?.phone || 
         accountUser?.whatsapp || 
         '+880 1959-524393'
 
-    // Customer Email: strictly prioritize the email used to create the account
     const custEmail = order.user?.email || 
         order.email || 
         accountUser?.email || 
@@ -71,42 +53,366 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         return 'Cash on Delivery'
     })()
 
-    // 100% Reliable Client-Side A4 PDF Download - Strictly Single Page Full-Screen Guarantee
+    const itemRowsHtml = items.length > 0 
+        ? items.map(item => {
+            const prodName = item.name || item.product?.name || 'UK Beauty Product'
+            const price = Number(item.price || 0)
+            const qty = Number(item.quantity || 1)
+            const lineTotal = price * qty
+            return `
+                <tr style="color: #111827;">
+                    <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px; line-height: 1.4;">${prodName}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #374151; font-size: 12px;">${qty}</td>
+                    <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px;">${currency}${price.toLocaleString()}</td>
+                    <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px;">${currency}${lineTotal.toLocaleString()}</td>
+                </tr>
+            `
+        }).join('')
+        : `
+            <tr style="color: #111827;">
+                <td style="padding: 12px 8px 12px 0; font-weight: 400; font-size: 12px;">100% Original UK Imported Cosmetics Order</td>
+                <td style="padding: 12px 8px; text-align: center; color: #374151; font-size: 12px;">1</td>
+                <td style="padding: 12px 8px; text-align: right; color: #374151; font-size: 12px;">${currency}${subtotal.toLocaleString()}</td>
+                <td style="padding: 12px 0 12px 8px; text-align: right; font-weight: 500; font-size: 12px;">${currency}${subtotal.toLocaleString()}</td>
+            </tr>
+        `
+
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8" />
+            <title>UKBL_Invoice_${orderNo}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 0;
+                }
+                * {
+                    box-sizing: border-box;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    background: #ffffff;
+                    width: 210mm;
+                    height: 297mm;
+                    max-height: 297mm;
+                    overflow: hidden;
+                    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+                .invoice-container {
+                    width: 210mm;
+                    height: 297mm;
+                    max-height: 297mm;
+                    box-sizing: border-box;
+                    padding: 16mm 18mm 12mm 18mm;
+                    margin: 0 auto;
+                    background: #ffffff;
+                    position: relative;
+                    overflow: hidden;
+                    page-break-after: avoid;
+                    break-after: avoid;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-container">
+                <!-- 1. Centered Header Logo -->
+                <div style="text-align: center; padding-top: 4px; padding-bottom: 28px;">
+                    <img
+                        src="${webLogoBase64}"
+                        alt="UK Brand Lover Logo"
+                        style="height: 44px; width: auto; object-fit: contain; margin: 0 auto; display: block;"
+                    />
+                    <div style="font-size: 10px; color: #9CA3AF; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;">
+                        100% ORIGINAL UK IMPORTED PRODUCTS
+                    </div>
+                </div>
+
+                <!-- 2. Two-Column Info Row -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px;">
+                    <!-- Left: Invoice To -->
+                    <div style="max-width: 55%;">
+                        <div style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">
+                            INVOICE TO :
+                        </div>
+                        <div style="font-size: 17px; font-weight: 600; color: #111827; line-height: 1.3;">
+                            ${custName}
+                        </div>
+                        <div style="font-size: 12px; color: #6B7280; line-height: 1.5; margin-top: 4px;">
+                            <div>${custPhone}</div>
+                            ${custEmail ? `<div>${custEmail}</div>` : ''}
+                            <div style="max-width: 290px;">${custAddr}</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Invoice Metadata -->
+                    <div style="text-align: right; min-width: 200px;">
+                        <div style="font-size: 28px; font-weight: 800; color: #111827; letter-spacing: -0.5px; margin-bottom: 8px;">
+                            INVOICE
+                        </div>
+                        <div style="font-size: 12px; color: #4B5563; line-height: 1.6;">
+                            <div>
+                                <span style="color: #6B7280;">Invoice no : </span>
+                                <strong style="color: #111827; font-family: monospace;">${orderNo}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #6B7280;">Invoice Date : </span>
+                                <span style="color: #111827; font-weight: 500;">${formattedDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Line Items Table -->
+                <div style="margin-top: 8px; margin-bottom: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="border-top: 2px solid #111827; border-bottom: 1px solid #111827; font-size: 11px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 1px;">
+                                <th style="padding: 12px 8px 12px 0; text-align: left;">ITEM DESCRIPTION</th>
+                                <th style="padding: 12px 8px; text-align: center; width: 64px;">QTY</th>
+                                <th style="padding: 12px 8px; text-align: right; width: 110px;">PRICE</th>
+                                <th style="padding: 12px 0 12px 8px; text-align: right; width: 110px;">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemRowsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" style="border-bottom: 1px solid #111827; padding: 0;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- 4. Lower Two-Column Section -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; padding-bottom: 24px; font-size: 12px;">
+                    <!-- Left: Contact Information -->
+                    <div style="color: #4B5563; line-height: 1.7;">
+                        <div style="font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 6px;">
+                            Contact :
+                        </div>
+                        <div>
+                            <span style="color: #6B7280;">Hotline : </span>
+                            <strong style="color: #111827;">+880 1959-524393</strong>
+                        </div>
+                        <div>
+                            <span style="color: #6B7280;">Email : </span>
+                            <strong style="color: #111827;">support@ukbrandlover.com</strong>
+                        </div>
+                        <div>
+                            <span style="color: #6B7280;">Payment : </span>
+                            <strong style="color: #111827;">${paymentLabel}</strong>
+                        </div>
+                        ${order.transactionId ? `
+                            <div>
+                                <span style="color: #6B7280;">TrxID : </span>
+                                <strong style="color: #111827; font-family: monospace;">${order.transactionId}</strong>
+                            </div>
+                        ` : ''}
+                        ${order.senderNumber ? `
+                            <div>
+                                <span style="color: #6B7280;">Sender : </span>
+                                <strong style="color: #111827; font-family: monospace;">${order.senderNumber}</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Right: Summary Totals -->
+                    <div style="width: 220px; font-size: 12px; text-align: right; line-height: 1.8;">
+                        <div style="display: flex; justify-content: space-between; color: #4B5563;">
+                            <span style="color: #6B7280;">Sub-total :</span>
+                            <strong style="color: #111827;">${currency}${subtotal.toLocaleString()}</strong>
+                        </div>
+                        ${discount > 0 ? `
+                            <div style="display: flex; justify-content: space-between; color: #4B5563;">
+                                <span style="color: #6B7280;">Discount :</span>
+                                <strong style="color: #111827;">-${currency}${discount.toLocaleString()}</strong>
+                            </div>
+                        ` : ''}
+                        <div style="display: flex; justify-content: space-between; color: #4B5563;">
+                            <span style="color: #6B7280;">Delivery :</span>
+                            <strong style="color: #111827;">${deliveryFee === 0 ? 'FREE' : `${currency}${deliveryFee.toLocaleString()}`}</strong>
+                        </div>
+                        <div style="border-top: 1px solid #111827; margin-top: 8px; padding-top: 10px; display: flex; justify-content: space-between; align-items: baseline;">
+                            <strong style="font-size: 13px; color: #111827;">Total :</strong>
+                            <strong style="font-size: 17px; color: #111827;">${currency}${totalAmount.toLocaleString()}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Elegant Signature Script: "Thank You" -->
+                <div style="padding-top: 24px; padding-bottom: 8px; text-align: center;">
+                    <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="-272 -1187 6696 1325" 
+                        fill="#242424" 
+                        style="width: 220px; height: auto; margin: 0 auto; display: block;"
+                        aria-label="Thank You"
+                    >
+                        <path d="${THANK_YOU_PATH}" />
+                    </svg>
+                </div>
+            </div>
+        </body>
+        </html>
+    `
+}
+
+const InvoiceModal = ({ order, isOpen, onClose }) => {
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [accountUser, setAccountUser] = useState(null)
+
+    // Load actual registered account user from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = JSON.parse(localStorage.getItem('ukbl_current_user') || 'null')
+                if (saved) setAccountUser(saved)
+            } catch {}
+        }
+    }, [])
+
+    if (!isOpen || !order) return null
+
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
+    const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
+
+    // Customer Name
+    const custName = order.user?.name || 
+        (accountUser?.name && accountUser.name !== 'Valued Customer' ? accountUser.name : '') || 
+        (order.address?.fullName && order.address.fullName !== 'Customer' ? order.address.fullName : '') || 
+        (order.address?.name && order.address.name !== 'Customer' ? order.address.name : '') || 
+        'Valued Customer'
+
+    // Customer Phone
+    const custPhone = order.address?.phoneNumber || 
+        order.address?.phone || 
+        accountUser?.phone || 
+        accountUser?.whatsapp || 
+        '+880 1959-524393'
+
+    // Customer Email
+    const custEmail = order.user?.email || 
+        order.email || 
+        accountUser?.email || 
+        (order.address?.email && !order.address.email.includes('example.com') ? order.address.email : '') || 
+        ''
+
+    const custAddr = `${order.address?.address || order.address?.street || 'Delivery Address'}, ${order.address?.city || 'Dhaka'}${order.address?.region ? `, ${order.address.region}` : ''}`
+    const isDhaka = isInsideDhaka(order.address)
+
+    const items = order.orderItems || []
+    const deliveryFee = Number(order.deliveryCharge ?? (isDhaka ? 80 : 150))
+    const discount = Number(order.discount || 0)
+    const subtotal = Number(order.subtotal || (order.total - deliveryFee + discount))
+    const totalAmount = Number(order.total || (subtotal + deliveryFee - discount))
+
+    const formattedDate = new Date(order.createdAt || Date.now()).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
+
+    const paymentLabel = (() => {
+        const pm = (order.paymentMethod || '').toLowerCase()
+        if (pm.includes('bkash')) return 'bKash Send Money'
+        if (pm.includes('nagad')) return 'Nagad Wallet'
+        if (pm.includes('rocket')) return 'Rocket App'
+        if (pm.includes('card')) return 'Debit / Credit Card'
+        return 'Cash on Delivery'
+    })()
+
+    // 100% Reliable Isolated Iframe Print - Strictly 1 Single Page Guarantee
+    const handlePrintInvoice = () => {
+        try {
+            const existingFrame = document.getElementById('ukbl-invoice-print-frame')
+            if (existingFrame) existingFrame.remove()
+
+            const iframe = document.createElement('iframe')
+            iframe.id = 'ukbl-invoice-print-frame'
+            iframe.style.position = 'fixed'
+            iframe.style.right = '0'
+            iframe.style.bottom = '0'
+            iframe.style.width = '0'
+            iframe.style.height = '0'
+            iframe.style.border = '0'
+            iframe.style.visibility = 'hidden'
+            document.body.appendChild(iframe)
+
+            const printDoc = iframe.contentWindow.document
+            printDoc.open()
+            printDoc.write(buildInvoiceHtml(order, accountUser, currency))
+            printDoc.close()
+
+            setTimeout(() => {
+                try {
+                    iframe.contentWindow.focus()
+                    iframe.contentWindow.print()
+                } catch (err) {
+                    console.error('Iframe print error:', err)
+                    window.print()
+                } finally {
+                    setTimeout(() => {
+                        const f = document.getElementById('ukbl-invoice-print-frame')
+                        if (f) f.remove()
+                    }, 3000)
+                }
+            }, 250)
+        } catch (e) {
+            console.error('Print trigger error:', e)
+            window.print()
+        }
+    }
+
+    // Direct High-Resolution Single-Page A4 PDF File Download
     const handleDownloadInvoice = async () => {
         try {
             setIsDownloading(true)
-            const element = document.getElementById('printable-invoice-content')
-            if (!element) {
-                toast.error('Invoice content could not be found')
-                return
-            }
 
+            // Dynamically import libraries
             const html2canvas = (await import('html2canvas')).default
             const { jsPDF } = await import('jspdf')
 
-            const canvas = await html2canvas(element, {
-                scale: 2, // Crisp 200+ DPI vector clarity, fast and lightweight
+            // Render invoice in an isolated sandbox iframe of exact A4 aspect ratio (794px x 1123px)
+            const iframe = document.createElement('iframe')
+            iframe.style.position = 'fixed'
+            iframe.style.top = '-99999px'
+            iframe.style.left = '-99999px'
+            iframe.style.width = '794px'
+            iframe.style.height = '1123px'
+            iframe.style.border = '0'
+            iframe.style.visibility = 'hidden'
+            document.body.appendChild(iframe)
+
+            const sandboxDoc = iframe.contentWindow.document
+            sandboxDoc.open()
+            sandboxDoc.write(buildInvoiceHtml(order, accountUser, currency))
+            sandboxDoc.close()
+
+            // Wait for DOM & images to settle
+            await new Promise(r => setTimeout(r, 200))
+
+            const targetElement = sandboxDoc.body.querySelector('.invoice-container') || sandboxDoc.body
+
+            const canvas = await html2canvas(targetElement, {
+                scale: 2, // 200+ DPI crisp vector clarity
                 useCORS: true,
-                allowTaint: false,
-                logging: false,
+                allowTaint: true,
                 backgroundColor: '#ffffff',
+                width: 794,
+                height: 1123,
                 windowWidth: 794,
-                onclone: (clonedDoc) => {
-                    const clonedEl = clonedDoc.getElementById('printable-invoice-content')
-                    if (clonedEl) {
-                        clonedEl.style.width = '794px'
-                        clonedEl.style.minHeight = '1123px'
-                        clonedEl.style.maxWidth = '794px'
-                        clonedEl.style.padding = '48px 56px 40px 56px'
-                        clonedEl.style.boxSizing = 'border-box'
-                        clonedEl.style.border = 'none'
-                        clonedEl.style.borderRadius = '0'
-                        clonedEl.style.boxShadow = 'none'
-                        clonedEl.style.margin = '0 auto'
-                        clonedEl.style.background = '#ffffff'
-                    }
-                }
+                windowHeight: 1123,
+                logging: false
             })
+
+            // Clean up temporary sandbox iframe
+            iframe.remove()
 
             const imgData = canvas.toDataURL('image/png')
             const pdf = new jsPDF({
@@ -116,10 +422,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 compress: true
             })
 
-            // Cover full A4 page edge-to-edge (0,0 to 210,297) without outer border or frame
+            // Add image to Page 1
             pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST')
 
-            // HARD ENFORCE: strictly 1 single page (strip any accidental trailing page)
+            // STRICT SINGLE-PAGE ENFORCEMENT: delete any secondary page
             while (pdf.internal.getNumberOfPages() > 1) {
                 pdf.deletePage(pdf.internal.getNumberOfPages())
             }
@@ -127,9 +433,9 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             pdf.save(`UKBL_Invoice_${orderNo}.pdf`)
             toast.success('Official invoice downloaded successfully!')
         } catch (error) {
-            console.error('Error generating PDF invoice:', error)
-            toast.error('Could not generate PDF directly. Opening print dialog as fallback...')
-            window.print()
+            console.error('Error generating PDF directly:', error)
+            toast.error('Falling back to high-resolution print/save dialog...')
+            handlePrintInvoice()
         } finally {
             setIsDownloading(false)
         }
@@ -161,15 +467,26 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
+                    /* Collapse all non-invoice DOM elements so they occupy ZERO height in flow */
                     body * {
                         visibility: hidden !important;
+                        height: 0 !important;
+                        max-height: 0 !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        border: none !important;
                     }
+                    /* Restore only the printable invoice content container and its children */
                     #printable-invoice-content,
                     #printable-invoice-content * {
                         visibility: visible !important;
+                        height: auto !important;
+                        max-height: none !important;
+                        overflow: visible !important;
                     }
                     #printable-invoice-content {
-                        position: fixed !important;
+                        position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
                         width: 210mm !important;
@@ -183,8 +500,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                         box-shadow: none !important;
                         background: #ffffff !important;
                         page-break-after: avoid !important;
+                        page-break-before: avoid !important;
                         page-break-inside: avoid !important;
                         break-after: avoid !important;
+                        break-before: avoid !important;
                         break-inside: avoid !important;
                         overflow: hidden !important;
                     }
@@ -197,8 +516,8 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
             {/* Modal Container: borderless professional document viewport */}
             <div className="clean-invoice-font bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative my-6 border-0">
                 
-                {/* Screen Action Bar (Clean Header: Invoice # on Left, Download & Close on Right) */}
-                <div className="print-hidden-bar flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+                {/* Screen Action Bar (Invoice # on Left, Print, Download & Close on Right) */}
+                <div className="print-hidden-bar flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
                     <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-bold text-[#6C306E] bg-[#FAF6FA] px-3.5 py-1.5 rounded-full border border-[#EFE0EF]">
                             Invoice: #{orderNo}
@@ -206,6 +525,16 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handlePrintInvoice}
+                            className="bg-[#FAF6FA] hover:bg-[#EFE0EF] text-[#6C306E] border border-[#EFE0EF] px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                            title="Print or Save as PDF"
+                        >
+                            <PrinterIcon size={14} color="#6C306E" />
+                            <span>Print</span>
+                        </button>
+
                         <button
                             type="button"
                             disabled={isDownloading}
@@ -219,6 +548,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                             )}
                             <span>{isDownloading ? 'Downloading...' : 'Download Invoice (PDF)'}</span>
                         </button>
+
                         <button
                             type="button"
                             onClick={onClose}
@@ -230,7 +560,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Printable Invoice (Borderless, Full-Width Professional Corporate Document Format) */}
+                {/* Printable Invoice (Borderless, Full-Width Professional Document Format) */}
                 <div 
                     id="printable-invoice-content" 
                     className="clean-invoice-font bg-white text-neutral-900 w-full"
@@ -239,7 +569,6 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                     {/* 1. Header Centered Logo & Subtitle */}
                     <div className="text-center pt-1 pb-8">
                         <div className="flex flex-col items-center justify-center">
-                            {/* Embedded high-resolution vector-grade logo without network/CORS overhead */}
                             <img
                                 src={webLogoBase64}
                                 alt="UK Brand Lover Logo"
