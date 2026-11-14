@@ -925,7 +925,7 @@ export default function CheckoutPage() {
                                             disabled={isApplyingCoupon || !couponInput.trim()}
                                             text={isApplyingCoupon ? '...' : 'Apply'}
                                             activeState={!!couponInput.trim()}
-                                            className={`!h-9 !px-4 text-xs shrink-0 transition-all ${
+                                            className={`!h-9 !pl-4 !pr-7.5 min-w-[80px] text-xs shrink-0 transition-all ${
                                                 couponInput.trim() ? 'shadow-[0_4px_16px_rgba(108,48,110,0.35)]' : ''
                                             }`}
                                         />

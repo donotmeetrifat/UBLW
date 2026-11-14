@@ -30,16 +30,16 @@ export function FlowButton({
       <ArrowRight 
         className={`absolute w-3.5 h-3.5 stroke-[#6C306E] fill-none z-[9] transition-all duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
           isActive 
-            ? 'left-4 stroke-white' 
-            : 'left-[-25%] group-hover/flow:left-4 group-hover/flow:stroke-white group-active/flow:left-4 group-active/flow:stroke-white'
+            ? 'left-3.5 stroke-white' 
+            : 'left-[-25%] group-hover/flow:left-3.5 group-hover/flow:stroke-white group-active/flow:left-3.5 group-active/flow:stroke-white'
         }`} 
       />
 
       {/* Text & Content */}
       <span className={`relative z-[1] transition-all duration-[800ms] ease-out leading-none select-none inline-flex items-center gap-1.5 ${
         isActive 
-          ? 'translate-x-2.5' 
-          : '-translate-x-2.5 group-hover/flow:translate-x-2.5 group-active/flow:translate-x-2.5'
+          ? 'translate-x-2' 
+          : '-translate-x-1.5 group-hover/flow:translate-x-2 group-active/flow:translate-x-2'
       }`}>
         {Icon && <Icon size={14} className="shrink-0 transition-colors" />}
         <span>{text}</span>
@@ -62,7 +62,7 @@ export function FlowButton({
         className={`absolute w-3.5 h-3.5 stroke-[#6C306E] fill-none z-[9] transition-all duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
           isActive 
             ? 'right-[-25%] stroke-white' 
-            : 'right-4 group-hover/flow:right-[-25%] group-hover/flow:stroke-white group-active/flow:right-[-25%] group-active/flow:stroke-white mobile-arrow-nudge'
+            : 'right-3 sm:right-3.5 group-hover/flow:right-[-25%] group-hover/flow:stroke-white group-active/flow:right-[-25%] group-active/flow:stroke-white mobile-arrow-nudge'
         }`} 
       />
     </>

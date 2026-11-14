@@ -392,7 +392,7 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
                             disabled={isApplyingCoupon || items.length === 0}
                             text={isApplyingCoupon ? '...' : 'Apply'}
                             activeState={!!couponCodeInput.trim()}
-                            className={`!h-9 !px-4 shrink-0 text-xs transition-all ${
+                            className={`!h-9 !pl-4 !pr-7.5 min-w-[80px] shrink-0 text-xs transition-all ${
                                 couponCodeInput.trim() ? 'shadow-[0_4px_16px_rgba(108,48,110,0.35)]' : ''
                             }`}
                         />
