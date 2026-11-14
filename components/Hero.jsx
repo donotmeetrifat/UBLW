@@ -87,7 +87,7 @@ const Hero = () => {
 
                             <div className="mt-5">
                                 <FlowButton 
-                                    text={mainCard.buttonText || "Explore Collection"} 
+                                    text={mainCard.buttonText || "Discover the Collection →"} 
                                     href={mainCard.buttonLink || "/shop"} 
                                     className="px-8 h-11 sm:h-12 text-xs sm:text-sm font-bold" 
                                 />
@@ -135,7 +135,7 @@ const Hero = () => {
                                         {sideCardTop.title}
                                     </h3>
                                     <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
-                                        {sideCardTop.buttonText || "Shop Skincare"} 
+                                        {sideCardTop.buttonText || "Shop Skincare →"} 
                                         <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                     </p>
                                 </div>
@@ -177,7 +177,7 @@ const Hero = () => {
                                         {sideCardBottom.title}
                                     </h3>
                                     <p className='inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-[#6C306E]'>
-                                        {sideCardBottom.buttonText || "Shop Makeup"} 
+                                        {sideCardBottom.buttonText || "Shop Now →"} 
                                         <ArrowRightIcon className='group-hover:translate-x-1.5 transition-transform duration-200' size={13} color="#6C306E" />
                                     </p>
                                 </div>

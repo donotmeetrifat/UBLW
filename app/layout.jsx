@@ -6,34 +6,34 @@ import "./globals.css";
 
 export const metadata = {
     title: {
-        default: "UK Brand Lover | 100% Authentic UK Imported Beauty in Bangladesh",
-        template: "%s | UK Brand Lover"
+        default: "UK Brand LOVER | Authentic UK-Imported Skincare & Beauty — Bangladesh",
+        template: "%s | UK Brand LOVER"
     },
-    description: "Shop 100% authentic UK imported beauty, skincare, haircare, and luxury cosmetics at UK Brand Lover in Bangladesh. Direct London Heathrow shipments, bKash & Cash on Delivery, and live 5-stage courier tracking.",
+    description: "Shop authentic UK-imported skincare, haircare & cosmetics in Bangladesh. CeraVe, E45, NIVEA, Neutrogena & more — with original UK purchase receipts. Fast delivery nationwide.",
     keywords: [
-        "UK Brand Lover",
-        "UK cosmetics Bangladesh",
-        "Authentic skincare Dhaka",
-        "CeraVe UK Bangladesh",
-        "The Ordinary Dhaka",
-        "Charlotte Tilbury Bangladesh",
-        "London Heathrow beauty",
-        "100% original UK imported products",
-        "UK beauty store Dhaka"
+        "UK imported skincare Bangladesh",
+        "authentic UK beauty products",
+        "CeraVe Bangladesh",
+        "E45 cream Bangladesh",
+        "NIVEA Bangladesh",
+        "UK cosmetics shop",
+        "online beauty shop Dhaka",
+        "UK Brand LOVER",
+        "original UK products Bangladesh"
     ],
     metadataBase: new URL("https://ukbrandlover.vercel.app"),
     openGraph: {
-        title: "UK Brand Lover | 100% Authentic UK Imported Beauty in Bangladesh",
-        description: "Direct London shipments of CeraVe, The Ordinary, Pixi, Olaplex & luxury UK imported perfumes in Bangladesh.",
+        title: "UK Brand LOVER | Real UK Beauty. Delivered in Bangladesh.",
+        description: "Hand-picked skincare, haircare & cosmetics directly from UK stores. Every product includes the original UK purchase receipt. Shop CeraVe, E45, NIVEA & more.",
         url: "https://ukbrandlover.vercel.app",
-        siteName: "UK Brand Lover",
+        siteName: "UK Brand LOVER",
         locale: "en_BD",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "UK Brand Lover | 100% Authentic UK Imported Beauty",
-        description: "100% Authentic UK imported beauty, skincare & haircare in Bangladesh. Cash on Delivery & bKash.",
+        title: "UK Brand LOVER | Real UK Beauty. Delivered in Bangladesh.",
+        description: "Hand-picked skincare, haircare & cosmetics directly from UK stores. Every product includes the original UK purchase receipt. Shop CeraVe, E45, NIVEA & more.",
     },
     icons: {
         icon: [

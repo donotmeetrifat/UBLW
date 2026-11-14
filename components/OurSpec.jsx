@@ -7,22 +7,22 @@ import { motion } from 'framer-motion'
 
 const specs = [
     { 
-        title: "100% Original UK Imported", 
-        description: "Directly imported from verified UK brand suppliers. Every formulation, batch code, and seal is 100% genuine.", 
+        title: "You'll See the Receipt. Every Time.", 
+        description: "Every product we bring from the UK comes with the original store purchase receipt. You're not just taking our word for it — you're holding the proof in your hands.", 
         icon: ShieldCheckIcon,
-        badge: "Guaranteed Authentic"
+        badge: "GUARANTEED AUTHENTIC"
     },
     { 
-        title: "Dermatologist-Approved Picks", 
-        description: "Carefully curated high-performance skincare, cult cosmetic editions, and salon-grade hair recovery treatments.", 
+        title: "Only What Actually Works.", 
+        description: "We don't stock everything. We bring only what dermatologists recommend and beauty lovers swear by — CeraVe, E45, NIVEA, Neutrogena, Liz Earle, L'Oréal and more. If it's here, it earned its place.", 
         icon: SparklesIcon,
-        badge: "Premium Quality"
+        badge: "CAREFULLY CURATED"
     },
     { 
-        title: "Reliable Support & Delivery", 
-        description: "Fast nationwide delivery across Bangladesh with secure COD, bKash mobile payments, and personal beauty guidance.", 
+        title: "A Real Person. Always Ready to Help.", 
+        description: "Not sure what's right for your skin? Just message us on WhatsApp or Messenger. We reply personally, guide you honestly, and deliver fast — Inside Dhaka ৳80 | Anywhere in Bangladesh ৳160.", 
         icon: LockIcon,
-        badge: "Trusted Service"
+        badge: "PERSONAL SUPPORT"
     }
 ]
 
@@ -31,8 +31,8 @@ const OurSpecs = () => {
         <section id="why-us" className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32'>
             <Title 
                 visibleButton={false} 
-                title='Why Choose UK Brand Lover' 
-                description="We bridge the gap between world-class UK beauty houses and Bangladesh with absolute authenticity and dedicated care." 
+                title='Why Thousands of Women Trust UK Brand LOVER' 
+                description="Because you deserve the real thing — not copies, not compromises. Just genuine UK beauty, delivered with the proof to back it up." 
             />
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mt-12 sm:mt-16'>

@@ -17,11 +17,16 @@ import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
 const Footer = () => {
-    const reduxCategories = useSelector(state => state.product?.categories);
-    const beautyCategoryLinks = (Array.isArray(reduxCategories) && reduxCategories.length > 0
-        ? reduxCategories
-        : ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools']
-    ).slice(0, 6).map(name => ({
+    const beautyCategoryLinks = [
+        'Skincare',
+        'Makeup',
+        'Haircare',
+        'Body Care',
+        'Lip Care',
+        'Winter Essentials',
+        'Baby Care',
+        'Eye Care'
+    ].map(name => ({
         text: name,
         path: `/shop?category=${encodeURIComponent(name)}`
     }));
@@ -35,18 +40,19 @@ const Footer = () => {
             title: "CUSTOMER CARE",
             links: [
                 { text: "Home", path: '/' },
-                { text: "All UK Collections", path: '/shop' },
-                { text: "Contact & Advisory", path: '/contact' },
+                { text: "Shop All Products", path: '/shop' },
+                { text: "Contact & Advice", path: '/contact' },
                 { text: "Track My Order", path: '/orders' },
-                { text: "100% Authenticity Guarantee", path: '/#why-us' },
+                { text: "Authenticity Guarantee", path: '/#why-us' },
             ]
         },
         {
             title: "DIRECT CONTACT",
             links: [
-                { text: SOCIAL_LINKS.contact.phone, path: `tel:${SOCIAL_LINKS.whatsapp.raw}`, icon: PhoneIcon },
-                { text: SOCIAL_LINKS.contact.email, path: `mailto:${SOCIAL_LINKS.contact.email}`, icon: MailIcon },
-                { text: SOCIAL_LINKS.contact.location, path: '/contact', icon: MapPinIcon }
+                { text: "📱 WhatsApp: +880 1959-524393", path: "https://wa.me/8801959524393" },
+                { text: "📘 Facebook: UK Brand LOVER", path: "https://www.facebook.com/ukbrandlover" },
+                { text: "📸 Instagram: @tuhinajahantopa", path: "https://www.instagram.com/tuhinajahantopa/" },
+                { text: "📍 Mirpur, Dhaka, Bangladesh", path: "/contact" }
             ]
         }
     ];
@@ -73,7 +79,7 @@ const Footer = () => {
                             </motion.div>
                         </Link>
                         <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-500 font-normal">
-                            Your premier destination in Bangladesh for authentic UK imported beauty, dermatological skincare, cult makeup, haircare, and personal care essentials.
+                            UK Brand LOVER is Bangladesh&apos;s trusted home for authentic UK-imported beauty. We believe every woman deserves access to the products she reads about — without worrying if they&apos;re real. That&apos;s why we bring them straight from the UK, with proof.
                         </p>
 
                         {/* Social Buttons with Smooth Hover */}
@@ -128,10 +134,10 @@ const Footer = () => {
 
                 {/* Subfooter */}
                 <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-                    <p>Copyright 2026 © UK Brand Lover. All Rights Reserved.</p>
+                    <p>© 2026 UK Brand LOVER — Bringing Real UK Beauty to Bangladesh.</p>
                     <p className="font-medium text-[#6C306E] flex items-center gap-1.5">
                         <RoyalCrownIcon size={14} color="#6C306E" />
-                        100% Authentic UK Imported Beauty in Bangladesh
+                        Authenticity. Transparency. Trust.
                     </p>
                 </div>
             </div>
