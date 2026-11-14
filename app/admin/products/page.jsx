@@ -142,7 +142,26 @@ export default function AdminProductsPage() {
 
         if (typeof window !== 'undefined') {
             window.addEventListener('category-catalog-updated', loadCategories)
-            return () => window.removeEventListener('category-catalog-updated', loadCategories)
+            const onStorage = (e) => {
+                if (e.key === 'ukbl_categories_synced') loadCategories()
+            }
+            window.addEventListener('storage', onStorage)
+
+            let bc
+            try {
+                bc = new BroadcastChannel('ukbl_catalog_channel')
+                bc.onmessage = (msg) => {
+                    if (msg.data?.type === 'category-updated' || msg.data?.type === 'category-catalog-updated') {
+                        loadCategories()
+                    }
+                }
+            } catch {}
+
+            return () => {
+                window.removeEventListener('category-catalog-updated', loadCategories)
+                window.removeEventListener('storage', onStorage)
+                if (bc) bc.close()
+            }
         }
     }, [])
 

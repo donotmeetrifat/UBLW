@@ -41,6 +41,10 @@ export default function AdminCategoriesPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.categories)) {
                 setCategories(data.categories)
+                if (typeof window !== 'undefined') {
+                    const activeNames = data.categories.filter(c => c.isActive !== false).map(c => c.name)
+                    localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
+                }
             } else {
                 setCategories([])
             }

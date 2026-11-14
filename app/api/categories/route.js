@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getUserFromRequest } from '@/lib/auth';
@@ -151,6 +152,15 @@ export async function POST(request) {
             targetOrder: typeof displayOrder === 'number' ? displayOrder : 1,
             isActive: isActive !== undefined ? Boolean(isActive) : true
         });
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/shop');
+            revalidatePath('/admin/categories');
+            revalidatePath('/admin/promotions');
+            revalidatePath('/admin/banners');
+            revalidatePath('/admin/products');
+        } catch {}
 
         return NextResponse.json({
             success: true,

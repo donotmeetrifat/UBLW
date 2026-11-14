@@ -23,7 +23,15 @@ import ClassicLoader from '@/components/ui/classic-loader'
 export default function AdminHeroBannersPage() {
     const [banners, setBanners] = useState([])
     const [savedBanners, setSavedBanners] = useState([])
-    const [categories, setCategories] = useState([])
+    const [categories, setCategories] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
     const [hasPendingChanges, setHasPendingChanges] = useState(false)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -139,7 +147,7 @@ export default function AdminHeroBannersPage() {
 
         const seenNames = new Set()
         categories.forEach(c => {
-            const name = (c.name || '').trim()
+            const name = (typeof c === 'string' ? c : c?.name || '').trim()
             if (name && !seenNames.has(name.toLowerCase())) {
                 seenNames.add(name.toLowerCase())
                 links.push({
@@ -149,15 +157,17 @@ export default function AdminHeroBannersPage() {
             }
         })
 
-        // Default fallback if categories haven't loaded yet
-        if (links.length === 1) {
-            ['Skincare', 'Makeup', 'Haircare', 'Fragrance'].forEach(name => {
+        // Also ensure baseline defaults exist
+        const defaultNames = ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools']
+        defaultNames.forEach(name => {
+            if (!seenNames.has(name.toLowerCase())) {
+                seenNames.add(name.toLowerCase())
                 links.push({
                     label: name,
                     url: `/shop?category=${encodeURIComponent(name)}`
                 })
-            })
-        }
+            }
+        })
 
         links.push({ label: 'Contact', url: '/contact' })
         return links

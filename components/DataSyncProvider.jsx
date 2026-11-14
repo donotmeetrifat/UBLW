@@ -410,6 +410,10 @@ export default function DataSyncProvider({ children }) {
                             localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(msg.data.sections))
                         } catch {}
                     }
+                    if (msg.data?.type === 'category-updated' || msg.data?.type === 'category-catalog-updated') {
+                        syncCategoryCatalog()
+                        syncProductCatalog()
+                    }
                     if (msg.data?.type === 'product-updated' && msg.data?.product) {
                         dispatch(setProduct([msg.data.product]))
                         try {

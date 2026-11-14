@@ -4,19 +4,35 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { useSelector, useDispatch } from 'react-redux'
 import {
     ArrowRightIcon,
     CheckIcon,
     RefreshIcon,
     StoreFrontIcon,
-    CameraIcon
+    CameraIcon,
+    RoyalCrownIcon
 } from '@/components/icons'
 import { DEFAULT_PROMOTIONS } from '@/lib/promotions'
+import { setPromotions as setReduxPromotions } from '@/lib/features/product/productSlice'
 
 export default function AdminHeroPromotionsPage() {
     const currency = '৳'
+    const dispatch = useDispatch()
+    const reduxCategories = useSelector(state => state.product?.categories)
     const [promotions, setPromotions] = useState(DEFAULT_PROMOTIONS)
-    const [categories, setCategories] = useState([])
+    const [categories, setCategories] = useState(() => {
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
+            return reduxCategories
+        }
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_categories') || '[]')
+                if (Array.isArray(cached) && cached.length > 0) return cached
+            } catch {}
+        }
+        return []
+    })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('mainCard') // 'mainCard' | 'sideCardTop' | 'sideCardBottom'
@@ -61,12 +77,23 @@ export default function AdminHeroPromotionsPage() {
             })
             const data = await res.json()
             if (data.success && Array.isArray(data.categories)) {
-                setCategories(data.categories.filter(c => c.isActive !== false && Boolean(c.name)))
+                const active = data.categories.filter(c => c.isActive !== false && Boolean(c.name))
+                setCategories(active)
+                const activeNames = active.map(c => c.name).filter(Boolean)
+                if (typeof window !== 'undefined' && activeNames.length > 0) {
+                    localStorage.setItem('ukbl_cached_categories', JSON.stringify(activeNames))
+                }
             }
         } catch (err) {
             console.error('Error fetching categories in promotions:', err)
         }
     }
+
+    useEffect(() => {
+        if (Array.isArray(reduxCategories) && reduxCategories.length > 0) {
+            setCategories(reduxCategories)
+        }
+    }, [reduxCategories])
 
     useEffect(() => {
         fetchPromotions()
@@ -75,7 +102,7 @@ export default function AdminHeroPromotionsPage() {
         // Real-time synchronization when categories change in /admin/categories
         const onCategoryUpdate = () => fetchLiveCategories()
         const onStorage = (e) => {
-            if (e.key === 'ukbl_categories_synced') fetchLiveCategories()
+            if (e.key === 'ukbl_categories_synced' || e.key === 'ukbl_cached_categories') fetchLiveCategories()
         }
 
         window.addEventListener('category-catalog-updated', onCategoryUpdate)
@@ -105,8 +132,10 @@ export default function AdminHeroPromotionsPage() {
         ]
 
         const seenNames = new Set()
-        categories.forEach(c => {
-            const name = (c.name || '').trim()
+        const allCandidates = [...categories, ...(Array.isArray(reduxCategories) ? reduxCategories : [])]
+
+        allCandidates.forEach(c => {
+            const name = (typeof c === 'string' ? c : c?.name || '').trim()
             if (name && !seenNames.has(name.toLowerCase())) {
                 seenNames.add(name.toLowerCase())
                 links.push({
@@ -116,18 +145,21 @@ export default function AdminHeroPromotionsPage() {
             }
         })
 
-        if (links.length === 1) {
-            ['Skincare', 'Makeup', 'Haircare', 'Fragrance'].forEach(name => {
+        // Also ensure baseline defaults exist
+        const defaults = ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Body Care', 'Beauty Tools']
+        defaults.forEach(name => {
+            if (!seenNames.has(name.toLowerCase())) {
+                seenNames.add(name.toLowerCase())
                 links.push({
                     label: name,
                     url: `/shop?category=${encodeURIComponent(name)}`
                 })
-            })
-        }
+            }
+        })
 
         links.push({ label: 'Contact', url: '/contact' })
         return links
-    }, [categories])
+    }, [categories, reduxCategories])
 
     // --- Update Handler for Any Field in Any of the 3 Cards ---
     const handleUpdateCardField = (cardKey, field, value) => {
@@ -187,6 +219,7 @@ export default function AdminHeroPromotionsPage() {
 
             if (data.success && data.promotions) {
                 setPromotions(data.promotions)
+                dispatch(setReduxPromotions(data.promotions))
                 toast.success('Promotional boxes published! All storefront visitors now see your updates.', { id: toastId })
 
                 // Instant synchronization across all tabs and user windows
@@ -276,6 +309,165 @@ export default function AdminHeroPromotionsPage() {
                             </>
                         )}
                     </button>
+                </div>
+            </div>
+
+            {/* 1:1 LIVE STOREFRONT PREVIEW (Exact match with website) */}
+            <div className="bg-white border border-[#EFE0EF] rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-[#241224] uppercase tracking-wider">
+                            Storefront Preview
+                        </h2>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            Live Simulation
+                        </span>
+                    </div>
+                    <div className="text-xs text-slate-400">
+                        Click any box below to edit its content
+                    </div>
+                </div>
+
+                {/* 3 Promos Grid matching Hero.jsx */}
+                <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5 pt-1">
+                    {/* 1. Large Feature Card Preview */}
+                    {mainCard?.isActive !== false && (
+                        <div 
+                            onClick={() => setActiveTab('mainCard')}
+                            className={`relative flex flex-col justify-between bg-gradient-to-br from-[#FAF6FA] via-[#FCF8FC] to-[#F7EEF7] rounded-3xl p-6 sm:p-8 md:p-10 border overflow-hidden min-h-[260px] sm:min-h-[340px] shadow-sm cursor-pointer transition-all duration-300 ${
+                                activeTab === 'mainCard' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                            }`}
+                        >
+                            {/* Subtle ambient light orb */}
+                            <div className="absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none" />
+
+                            <div className="z-10 max-w-[58%]">
+                                {mainCard.badge && (
+                                    <div className="inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-3 shadow-2xs">
+                                        <RoyalCrownIcon size={12} color="#D8B56D" />
+                                        <span>{mainCard.badge}</span>
+                                    </div>
+                                )}
+
+                                <h3 className="text-lg sm:text-2xl lg:text-3xl font-extrabold text-[#241224] leading-snug tracking-tight">
+                                    {mainCard.title} <br className="hidden sm:inline" />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6C306E] to-[#9956A1] font-semibold">
+                                        {mainCard.titleHighlight}
+                                    </span>
+                                </h3>
+
+                                {mainCard.description && (
+                                    <p className="text-xs sm:text-sm text-slate-500 mt-2 font-normal leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none">
+                                        {mainCard.description}
+                                    </p>
+                                )}
+
+                                {(mainCard.priceLabel || mainCard.priceValue) && (
+                                    <div className="flex items-baseline gap-2 mt-4">
+                                        {mainCard.priceLabel && (
+                                            <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
+                                                {mainCard.priceLabel}
+                                            </span>
+                                        )}
+                                        {mainCard.priceValue && (
+                                            <span className="text-base sm:text-2xl font-extrabold text-[#3A0C38]">
+                                                {currency}{mainCard.priceValue.replace(/^[৳$£\s]+/, '')}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="mt-5">
+                                    <span className="inline-flex items-center justify-center px-8 h-10 sm:h-11 text-xs sm:text-sm font-bold bg-[#6C306E] text-white rounded-full shadow-md transition">
+                                        {mainCard.buttonText || "Explore Collection"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="absolute right-0 bottom-0 top-0 w-[45%] max-w-[320px] flex items-end justify-end pointer-events-none z-0 overflow-hidden rounded-b-3xl">
+                                {mainCard.image && (
+                                    <img
+                                        src={mainCard.image}
+                                        alt="Main Card Preview"
+                                        className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-1"
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2 & 3. Side Cards Preview */}
+                    <div className="flex flex-col gap-4 text-xs justify-between">
+                        {/* Top Side Card */}
+                        {sideCardTop?.isActive !== false && (
+                            <div 
+                                onClick={() => setActiveTab('sideCardTop')}
+                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${
+                                    activeTab === 'sideCardTop' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                }`}
+                            >
+                                <div className="z-10 max-w-[56%] pr-1">
+                                    {sideCardTop.tag && (
+                                        <span className="text-[9px] sm:text-[10px] font-extrabold text-[#6C306E] uppercase tracking-widest block mb-1">
+                                            {sideCardTop.tag}
+                                        </span>
+                                    )}
+                                    <h4 className="text-base sm:text-xl font-bold text-[#241224] tracking-tight">
+                                        {sideCardTop.title}
+                                    </h4>
+                                    <p className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-[#6C306E]">
+                                        {sideCardTop.buttonText || "Shop Skincare"}
+                                        <ArrowRightIcon size={12} color="#6C306E" />
+                                    </p>
+                                </div>
+
+                                <div className="w-[44%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
+                                    {sideCardTop.image && (
+                                        <img
+                                            src={sideCardTop.image}
+                                            alt="Top Card Preview"
+                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Bottom Side Card */}
+                        {sideCardBottom?.isActive !== false && (
+                            <div 
+                                onClick={() => setActiveTab('sideCardBottom')}
+                                className={`flex items-center justify-between w-full h-full bg-[#FAF6FA] hover:bg-[#FAF3FA] rounded-3xl p-5 sm:p-6 border transition-all duration-300 cursor-pointer relative overflow-hidden min-h-[155px] sm:min-h-[165px] ${
+                                    activeTab === 'sideCardBottom' ? 'border-[#6C306E] ring-2 ring-[#6C306E]/20' : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
+                                }`}
+                            >
+                                <div className="z-10 max-w-[56%] pr-1">
+                                    {sideCardBottom.tag && (
+                                        <span className="text-[9px] sm:text-[10px] font-extrabold text-[#D8B56D] uppercase tracking-widest block mb-1">
+                                            {sideCardBottom.tag}
+                                        </span>
+                                    )}
+                                    <h4 className="text-base sm:text-xl font-bold text-[#241224] tracking-tight">
+                                        {sideCardBottom.title}
+                                    </h4>
+                                    <p className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold text-[#6C306E]">
+                                        {sideCardBottom.buttonText || "Shop Makeup"}
+                                        <ArrowRightIcon size={12} color="#6C306E" />
+                                    </p>
+                                </div>
+
+                                <div className="w-[44%] h-full flex items-end justify-end relative shrink-0 pointer-events-none overflow-hidden">
+                                    {sideCardBottom.image && (
+                                        <img
+                                            src={sideCardBottom.image}
+                                            alt="Bottom Card Preview"
+                                            className="h-full max-h-full w-auto object-contain object-right-bottom translate-y-0.5"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 

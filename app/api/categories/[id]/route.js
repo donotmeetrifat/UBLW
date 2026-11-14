@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getUserFromRequest } from '@/lib/auth';
@@ -82,6 +83,15 @@ export async function PUT(request, { params }) {
             );
         }
 
+        try {
+            revalidatePath('/');
+            revalidatePath('/shop');
+            revalidatePath('/admin/categories');
+            revalidatePath('/admin/promotions');
+            revalidatePath('/admin/banners');
+            revalidatePath('/admin/products');
+        } catch {}
+
         return NextResponse.json({
             success: true,
             message: `Category "${trimmedName}" updated successfully!`,
@@ -114,6 +124,15 @@ export async function DELETE(request, { params }) {
         if (!deleted) {
             return NextResponse.json({ success: false, message: 'Category not found' }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/shop');
+            revalidatePath('/admin/categories');
+            revalidatePath('/admin/promotions');
+            revalidatePath('/admin/banners');
+            revalidatePath('/admin/products');
+        } catch {}
 
         return NextResponse.json({
             success: true,
