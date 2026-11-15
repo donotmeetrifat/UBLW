@@ -500,12 +500,12 @@ export const VideoIcon = ({ size = 18, className = '', color = 'currentColor', .
     </svg>
 )
 
-// 38. Bespoke 2D Clean Luxury Camera Icon
+// 38. Bespoke 2D Clean Luxury Camera / Visual Search Icon
 export const CameraIcon = ({ size = 18, className = '', color = 'currentColor', ...props }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} {...props}>
-        <path d="M4 8H7L8.5 5.5H15.5L17 8H20C21.1 8 22 8.9 22 10V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V10C2 8.9 2.9 8 4 8Z" stroke={color} strokeWidth="1.6" strokeLinejoin="round" />
-        <circle cx="12" cy="14" r="3.5" stroke={color} strokeWidth="1.6" />
-        <circle cx="12" cy="14" r="1.25" fill={color} />
+        <path d="M4 8.5C4 7.12 5.12 6 6.5 6H7.8C8.38 6 8.93 5.67 9.2 5.15L9.6 4.35C9.96 3.65 10.7 3.2 11.48 3.2H12.52C13.3 3.2 14.04 3.65 14.4 4.35L14.8 5.15C15.07 5.67 15.62 6 16.2 6H17.5C18.88 6 20 7.12 20 8.5V17C20 18.38 18.88 19.5 17.5 19.5H6.5C5.12 19.5 4 18.38 4 17V8.5Z" stroke={color} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="12" cy="12.75" r="3.75" stroke={color} strokeWidth="1.65" />
+        <circle cx="16.5" cy="9" r="0.75" fill={color} />
     </svg>
 )
 

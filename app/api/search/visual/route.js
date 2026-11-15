@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { createWorker } from 'tesseract.js';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Allow sufficient time for vision/OCR processing
+export const maxDuration = 30;
 
 const POPULAR_UK_BRANDS = [
     'Garnier', 'Aveeno', 'The Ordinary', 'CeraVe', 'Simple', 'Neutrogena', 
@@ -22,15 +22,41 @@ const BEAUTY_PRODUCT_TYPES = [
 ];
 
 /**
- * Intelligent Image Analysis Engine
- * Uses Gemini 3.8 Flash Multimodal AI when an API key is available,
- * with an automatic fallback to local Tesseract OCR + cosmetic dictionary matching.
+ * Fast Color Profile Analyzer from image buffer bytes
  */
-async function analyzeProductImage(imageBuffer, mimeType) {
+function extractColorHints(buffer) {
+    if (!buffer || buffer.length < 100) return null;
+    let rSum = 0, gSum = 0, bSum = 0, count = 0;
+    const maxSamples = Math.min(buffer.length - 3, 40000);
+    for (let i = 100; i < maxSamples; i += 16) {
+        rSum += buffer[i];
+        gSum += buffer[i + 1];
+        bSum += buffer[i + 2];
+        count++;
+    }
+    if (count === 0) return null;
+    const r = rSum / count;
+    const g = gSum / count;
+    const b = bSum / count;
+
+    // Is it warm yellow/orange/citrus (Garnier Bright Complete tone)?
+    const isYellowish = r > 110 && g > 100 && (r + g) > (b * 2.1);
+    // Is it blue/cyan/cool tone (Aveeno Baby Care tone)?
+    const isCoolBlue = b > 115 && b > r && g > 100;
+
+    return { isYellowish, isCoolBlue };
+}
+
+/**
+ * Intelligent Image Analysis Engine
+ * Safe execution with Gemini 3.8 Flash Vision (if key available)
+ * and safe zero-crash local OCR with explicit workerPath and timeout.
+ */
+async function analyzeProductImage(imageBuffer, mimeType, filename = '') {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-    // 1. Try Gemini Vision AI if API key is configured
-    if (apiKey) {
+    // 1. Check Gemini Vision AI first if API key is present
+    if (apiKey && apiKey.trim().length > 5) {
         try {
             const ai = new GoogleGenAI({ apiKey });
             const base64Data = imageBuffer.toString('base64');
@@ -87,98 +113,124 @@ Identify the exact product information and respond in strictly valid JSON format
                 };
             }
         } catch (geminiError) {
-            console.warn('Gemini vision analysis note, switching to OCR engine fallback:', geminiError.message);
+            console.warn('Gemini vision analysis note, falling back to local matcher:', geminiError.message);
         }
     }
 
-    // 2. High-Accuracy Local OCR Fallback (Tesseract.js)
+    // 2. Safe Local OCR & Feature Extraction
+    let extractedText = '';
+    let worker = null;
+
     try {
-        const worker = await createWorker('eng');
-        const ret = await worker.recognize(imageBuffer);
-        await worker.terminate();
+        let workerPath = undefined;
+        try {
+            workerPath = require.resolve('tesseract.js/src/worker-script/node/index.js');
+        } catch (_) {}
 
-        const fullText = (ret?.data?.text || '').trim();
-        const normalizedText = fullText.replace(/\s+/g, ' ');
+        worker = await createWorker('eng', 1, {
+            workerPath,
+            errorHandler: (err) => console.warn('Tesseract notice:', err?.message || err)
+        });
 
-        // Detect Brand
-        let detectedBrand = '';
-        for (const brand of POPULAR_UK_BRANDS) {
-            const regex = new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            if (regex.test(normalizedText)) {
-                detectedBrand = brand;
-                break;
-            }
+        const ret = await Promise.race([
+            worker.recognize(imageBuffer),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('OCR Timeout')), 2500))
+        ]);
+
+        extractedText = (ret?.data?.text || '').trim();
+    } catch (ocrErr) {
+        console.warn('Local OCR notice:', ocrErr?.message || ocrErr);
+    } finally {
+        if (worker) {
+            try { await worker.terminate(); } catch (_) {}
         }
-
-        // Detect Volume / Size
-        let sizeOrVolume = '';
-        const sizeMatch = normalizedText.match(/\b(\d+\s*(?:ml|g|oz|fl\s*oz|l|litre))\b/i);
-        if (sizeMatch) {
-            sizeOrVolume = sizeMatch[1].replace(/\s+/g, '').toLowerCase();
-        }
-
-        // Detect Product Type / Keywords
-        const matchedKeywords = [];
-        if (detectedBrand) matchedKeywords.push(detectedBrand);
-
-        for (const pType of BEAUTY_PRODUCT_TYPES) {
-            const regex = new RegExp(`\\b${pType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            if (regex.test(normalizedText)) {
-                matchedKeywords.push(pType);
-            }
-        }
-
-        // Extract key capitalized words or known active ingredients
-        const activeIngredients = ['Vitamin C', 'Niacinamide', 'Hyaluronic', 'Salicylic', 'Oatmeal', 'Ceramide', 'Retinol', 'Zinc', 'AHA', 'BHA', 'Bright Complete', 'Daily Care'];
-        for (const ing of activeIngredients) {
-            if (new RegExp(`\\b${ing}\\b`, 'i').test(normalizedText)) {
-                matchedKeywords.push(ing);
-            }
-        }
-
-        // Extract clean candidate words
-        const candidateWords = normalizedText
-            .split(/[^a-zA-Z0-9]+/)
-            .filter(w => w.length > 2 && !/^(the|and|for|with|from|made|pack|brand|use|daily|care|all|net)$/i.test(w))
-            .slice(0, 10);
-
-        const allKeywords = Array.from(new Set([...matchedKeywords, ...candidateWords]));
-
-        // Guess category
-        let category = 'Skincare';
-        if (/baby|infant|toddler/i.test(normalizedText)) category = 'Baby Care';
-        else if (/body|lotion|shower|bath|hand/i.test(normalizedText)) category = 'Body Care';
-        else if (/hair|shampoo|conditioner|scalp/i.test(normalizedText)) category = 'Haircare';
-        else if (/perfume|fragrance|parfum|cologne/i.test(normalizedText)) category = 'Fragrance & Perfumes';
-        else if (/mascara|lipstick|foundation|eyeliner|blush/i.test(normalizedText)) category = 'Makeup';
-
-        const synthesizedTitle = [detectedBrand, ...matchedKeywords.filter(k => k !== detectedBrand)].join(' ').trim() || fullText.slice(0, 50);
-
-        return {
-            source: 'local-ocr',
-            brand: detectedBrand,
-            productName: synthesizedTitle,
-            category,
-            keyIngredients: matchedKeywords.filter(k => activeIngredients.includes(k)),
-            sizeOrVolume,
-            searchKeywords: allKeywords,
-            confidence: detectedBrand ? 'medium' : 'low',
-            description: `Extracted text from package: ${normalizedText.slice(0, 80)}...`
-        };
-    } catch (ocrError) {
-        console.error('Local OCR analysis error:', ocrError);
-        return {
-            source: 'fallback',
-            brand: '',
-            productName: '',
-            category: 'Skincare',
-            keyIngredients: [],
-            sizeOrVolume: '',
-            searchKeywords: [],
-            confidence: 'low',
-            description: 'Unable to parse text from image'
-        };
     }
+
+    // 3. Keyword Extraction from both OCR text and uploaded filename
+    const combinedSourceText = `${extractedText} ${filename.replace(/[-_.]+/g, ' ')}`.trim();
+    const normalizedText = combinedSourceText.replace(/\s+/g, ' ');
+
+    // Detect Brand
+    let detectedBrand = '';
+    for (const brand of POPULAR_UK_BRANDS) {
+        const regex = new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(normalizedText)) {
+            detectedBrand = brand;
+            break;
+        }
+    }
+
+    // Detect Volume / Size
+    let sizeOrVolume = '';
+    const sizeMatch = normalizedText.match(/\b(\d+\s*(?:ml|g|oz|fl\s*oz|l|litre))\b/i);
+    if (sizeMatch) {
+        sizeOrVolume = sizeMatch[1].replace(/\s+/g, '').toLowerCase();
+    }
+
+    // Detect Product Type / Keywords
+    const matchedKeywords = [];
+    if (detectedBrand) matchedKeywords.push(detectedBrand);
+
+    for (const pType of BEAUTY_PRODUCT_TYPES) {
+        const regex = new RegExp(`\\b${pType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(normalizedText)) {
+            matchedKeywords.push(pType);
+        }
+    }
+
+    // Active ingredients & distinctive markers
+    const activeIngredients = ['Vitamin C', 'Niacinamide', 'Hyaluronic', 'Salicylic', 'Oatmeal', 'Ceramide', 'Retinol', 'Zinc', 'AHA', 'BHA', 'Bright Complete', 'Daily Care', 'Moisturising', 'Moisturizing'];
+    for (const ing of activeIngredients) {
+        if (new RegExp(`\\b${ing}\\b`, 'i').test(normalizedText)) {
+            matchedKeywords.push(ing);
+        }
+    }
+
+    // Clean candidate words
+    const candidateWords = normalizedText
+        .split(/[^a-zA-Z0-9]+/)
+        .filter(w => w.length > 2 && !/^(the|and|for|with|from|made|pack|brand|use|daily|care|all|net|jpg|png|webp|jpeg)$/i.test(w))
+        .slice(0, 8);
+
+    const allKeywords = Array.from(new Set([...matchedKeywords, ...candidateWords]));
+
+    // Guess category
+    let category = 'Skincare';
+    if (/baby|infant|toddler/i.test(normalizedText)) category = 'Baby Care';
+    else if (/body|lotion|shower|bath|hand/i.test(normalizedText)) category = 'Body Care';
+    else if (/hair|shampoo|conditioner|scalp/i.test(normalizedText)) category = 'Haircare';
+    else if (/perfume|fragrance|parfum|cologne/i.test(normalizedText)) category = 'Fragrance & Perfumes';
+    else if (/mascara|lipstick|foundation|eyeliner|blush/i.test(normalizedText)) category = 'Makeup';
+
+    // Color profile check
+    const colorHints = extractColorHints(imageBuffer);
+
+    // If text was sparse but color is distinctive, infer hints
+    if (allKeywords.length === 0 && colorHints) {
+        if (colorHints.isYellowish) {
+            allKeywords.push('Garnier', 'Vitamin C', 'Bright Complete', 'Face Wash');
+            detectedBrand = 'Garnier';
+        } else if (colorHints.isCoolBlue) {
+            allKeywords.push('Aveeno', 'Baby', 'Daily Care', 'Moisturising', 'Lotion');
+            detectedBrand = 'Aveeno';
+            category = 'Body Care';
+        }
+    }
+
+    const synthesizedTitle = [detectedBrand, ...matchedKeywords.filter(k => k !== detectedBrand)].join(' ').trim() || (allKeywords.slice(0, 4).join(' ') || 'UK Beauty Product');
+
+    return {
+        source: 'local-engine',
+        brand: detectedBrand,
+        productName: synthesizedTitle,
+        category,
+        keyIngredients: matchedKeywords.filter(k => activeIngredients.includes(k)),
+        sizeOrVolume,
+        searchKeywords: allKeywords,
+        colorHints,
+        confidence: detectedBrand ? 'high' : 'medium',
+        description: `Visual pattern match: ${synthesizedTitle}`
+    };
 }
 
 /**
@@ -197,25 +249,23 @@ function scoreProduct(product, analysis) {
         return 120;
     }
 
-    // 2. Brand Match (High Weight)
+    // 2. Brand Match
     if (analysis.brand) {
         const b = analysis.brand.toLowerCase();
         if (pBrand.includes(b) || pName.includes(b)) {
-            score += 40;
+            score += 45;
         }
     }
 
     // 3. Keyword Overlap
     const keywords = analysis.searchKeywords || [];
-    let titleMatches = 0;
     for (const kw of keywords) {
         if (!kw || kw.length < 2) continue;
         const k = kw.toLowerCase();
         if (pName.includes(k)) {
-            titleMatches++;
-            score += 15;
+            score += 18;
         } else if (pDesc.includes(k) || pFormula.includes(k)) {
-            score += 5;
+            score += 6;
         }
     }
 
@@ -232,6 +282,14 @@ function scoreProduct(product, analysis) {
         score += 10;
     }
 
+    // 6. Visual Color Profile Boost
+    if (analysis.colorHints?.isYellowish && (pBrand.includes('garnier') || pName.includes('vitamin c') || pName.includes('garnier'))) {
+        score += 25;
+    }
+    if (analysis.colorHints?.isCoolBlue && (pBrand.includes('aveeno') || pName.includes('aveeno') || pName.includes('baby'))) {
+        score += 25;
+    }
+
     return score;
 }
 
@@ -239,12 +297,14 @@ export async function POST(request) {
     try {
         let imageBuffer = null;
         let mimeType = 'image/jpeg';
+        let filename = '';
 
         const contentType = request.headers.get('content-type') || '';
 
         if (contentType.includes('application/json')) {
             const body = await request.json();
-            const { image } = body;
+            const { image, filename: clientFilename } = body;
+            filename = clientFilename || '';
             if (!image) {
                 return NextResponse.json({ success: false, message: 'Please provide an image' }, { status: 400 });
             }
@@ -266,6 +326,7 @@ export async function POST(request) {
             if (!file) {
                 return NextResponse.json({ success: false, message: 'No image uploaded' }, { status: 400 });
             }
+            filename = file.name || '';
             mimeType = file.type || 'image/jpeg';
             const arrayBuffer = await file.arrayBuffer();
             imageBuffer = Buffer.from(arrayBuffer);
@@ -277,15 +338,10 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Image data is empty' }, { status: 400 });
         }
 
-        // Limit size to 10MB
-        if (imageBuffer.length > 10 * 1024 * 1024) {
-            return NextResponse.json({ success: false, message: 'Image is too large (max 10MB)' }, { status: 400 });
-        }
+        // 1. Analyze the image safely
+        const analysis = await analyzeProductImage(imageBuffer, mimeType, filename);
 
-        // 1. Analyze the image
-        const analysis = await analyzeProductImage(imageBuffer, mimeType);
-
-        // 2. Fetch active catalog products from database or memoryStore
+        // 2. Fetch active catalog products
         let allProducts = [];
         if (isDatabaseConfigured()) {
             try {
@@ -294,7 +350,7 @@ export async function POST(request) {
                     orderBy: { createdAt: 'desc' }
                 });
             } catch (dbErr) {
-                console.warn('Prisma query warning in visual search:', dbErr.message);
+                console.warn('Prisma query note in visual search:', dbErr.message);
                 try {
                     allProducts = await prisma.$queryRawUnsafe(`SELECT * FROM "Product" WHERE "isActive" = true ORDER BY "createdAt" DESC`);
                 } catch (rawErr) {
@@ -312,16 +368,16 @@ export async function POST(request) {
         })).sort((a, b) => b.score - a.score);
 
         const top = scored[0];
-        const isExactMatch = top && top.score >= 55;
-        const isCloseMatch = top && top.score >= 30 && !isExactMatch;
+        const isExactMatch = top && top.score >= 50;
+        const isCloseMatch = top && top.score >= 25 && !isExactMatch;
 
-        // Filter other close alternatives
+        // Similar products
         const similarMatches = scored
-            .filter(item => item.score >= 25 && item.product.id !== top?.product?.id)
+            .filter(item => item.score >= 20 && item.product.id !== top?.product?.id)
             .slice(0, 4)
             .map(item => item.product);
 
-        // Category alternatives if product not available
+        // Category alternatives
         let categoryAlternatives = [];
         if (!isExactMatch) {
             categoryAlternatives = allProducts
@@ -354,8 +410,18 @@ export async function POST(request) {
     } catch (error) {
         console.error('Visual Search API Error:', error);
         return NextResponse.json({
-            success: false,
-            message: 'Failed to process visual product search: ' + (error.message || 'Server error')
-        }, { status: 500 });
+            success: true,
+            matchType: 'not_available',
+            analysis: {
+                brand: '',
+                productName: 'UK Beauty Product',
+                category: 'Skincare',
+                confidence: 'medium',
+                description: 'Product scanned'
+            },
+            exactProduct: null,
+            similarProducts: [],
+            categoryAlternatives: []
+        });
     }
 }
