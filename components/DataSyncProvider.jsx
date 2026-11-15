@@ -89,7 +89,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v8';
+                    const currentSwVer = 'ukbl-v9';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -97,7 +97,7 @@ export default function DataSyncProvider({ children }) {
                         if ('caches' in window) {
                             caches.keys().then((keys) => {
                                 keys.forEach(key => {
-                                    if (!key.includes(currentSwVer)) {
+                                    if (!key.includes('v9')) {
                                         caches.delete(key);
                                     }
                                 });
