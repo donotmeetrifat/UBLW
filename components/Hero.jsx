@@ -1,7 +1,7 @@
 'use client'
 
 import { assets } from '@/assets/assets'
-import { ArrowRightIcon, CameraIcon, SparklesIcon } from '@/components/icons'
+import { ArrowRightIcon } from '@/components/icons'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -34,30 +34,6 @@ const Hero = () => {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6'>
             {/* PRIMARY HERO: Main Banner Slider */}
             <HeroBannerSlider />
-
-            {/* Visual Product Search Quick Prompt */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-                className="mt-3 sm:mt-4 flex items-center justify-center"
-            >
-                <button
-                    type="button"
-                    onClick={() => {
-                        if (typeof window !== 'undefined') {
-                            window.dispatchEvent(new CustomEvent('open-visual-search'));
-                        }
-                    }}
-                    className="group inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/80 hover:bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-[#241224] transition-all shadow-2xs hover:shadow-xs cursor-pointer text-[10.5px] sm:text-xs font-semibold backdrop-blur-md"
-                >
-                    <span className="flex items-center justify-center size-5 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] group-hover:scale-110 transition-transform">
-                        <CameraIcon size={11} color="#6C306E" />
-                    </span>
-                    <span className="text-slate-600">Have a UK beauty product photo? <strong className="text-[#6C306E] group-hover:underline font-bold">Snap or Upload to Check Availability</strong></span>
-                    <SparklesIcon size={12} color="#D8B56D" />
-                </button>
-            </motion.div>
 
             {/* SECONDARY PROMOTIONAL AREA: 3 Interactive Boxes */}
             <div className='grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 mt-6 sm:mt-10'>
