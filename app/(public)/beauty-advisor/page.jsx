@@ -20,11 +20,7 @@ import {
 const DEFAULT_WELCOME = {
     id: 'full-welcome',
     role: 'assistant',
-    content: `Hey darling! I'm Emma, your Senior UK Beauty Consultant at UK Brand Lover. 🇬🇧✨
-
-Whether you want to verify if a specific British skincare product is in stock, identify a formulation from a photo, or curate a bespoke routine for acne, pigmentation, or barrier repair — I am here to guide you with authentic advice straight from London.
-
-What skin goal are we focusing on today?`,
+    content: `Hello! I am Emma, your beauty consultant at UK Brand Lover. How can I assist you today? You can ask about product availability, skincare routines, or upload a photo of any product bottle to check our stock.`,
     products: [],
     createdAt: new Date().toISOString(),
 };
@@ -227,7 +223,7 @@ export default function BeautyAdvisorPage() {
                 {
                     id: `assistant-${Date.now()}`,
                     role: 'assistant',
-                    content: `Hello darling! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from London, UK with batch code verification.\n\nCould you share what skin concern or UK brand you're looking for today? I would love to curate the perfect routine for you! ✨`,
+                    content: `Hello! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from the UK with verified batch codes.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to recommend the best option for you.`,
                     products: [],
                     createdAt: new Date().toISOString(),
                 },
@@ -266,23 +262,14 @@ export default function BeautyAdvisorPage() {
             <header className="px-4 sm:px-8 py-3.5 bg-white/80 backdrop-blur-xl border-b border-[#EFE0EF]/80 flex items-center justify-between shrink-0 shadow-2xs z-10">
                 <div className="flex items-center gap-3.5">
                     <div className="relative">
-                        <EmmaAvatar size={44} />
-                        <span className="absolute bottom-0 right-0 size-3 rounded-full bg-emerald-500 border-2 border-white" />
+                        <EmmaAvatar size={42} />
+                        <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-white" />
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                         <h1 className="font-bold text-base sm:text-lg text-[#241224] leading-tight tracking-tight">
                             Emma AI
                         </h1>
-                        <p className="text-xs text-slate-500 font-medium flex items-center gap-2 mt-0.5">
-                            <span className="inline-flex items-center gap-1.5 text-emerald-600 font-semibold">
-                                <span className="size-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                                online
-                            </span>
-                            <span className="text-slate-300">•</span>
-                            <span className="text-[#6C306E] font-medium hidden min-[400px]:inline">
-                                Senior UK Beauty Specialist 🇬🇧
-                            </span>
-                        </p>
+                        <span className="size-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
                     </div>
                 </div>
 
@@ -420,17 +407,16 @@ export default function BeautyAdvisorPage() {
                         );
                     })}
 
-                    {/* Typing Indicator */}
+                    {/* Typing Indicator: Emma Avatar + Clean 3 Dots Only */}
                     {isSending && (
                         <div className="flex items-start gap-3">
-                            <EmmaAvatar size={34} className="mt-1 shadow-2xs" />
-                            <div className="bg-white border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-4 py-3 flex items-center gap-2.5 text-xs text-[#6C306E] font-medium shadow-2xs">
-                                <div className="flex gap-1 items-center">
-                                    <span className="size-2 rounded-full bg-[#6C306E] animate-bounce" />
-                                    <span className="size-2 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.2s]" />
-                                    <span className="size-2 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.4s]" />
+                            <EmmaAvatar size={32} className="mt-1 shadow-2xs" />
+                            <div className="bg-white border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-3.5 py-2.5 flex items-center shadow-2xs">
+                                <div className="flex gap-1.5 items-center">
+                                    <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce" />
+                                    <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.2s]" />
+                                    <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.4s]" />
                                 </div>
-                                <span className="text-xs">Emma is checking real-time UK stock & formulas...</span>
                             </div>
                         </div>
                     )}
@@ -503,7 +489,7 @@ export default function BeautyAdvisorPage() {
                             type="text"
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            placeholder="Ask Emma AI anything: 'Is CeraVe in stock?', 'Build an acne routine'..."
+                            placeholder="Ask Emma AI anything..."
                             disabled={isSending}
                             className="flex-1 bg-transparent text-xs sm:text-sm text-[#241224] placeholder:text-slate-400 outline-none font-medium min-w-0"
                         />

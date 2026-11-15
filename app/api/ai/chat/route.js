@@ -114,7 +114,7 @@ export async function POST(request) {
         } catch (innerErr) {
             return NextResponse.json({
                 success: true,
-                message: "Hello darling! Delighted to assist you at UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from London with batch code verification.\n\nCould you share what skin concern or UK brand you're looking for today? I'd love to curate the perfect routine for you! ✨",
+                message: "Hello! Welcome to UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from the UK with batch code verification.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to assist you.",
                 products: [],
                 provider: 'emma_saleswoman_fallback',
             });

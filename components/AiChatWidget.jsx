@@ -20,7 +20,7 @@ import {
 const DEFAULT_WELCOME_MESSAGE = {
     id: 'welcome-0',
     role: 'assistant',
-    content: `Hey darling, I'm Emma! Ask me about authentic UK skincare, check product availability, or snap a photo of any bottle to see if we have it in stock. 🇬🇧✨`,
+    content: `Hello! I am Emma, your beauty consultant at UK Brand Lover. How can I assist you today? You can ask about product availability, skincare routines, or upload a photo of any product bottle to check our stock.`,
     products: [],
     createdAt: new Date().toISOString(),
 };
@@ -261,7 +261,7 @@ export default function AiChatWidget() {
             const fallbackMsg = {
                 id: `assistant-${Date.now()}`,
                 role: 'assistant',
-                content: `Hello darling! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from London, UK with batch code verification.\n\nCould you share your skin type or what specific product you're looking for? I would love to curate the perfect routine for you! ✨`,
+                content: `Hello! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from the UK with verified batch codes.\n\nCould you share your skin type or what specific product you are looking for? I would be happy to recommend the best option for you.`,
                 products: [],
                 createdAt: new Date().toISOString(),
             };
@@ -322,20 +322,17 @@ export default function AiChatWidget() {
                         className="fixed bottom-20 right-2 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-16px)] sm:w-[410px] h-[590px] max-h-[85vh] rounded-[30px] bg-white/85 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 shadow-[0_24px_70px_-15px_rgba(58,12,56,0.2),0_0_0_1px_rgba(239,224,239,0.7)] flex flex-col overflow-hidden select-none font-sans"
                     >
                         {/* Top Header: Clean, open, white-theme (RIFAT Ai Style) */}
-                        <div className="px-5 pt-4 pb-2.5 flex items-center justify-between shrink-0">
+                        <div className="px-5 py-3.5 border-b border-[#EFE0EF]/70 flex items-center justify-between shrink-0 bg-white/40">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <EmmaAvatar size={42} />
+                                    <EmmaAvatar size={38} />
                                     <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-white" />
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-[17px] text-[#241224] leading-tight tracking-tight">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-[16px] text-[#241224] tracking-tight">
                                         Emma AI
                                     </h3>
-                                    <p className="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                                        <span className="size-1.5 rounded-full bg-emerald-500 inline-block" />
-                                        <span>Emma • online</span>
-                                    </p>
+                                    <span className="size-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
                                 </div>
                             </div>
 
@@ -483,17 +480,16 @@ export default function AiChatWidget() {
                                 );
                             })}
 
-                            {/* Typing Indicator: Emma Avatar + Clean Bubble */}
+                            {/* Typing Indicator: Emma Avatar + Clean 3 Dots Only */}
                             {isSending && (
                                 <div className="flex items-start gap-2.5">
-                                    <EmmaAvatar size={30} className="mt-0.5" />
-                                    <div className="bg-white/95 border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-4 py-2.5 flex items-center gap-2 text-xs text-[#6C306E] font-medium shadow-2xs">
-                                        <div className="flex gap-1 items-center">
+                                    <EmmaAvatar size={28} className="mt-0.5 shadow-2xs" />
+                                    <div className="bg-white/95 border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-3.5 py-2.5 flex items-center shadow-2xs">
+                                        <div className="flex gap-1.5 items-center">
                                             <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce" />
                                             <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.2s]" />
                                             <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.4s]" />
                                         </div>
-                                        <span className="text-[11.5px]">Emma is checking authentic UK stock...</span>
                                     </div>
                                 </div>
                             )}
@@ -502,7 +498,7 @@ export default function AiChatWidget() {
                         </div>
 
                         {/* Suggestions Bar: Text only, Left & Right Arrow Buttons (Exact RIFAT Ai Style) */}
-                        <div className="px-3 py-1 shrink-0">
+                        <div className="px-3.5 py-1.5 bg-white/40 border-t border-[#EFE0EF]/60 shrink-0">
                             <AiSuggestionBar
                                 suggestions={dynamicSuggestions}
                                 onSelect={(query) => handleSendMessage(query, null)}
@@ -511,7 +507,7 @@ export default function AiChatWidget() {
                         </div>
 
                         {/* Input Capsule: Pill shape with Camera + Input + Circular Send Button (Exact RIFAT Ai Style) */}
-                        <div className="p-3 pt-1 shrink-0">
+                        <div className="p-3.5 pt-1.5 shrink-0 bg-white/50 backdrop-blur-md">
                             {/* Attached image preview banner */}
                             {attachedImage && (
                                 <div className="flex items-center justify-between bg-white/95 border border-[#EFE0EF] rounded-2xl px-3 py-1.5 mb-2 shadow-2xs">
