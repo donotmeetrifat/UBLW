@@ -177,17 +177,36 @@ export default function AiSuggestionBar({
         setIsDragging(false)
     }
 
+    const handleScroll = (direction) => {
+        if (!scrollRef.current) return
+        const amount = direction === 'left' ? -220 : 220
+        scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' })
+    }
+
     if (!suggestions || suggestions.length === 0) return null
 
     return (
-        <div className={`relative w-full ${className}`}>
+        <div className={`relative w-full flex items-center gap-1.5 px-1 py-1 ${className}`}>
+            {/* Left Scroll Button */}
+            <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                aria-label="Scroll left"
+                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition"
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+
+            {/* Horizontal Scrollable Pills */}
             <div
                 ref={scrollRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUpOrLeave}
                 onMouseLeave={handleMouseUpOrLeave}
-                className="w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 py-1.5 px-3 select-none touch-pan-x cursor-grab active:cursor-grabbing"
+                className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 py-0.5 select-none touch-pan-x cursor-grab active:cursor-grabbing"
             >
                 {suggestions.map((item, idx) => (
                     <button
@@ -195,12 +214,24 @@ export default function AiSuggestionBar({
                         type="button"
                         disabled={disabled}
                         onClick={() => onSelect?.(item)}
-                        className="whitespace-nowrap shrink-0 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium text-[#4A204C] bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:bg-[#6C306E] hover:text-white transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                        className="whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                     >
                         {item}
                     </button>
                 ))}
             </div>
+
+            {/* Right Scroll Button */}
+            <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                aria-label="Scroll right"
+                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition"
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </button>
         </div>
     )
 }
