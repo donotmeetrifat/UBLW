@@ -693,23 +693,46 @@ export default function AdminHeroBannersPage() {
 
             {/* Slides List Table */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden">
-                <div className="p-6 border-b border-[#EFE0EF] flex items-center justify-between">
-                    <div>
-                        <h2 className="text-base font-extrabold text-[#241224]">
+                <div className="p-4 sm:p-6 border-b border-[#EFE0EF] flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-base font-extrabold text-[#241224] truncate">
                             Slider Priority &amp; Reorder
                         </h2>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
                             Drag rows or use arrows to change the presentation sequence.
                         </p>
                     </div>
 
-                    <button
-                        onClick={handleOpenAddModal}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-[#6C306E] hover:bg-[#4A1D4C] transition shadow-2xs cursor-pointer"
-                    >
-                        <PlusIcon size={13} />
-                        <span>Add Slide</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {hasPendingChanges && (
+                            <button
+                                type="button"
+                                onClick={() => handleSaveAllBanners()}
+                                disabled={saving}
+                                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 transition shadow-xs cursor-pointer shrink-0 whitespace-nowrap animate-pulse"
+                            >
+                                {saving ? (
+                                    <>
+                                        <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckIcon size={12} />
+                                        <span>Save Order</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        <button
+                            onClick={handleOpenAddModal}
+                            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold text-white bg-[#6C306E] hover:bg-[#4A1D4C] transition shadow-2xs cursor-pointer shrink-0 whitespace-nowrap"
+                        >
+                            <PlusIcon size={13} />
+                            <span>Add Slide</span>
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -735,115 +758,137 @@ export default function AdminHeroBannersPage() {
                                     }
                                     setDraggedIndex(null)
                                 }}
-                                className={`p-4 flex items-center justify-between gap-4 transition-all ${
+                                className={`p-3.5 sm:p-4.5 transition-all ${
                                     draggedIndex === index
                                         ? 'bg-[#FAF6FA] border-2 border-dashed border-[#6C306E]'
                                         : 'hover:bg-[#FAF6FA]/50 bg-white'
                                 }`}
                             >
-                                {/* Left: Drag handle & Priority Rank */}
-                                <div className="flex items-center gap-3 shrink-0">
-                                    <div
-                                        className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#6C306E] p-1 rounded transition"
-                                        title="Drag to reorder"
-                                    >
-                                        <GripVerticalIcon size={16} />
-                                    </div>
-
-                                    <div className="size-8 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center font-black text-xs shrink-0">
-                                        #{index + 1}
-                                    </div>
-                                </div>
-
-                                {/* Center: Thumbnail & Meta */}
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-24 sm:w-28 aspect-[21/9] rounded-lg border border-[#EFE0EF] bg-slate-50 relative shrink-0 overflow-hidden shadow-2xs">
-                                        {banner.image ? (
-                                            <Image
-                                                src={banner.image}
-                                                alt={banner.title || 'Banner'}
-                                                fill
-                                                className="object-cover"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px]">
-                                                No Image
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                                    {/* Left & Middle: Drag Handle, Priority, Thumbnail, Details */}
+                                    <div className="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+                                        {/* Drag handle & Priority Rank */}
+                                        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                                            <div
+                                                className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#6C306E] p-1 rounded transition"
+                                                title="Drag to reorder"
+                                            >
+                                                <GripVerticalIcon size={16} />
                                             </div>
-                                        )}
+
+                                            <div className="size-7 sm:size-8 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] flex items-center justify-center font-black text-xs shrink-0">
+                                                #{index + 1}
+                                            </div>
+                                        </div>
+
+                                        {/* Thumbnail */}
+                                        <div className="w-20 sm:w-28 aspect-[21/9] rounded-lg border border-[#EFE0EF] bg-slate-50 relative shrink-0 overflow-hidden shadow-2xs">
+                                            {banner.image ? (
+                                                <Image
+                                                    src={banner.image}
+                                                    alt={banner.title || 'Banner'}
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px]">
+                                                    No Image
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Info & Meta */}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="font-extrabold text-xs sm:text-sm text-[#241224] truncate max-w-[150px] sm:max-w-xs md:max-w-sm">
+                                                    {banner.title || `Slide #${index + 1}`}
+                                                </h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleActiveRow(banner.id)}
+                                                    className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition shrink-0 whitespace-nowrap hidden sm:inline-flex ${
+                                                        banner.isActive !== false
+                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                                            : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
+                                                    }`}
+                                                >
+                                                    {banner.isActive !== false ? '● Active' : '○ Hidden'}
+                                                </button>
+                                            </div>
+
+                                            {banner.subtitle && (
+                                                <p className="text-[10.5px] sm:text-[11px] text-slate-500 truncate mt-0.5">
+                                                    {banner.subtitle}
+                                                </p>
+                                            )}
+
+                                            {banner.link && (
+                                                <p className="text-[9.5px] sm:text-[10px] text-[#6C306E] truncate font-medium mt-0.5">
+                                                    🔗 {banner.link}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-extrabold text-xs sm:text-sm text-[#241224] truncate">
-                                                {banner.title || `Slide #${index + 1}`}
-                                            </h3>
+                                    {/* Bottom row on mobile / Right column on desktop: Actions & Status */}
+                                    <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 border-t border-[#EFE0EF]/60 sm:border-t-0 sm:pt-0">
+                                        {/* Status badge visible on mobile */}
+                                        <div className="flex items-center gap-2 sm:hidden">
                                             <button
                                                 type="button"
                                                 onClick={() => handleToggleActiveRow(banner.id)}
-                                                className={`text-[9.5px] font-bold px-2 py-0.2 rounded-full cursor-pointer transition ${
+                                                className={`text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition whitespace-nowrap ${
                                                     banner.isActive !== false
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                                        : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
                                                 }`}
                                             >
-                                                {banner.isActive !== false ? 'Active' : 'Hidden'}
+                                                {banner.isActive !== false ? '● Active' : '○ Hidden'}
                                             </button>
                                         </div>
 
-                                        {banner.subtitle && (
-                                            <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                                                {banner.subtitle}
-                                            </p>
-                                        )}
+                                        {/* Reorder and Edit / Delete buttons */}
+                                        <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+                                            <button
+                                                type="button"
+                                                disabled={index === 0}
+                                                onClick={() => handleMoveBanner(index, index - 1)}
+                                                className="size-7 sm:size-7.5 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] hover:border-[#6C306E]/30 flex items-center justify-center disabled:opacity-30 cursor-pointer transition shrink-0"
+                                                title="Move up"
+                                            >
+                                                ▲
+                                            </button>
 
-                                        {banner.link && (
-                                            <p className="text-[10px] text-[#6C306E] truncate font-medium mt-0.5">
-                                                🔗 {banner.link}
-                                            </p>
-                                        )}
+                                            <button
+                                                type="button"
+                                                disabled={index === banners.length - 1}
+                                                onClick={() => handleMoveBanner(index, index + 1)}
+                                                className="size-7 sm:size-7.5 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] hover:border-[#6C306E]/30 flex items-center justify-center disabled:opacity-30 cursor-pointer transition shrink-0"
+                                                title="Move down"
+                                            >
+                                                ▼
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleOpenEditModal(banner)}
+                                                className="size-7 sm:size-7.5 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] hover:bg-white hover:border-[#6C306E]/30 flex items-center justify-center transition cursor-pointer shrink-0 ml-0.5"
+                                                title="Edit banner"
+                                            >
+                                                <EditIcon size={12} />
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteBanner(banner.id)}
+                                                className="size-7 sm:size-7.5 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 flex items-center justify-center transition cursor-pointer shrink-0"
+                                                title="Delete banner"
+                                            >
+                                                <TrashIcon size={12} />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Right: Reorder arrows & Edit/Delete */}
-                                <div className="flex items-center gap-1 shrink-0">
-                                    <button
-                                        type="button"
-                                        disabled={index === 0}
-                                        onClick={() => handleMoveBanner(index, index - 1)}
-                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center disabled:opacity-30 cursor-pointer"
-                                        title="Move up"
-                                    >
-                                        ▲
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        disabled={index === banners.length - 1}
-                                        onClick={() => handleMoveBanner(index, index + 1)}
-                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center disabled:opacity-30 cursor-pointer"
-                                        title="Move down"
-                                    >
-                                        ▼
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleOpenEditModal(banner)}
-                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:text-[#6C306E] flex items-center justify-center hover:bg-white transition cursor-pointer ml-1"
-                                        title="Edit banner"
-                                    >
-                                        <EditIcon size={12} />
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDeleteBanner(banner.id)}
-                                        className="size-7 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] text-slate-400 hover:text-rose-600 flex items-center justify-center hover:bg-rose-50 transition cursor-pointer"
-                                        title="Delete banner"
-                                    >
-                                        <TrashIcon size={12} />
-                                    </button>
                                 </div>
                             </div>
                         ))}
