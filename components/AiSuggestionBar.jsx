@@ -186,39 +186,52 @@ export default function AiSuggestionBar({
     if (!suggestions || suggestions.length === 0) return null
 
     return (
-        <div className={`relative w-full flex items-center gap-1.5 px-1 py-1 ${className}`}>
+        <div className={`relative w-full flex items-center gap-1.5 px-0.5 py-1 ${className}`}>
             {/* Left Scroll Button */}
             <button
                 type="button"
                 onClick={() => handleScroll('left')}
                 aria-label="Scroll left"
-                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition"
+                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition z-10"
             >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                 </svg>
             </button>
 
-            {/* Horizontal Scrollable Pills */}
-            <div
-                ref={scrollRef}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUpOrLeave}
-                onMouseLeave={handleMouseUpOrLeave}
-                className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 py-0.5 select-none touch-pan-x cursor-grab active:cursor-grabbing"
-            >
-                {suggestions.map((item, idx) => (
-                    <button
-                        key={`${item}-${idx}`}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => onSelect?.(item)}
-                        className="whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-                    >
-                        {item}
-                    </button>
-                ))}
+            {/* Scroll Track with Smooth Gradient Mask & Overlays */}
+            <div className="relative flex-1 min-w-0 overflow-hidden">
+                {/* Smooth Gradient Fade on Left */}
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white/95 via-white/70 to-transparent z-10" />
+
+                {/* Horizontal Scrollable Pills with CSS Mask */}
+                <div
+                    ref={scrollRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUpOrLeave}
+                    onMouseLeave={handleMouseUpOrLeave}
+                    style={{
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%)',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%)',
+                    }}
+                    className="overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 py-0.5 px-3 select-none touch-pan-x cursor-grab active:cursor-grabbing"
+                >
+                    {suggestions.map((item, idx) => (
+                        <button
+                            key={`${item}-${idx}`}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => onSelect?.(item)}
+                            className="whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                        >
+                            {item}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Smooth Gradient Fade on Right */}
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white/95 via-white/70 to-transparent z-10" />
             </div>
 
             {/* Right Scroll Button */}
@@ -226,7 +239,7 @@ export default function AiSuggestionBar({
                 type="button"
                 onClick={() => handleScroll('right')}
                 aria-label="Scroll right"
-                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition"
+                className="size-7 sm:size-7.5 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 text-slate-500 hover:text-[#6C306E] shadow-2xs flex items-center justify-center shrink-0 cursor-pointer active:scale-90 transition z-10"
             >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6" />

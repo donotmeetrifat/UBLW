@@ -338,31 +338,14 @@ export default function AiChatWidget() {
 
                             {/* Header Actions: Clear Chat & Minimal Close (X) */}
                             <div className="flex items-center gap-1">
-                                {isClearConfirming ? (
-                                    <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg text-[10px]">
-                                        <span className="text-rose-700 font-semibold">Clear?</span>
-                                        <button
-                                            onClick={handleClearChat}
-                                            className="px-1.5 py-0.5 bg-rose-600 rounded text-white font-bold hover:bg-rose-700 transition"
-                                        >
-                                            Yes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsClearConfirming(false)}
-                                            className="px-1 text-slate-500 hover:text-slate-700"
-                                        >
-                                            No
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => setIsClearConfirming(true)}
-                                        title="Clear conversation history"
-                                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-black/5 transition cursor-pointer"
-                                    >
-                                        <TrashIcon size={14} color="currentColor" />
-                                    </button>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsClearConfirming(true)}
+                                    title="Clear conversation history"
+                                    className="p-1.5 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                                >
+                                    <TrashIcon size={15} color="currentColor" />
+                                </button>
 
                                 <button
                                     onClick={() => setIsOpen(false)}
@@ -374,6 +357,40 @@ export default function AiChatWidget() {
                                 </button>
                             </div>
                         </div>
+
+                        {/* Smooth Delete Confirmation Dropdown */}
+                        <AnimatePresence>
+                            {isClearConfirming && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                                    className="overflow-hidden bg-rose-50/95 border-b border-rose-200/80 px-4 py-2.5 flex items-center justify-between text-xs shrink-0 z-20"
+                                >
+                                    <div className="flex items-center gap-2 text-rose-800 font-medium text-[11.5px]">
+                                        <TrashIcon size={13} color="#E11D48" />
+                                        <span>Clear entire conversation?</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsClearConfirming(false)}
+                                            className="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-black/5 text-[11px] font-semibold transition cursor-pointer"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleClearChat}
+                                            className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-2xs active:scale-95 transition cursor-pointer"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Message Stream */}
                         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 no-scrollbar">

@@ -275,33 +275,50 @@ export default function BeautyAdvisorPage() {
 
                 {/* Right: Clear Chat Control */}
                 <div>
-                    {isClearConfirming ? (
-                        <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-3 py-1 rounded-xl text-xs">
-                            <span className="text-rose-700 font-semibold text-xs">Clear all?</span>
-                            <button
-                                onClick={handleClearChat}
-                                className="px-2 py-0.5 bg-rose-600 text-white font-bold rounded-md hover:bg-rose-700 transition cursor-pointer"
-                            >
-                                Yes
-                            </button>
-                            <button
-                                onClick={() => setIsClearConfirming(false)}
-                                className="text-slate-500 hover:text-slate-700 px-1 cursor-pointer"
-                            >
-                                No
-                            </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => setIsClearConfirming(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer"
-                        >
-                            <TrashIcon size={14} color="currentColor" />
-                            <span className="hidden sm:inline">Clear Chat</span>
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        onClick={() => setIsClearConfirming(!isClearConfirming)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer"
+                    >
+                        <TrashIcon size={14} color="currentColor" />
+                        <span className="hidden sm:inline">Clear Chat</span>
+                    </button>
                 </div>
             </header>
+
+            {/* Smooth Delete Confirmation Dropdown */}
+            <AnimatePresence>
+                {isClearConfirming && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        className="overflow-hidden bg-rose-50/95 border-b border-rose-200/80 px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs shrink-0 z-20"
+                    >
+                        <div className="flex items-center gap-2 text-rose-800 font-medium">
+                            <TrashIcon size={14} color="#E11D48" />
+                            <span>Are you sure you want to clear your consultation history?</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsClearConfirming(false)}
+                                className="px-3 py-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-black/5 text-xs font-semibold transition cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearChat}
+                                className="px-3.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-2xs active:scale-95 transition cursor-pointer"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 2. Full-Page Chat Message Stream (Centered Conversational Column) */}
             <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 no-scrollbar">
