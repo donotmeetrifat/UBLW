@@ -319,9 +319,9 @@ export default function AdminSettingsPage() {
                         {/* 1. bKash Settings */}
                         <div className="p-4 rounded-2xl border border-pink-100 bg-pink-50/20 space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-lg bg-pink-600 text-white flex items-center justify-center font-bold text-xs">
-                                        b
+                                <div className="flex items-center gap-2.5">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-0.5 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/payments/bkash.png" alt="bKash" className="size-7 object-contain" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-xs text-[#241224]">bKash Send Money</p>
@@ -435,9 +435,9 @@ export default function AdminSettingsPage() {
                         {/* 2. Nagad Settings */}
                         <div className="p-4 rounded-2xl border border-orange-100 bg-orange-50/20 space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-xs">
-                                        N
+                                <div className="flex items-center gap-2.5">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-0.5 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/payments/nagad.png" alt="Nagad" className="size-7 object-contain" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-xs text-[#241224]">Nagad Wallet</p>
@@ -551,9 +551,9 @@ export default function AdminSettingsPage() {
                         {/* 3. Rocket App Settings */}
                         <div className="p-4 rounded-2xl border border-purple-100 bg-purple-50/20 space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-lg bg-[#8C3494] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-                                        R
+                                <div className="flex items-center gap-2.5">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-0.5 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/payments/rocket.png" alt="Rocket" className="size-7 object-contain" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-xs text-[#241224]">Rocket App</p>
@@ -666,8 +666,10 @@ export default function AdminSettingsPage() {
 
                         {/* 4. Cash on Delivery */}
                         <div className="p-4 rounded-2xl border border-[#EFE0EF] bg-white flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <CashDeliveryIcon size={20} color="#059669" />
+                            <div className="flex items-center gap-2.5">
+                                <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-0.5 flex items-center justify-center shrink-0 shadow-2xs">
+                                    <img src="/payments/cash.png" alt="Cash on Delivery" className="size-7 object-contain" />
+                                </div>
                                 <div>
                                     <p className="font-bold text-xs text-[#241224]">Cash on Delivery (COD)</p>
                                     <p className="text-[10px] text-slate-500">Pay cash upon product inspection across Bangladesh</p>
