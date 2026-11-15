@@ -100,118 +100,189 @@ export async function POST(request) {
 
             const startTime = Date.now();
 
-            // 1. Google Gemini Connection Test with resilient model fallback
+            // 1. Google Gemini Dynamic Model Discovery & Verification
             if (provider === 'gemini') {
-                const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
-                let lastError = null;
+                try {
+                    // Call Google's ListModels first to dynamically discover supported models for this exact key
+                    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${keyToTest}`;
+                    const listRes = await fetch(listUrl);
 
-                for (const model of modelsToTry) {
-                    try {
-                        const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToTest}`;
-                        const res = await fetch(testUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ role: 'user', parts: [{ text: 'Respond with exactly the single word "VERIFIED".' }] }],
-                            }),
-                        });
-                        const latencyMs = Date.now() - startTime;
-
-                        if (res.ok) {
-                            return NextResponse.json({
-                                success: true,
-                                message: `Gemini (${model}) connected successfully! Latency: ${latencyMs}ms`,
-                                latencyMs,
-                            });
-                        } else {
-                            const errText = await res.text();
-                            lastError = errText;
-                        }
-                    } catch (e) {
-                        lastError = e.message;
+                    if (!listRes.ok) {
+                        const errData = await listRes.json().catch(() => ({}));
+                        const errMsg = errData?.error?.message || `Google API key verification failed (${listRes.status})`;
+                        return NextResponse.json({
+                            success: false,
+                            message: errMsg,
+                            latencyMs: Date.now() - startTime,
+                        }, { status: 400 });
                     }
-                }
 
-                return NextResponse.json({
-                    success: false,
-                    message: `Gemini verification failed: ${lastError ? lastError.substring(0, 250) : 'Service unavailable'}`,
-                    latencyMs: Date.now() - startTime,
-                }, { status: 400 });
-            }
+                    const listData = await listRes.json();
+                    const supportedModels = (listData.models || [])
+                        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                        .map(m => m.name.replace(/^models\//, ''));
 
-            // 2. Groq Cloud (Free LPU) Connection Test
-            else if (provider === 'groq') {
-                const modelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-                let lastError = null;
-
-                for (const model of modelsToTry) {
-                    try {
-                        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${keyToTest}`,
-                            },
-                            body: JSON.stringify({
-                                model,
-                                messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
-                                max_tokens: 10,
-                            }),
-                        });
-                        const latencyMs = Date.now() - startTime;
-
-                        if (res.ok) {
-                            return NextResponse.json({
-                                success: true,
-                                message: `Groq Cloud (${model}) connected successfully! Latency: ${latencyMs}ms`,
-                                latencyMs,
-                            });
-                        } else {
-                            const err = await res.text();
-                            lastError = err;
-                        }
-                    } catch (e) {
-                        lastError = e.message;
+                    if (supportedModels.length === 0) {
+                        return NextResponse.json({
+                            success: false,
+                            message: 'API key is valid, but no generateContent models are accessible.',
+                            latencyMs: Date.now() - startTime,
+                        }, { status: 400 });
                     }
-                }
 
-                return NextResponse.json({
-                    success: false,
-                    message: `Groq verification failed: ${lastError ? lastError.substring(0, 250) : 'Unable to connect to api.groq.com'}`,
-                    latencyMs: Date.now() - startTime,
-                }, { status: 400 });
-            }
+                    // Choose best model supported by this key
+                    const chosenModel =
+                        supportedModels.find(n => n.includes('2.0-flash')) ||
+                        supportedModels.find(n => n.includes('1.5-flash') && !n.includes('8b')) ||
+                        supportedModels.find(n => n.includes('1.5-flash')) ||
+                        supportedModels.find(n => n.includes('1.5-pro')) ||
+                        supportedModels[0];
 
-            // 3. OpenRouter Connection Test
-            else if (provider === 'openrouter') {
-                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${keyToTest}`,
-                        'HTTP-Referer': 'https://ukbrandlover.com',
-                        'X-Title': 'UK Brand Lover Beauty Advisor',
-                    },
-                    body: JSON.stringify({
-                        model: 'google/gemini-2.0-flash-exp:free',
-                        messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
-                        max_tokens: 10,
-                    }),
-                });
-                const latencyMs = Date.now() - startTime;
-                if (!res.ok) {
-                    const err = await res.text();
+                    // Send verified test ping
+                    const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${keyToTest}`;
+                    const pingRes = await fetch(pingUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Respond with "VERIFIED"' }] }],
+                        }),
+                    });
+
+                    const totalLatency = Date.now() - startTime;
+
+                    if (pingRes.ok) {
+                        return NextResponse.json({
+                            success: true,
+                            message: `Google Gemini verified successfully using ${chosenModel}! Latency: ${totalLatency}ms`,
+                            model: chosenModel,
+                            latencyMs: totalLatency,
+                        });
+                    } else {
+                        const pingErr = await pingRes.json().catch(() => ({}));
+                        return NextResponse.json({
+                            success: false,
+                            message: pingErr?.error?.message || `Gemini test ping failed on ${chosenModel}`,
+                            latencyMs: totalLatency,
+                        }, { status: 400 });
+                    }
+                } catch (netErr) {
                     return NextResponse.json({
                         success: false,
-                        message: `OpenRouter verification failed (${res.status}): ${err.substring(0, 200)}`,
-                        latencyMs,
+                        message: `Gemini network error: ${netErr.message}`,
+                        latencyMs: Date.now() - startTime,
                     }, { status: 400 });
                 }
-                return NextResponse.json({
-                    success: true,
-                    message: `OpenRouter connected successfully! Latency: ${latencyMs}ms`,
-                    latencyMs,
-                });
+            }
+
+            // 2. Groq Cloud (Free LPU) Dynamic Model Discovery & Verification
+            else if (provider === 'groq') {
+                try {
+                    const listRes = await fetch('https://api.groq.com/openai/v1/models', {
+                        headers: {
+                            Authorization: `Bearer ${keyToTest}`,
+                        },
+                    });
+
+                    if (!listRes.ok) {
+                        const errData = await listRes.json().catch(() => ({}));
+                        const errMsg = errData?.error?.message || `Groq API key verification failed (${listRes.status})`;
+                        return NextResponse.json({
+                            success: false,
+                            message: errMsg,
+                            latencyMs: Date.now() - startTime,
+                        }, { status: 400 });
+                    }
+
+                    const listData = await listRes.json();
+                    const availableModels = (listData.data || []).map(m => m.id);
+
+                    const chosenModel =
+                        availableModels.find(id => id.includes('llama-3.3-70b')) ||
+                        availableModels.find(id => id.includes('llama-3.1-8b-instant')) ||
+                        availableModels.find(id => id.includes('llama3-70b')) ||
+                        availableModels[0] ||
+                        'llama-3.3-70b-versatile';
+
+                    const pingRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${keyToTest}`,
+                        },
+                        body: JSON.stringify({
+                            model: chosenModel,
+                            messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
+                            max_tokens: 10,
+                        }),
+                    });
+
+                    const totalLatency = Date.now() - startTime;
+
+                    if (pingRes.ok) {
+                        return NextResponse.json({
+                            success: true,
+                            message: `Groq Cloud verified successfully using ${chosenModel}! Latency: ${totalLatency}ms`,
+                            model: chosenModel,
+                            latencyMs: totalLatency,
+                        });
+                    } else {
+                        const pingErr = await pingRes.json().catch(() => ({}));
+                        return NextResponse.json({
+                            success: false,
+                            message: pingErr?.error?.message || `Groq ping failed on ${chosenModel}`,
+                            latencyMs: totalLatency,
+                        }, { status: 400 });
+                    }
+                } catch (netErr) {
+                    return NextResponse.json({
+                        success: false,
+                        message: `Groq network error: ${netErr.message}`,
+                        latencyMs: Date.now() - startTime,
+                    }, { status: 400 });
+                }
+            }
+
+            // 3. OpenRouter Verification
+            else if (provider === 'openrouter') {
+                try {
+                    const pingRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${keyToTest}`,
+                            'HTTP-Referer': 'https://ukbrandlover.com',
+                            'X-Title': 'UK Brand Lover Beauty Advisor',
+                        },
+                        body: JSON.stringify({
+                            model: 'google/gemini-2.0-flash-exp:free',
+                            messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
+                            max_tokens: 10,
+                        }),
+                    });
+
+                    const totalLatency = Date.now() - startTime;
+
+                    if (pingRes.ok) {
+                        return NextResponse.json({
+                            success: true,
+                            message: `OpenRouter verified successfully! Latency: ${totalLatency}ms`,
+                            latencyMs: totalLatency,
+                        });
+                    } else {
+                        const err = await pingRes.json().catch(() => ({}));
+                        return NextResponse.json({
+                            success: false,
+                            message: err?.error?.message || `OpenRouter verification failed (${pingRes.status})`,
+                            latencyMs: totalLatency,
+                        }, { status: 400 });
+                    }
+                } catch (netErr) {
+                    return NextResponse.json({
+                        success: false,
+                        message: `OpenRouter network error: ${netErr.message}`,
+                        latencyMs: Date.now() - startTime,
+                    }, { status: 400 });
+                }
             }
         }
 
