@@ -336,7 +336,6 @@ export default function AiChatWidget() {
                     className="relative size-14 sm:size-15 rounded-full bg-white shadow-[0_10px_35px_rgba(108,48,110,0.28)] border-2 border-white ring-2 ring-[#6C306E]/20 flex items-center justify-center cursor-pointer transition-all duration-200"
                 >
                     <EmmaAvatar size={54} />
-                    <span className="absolute bottom-0.5 right-0.5 size-3.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-black/5" />
                 </motion.div>
             </div>
 
@@ -355,13 +354,11 @@ export default function AiChatWidget() {
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <EmmaAvatar size={38} />
-                                    <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-white" />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-bold text-[16px] text-[#241224] tracking-tight">
                                         Emma AI
                                     </h3>
-                                    <span className="size-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
                                 </div>
                             </div>
 

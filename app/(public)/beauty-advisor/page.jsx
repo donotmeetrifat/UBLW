@@ -290,13 +290,11 @@ export default function BeautyAdvisorPage() {
                 <div className="flex items-center gap-3.5">
                     <div className="relative">
                         <EmmaAvatar size={42} />
-                        <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-white" />
                     </div>
                     <div className="flex items-center gap-2">
                         <h1 className="font-bold text-base sm:text-lg text-[#241224] leading-tight tracking-tight">
                             Emma AI
                         </h1>
-                        <span className="size-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
                     </div>
                 </div>
 
