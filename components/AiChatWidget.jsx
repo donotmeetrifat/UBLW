@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
@@ -290,7 +291,14 @@ export default function AiChatWidget() {
 
     // Quick Add to Bag
     const handleQuickAdd = (product) => {
-        dispatch(addToCart({ id: product.id }));
+        if (!product?.id) return;
+
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add authentic UK products to your shopping bag.');
+            return;
+        }
+
+        dispatch(addToCart({ productId: product.id, id: product.id, quantity: 1 }));
         toast.success(`Added ${product.name} to your bag!`);
         window.dispatchEvent(new Event('cart-bump'));
     };

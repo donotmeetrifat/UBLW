@@ -19,7 +19,7 @@ const LIQUID_MATTE_NOISE = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.
 
 export function LiquidMultimodalInput({
     placeholder = 'Ask Emma AI anything, or drop product photos…',
-    maxHeight = 250,
+    maxHeight = 200,
     accept = 'image/*',
     onSubmit,
     onChange,
@@ -37,7 +37,7 @@ export function LiquidMultimodalInput({
         const ta = taRef.current
         if (!ta) return
         ta.style.height = 'auto'
-        ta.style.height = Math.min(Math.max(ta.scrollHeight, 80), maxHeight) + 'px'
+        ta.style.height = Math.min(Math.max(ta.scrollHeight, 38), maxHeight) + 'px'
     }, [value, maxHeight])
 
     function addFiles(list) {
@@ -65,7 +65,7 @@ export function LiquidMultimodalInput({
         setValue('')
         files.forEach((f) => f.preview && URL.revokeObjectURL(f.preview))
         setFiles([])
-        if (taRef.current) taRef.current.style.height = '80px'
+        if (taRef.current) taRef.current.style.height = '38px'
     }
 
     function handleKey(e) {
@@ -105,7 +105,7 @@ export function LiquidMultimodalInput({
                 {/* Outer Aurora Glow (Drop target) */}
                 <motion.div
                     aria-hidden
-                    className="pointer-events-none absolute -inset-[2px] rounded-[30px] opacity-0 blur-[10px]"
+                    className="pointer-events-none absolute -inset-[2px] rounded-[24px] opacity-0 blur-[8px]"
                     animate={{ opacity: dragOver ? 0.9 : 0 }}
                     transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     style={{
@@ -118,7 +118,7 @@ export function LiquidMultimodalInput({
                 {/* Main Form Container */}
                 <div
                     className={cn(
-                        'group relative isolate flex w-full flex-col gap-2 overflow-hidden rounded-[28px] p-3 transition-all duration-150 ease-in-out',
+                        'group relative isolate flex w-full flex-col gap-1 overflow-hidden rounded-[22px] px-3 py-1.5 sm:px-3.5 sm:py-2 transition-all duration-150 ease-in-out',
                         // Light Mode Styles (Website luxury theme)
                         'border border-black/[0.08] bg-[radial-gradient(ellipse_90%_70%_at_50%_-10%,#ffffff_0%,#FAF6FA_72%)] text-base',
                         'shadow-[0_1px_2px_rgba(108,48,110,.06),0_8px_24px_-12px_rgba(108,48,110,.12)]',
@@ -143,7 +143,7 @@ export function LiquidMultimodalInput({
                     {/* Animated Gradient Thin Inner Edge (1px) */}
                     <div
                         aria-hidden
-                        className="lmi-border pointer-events-none absolute inset-0 z-10 rounded-[28px] opacity-50 transition-opacity duration-500 group-focus-within:opacity-100 group-hover:opacity-100"
+                        className="lmi-border pointer-events-none absolute inset-0 z-10 rounded-[22px] opacity-50 transition-opacity duration-500 group-focus-within:opacity-100 group-hover:opacity-100"
                         style={{
                             padding: '1px',
                             WebkitMask:
@@ -249,8 +249,8 @@ export function LiquidMultimodalInput({
                                 onKeyDown={handleKey}
                                 placeholder={placeholder}
                                 aria-label="Chat input"
-                                className="w-full resize-none bg-transparent px-3 py-1 text-[15px] sm:text-[16px] leading-snug text-[#241224] outline-none placeholder:text-slate-400 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-                                style={{ minHeight: '80px', maxHeight }}
+                                className="w-full resize-none bg-transparent px-2.5 py-0.5 text-xs sm:text-[14px] leading-relaxed text-[#241224] outline-none placeholder:text-slate-400 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                                style={{ minHeight: '38px', maxHeight }}
                             />
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
@@ -257,7 +258,14 @@ export default function BeautyAdvisorPage() {
     };
 
     const handleQuickAdd = (product) => {
-        dispatch(addToCart({ id: product.id }));
+        if (!product?.id) return;
+
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add authentic UK products to your shopping bag.');
+            return;
+        }
+
+        dispatch(addToCart({ productId: product.id, id: product.id, quantity: 1 }));
         toast.success(`Added ${product.name} to your bag!`);
         window.dispatchEvent(new Event('cart-bump'));
     };
@@ -327,8 +335,8 @@ export default function BeautyAdvisorPage() {
             </AnimatePresence>
 
             {/* 2. Full-Page Chat Message Stream (Centered Conversational Column) */}
-            <main ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 no-scrollbar">
-                <div className="max-w-3xl sm:max-w-4xl mx-auto w-full space-y-5">
+            <main ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-5 no-scrollbar">
+                <div className="max-w-2xl sm:max-w-3xl mx-auto w-full space-y-4">
                     {messages.map((m, idx) => {
                         const isUser = m.role === 'user';
                         return (
@@ -447,8 +455,8 @@ export default function BeautyAdvisorPage() {
             </main>
 
             {/* 3. Bottom Prompt Capsule & Suggestions (Seamless transition, border line removed) */}
-            <footer className="shrink-0 bg-transparent px-3 sm:px-6 py-3 z-10">
-                <div className="max-w-3xl sm:max-w-4xl mx-auto w-full space-y-2.5">
+            <footer className="shrink-0 bg-transparent px-3 sm:px-6 py-2 sm:py-3 z-10">
+                <div className="max-w-2xl sm:max-w-3xl mx-auto w-full space-y-2">
                     {/* Suggestions Carousel: Left/Right Arrow Navigation with Smooth Edge Fading */}
                     <AiSuggestionBar
                         suggestions={dynamicSuggestions}
