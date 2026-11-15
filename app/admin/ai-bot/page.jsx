@@ -236,7 +236,7 @@ export default function AdminAiBotPage() {
     }
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
             {/* 1. Header Banner */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFE0EF]">
                 <div>
@@ -306,7 +306,7 @@ export default function AdminAiBotPage() {
             </div>
 
             {/* 3. AI Providers & API Keys (Triple Fallback Architecture) */}
-            <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs space-y-5">
+            <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-5">
                 <div>
                     <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
                         AI Provider API Keys
@@ -325,20 +325,20 @@ export default function AdminAiBotPage() {
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/gemini.png" alt="Google Gemini" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224]">Google Gemini</h4>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Google Gemini</h4>
                                 </div>
                                 {isGeminiConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -415,20 +415,20 @@ export default function AdminAiBotPage() {
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/groq.png" alt="Groq" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224]">Groq Cloud</h4>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Groq Cloud</h4>
                                 </div>
                                 {isGroqConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -505,20 +505,20 @@ export default function AdminAiBotPage() {
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 px-2 rounded-lg bg-white border border-[#EFE0EF] flex items-center justify-center shrink-0 shadow-2xs">
-                                        <img src="/logos/openrouter.png" alt="OpenRouter" className="h-4.5 w-auto max-w-[95px] object-contain" />
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/logos/openrouter-icon.png" alt="OpenRouter" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224]">OpenRouter</h4>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">OpenRouter</h4>
                                 </div>
                                 {isOpenRouterConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -588,30 +588,32 @@ export default function AdminAiBotPage() {
                     </div>
                 </div>
 
-                {/* Primary Engine Segmented Control */}
-                <div className="pt-3 border-t border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Primary Engine Segmented Control (Optimized for Android & Desktop) */}
+                <div className="pt-4 border-t border-[#EFE0EF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <span className="text-xs font-bold text-[#241224]">Primary Provider Engine:</span>
                         <p className="text-[11px] text-slate-500">Emma queries this provider first, then automatically fails over if busy.</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:w-auto">
                         {[
-                            { id: 'gemini', label: 'Google Gemini', icon: '/logos/gemini.png', connected: isGeminiConnected },
-                            { id: 'groq', label: 'Groq Cloud', icon: '/logos/groq.png', connected: isGroqConnected },
-                            { id: 'openrouter', label: 'OpenRouter', icon: '/logos/openrouter.png', connected: isOpenRouterConnected },
+                            { id: 'gemini', label: 'Google Gemini', shortLabel: 'Gemini', icon: '/logos/gemini.png', connected: isGeminiConnected },
+                            { id: 'groq', label: 'Groq Cloud', shortLabel: 'Groq', icon: '/logos/groq.png', connected: isGroqConnected },
+                            { id: 'openrouter', label: 'OpenRouter', shortLabel: 'OpenRouter', icon: '/logos/openrouter-icon.png', connected: isOpenRouterConnected },
                         ].map((p) => (
                             <button
                                 key={p.id}
                                 type="button"
                                 onClick={() => setPreferredProvider(p.id)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                                className={`px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                                     preferredProvider === p.id
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'bg-[#FAF6FA] border border-[#EFE0EF] text-slate-600 hover:bg-slate-100'
                                 }`}
                             >
-                                <span className={`size-1.5 rounded-full ${p.connected ? 'bg-emerald-400' : 'bg-slate-300'}`} />
-                                <span>{p.label}</span>
+                                <img src={p.icon} alt={p.label} className="size-3.5 sm:size-4 object-contain shrink-0" />
+                                <span className={`size-1.5 rounded-full shrink-0 ${p.connected ? 'bg-emerald-400' : 'bg-slate-300'}`} />
+                                <span className="truncate hidden md:inline">{p.label}</span>
+                                <span className="truncate md:hidden">{p.shortLabel}</span>
                             </button>
                         ))}
                     </div>
