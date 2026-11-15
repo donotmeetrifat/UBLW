@@ -16,6 +16,8 @@ const HeroBannerSlider = () => {
     const reduxBanners = useSelector(state => state.product.banners)
     const bannerSettings = useSelector(state => state.product.bannerSettings)
     const [localBanners, setLocalBanners] = useState(null)
+    const [bannerRatio, setBannerRatio] = useState('2135 / 737')
+    const [slideRatios, setSlideRatios] = useState({})
 
     // Storefront Autoplay resolution (true by default unless disabled by admin)
     const [liveAutoplay, setLiveAutoplay] = useState(
@@ -327,6 +329,7 @@ const HeroBannerSlider = () => {
                     {slides.map((slide, index) => {
                         const isActive = activeIndex === index
                         const hasLink = Boolean(slide.link && slide.link.trim())
+                        const currentRatio = slideRatios[slide.id || index] || bannerRatio || '2135 / 737'
 
                         return (
                             <article
@@ -338,18 +341,26 @@ const HeroBannerSlider = () => {
                                 aria-hidden={!isActive}
                                 title={hasLink ? `Click to visit: ${slide.link}` : (slide.title || 'UK Brand Lover')}
                             >
-                                <div className="relative w-full aspect-[16/8] sm:aspect-[21/9] md:aspect-[26/9] min-h-[175px] max-h-[520px]">
+                                <div 
+                                    className="relative w-full aspect-[2135/737]"
+                                    style={{ aspectRatio: currentRatio }}
+                                >
                                     <Image
                                         src={slide.image}
                                         alt={slide.imageAlt || slide.title || 'UK Brand Lover promotional banner'}
                                         fill
                                         draggable={false}
-                                        className={`w-full h-full object-cover transition-transform duration-[6000ms] ease-out pointer-events-none select-none ${
-                                            isActive ? 'scale-[1.02]' : 'scale-100'
-                                        }`}
+                                        className="w-full h-full object-contain pointer-events-none select-none"
                                         priority={index === 0}
-                                        quality={92}
+                                        quality={95}
                                         unoptimized
+                                        onLoad={(e) => {
+                                            if (e?.target?.naturalWidth && e?.target?.naturalHeight) {
+                                                const ratio = `${e.target.naturalWidth} / ${e.target.naturalHeight}`
+                                                setBannerRatio(ratio)
+                                                setSlideRatios(prev => ({ ...prev, [slide.id || index]: ratio }))
+                                            }
+                                        }}
                                     />
 
                                     {/* Campaign Title & Subtitle Overlay */}
@@ -421,7 +432,7 @@ const HeroBannerSlider = () => {
                 {/* Round Small Clickable Slide Indicators (Dots in Glass Capsule) */}
                 {slides.length > 1 && (
                     <div 
-                        className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/25 backdrop-blur-md border border-white/20 shadow-md z-20" 
+                        className="absolute bottom-2 sm:bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/20 shadow-md z-20" 
                         role="tablist" 
                         aria-label="Banner slides"
                         onPointerDown={(e) => e.stopPropagation()}
@@ -442,8 +453,8 @@ const HeroBannerSlider = () => {
                                     }}
                                     className={`transition-all duration-300 cursor-pointer rounded-full ${
                                         isActive
-                                            ? 'w-6 h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)]'
-                                            : 'size-2 bg-white/60 hover:bg-white hover:scale-125'
+                                            ? 'w-5 sm:w-6 h-1.5 sm:h-2 bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)]'
+                                            : 'size-1.5 sm:size-2 bg-white/60 hover:bg-white hover:scale-125'
                                     }`}
                                 />
                             )

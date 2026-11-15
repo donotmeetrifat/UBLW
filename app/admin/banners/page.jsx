@@ -612,14 +612,14 @@ export default function AdminHeroBannersPage() {
                     </div>
                 ) : (
                     <div className="relative overflow-hidden rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] shadow-sm select-none">
-                        <div className="relative w-full aspect-[21/9] sm:aspect-[24/9] md:aspect-[26/9] min-h-[160px] max-h-[460px] overflow-hidden flex items-center justify-center">
+                        <div className="relative w-full aspect-[2135/737] max-h-[460px] overflow-hidden flex items-center justify-center">
                             {activePreviewBanner && activePreviewBanner.image ? (
                                 <>
                                     <Image
                                         src={activePreviewBanner.image}
                                         alt={activePreviewBanner.title || 'Hero Banner'}
                                         fill
-                                        className="object-cover"
+                                        className="object-contain"
                                         unoptimized
                                     />
 
