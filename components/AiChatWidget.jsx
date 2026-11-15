@@ -318,18 +318,26 @@ export default function AiChatWidget() {
 
     return (
         <>
-            {/* 1. Floating Circular Avatar Launcher Button (Exact RIFAT Ai Style) */}
+            {/* 1. Floating Circular Avatar Launcher Button (Exact RIFAT Ai Style with Interactive Mascot) */}
             <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 select-none">
-                <motion.button
+                <motion.div
+                    role="button"
+                    tabIndex={0}
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => setIsOpen(!isOpen)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setIsOpen(!isOpen);
+                        }
+                    }}
                     aria-label="Open Emma AI"
                     className="relative size-14 sm:size-15 rounded-full bg-white shadow-[0_10px_35px_rgba(108,48,110,0.28)] border-2 border-white ring-2 ring-[#6C306E]/20 flex items-center justify-center cursor-pointer transition-all duration-200"
                 >
                     <EmmaAvatar size={54} />
                     <span className="absolute bottom-0.5 right-0.5 size-3.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-black/5" />
-                </motion.button>
+                </motion.div>
             </div>
 
             {/* 2. Floating AI Chat Modal (Exact RIFAT Ai UI Design + Frosted White-Blur Theme) */}
