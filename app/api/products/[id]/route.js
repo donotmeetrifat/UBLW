@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { invalidateProductsCache } from '@/lib/productsCache';
+import { updateProductHomepagePlacement, removeProductFromHomepageSections } from '@/lib/homepageSections';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -187,6 +188,9 @@ export async function PATCH(request, context) {
         const updates = await request.json();
 
         // Sanitize fields before database update
+        const addToNewArrivalsVal = updates.addToNewArrivals;
+        const addToBestSellingVal = updates.addToBestSelling;
+
         const cleanedData = { ...updates };
         delete cleanedData.id;
         delete cleanedData.store;
@@ -202,6 +206,8 @@ export async function PATCH(request, context) {
         delete cleanedData.sizeVolume;
         delete cleanedData.stats;
         delete cleanedData._count;
+        delete cleanedData.addToNewArrivals;
+        delete cleanedData.addToBestSelling;
 
         if (cleanedData.price !== undefined) cleanedData.price = parseFloat(cleanedData.price);
         if (cleanedData.mrp !== undefined) cleanedData.mrp = parseFloat(cleanedData.mrp);
@@ -332,8 +338,20 @@ export async function PATCH(request, context) {
                 whyYouWillLoveIt: (product?.whyYouWillLoveIt || '').trim()
             };
 
+            let updatedSections = null;
+            if (addToNewArrivalsVal !== undefined || addToBestSellingVal !== undefined) {
+                try {
+                    updatedSections = await updateProductHomepagePlacement(id, {
+                        addToNewArrivals: addToNewArrivalsVal !== undefined ? Boolean(addToNewArrivalsVal) : undefined,
+                        addToBestSelling: addToBestSellingVal !== undefined ? Boolean(addToBestSellingVal) : undefined
+                    });
+                } catch (secErr) {
+                    console.error('Error updating product homepage placement on patch:', secErr);
+                }
+            }
+
             invalidateProductsCache();
-            return NextResponse.json({ success: true, product: normalizedProduct }, {
+            return NextResponse.json({ success: true, product: normalizedProduct, sections: updatedSections }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
                 }
@@ -378,6 +396,11 @@ export async function DELETE(request, context) {
 
         if (isDatabaseConfigured()) {
             invalidateProductsCache();
+            try {
+                await removeProductFromHomepageSections(id);
+            } catch (secErr) {
+                console.warn('Note: removing from homepage sections on delete:', secErr.message);
+            }
             const orderItemsCount = await prisma.orderItem.count({ where: { productId: id } });
             if (orderItemsCount > 0) {
                 // Preserve historical order records by soft-deleting

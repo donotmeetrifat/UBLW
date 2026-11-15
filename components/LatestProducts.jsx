@@ -18,38 +18,24 @@ const LatestProducts = () => {
     const displayedProducts = useMemo(() => {
         if (!Array.isArray(products) || products.length === 0) return []
 
-        // If admin curated custom product order in database
-        if (Array.isArray(newArrivalsConfig?.productIds) && newArrivalsConfig.productIds.length > 0) {
-            const curated = []
-            const usedIds = new Set()
-
-            // 1. Strictly place curated products in their assigned priority serial order
-            newArrivalsConfig.productIds.forEach(id => {
-                const found = products.find(p => p && p.id === id)
-                if (found && !usedIds.has(found.id)) {
-                    curated.push(found)
-                    usedIds.add(found.id)
-                }
-            })
-
-            // 2. If fewer items than target count, gracefully pad with newest products
-            if (curated.length < displayQuantity) {
-                const remainder = products
-                    .slice()
-                    .filter(p => p && !usedIds.has(p.id) && p.isActive !== false)
-                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-                curated.push(...remainder.slice(0, displayQuantity - curated.length))
-            }
-
-            return curated.slice(0, displayQuantity)
+        // ONLY show products explicitly selected by admin in Homepage Showcase
+        if (!Array.isArray(newArrivalsConfig?.productIds) || newArrivalsConfig.productIds.length === 0) {
+            return []
         }
 
-        // Default: Sort by newest created
-        return products
-            .slice()
-            .filter(p => p && p.isActive !== false)
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-            .slice(0, displayQuantity)
+        const curated = []
+        const usedIds = new Set()
+
+        // Strictly place only admin-curated products in their assigned priority serial order
+        newArrivalsConfig.productIds.forEach(id => {
+            const found = products.find(p => p && p.id === id && p.isActive !== false)
+            if (found && !usedIds.has(found.id)) {
+                curated.push(found)
+                usedIds.add(found.id)
+            }
+        })
+
+        return curated.slice(0, displayQuantity)
     }, [products, newArrivalsConfig, displayQuantity])
 
     if (newArrivalsConfig?.enabled === false || displayedProducts.length === 0) {

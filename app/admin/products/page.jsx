@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
-import { useDispatch } from "react-redux"
-import { setProduct, upsertProduct, removeProduct } from "@/lib/features/product/productSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { setProduct, upsertProduct, removeProduct, setHomepageSections } from "@/lib/features/product/productSlice"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 import {
@@ -98,6 +98,17 @@ export default function AdminProductsPage() {
     const [modalViewMode, setModalViewMode] = useState('split') // 'split' | 'form' | 'preview'
     const [previewTab, setPreviewTab] = useState('details') // 'details' | 'reviews'
 
+    const reduxSections = useSelector(state => state.product?.homepageSections)
+    const [homepageSections, setHomepageSectionsState] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = JSON.parse(localStorage.getItem('ukbl_cached_homepage_sections') || '{}')
+                if (cached && cached.newArrivals) return cached
+            } catch {}
+        }
+        return null
+    })
+
     // Form data state
     const [formData, setFormData] = useState({
         name: '',
@@ -111,7 +122,9 @@ export default function AdminProductsPage() {
         formulaProfile: '',
         benefits: [''],
         whyYouWillLoveIt: '',
-        sizeVolume: 'Standard'
+        sizeVolume: 'Standard',
+        addToNewArrivals: false,
+        addToBestSelling: false
     })
 
     const [dbCategories, setDbCategories] = useState([])
@@ -120,7 +133,7 @@ export default function AdminProductsPage() {
     const dropzoneDragCounter = useRef(0)
     const fileInputRef = useRef(null)
 
-    // Load live categories from catalog
+    // Load live categories & homepage curated sections from catalog
     useEffect(() => {
         const loadCategories = async () => {
             try {
@@ -141,6 +154,24 @@ export default function AdminProductsPage() {
             }
         }
         loadCategories()
+
+        const loadHomepageSections = async () => {
+            try {
+                const res = await fetch('/api/homepage-sections?_t=' + Date.now(), { cache: 'no-store' })
+                const data = await res.json()
+                if (data.success && data.sections) {
+                    setHomepageSectionsState(data.sections)
+                    dispatch(setHomepageSections(data.sections))
+                }
+            } catch (err) {
+                console.error('Error fetching homepage sections in products page:', err)
+            }
+        }
+        loadHomepageSections()
+
+        const onSectionsUpdated = () => loadHomepageSections()
+        window.addEventListener('homepage-sections-updated', onSectionsUpdated)
+        return () => window.removeEventListener('homepage-sections-updated', onSectionsUpdated)
 
         if (typeof window !== 'undefined') {
             const onCatUpdate = () => loadCategories()
@@ -228,7 +259,9 @@ export default function AdminProductsPage() {
             formulaProfile: '',
             benefits: [''],
             whyYouWillLoveIt: '',
-            sizeVolume: 'Standard'
+            sizeVolume: 'Standard',
+            addToNewArrivals: false,
+            addToBestSelling: false
         })
         setActivePreviewImage(0)
         setModalViewMode('split')
@@ -258,6 +291,10 @@ export default function AdminProductsPage() {
             initialBenefits = ['']
         }
 
+        const curSections = homepageSections || reduxSections
+        const inNewArrivals = (Array.isArray(curSections?.newArrivals?.productIds) && curSections.newArrivals.productIds.includes(prod.id)) || Boolean(prod.isFeatured)
+        const inBestSelling = (Array.isArray(curSections?.bestSelling?.productIds) && curSections.bestSelling.productIds.includes(prod.id)) || Boolean(prod.isBestSeller)
+
         setFormData({
             name: prod.name || '',
             category: prod.category || dbCategories[0] || '',
@@ -270,7 +307,9 @@ export default function AdminProductsPage() {
             formulaProfile: (prod.formulaProfile || prod.description || '').trim(),
             benefits: initialBenefits,
             whyYouWillLoveIt: (prod.whyYouWillLoveIt || '').trim(),
-            sizeVolume: prod.sizeVolume || 'Standard'
+            sizeVolume: prod.sizeVolume || 'Standard',
+            addToNewArrivals: Boolean(inNewArrivals),
+            addToBestSelling: Boolean(inBestSelling)
         })
         setActivePreviewImage(0)
         setModalViewMode('split')
@@ -556,7 +595,9 @@ export default function AdminProductsPage() {
             formulaProfile: formData.formulaProfile.trim(),
             benefits: cleanBenefits,
             whyYouWillLoveIt: formData.whyYouWillLoveIt.trim(),
-            sizeVolume: formData.sizeVolume || 'Standard'
+            sizeVolume: formData.sizeVolume || 'Standard',
+            addToNewArrivals: Boolean(formData.addToNewArrivals),
+            addToBestSelling: Boolean(formData.addToBestSelling)
         }
 
         try {
@@ -572,6 +613,21 @@ export default function AdminProductsPage() {
                     if (data.product) {
                         dispatch(upsertProduct(data.product))
                         setProducts(prev => prev.map(p => p.id === data.product.id ? { ...p, ...data.product } : p))
+                    }
+                    if (data.sections) {
+                        setHomepageSectionsState(data.sections)
+                        dispatch(setHomepageSections(data.sections))
+                        if (typeof window !== 'undefined') {
+                            try {
+                                localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(data.sections))
+                                localStorage.setItem('ukbl_sections_synced', Date.now().toString())
+                                window.dispatchEvent(new CustomEvent('homepage-sections-updated'))
+                                const bcSec = new BroadcastChannel('ukbl_catalog_channel')
+                                bcSec.postMessage({ type: 'homepage-sections-updated', sections: data.sections })
+                                bcSec.close()
+                            } catch {}
+                            broadcastStoreChange('sections', { sections: data.sections })
+                        }
                     }
                     if (typeof window !== 'undefined') {
                         try {
@@ -618,6 +674,21 @@ export default function AdminProductsPage() {
                         dispatch(upsertProduct(data.product))
                         setProducts(prev => [data.product, ...prev])
                         setStats(prev => ({ ...prev, totalProducts: (prev.totalProducts || 0) + 1, inStockCount: (prev.inStockCount || 0) + 1 }))
+                    }
+                    if (data.sections) {
+                        setHomepageSectionsState(data.sections)
+                        dispatch(setHomepageSections(data.sections))
+                        if (typeof window !== 'undefined') {
+                            try {
+                                localStorage.setItem('ukbl_cached_homepage_sections', JSON.stringify(data.sections))
+                                localStorage.setItem('ukbl_sections_synced', Date.now().toString())
+                                window.dispatchEvent(new CustomEvent('homepage-sections-updated'))
+                                const bcSec = new BroadcastChannel('ukbl_catalog_channel')
+                                bcSec.postMessage({ type: 'homepage-sections-updated', sections: data.sections })
+                                bcSec.close()
+                            } catch {}
+                            broadcastStoreChange('sections', { sections: data.sections })
+                        }
                     }
                     if (typeof window !== 'undefined') {
                         try {
@@ -965,9 +1036,23 @@ export default function AdminProductsPage() {
 
                                             {/* Category */}
                                             <td className="px-4 py-3.5">
-                                                <span className="inline-block bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                                                    {prod.category}
-                                                </span>
+                                                <div className="space-y-1">
+                                                    <span className="inline-block bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                                        {prod.category}
+                                                    </span>
+                                                    <div className="flex flex-wrap items-center gap-1">
+                                                        {(homepageSections?.newArrivals?.productIds?.includes(prod.id) || prod.isFeatured) && (
+                                                            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-[#6C306E] border border-purple-200" title="Featured in Homepage New Arrivals">
+                                                                ★ New Arrival
+                                                            </span>
+                                                        )}
+                                                        {(homepageSections?.bestSelling?.productIds?.includes(prod.id) || prod.isBestSeller) && (
+                                                            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200" title="Featured in Homepage Best Selling">
+                                                                👑 Best Seller
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </td>
 
                                             {/* Pricing */}
@@ -1267,6 +1352,67 @@ export default function AdminProductsPage() {
                                             />
                                             <span>Display as Available In Stock on Website</span>
                                         </label>
+                                    </div>
+
+                                    {/* HOMEPAGE SHOWCASE PLACEMENT SELECTION */}
+                                    <div className="pt-3 border-t border-[#EFE0EF]/80 space-y-2.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-xs font-black text-[#241224] uppercase tracking-wider">
+                                                Homepage Showcase Placement
+                                            </label>
+                                            <span className="text-[10px] font-semibold text-[#6C306E] bg-[#FAF6FA] px-2 py-0.5 rounded-full border border-[#EFE0EF]">
+                                                Curated Selection
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 font-normal leading-normal">
+                                            Select whether to display this product in the curated New Arrivals or Best Selling sections on the website homepage.
+                                        </p>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                            {/* Toggle 1: New UK Arrivals */}
+                                            <label className={`relative flex items-start gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                                                formData.addToNewArrivals
+                                                    ? 'bg-[#FAF6FA] border-[#6C306E] ring-1 ring-[#6C306E]/30 shadow-2xs'
+                                                    : 'bg-white border-[#EFE0EF] hover:border-slate-300'
+                                            }`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.addToNewArrivals}
+                                                    onChange={(e) => setFormData({ ...formData, addToNewArrivals: e.target.checked })}
+                                                    className="mt-0.5 size-4 rounded accent-[#6C306E] text-[#6C306E] focus:ring-[#6C306E] cursor-pointer"
+                                                />
+                                                <div className="space-y-0.5">
+                                                    <span className="text-xs font-bold text-[#241224] block">
+                                                        New UK Arrivals
+                                                    </span>
+                                                    <span className="text-[10.5px] text-slate-500 font-normal leading-tight block">
+                                                        Showcase in the New Arrivals grid on the homepage
+                                                    </span>
+                                                </div>
+                                            </label>
+
+                                            {/* Toggle 2: Best Selling Beauty */}
+                                            <label className={`relative flex items-start gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                                                formData.addToBestSelling
+                                                    ? 'bg-[#FAF6FA] border-[#6C306E] ring-1 ring-[#6C306E]/30 shadow-2xs'
+                                                    : 'bg-white border-[#EFE0EF] hover:border-slate-300'
+                                            }`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.addToBestSelling}
+                                                    onChange={(e) => setFormData({ ...formData, addToBestSelling: e.target.checked })}
+                                                    className="mt-0.5 size-4 rounded accent-[#6C306E] text-[#6C306E] focus:ring-[#6C306E] cursor-pointer"
+                                                />
+                                                <div className="space-y-0.5">
+                                                    <span className="text-xs font-bold text-[#241224] block">
+                                                        Best Selling
+                                                    </span>
+                                                    <span className="text-[10.5px] text-slate-500 font-normal leading-tight block">
+                                                        Showcase in the Best Selling grid on the homepage
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 

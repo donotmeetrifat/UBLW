@@ -18,38 +18,24 @@ const BestSelling = () => {
     const displayedProducts = useMemo(() => {
         if (!Array.isArray(products) || products.length === 0) return []
 
-        // If admin curated custom product order in database
-        if (Array.isArray(bestSellingConfig?.productIds) && bestSellingConfig.productIds.length > 0) {
-            const curated = []
-            const usedIds = new Set()
-
-            // 1. Strictly place curated products in their assigned priority serial order
-            bestSellingConfig.productIds.forEach(id => {
-                const found = products.find(p => p && p.id === id)
-                if (found && !usedIds.has(found.id)) {
-                    curated.push(found)
-                    usedIds.add(found.id)
-                }
-            })
-
-            // 2. If fewer items than target count, gracefully pad with top-rated/best-seller products
-            if (curated.length < displayQuantity) {
-                const remainder = products
-                    .slice()
-                    .filter(p => p && !usedIds.has(p.id) && p.isActive !== false)
-                    .sort((a, b) => (b.rating?.length || 0) - (a.rating?.length || 0))
-                curated.push(...remainder.slice(0, displayQuantity - curated.length))
-            }
-
-            return curated.slice(0, displayQuantity)
+        // ONLY show products explicitly selected by admin in Homepage Showcase
+        if (!Array.isArray(bestSellingConfig?.productIds) || bestSellingConfig.productIds.length === 0) {
+            return []
         }
 
-        // Default: Sort by ratings count
-        return products
-            .slice()
-            .filter(p => p && p.isActive !== false)
-            .sort((a, b) => (b.rating?.length || 0) - (a.rating?.length || 0))
-            .slice(0, displayQuantity)
+        const curated = []
+        const usedIds = new Set()
+
+        // Strictly place only admin-curated products in their assigned priority serial order
+        bestSellingConfig.productIds.forEach(id => {
+            const found = products.find(p => p && p.id === id && p.isActive !== false)
+            if (found && !usedIds.has(found.id)) {
+                curated.push(found)
+                usedIds.add(found.id)
+            }
+        })
+
+        return curated.slice(0, displayQuantity)
     }, [products, bestSellingConfig, displayQuantity])
 
     if (bestSellingConfig?.enabled === false || displayedProducts.length === 0) {

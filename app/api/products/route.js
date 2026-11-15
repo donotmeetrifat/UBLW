@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getProductsCache, setProductsCache, invalidateProductsCache } from '@/lib/productsCache';
+import { updateProductHomepagePlacement } from '@/lib/homepageSections';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -284,7 +285,19 @@ export async function POST(request) {
                 whyYouWillLoveIt: cleanWhy
             };
 
-            return NextResponse.json({ success: true, product: normalizedProduct }, {
+            let updatedSections = null;
+            if (product?.id && (body.addToNewArrivals !== undefined || body.addToBestSelling !== undefined)) {
+                try {
+                    updatedSections = await updateProductHomepagePlacement(product.id, {
+                        addToNewArrivals: Boolean(body.addToNewArrivals),
+                        addToBestSelling: Boolean(body.addToBestSelling)
+                    });
+                } catch (secErr) {
+                    console.error('Error placing product on homepage sections:', secErr);
+                }
+            }
+
+            return NextResponse.json({ success: true, product: normalizedProduct, sections: updatedSections }, {
                 status: 201,
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'

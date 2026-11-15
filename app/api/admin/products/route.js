@@ -3,6 +3,7 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { randomUUID } from 'crypto';
 import { invalidateProductsCache } from '@/lib/productsCache';
+import { updateProductHomepagePlacement } from '@/lib/homepageSections';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -354,8 +355,20 @@ export async function POST(request) {
                 whyYouWillLoveIt: (created?.whyYouWillLoveIt || cleanWhyYouWillLoveIt || '').trim()
             };
 
+            let updatedSections = null;
+            if (created?.id && (body.addToNewArrivals !== undefined || body.addToBestSelling !== undefined)) {
+                try {
+                    updatedSections = await updateProductHomepagePlacement(created.id, {
+                        addToNewArrivals: Boolean(body.addToNewArrivals),
+                        addToBestSelling: Boolean(body.addToBestSelling)
+                    });
+                } catch (secErr) {
+                    console.error('Error placing product on homepage sections:', secErr);
+                }
+            }
+
             invalidateProductsCache();
-            return NextResponse.json({ success: true, product: normalizedProduct }, {
+            return NextResponse.json({ success: true, product: normalizedProduct, sections: updatedSections }, {
                 status: 201,
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'

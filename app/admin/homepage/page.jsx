@@ -275,9 +275,9 @@ export default function AdminHomepageSectionsPage() {
         toast.success(`Product prioritized to position #${targetIndex + 1}`)
     }
 
-    // Reset section to default
+    // Clear section products
     const handleResetDefaults = () => {
-        if (confirm(`Reset "${activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}" to default automatic sorting?`)) {
+        if (confirm(`Clear all assigned products from "${activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}"?`)) {
             setSections(prev => ({
                 ...prev,
                 [activeTab]: {
@@ -285,7 +285,7 @@ export default function AdminHomepageSectionsPage() {
                     productIds: []
                 }
             }))
-            toast.success('Section reset to default auto-sorting')
+            toast.success('Section cleared. Click "Save & Publish Showcase" to commit.')
         }
     }
 
@@ -369,7 +369,7 @@ export default function AdminHomepageSectionsPage() {
                         </svg>
                     </Link>
 
-                    {/* Reset Auto */}
+                    {/* Clear Section */}
                     <button
                         onClick={handleResetDefaults}
                         className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer"
@@ -379,7 +379,7 @@ export default function AdminHomepageSectionsPage() {
                             <polyline points="23 4 23 10 17 10"></polyline>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                         </svg>
-                        <span>Reset Auto</span>
+                        <span>Clear Section</span>
                     </button>
 
                     {/* Save & Publish Showcase (Primary Action) */}
@@ -444,11 +444,11 @@ export default function AdminHomepageSectionsPage() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
                             sections.newArrivals.productIds.length > 0
                                 ? 'bg-purple-50 text-plum border-purple-200'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                                : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
                             {sections.newArrivals.productIds.length > 0
                                 ? `${sections.newArrivals.productIds.length} Curated`
-                                : 'Auto Latest'}
+                                : '0 Products (Hidden)'}
                         </span>
                     </div>
                 </div>
@@ -487,11 +487,11 @@ export default function AdminHomepageSectionsPage() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
                             sections.bestSelling.productIds.length > 0
                                 ? 'bg-purple-50 text-plum border-purple-200'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                                : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
                             {sections.bestSelling.productIds.length > 0
                                 ? `${sections.bestSelling.productIds.length} Curated`
-                                : 'Auto Bestsellers'}
+                                : '0 Products (Hidden)'}
                         </span>
                     </div>
                 </div>
@@ -624,34 +624,40 @@ export default function AdminHomepageSectionsPage() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                        {curatedProducts.slice(0, currentSectionConfig.displayLimit).map((p, idx) => (
-                            <div key={p.id || idx} className="bg-white p-3 rounded-xl border border-slate-200/80 text-center space-y-2 shadow-2xs">
-                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-plum text-white">
-                                    Priority #{idx + 1}
-                                </span>
-                                <div className="w-20 h-20 mx-auto relative rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
-                                    {p.images && p.images[0] ? (
-                                        <Image
-                                            src={p.images[0]}
-                                            alt={p.name}
-                                            fill
-                                            className="object-contain p-1"
-                                            unoptimized
-                                        />
-                                    ) : (
-                                        <BagIcon size={20} color="#94A3B8" />
-                                    )}
+                    {curatedProducts.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
+                            No products curated yet. This section is currently hidden from the live storefront.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                            {curatedProducts.slice(0, currentSectionConfig.displayLimit).map((p, idx) => (
+                                <div key={p.id || idx} className="bg-white p-3 rounded-xl border border-slate-200/80 text-center space-y-2 shadow-2xs">
+                                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-plum text-white">
+                                        Priority #{idx + 1}
+                                    </span>
+                                    <div className="w-20 h-20 mx-auto relative rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                        {p.images && p.images[0] ? (
+                                            <Image
+                                                src={p.images[0]}
+                                                alt={p.name}
+                                                fill
+                                                className="object-contain p-1"
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <BagIcon size={20} color="#94A3B8" />
+                                        )}
+                                    </div>
+                                    <h4 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight">
+                                        {p.name}
+                                    </h4>
+                                    <div className="text-xs font-bold text-plum">
+                                        {currency}{Number(p.price || 0).toLocaleString()}
+                                    </div>
                                 </div>
-                                <h4 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight">
-                                    {p.name}
-                                </h4>
-                                <div className="text-xs font-bold text-plum">
-                                    {currency}{Number(p.price || 0).toLocaleString()}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -702,7 +708,7 @@ export default function AdminHomepageSectionsPage() {
                         {/* Empty State Headings */}
                         <h3 className="font-display font-bold text-base text-slate-900 mb-1.5">No Custom Products Assigned Yet</h3>
                         <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed mb-6">
-                            This section is currently using automatic catalog sorting ({activeTab === 'newArrivals' ? 'newest imports first' : 'highest customer reviews first'}). Click below to select specific authentic products and curate their exact display sequence.
+                            This section only displays products you explicitly assign. Products will not appear on the homepage until you add them below or enable them from the Products & Inventory manager.
                         </p>
                         {/* Center Call to Action */}
                         <button
