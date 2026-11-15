@@ -404,13 +404,20 @@ export default function AiChatWidget() {
                         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 no-scrollbar">
                             {messages.map((m, idx) => {
                                 const isUser = m.role === 'user';
+                                const hasValidImage = m.image && m.image !== '[Photo Attachment]' && (m.image.startsWith('data:') || m.image.startsWith('http') || m.image.startsWith('/'));
+
                                 return (
-                                    <div key={m.id || idx}>
+                                    <motion.div
+                                        key={m.id || idx}
+                                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                    >
                                         {isUser ? (
                                             /* User Message: Right-aligned pill */
                                             <div className="flex justify-end">
                                                 <div className="max-w-[85%] space-y-1.5 flex flex-col items-end">
-                                                    {m.image && (
+                                                    {hasValidImage && (
                                                         <div className="max-w-[200px] rounded-2xl overflow-hidden border border-[#EFE0EF] shadow-2xs">
                                                             <img
                                                                 src={m.image}
@@ -501,23 +508,31 @@ export default function AiChatWidget() {
                                                 </div>
                                             </div>
                                         )}
-                                    </div>
+                                    </motion.div>
                                 );
                             })}
 
                             {/* Typing Indicator: Emma Avatar + Clean 3 Dots Only */}
-                            {isSending && (
-                                <div className="flex items-start gap-2.5">
-                                    <EmmaAvatar size={28} className="mt-0.5 shadow-2xs" />
-                                    <div className="bg-white/95 border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-3.5 py-2.5 flex items-center shadow-2xs">
-                                        <div className="flex gap-1.5 items-center">
-                                            <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce" />
-                                            <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.2s]" />
-                                            <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.4s]" />
+                            <AnimatePresence>
+                                {isSending && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.96 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex items-start gap-2.5"
+                                    >
+                                        <EmmaAvatar size={28} className="mt-0.5 shadow-2xs" />
+                                        <div className="bg-white/95 border border-[#EFE0EF] rounded-2xl rounded-tl-xs px-3.5 py-2.5 flex items-center shadow-2xs">
+                                            <div className="flex gap-1.5 items-center">
+                                                <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce" />
+                                                <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.2s]" />
+                                                <span className="size-1.5 rounded-full bg-[#6C306E] animate-bounce [animation-delay:0.4s]" />
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <div ref={messagesEndRef} />
                         </div>

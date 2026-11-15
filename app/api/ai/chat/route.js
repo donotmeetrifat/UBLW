@@ -62,7 +62,7 @@ export async function POST(request) {
                         sessionId: !user ? (sessionId || null) : null,
                         role: 'user',
                         content: message ? message.trim() : 'Sent product image for identification',
-                        image: image ? (image.length > 500 ? '[Photo Attachment]' : image) : null,
+                        image: image || null,
                     },
                 });
 

@@ -28,7 +28,12 @@ export default function AiProductCard({ product, onQuickAdd, onCloseChat }) {
     }
 
     return (
-        <div className="my-2.5 rounded-2xl bg-white border border-[#EFE0EF] hover:border-[#6C306E]/30 shadow-2xs hover:shadow-xs transition-all duration-200 p-2.5 sm:p-3 select-none group/card">
+        <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="my-2.5 rounded-2xl bg-white border border-[#EFE0EF] hover:border-[#6C306E]/30 shadow-2xs hover:shadow-xs transition-all duration-200 p-2.5 sm:p-3 select-none group/card"
+        >
             <div className="flex items-center justify-between gap-3 sm:gap-4">
                 {/* Left: Product Thumbnail + Title & Price */}
                 <Link
@@ -114,6 +119,6 @@ export default function AiProductCard({ product, onQuickAdd, onCloseChat }) {
                     </motion.button>
                 )}
             </div>
-        </div>
+        </motion.div>
     )
 }

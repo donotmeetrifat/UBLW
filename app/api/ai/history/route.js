@@ -34,7 +34,7 @@ export async function GET(request) {
                 role: m.role,
                 content: m.content,
                 products: m.products || [],
-                image: m.image || null,
+                image: (m.image && m.image !== '[Photo Attachment]') ? m.image : null,
                 createdAt: m.createdAt,
             })),
         });
@@ -66,13 +66,13 @@ export async function POST(request) {
 
         if (Array.isArray(guestMessages) && guestMessages.length > 0) {
             const records = guestMessages
-                .filter(m => m && m.content)
+                .filter(m => m && (m.content || m.image))
                 .map(m => ({
                     userId: user.id,
                     role: m.role === 'assistant' ? 'assistant' : 'user',
-                    content: m.content,
+                    content: m.content || (m.image ? 'Product photo attached' : ''),
                     products: m.products || null,
-                    image: m.image || null,
+                    image: (m.image && m.image !== '[Photo Attachment]') ? m.image : null,
                 }));
 
             if (records.length > 0) {
