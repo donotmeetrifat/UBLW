@@ -933,7 +933,7 @@ export default function AdminHeroBannersPage() {
                                             value={formData.title}
                                             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                                             placeholder="e.g. Summer Glow Collection"
-                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-[11px] sm:text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                         />
                                     </div>
 
@@ -947,7 +947,7 @@ export default function AdminHeroBannersPage() {
                                             value={formData.subtitle}
                                             onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
                                             placeholder="e.g. Authentic UK beauty imported directly"
-                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
+                                            className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-[11px] sm:text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E]"
                                         />
                                     </div>
 
@@ -966,7 +966,7 @@ export default function AdminHeroBannersPage() {
                                             value={formData.link}
                                             onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
                                             placeholder="e.g. /shop, /shop?category=Skincare or https://..."
-                                            className="w-full px-3 py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E] focus:bg-white transition"
+                                            className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA]/40 text-[11px] sm:text-xs text-[#241224] focus:outline-hidden focus:border-[#6C306E] focus:bg-white transition"
                                         />
 
                                         <div className="flex flex-wrap items-center gap-1.5 mt-2">

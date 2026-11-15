@@ -290,7 +290,7 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Filter Tabs & Search Bar */}
-            <div className="bg-white border border-[#EFE0EF] p-4 rounded-2xl shadow-2xs space-y-4">
+            <div className="bg-white border border-[#EFE0EF] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs space-y-3 sm:space-y-3.5">
                 {/* Status Segmented Tabs */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                     {STATUSES.map(tab => {
@@ -300,14 +300,14 @@ export default function AdminOrdersPage() {
                             <button
                                 key={tab.key}
                                 onClick={() => setStatusFilter(tab.key)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
                                     active
                                         ? 'bg-[#6C306E] text-white shadow-xs'
                                         : 'bg-[#FAF6FA] hover:bg-[#EFE0EF] text-slate-600'
                                 }`}
                             >
                                 <span>{tab.label}</span>
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                                <span className={`text-[9.5px] sm:text-[10px] px-1.5 py-0.2 rounded-full ${
                                     active ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
                                 }`}>
                                     {count}
@@ -319,15 +319,15 @@ export default function AdminOrdersPage() {
 
                 {/* Search Input */}
                 <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <SearchIcon size={16} />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <SearchIcon size={14} className="sm:size-4" />
                     </div>
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by order number, customer name, phone, or city..."
-                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400"
+                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400"
                     />
                 </div>
             </div>

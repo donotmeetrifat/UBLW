@@ -244,7 +244,7 @@ export default function AdminSettingsPage() {
                                 </label>
                                 <p className="text-[10px] text-slate-400 mb-2">Standard rate for Dhaka City Corporation & Metro</p>
                                 <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">
                                         {currency}
                                     </span>
                                     <input
@@ -253,7 +253,7 @@ export default function AdminSettingsPage() {
                                         value={delivery.insideDhaka}
                                         onChange={(e) => setDelivery({ ...delivery, insideDhaka: Number(e.target.value) })}
                                         disabled={delivery.isFreeDeliveryEnabled}
-                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224] font-bold text-sm disabled:opacity-50"
+                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-7.5 pr-3 py-1.5 sm:py-2 outline-none text-[#241224] font-bold text-[11px] sm:text-xs disabled:opacity-50"
                                         required
                                     />
                                 </div>
@@ -265,7 +265,7 @@ export default function AdminSettingsPage() {
                                 </label>
                                 <p className="text-[10px] text-slate-400 mb-2">Rate for all other 63 districts & sub-districts</p>
                                 <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">
                                         {currency}
                                     </span>
                                     <input
@@ -274,7 +274,7 @@ export default function AdminSettingsPage() {
                                         value={delivery.outsideDhaka}
                                         onChange={(e) => setDelivery({ ...delivery, outsideDhaka: Number(e.target.value) })}
                                         disabled={delivery.isFreeDeliveryEnabled}
-                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2.5 outline-none text-[#241224] font-bold text-sm disabled:opacity-50"
+                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-7.5 pr-3 py-1.5 sm:py-2 outline-none text-[#241224] font-bold text-[11px] sm:text-xs disabled:opacity-50"
                                         required
                                     />
                                 </div>
@@ -290,7 +290,7 @@ export default function AdminSettingsPage() {
                                 Automatically offer free delivery when subtotal reaches this amount. Set to <b>0</b> to disable threshold.
                             </p>
                             <div className="relative max-w-xs">
-                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">
                                     {currency}
                                 </span>
                                 <input
@@ -298,7 +298,7 @@ export default function AdminSettingsPage() {
                                     min="0"
                                     value={delivery.freeDeliveryThreshold}
                                     onChange={(e) => setDelivery({ ...delivery, freeDeliveryThreshold: Number(e.target.value) })}
-                                    className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 py-2 outline-none text-[#241224] font-bold text-sm"
+                                    className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-7.5 pr-3 py-1.5 sm:py-2 outline-none text-[#241224] font-bold text-[11px] sm:text-xs"
                                 />
                             </div>
                         </div>
@@ -352,7 +352,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             bkash: { ...payments.bkash, number: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-mono font-bold text-[#241224]"
                                         placeholder="01959-524393"
                                     />
                                 </div>
@@ -365,7 +365,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             bkash: { ...payments.bkash, type: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         placeholder="Personal / Merchant"
                                     />
                                 </div>
@@ -412,7 +412,7 @@ export default function AdminSettingsPage() {
                                         />
                                         <label
                                             htmlFor="bkash-qr-file"
-                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-pink-300 hover:border-pink-500 text-pink-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                            className="px-3 py-1.5 sm:py-2 rounded-xl bg-white border border-dashed border-pink-300 hover:border-pink-500 text-pink-700 text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                                         >
                                             <UploadIcon size={13} color="currentColor" />
                                             <span>{uploadingQr === 'bkash' ? 'Uploading...' : 'Upload bKash QR'}</span>
@@ -425,7 +425,7 @@ export default function AdminSettingsPage() {
                                                 ...payments,
                                                 bkash: { ...payments.bkash, qrCode: e.target.value }
                                             })}
-                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-pink-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         />
                                     </div>
                                 )}
@@ -468,7 +468,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             nagad: { ...payments.nagad, number: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-mono font-bold text-[#241224]"
                                         placeholder="01959-524393"
                                     />
                                 </div>
@@ -481,7 +481,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             nagad: { ...payments.nagad, type: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         placeholder="Personal / Merchant"
                                     />
                                 </div>
@@ -528,7 +528,7 @@ export default function AdminSettingsPage() {
                                         />
                                         <label
                                             htmlFor="nagad-qr-file"
-                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-orange-300 hover:border-orange-500 text-orange-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                            className="px-3 py-1.5 sm:py-2 rounded-xl bg-white border border-dashed border-orange-300 hover:border-orange-500 text-orange-700 text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                                         >
                                             <UploadIcon size={13} color="currentColor" />
                                             <span>{uploadingQr === 'nagad' ? 'Uploading...' : 'Upload Nagad QR'}</span>
@@ -541,7 +541,7 @@ export default function AdminSettingsPage() {
                                                 ...payments,
                                                 nagad: { ...payments.nagad, qrCode: e.target.value }
                                             })}
-                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-orange-500 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         />
                                     </div>
                                 )}
@@ -584,7 +584,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             rocket: { ...payments.rocket, number: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-mono font-bold text-[#241224]"
                                         placeholder="01959-524393"
                                     />
                                 </div>
@@ -597,7 +597,7 @@ export default function AdminSettingsPage() {
                                             ...payments,
                                             rocket: { ...payments.rocket, type: e.target.value }
                                         })}
-                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         placeholder="Personal / Merchant"
                                     />
                                 </div>
@@ -644,7 +644,7 @@ export default function AdminSettingsPage() {
                                         />
                                         <label
                                             htmlFor="rocket-qr-file"
-                                            className="px-4 py-2 rounded-xl bg-white border border-dashed border-purple-300 hover:border-purple-500 text-purple-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                            className="px-3 py-1.5 sm:py-2 rounded-xl bg-white border border-dashed border-purple-300 hover:border-purple-500 text-purple-700 text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                                         >
                                             <UploadIcon size={13} color="currentColor" />
                                             <span>{uploadingQr === 'rocket' ? 'Uploading...' : 'Upload Rocket QR'}</span>
@@ -657,7 +657,7 @@ export default function AdminSettingsPage() {
                                                 ...payments,
                                                 rocket: { ...payments.rocket, qrCode: e.target.value }
                                             })}
-                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-2 text-xs text-[#241224]"
+                                            className="flex-1 bg-white border border-[#EFE0EF] focus:border-[#8C3494] rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224]"
                                         />
                                     </div>
                                 )}

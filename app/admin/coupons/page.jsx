@@ -567,16 +567,16 @@ export default function AdminCouponsPage() {
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="bg-white border border-[#EFE0EF] rounded-3xl p-4 sm:p-5 shadow-2xs space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="bg-white border border-[#EFE0EF] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xs space-y-3 sm:space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3">
                     <div className="relative flex-1 max-w-md">
-                        <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:size-4 pointer-events-none" />
                         <input
                             type="text"
                             placeholder="Search by coupon code, description, or assigned user email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-full text-xs text-[#241224] outline-none transition"
+                            className="w-full pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl text-[11px] sm:text-xs text-[#241224] outline-none transition"
                         />
                     </div>
 
@@ -851,12 +851,12 @@ export default function AdminCouponsPage() {
                                                             value={formData.code}
                                                             onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                                             required
-                                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2 font-mono font-black text-sm uppercase text-[#241224] outline-none pr-20 transition"
+                                                            className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 sm:py-2 font-mono font-black text-xs uppercase text-[#241224] outline-none pr-20 transition"
                                                         />
                                                         <button
                                                             type="button"
                                                             onClick={generateSuggestedCode}
-                                                            className="absolute right-1.5 top-1.5 bottom-1.5 px-2 bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white border border-[#EFE0EF] text-[10px] font-bold text-[#6C306E] rounded-lg transition flex items-center gap-1 cursor-pointer"
+                                                            className="absolute right-1 top-1 bottom-1 px-2 bg-[#FAF6FA] hover:bg-[#6C306E] hover:text-white border border-[#EFE0EF] text-[10px] font-bold text-[#6C306E] rounded-lg transition flex items-center gap-1 cursor-pointer"
                                                         >
                                                             <SparklesIcon size={10} color="currentColor" />
                                                             <span>Suggest</span>
@@ -873,7 +873,7 @@ export default function AdminCouponsPage() {
                                                         placeholder="e.g. 20% Off Eid Luxury Skincare Offer"
                                                         value={formData.description}
                                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3.5 py-2 text-xs text-[#241224] outline-none transition"
+                                                        className="w-full bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224] outline-none transition"
                                                     />
                                                 </div>
                                             </div>
@@ -929,9 +929,9 @@ export default function AdminCouponsPage() {
                                                             value={formData.discount}
                                                             onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
                                                             required
-                                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-2 font-black text-sm text-[#241224] outline-none transition"
+                                                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 font-black text-xs text-[#241224] outline-none transition"
                                                         />
-                                                        <span className="absolute right-3 top-2.5 font-bold text-xs text-slate-400">
+                                                        <span className="absolute right-3 top-2 font-bold text-xs text-slate-400">
                                                             {formData.discountType === 'PERCENTAGE' ? '%' : currency}
                                                         </span>
                                                     </div>
@@ -948,7 +948,7 @@ export default function AdminCouponsPage() {
                                                         value={formData.maxDiscount}
                                                         onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
                                                         disabled={formData.discountType === 'FIXED'}
-                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-2 text-xs text-[#241224] outline-none disabled:opacity-40 transition"
+                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224] outline-none disabled:opacity-40 transition"
                                                     />
                                                     <span className="text-[9.5px] text-slate-400 mt-0.5 block truncate">
                                                         {formData.discountType === 'PERCENTAGE' ? 'Ceiling limit for big orders' : 'Exact flat deduction'}
@@ -965,7 +965,7 @@ export default function AdminCouponsPage() {
                                                         placeholder="0 for any order"
                                                         value={formData.minOrderAmount}
                                                         onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-2 text-xs text-[#241224] outline-none transition"
+                                                        className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224] outline-none transition"
                                                     />
                                                     <span className="text-[9.5px] text-slate-400 mt-0.5 block truncate">
                                                         0 = Valid on any order value

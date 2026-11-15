@@ -347,16 +347,16 @@ export default function AdminInquiriesPage() {
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="bg-white border border-[#EFE0EF] p-4 rounded-2xl shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5">
+            <div className="bg-white border border-[#EFE0EF] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3.5">
                 {/* Search */}
                 <div className="relative flex-1">
-                    <SearchIcon size={16} color="#94a3b8" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <SearchIcon size={14} color="#94a3b8" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none sm:size-4" />
                     <input
                         type="text"
                         placeholder="Search by customer name, email, phone, subject, or message content..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#241224] focus:border-[#6C306E] focus:bg-white outline-none transition placeholder:text-slate-400"
+                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] rounded-xl pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 text-[11px] sm:text-xs text-[#241224] focus:border-[#6C306E] focus:bg-white outline-none transition placeholder:text-slate-400 font-medium"
                     />
                 </div>
 

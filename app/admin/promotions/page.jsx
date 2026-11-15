@@ -748,7 +748,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.title || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'title', e.target.value)}
                                     placeholder="e.g. Curated UK Beauty."
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -762,7 +762,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.titleHighlight || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'titleHighlight', e.target.value)}
                                     placeholder="e.g. Delivered in Bangladesh."
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -777,7 +777,7 @@ export default function AdminHeroPromotionsPage() {
                                         value={mainCard.priceLabel || ''}
                                         onChange={(e) => handleUpdateCardField('mainCard', 'priceLabel', e.target.value)}
                                         placeholder="e.g. Prices start at"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                        className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                     />
                                 </div>
                                 <div>
@@ -789,7 +789,7 @@ export default function AdminHeroPromotionsPage() {
                                         value={mainCard.priceValue || ''}
                                         onChange={(e) => handleUpdateCardField('mainCard', 'priceValue', e.target.value)}
                                         placeholder="e.g. 1,650"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                        className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                     />
                                 </div>
                             </div>
@@ -805,7 +805,7 @@ export default function AdminHeroPromotionsPage() {
                                 value={mainCard.description || ''}
                                 onChange={(e) => handleUpdateCardField('mainCard', 'description', e.target.value)}
                                 placeholder="e.g. Authentic dermatological skincare, cult cosmetics, and hair perfectors imported directly from the UK."
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                             />
                         </div>
 
@@ -820,7 +820,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'buttonText', e.target.value)}
                                     placeholder="e.g. Explore Collection"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -838,7 +838,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={mainCard.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('mainCard', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop or /shop?category=Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
 
                                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -958,7 +958,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.tag || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'tag', e.target.value)}
                                     placeholder="e.g. TOP SELECTED"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-plum focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -971,7 +971,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.title || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'title', e.target.value)}
                                     placeholder="e.g. Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -984,7 +984,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'buttonText', e.target.value)}
                                     placeholder="e.g. Shop Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -1002,7 +1002,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardTop.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardTop', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop?category=Skincare"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
 
                                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -1122,7 +1122,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.tag || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'tag', e.target.value)}
                                     placeholder="e.g. EXCLUSIVE DEALS"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-slate-700 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -1135,7 +1135,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.title || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'title', e.target.value)}
                                     placeholder="e.g. Cosmetics"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-bold text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -1148,7 +1148,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.buttonText || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'buttonText', e.target.value)}
                                     placeholder="e.g. Shop Makeup"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs font-medium text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
                             </div>
 
@@ -1166,7 +1166,7 @@ export default function AdminHeroPromotionsPage() {
                                     value={sideCardBottom.buttonLink || ''}
                                     onChange={(e) => handleUpdateCardField('sideCardBottom', 'buttonLink', e.target.value)}
                                     placeholder="e.g. /shop?category=Makeup"
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
+                                    className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 transition"
                                 />
 
                                 <div className="flex flex-wrap items-center gap-1.5 mt-2">

@@ -541,7 +541,7 @@ export default function AdminHomepageSectionsPage() {
                         </label>
                         <div className="relative">
                             <input
-                                className="w-full text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
+                                className="w-full text-[11px] sm:text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3 py-1.5 sm:py-2 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
                                 id="sectionHeading"
                                 placeholder="e.g. New UK Arrivals"
                                 type="text"
@@ -558,7 +558,7 @@ export default function AdminHomepageSectionsPage() {
                         </label>
                         <div className="relative">
                             <input
-                                className="w-full text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
+                                className="w-full text-[11px] sm:text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl px-3 py-1.5 sm:py-2 focus:ring-2 focus:ring-plum/20 focus:border-plum transition placeholder-slate-400 focus:outline-hidden"
                                 id="sectionSubtitle"
                                 placeholder="Customer advisory headline or promotional context"
                                 type="text"
@@ -898,15 +898,15 @@ export default function AdminHomepageSectionsPage() {
                         </div>
 
                         {/* Search & Category Filter Bar */}
-                        <div className="p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                        <div className="p-3 sm:p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 shrink-0">
                             <div className="relative flex-1 w-full">
-                                <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:size-4 pointer-events-none" />
                                 <input
                                     type="text"
                                     value={catalogSearch}
                                     onChange={(e) => setCatalogSearch(e.target.value)}
                                     placeholder="Search products by title, UK brand origin, or category..."
-                                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20"
+                                    className="w-full pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[11px] sm:text-xs text-slate-900 focus:outline-hidden focus:border-plum focus:ring-2 focus:ring-plum/20 font-medium"
                                 />
                             </div>
 

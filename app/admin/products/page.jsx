@@ -925,15 +925,15 @@ export default function AdminProductsPage() {
                 <div className="flex flex-col md:flex-row items-center gap-3">
                     {/* Search */}
                     <div className="relative flex-1 w-full">
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                            <SearchIcon size={16} />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <SearchIcon size={14} className="sm:size-4" />
                         </div>
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by title, brand, or category..."
-                            className="w-full bg-[#FAF6FA]/50 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none transition font-medium"
+                            className="w-full bg-[#FAF6FA]/50 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 text-[11px] sm:text-xs outline-none transition font-medium"
                         />
                     </div>
 
@@ -1232,7 +1232,7 @@ export default function AdminProductsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                        <label className="block text-xs font-bold text-[#241224] mb-1">
                                             Product Title <span className="text-red-500">*</span>
                                         </label>
                                         <input
@@ -1241,13 +1241,13 @@ export default function AdminProductsPage() {
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="e.g. CeraVe Foaming Cleanser for Normal to Oily Skin 473ml"
-                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium outline-none transition"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                            <label className="block text-xs font-bold text-[#241224] mb-1">
                                                 Category <span className="text-red-500">*</span>
                                             </label>
                                             {dbCategories.length > 0 ? (
@@ -1266,7 +1266,7 @@ export default function AdminProductsPage() {
                                                         value={formData.category}
                                                         onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                                                         placeholder="Enter category name or create in Categories"
-                                                        className="w-full bg-[#FAF6FA]/60 border border-amber-300 focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                                        className="w-full bg-[#FAF6FA]/60 border border-amber-300 focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium outline-none transition"
                                                     />
                                                     <div className="flex items-center justify-between text-[10px] text-amber-700 px-1">
                                                         <span>No categories in catalog yet.</span>
@@ -1284,7 +1284,7 @@ export default function AdminProductsPage() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                            <label className="block text-xs font-bold text-[#241224] mb-1">
                                                 Brand Origin / Name
                                             </label>
                                             <input
@@ -1292,14 +1292,14 @@ export default function AdminProductsPage() {
                                                 value={formData.brand}
                                                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                                                 placeholder="e.g. The Ordinary, CeraVe"
-                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium outline-none transition"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <div>
-                                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                            <label className="block text-xs font-bold text-[#241224] mb-1">
                                                 Selling Price ({currency}) <span className="text-red-500">*</span>
                                             </label>
                                             <input
@@ -1309,12 +1309,12 @@ export default function AdminProductsPage() {
                                                 value={formData.price}
                                                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                                 placeholder="1850"
-                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-black outline-none transition"
+                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-black outline-none transition"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                            <label className="block text-xs font-bold text-[#241224] mb-1">
                                                 Regular Price / MRP ({currency})
                                             </label>
                                             <input
@@ -1323,12 +1323,12 @@ export default function AdminProductsPage() {
                                                 value={formData.mrp}
                                                 onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
                                                 placeholder="2200"
-                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium outline-none transition"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                            <label className="block text-xs font-bold text-[#241224] mb-1">
                                                 Stock Count
                                             </label>
                                             <input
@@ -1337,7 +1337,7 @@ export default function AdminProductsPage() {
                                                 value={formData.stockCount}
                                                 onChange={(e) => setFormData({ ...formData, stockCount: e.target.value })}
                                                 placeholder="50"
-                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition"
+                                                className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium outline-none transition"
                                             />
                                         </div>
                                     </div>
@@ -1606,7 +1606,7 @@ export default function AdminProductsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                        <label className="block text-xs font-bold text-[#241224] mb-1">
                                             Formulation & Profile (Overview Description)
                                         </label>
                                         <textarea
@@ -1614,7 +1614,7 @@ export default function AdminProductsPage() {
                                             value={formData.formulaProfile}
                                             onChange={(e) => setFormData({ ...formData, formulaProfile: e.target.value })}
                                             placeholder="Detailed description of active ingredients, clinical formulation, and target skin types..."
-                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-3 text-xs outline-none transition leading-relaxed font-normal"
+                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-2.5 text-[11px] sm:text-xs outline-none transition leading-relaxed font-normal"
                                         />
                                     </div>
 
@@ -1643,12 +1643,12 @@ export default function AdminProductsPage() {
                                                     value={benefit}
                                                     onChange={(e) => handleBenefitChange(bIdx, e.target.value)}
                                                     placeholder={`Proven benefit #${bIdx + 1}`}
-                                                    className="flex-1 bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-2 text-xs outline-none"
+                                                    className="flex-1 bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs outline-none font-medium"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => removeBenefitField(bIdx)}
-                                                    className="p-1.5 text-slate-400 hover:text-red-500 transition"
+                                                    className="p-1.5 text-slate-400 hover:text-red-500 transition cursor-pointer"
                                                 >
                                                     <CloseIcon size={12} />
                                                 </button>
@@ -1658,7 +1658,7 @@ export default function AdminProductsPage() {
 
                                     {/* Why You'll Love It */}
                                     <div>
-                                        <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                                        <label className="block text-xs font-bold text-[#241224] mb-1">
                                             Why You'll Love It (Conversion Copy)
                                         </label>
                                         <textarea
@@ -1666,7 +1666,7 @@ export default function AdminProductsPage() {
                                             value={formData.whyYouWillLoveIt}
                                             onChange={(e) => setFormData({ ...formData, whyYouWillLoveIt: e.target.value })}
                                             placeholder="Explain why this authentic UK product delivers unparalleled results..."
-                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-3 text-xs outline-none transition leading-relaxed font-normal"
+                                            className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-2.5 text-[11px] sm:text-xs outline-none transition leading-relaxed font-normal"
                                         />
                                     </div>
                                 </div>

@@ -135,17 +135,17 @@ export default function AdminCustomersPage() {
             </div>
 
             {/* Search Filter */}
-            <div className="bg-white border border-[#EFE0EF] p-4 rounded-2xl shadow-2xs">
+            <div className="bg-white border border-[#EFE0EF] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
                 <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <SearchIcon size={16} />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <SearchIcon size={14} className="sm:size-4" />
                     </div>
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search customer by name, email address, or phone number..."
-                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400"
+                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400"
                     />
                 </div>
             </div>

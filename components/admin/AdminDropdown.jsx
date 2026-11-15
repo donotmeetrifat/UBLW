@@ -64,7 +64,7 @@ export default function AdminDropdown({
                     e.stopPropagation();
                     setIsOpen(!isOpen);
                 }}
-                className={`w-full flex items-center justify-between gap-2 bg-[#FAF6FA]/70 hover:bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 focus:border-[#6C306E] rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition cursor-pointer select-none text-left shadow-2xs outline-none ${buttonClassName}`}
+                className={`w-full flex items-center justify-between gap-2 bg-[#FAF6FA]/70 hover:bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 focus:border-[#6C306E] rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-slate-700 transition cursor-pointer select-none text-left shadow-2xs outline-none ${buttonClassName}`}
             >
                 <div className="flex items-center gap-2 min-w-0">
                     {selectedOption?.dot && (
