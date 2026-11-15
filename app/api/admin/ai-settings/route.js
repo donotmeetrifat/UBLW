@@ -100,16 +100,16 @@ export async function POST(request) {
 
             const startTime = Date.now();
 
-            // 1. Google Gemini Dynamic Model Discovery & Verification
+            // 1. Google Gemini Dynamic Discovery & Multi-Candidate Ping
             if (provider === 'gemini') {
                 try {
-                    // Call Google's ListModels first to dynamically discover supported models for this exact key
+                    // Check API key validity via Google's ModelService
                     const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${keyToTest}`;
                     const listRes = await fetch(listUrl);
 
                     if (!listRes.ok) {
                         const errData = await listRes.json().catch(() => ({}));
-                        const errMsg = errData?.error?.message || `Google API key verification failed (${listRes.status})`;
+                        const errMsg = errData?.error?.message || `Google API key verification failed (${listRes.status}). Please check your key at aistudio.google.com.`;
                         return NextResponse.json({
                             success: false,
                             message: errMsg,
@@ -118,50 +118,64 @@ export async function POST(request) {
                     }
 
                     const listData = await listRes.json();
-                    const supportedModels = (listData.models || [])
+                    const allSupported = (listData.models || [])
                         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-                        .map(m => m.name.replace(/^models\//, ''));
+                        .map(m => m.name.replace(/^models\//, ''))
+                        .filter(n => !n.includes('2.5') && !n.includes('8b')); // Exclude deprecated 2.5 or discontinued 8b
 
-                    if (supportedModels.length === 0) {
-                        return NextResponse.json({
-                            success: false,
-                            message: 'API key is valid, but no generateContent models are accessible.',
-                            latencyMs: Date.now() - startTime,
-                        }, { status: 400 });
+                    // Prioritized stable models queue
+                    const priorityCandidates = [
+                        'gemini-1.5-flash',
+                        'gemini-1.5-flash-latest',
+                        'gemini-2.0-flash',
+                        'gemini-2.0-flash-exp',
+                        'gemini-1.5-pro',
+                        'gemini-pro',
+                        ...allSupported,
+                    ];
+
+                    const candidateQueue = [...new Set(priorityCandidates)].filter(m => allSupported.length === 0 || allSupported.includes(m));
+                    const modelsToTry = candidateQueue.length > 0 ? candidateQueue : ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+
+                    let workingModel = null;
+                    let lastErrMsg = null;
+
+                    for (const model of modelsToTry) {
+                        try {
+                            const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToTest}`;
+                            const pingRes = await fetch(pingUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: 'Respond with "VERIFIED"' }] }],
+                                }),
+                            });
+
+                            if (pingRes.ok) {
+                                workingModel = model;
+                                break;
+                            } else {
+                                const pingErr = await pingRes.json().catch(() => ({}));
+                                lastErrMsg = pingErr?.error?.message || `Model ${model} returned status ${pingRes.status}`;
+                            }
+                        } catch (pingErr) {
+                            lastErrMsg = pingErr.message;
+                        }
                     }
-
-                    // Choose best model supported by this key
-                    const chosenModel =
-                        supportedModels.find(n => n.includes('2.0-flash')) ||
-                        supportedModels.find(n => n.includes('1.5-flash') && !n.includes('8b')) ||
-                        supportedModels.find(n => n.includes('1.5-flash')) ||
-                        supportedModels.find(n => n.includes('1.5-pro')) ||
-                        supportedModels[0];
-
-                    // Send verified test ping
-                    const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${keyToTest}`;
-                    const pingRes = await fetch(pingUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: 'Respond with "VERIFIED"' }] }],
-                        }),
-                    });
 
                     const totalLatency = Date.now() - startTime;
 
-                    if (pingRes.ok) {
+                    if (workingModel) {
                         return NextResponse.json({
                             success: true,
-                            message: `Google Gemini verified successfully using ${chosenModel}! Latency: ${totalLatency}ms`,
-                            model: chosenModel,
+                            message: `Google Gemini (${workingModel}) connected successfully! Latency: ${totalLatency}ms`,
+                            model: workingModel,
                             latencyMs: totalLatency,
                         });
                     } else {
-                        const pingErr = await pingRes.json().catch(() => ({}));
                         return NextResponse.json({
                             success: false,
-                            message: pingErr?.error?.message || `Gemini test ping failed on ${chosenModel}`,
+                            message: lastErrMsg || 'No working Gemini model could generate content with this key.',
                             latencyMs: totalLatency,
                         }, { status: 400 });
                     }
@@ -185,7 +199,7 @@ export async function POST(request) {
 
                     if (!listRes.ok) {
                         const errData = await listRes.json().catch(() => ({}));
-                        const errMsg = errData?.error?.message || `Groq API key verification failed (${listRes.status})`;
+                        const errMsg = errData?.error?.message || `Groq API key verification failed (${listRes.status}). Please check your key at console.groq.com.`;
                         return NextResponse.json({
                             success: false,
                             message: errMsg,
