@@ -25,12 +25,11 @@ export default function BeautyAdvisorPage() {
     const dispatch = useDispatch();
     const [currentUser, setCurrentUser] = useState(null);
     const [messages, setMessages] = useState([DEFAULT_WELCOME]);
-    const [selectedModel, setSelectedModel] = useState('pro');
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState('');
     const [isClearConfirming, setIsClearConfirming] = useState(false);
 
-    const messagesEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
 
     // Compute dynamic contextual suggestions from the last user message
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
@@ -112,9 +111,14 @@ export default function BeautyAdvisorPage() {
         }
     }, [messages, currentUser]);
 
-    // Scroll to bottom
+    // Scroll to bottom purely inside the chat container (never scrolls window)
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: 'smooth',
+            });
+        }
     };
 
     useEffect(() => {
@@ -159,7 +163,7 @@ export default function BeautyAdvisorPage() {
     };
 
     // Submit handler from LiquidMultimodalInput
-    const handleLiquidSubmit = async (value, files, model) => {
+    const handleLiquidSubmit = async (value, files) => {
         let photo = null;
         if (files && files.length > 0) {
             const imageFile = files.find(f => f.type.startsWith('image/'));
@@ -167,14 +171,14 @@ export default function BeautyAdvisorPage() {
                 photo = await compressFileToBase64(imageFile);
             }
         }
-        handleSendMessage(value, photo, model);
+        handleSendMessage(value, photo);
     };
 
     // Send Message
-    const handleSendMessage = async (textToSend = null, photoToSend = null, modelToUse = null) => {
+    const handleSendMessage = async (textToSend = null, photoToSend = null, modelToUse = 'pro') => {
         const text = (textToSend !== null ? textToSend : '').trim();
         const photo = photoToSend !== null ? photoToSend : null;
-        const model = modelToUse || selectedModel || 'pro';
+        const model = modelToUse || 'pro';
 
         if (!text && !photo) return;
         if (isSending) return;
@@ -259,7 +263,7 @@ export default function BeautyAdvisorPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-64px)] w-full flex flex-col bg-gradient-to-b from-[#FAF6FA]/60 via-white to-[#FAF6FA]/80 overflow-hidden font-sans select-none">
+        <div className="h-full w-full flex flex-col bg-gradient-to-b from-[#FAF6FA]/60 via-white to-[#FAF6FA]/80 overflow-hidden font-sans select-none">
             {/* 1. Clean Top Header Bar (Exact RIFAT Ai Style, Full Browser Width) */}
             <header className="px-4 sm:px-8 py-3.5 bg-white/80 backdrop-blur-xl border-b border-[#EFE0EF]/80 flex items-center justify-between shrink-0 shadow-2xs z-10">
                 <div className="flex items-center gap-3.5">
@@ -323,7 +327,7 @@ export default function BeautyAdvisorPage() {
             </AnimatePresence>
 
             {/* 2. Full-Page Chat Message Stream (Centered Conversational Column) */}
-            <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 no-scrollbar">
+            <main ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 no-scrollbar">
                 <div className="max-w-3xl sm:max-w-4xl mx-auto w-full space-y-5">
                     {messages.map((m, idx) => {
                         const isUser = m.role === 'user';
@@ -439,18 +443,16 @@ export default function BeautyAdvisorPage() {
                             </div>
                         </div>
                     )}
-
-                    <div ref={messagesEndRef} />
                 </div>
             </main>
 
-            {/* 3. Sticky Bottom Area: Suggestions Carousel + Liquid Multimodal Input */}
-            <footer className="shrink-0 bg-white/70 backdrop-blur-xl border-t border-[#EFE0EF]/80 px-3 sm:px-6 py-3 shadow-[0_-4px_20px_rgba(58,12,56,0.03)] z-10">
+            {/* 3. Bottom Prompt Capsule & Suggestions (Seamless transition, border line removed) */}
+            <footer className="shrink-0 bg-transparent px-3 sm:px-6 py-3 z-10">
                 <div className="max-w-3xl sm:max-w-4xl mx-auto w-full space-y-2.5">
                     {/* Suggestions Carousel: Left/Right Arrow Navigation with Smooth Edge Fading */}
                     <AiSuggestionBar
                         suggestions={dynamicSuggestions}
-                        onSelect={(query) => handleSendMessage(query, null, selectedModel)}
+                        onSelect={(query) => handleSendMessage(query, null)}
                         disabled={isSending}
                     />
 
@@ -460,8 +462,6 @@ export default function BeautyAdvisorPage() {
                             placeholder="Ask Emma AI anything, or drop product photos…"
                             onSubmit={handleLiquidSubmit}
                             disabled={isSending}
-                            defaultModel={selectedModel}
-                            onModelChange={setSelectedModel}
                             className="w-full max-w-none"
                         />
                     </div>

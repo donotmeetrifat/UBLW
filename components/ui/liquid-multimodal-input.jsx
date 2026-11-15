@@ -1,18 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-    IconPaperclip,
     IconPhoto,
     IconArrowUp,
     IconX,
-    IconRocket,
-    IconBulb,
-    IconSparkles,
-    IconCheck,
-    IconChevronDown,
     IconFileDescription,
 } from '@tabler/icons-react'
 import { clsx } from 'clsx'
@@ -27,19 +20,15 @@ const LIQUID_MATTE_NOISE = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.
 export function LiquidMultimodalInput({
     placeholder = 'Ask Emma AI anything, or drop product photos…',
     maxHeight = 250,
-    accept = 'image/*,application/pdf,text/*',
-    defaultModel = 'pro',
+    accept = 'image/*',
     onSubmit,
     onChange,
-    onModelChange,
-    hideModel = false,
     className,
     disabled = false,
 }) {
     const [value, setValue] = React.useState('')
     const [files, setFiles] = React.useState([])
     const [dragOver, setDragOver] = React.useState(false)
-    const [model, setModel] = React.useState(defaultModel)
     const taRef = React.useRef(null)
     const fileInputRef = React.useRef(null)
     const dragCounter = React.useRef(0)
@@ -72,7 +61,7 @@ export function LiquidMultimodalInput({
     function submit() {
         if (disabled) return
         if (!value.trim() && files.length === 0) return
-        onSubmit?.(value, files.map((f) => f.file), model)
+        onSubmit?.(value, files.map((f) => f.file))
         setValue('')
         files.forEach((f) => f.preview && URL.revokeObjectURL(f.preview))
         setFiles([])
@@ -267,20 +256,14 @@ export function LiquidMultimodalInput({
                     </div>
 
                     {/* Toolbar Container */}
-                    <div className="relative z-20 flex flex-wrap items-center gap-1 mt-auto w-full px-1">
-                        <div className="flex items-center gap-1">
+                    <div className="relative z-20 flex items-center justify-between mt-auto w-full px-1">
+                        {/* Only Image Upload Button (Upload/Paperclip button removed as requested) */}
+                        <div className="flex items-center">
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                aria-label="Attach files"
-                                className="grid h-8 w-8 place-items-center rounded-full text-slate-500 transition-colors hover:bg-black/5 hover:text-[#6C306E] cursor-pointer"
-                            >
-                                <IconPaperclip size={18} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                aria-label="Attach images"
+                                aria-label="Attach product photo"
+                                title="Attach product bottle photo"
                                 className="grid h-8 w-8 place-items-center rounded-full text-slate-500 transition-colors hover:bg-black/5 hover:text-[#6C306E] cursor-pointer"
                             >
                                 <IconPhoto size={18} />
@@ -288,7 +271,6 @@ export function LiquidMultimodalInput({
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                multiple
                                 accept={accept}
                                 hidden
                                 onChange={(e) => {
@@ -298,17 +280,8 @@ export function LiquidMultimodalInput({
                             />
                         </div>
 
-                        <div className="ml-auto flex items-center gap-2">
-                            {!hideModel && (
-                                <ModelSelector
-                                    value={model}
-                                    onChange={(m) => {
-                                        setModel(m)
-                                        onModelChange?.(m)
-                                    }}
-                                />
-                            )}
-
+                        {/* Send Action (Pro model dropdown removed as requested) */}
+                        <div className="flex items-center">
                             <motion.button
                                 type="button"
                                 onClick={submit}
@@ -317,7 +290,7 @@ export function LiquidMultimodalInput({
                                 whileTap={{ scale: 0.92 }}
                                 transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                                 className={cn(
-                                    'grid h-8 w-8 place-items-center rounded-full transition-all ml-1 shrink-0 cursor-pointer',
+                                    'grid h-8 w-8 place-items-center rounded-full transition-all shrink-0 cursor-pointer',
                                     'bg-[#6C306E] text-white shadow-[0_2px_8px_-2px_rgba(108,48,110,0.4)]',
                                     'hover:bg-[#562258] hover:shadow-[0_4px_12px_-2px_rgba(108,48,110,0.6)]',
                                     'disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed'
@@ -341,300 +314,14 @@ export function LiquidMultimodalInput({
                                 style={{ willChange: 'opacity' }}
                             >
                                 <div className="flex items-center gap-2 rounded-full border border-[#6C306E]/30 bg-white px-5 py-2.5 text-sm font-semibold text-[#6C306E] shadow-xl">
-                                    <IconPaperclip size={16} />
-                                    Drop files here
+                                    <IconPhoto size={16} />
+                                    Drop product photo here
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
-        </div>
-    )
-}
-
-/* ───────────────────────── Model selector ───────────────────────── */
-
-const MODELS = [
-    {
-        id: 'fast',
-        label: 'Fast',
-        blurb: 'Instant stock & pricing inquiries',
-        icon: IconRocket,
-    },
-    {
-        id: 'thinking',
-        label: 'Thinking',
-        blurb: 'Step-by-step skincare routine reasoning',
-        icon: IconBulb,
-    },
-    {
-        id: 'pro',
-        label: 'Pro',
-        blurb: 'Full multimodal bottle vision + deep search',
-        icon: IconSparkles,
-    },
-]
-
-function ModelSelector({ value, onChange }) {
-    const [open, setOpen] = React.useState(false)
-    const [hoverId, setHoverId] = React.useState(null)
-    const [menuPosition, setMenuPosition] = React.useState(null)
-    const wrapRef = React.useRef(null)
-    const buttonRef = React.useRef(null)
-    const menuRef = React.useRef(null)
-    const listboxId = React.useId()
-    const current = MODELS.find((m) => m.id === value) ?? MODELS[0]
-    const CurrentIcon = current.icon
-
-    const updateMenuPosition = React.useCallback(() => {
-        const button = buttonRef.current
-        if (!button || typeof window === 'undefined') return
-
-        const rect = button.getBoundingClientRect()
-        const viewportPadding = 12
-        const scrollX = window.scrollX
-        const scrollY = window.scrollY
-        const menuWidth = Math.min(280, window.innerWidth - viewportPadding * 2)
-        const spaceBelow = window.innerHeight - rect.bottom - viewportPadding - 10
-        const maxHeight = Math.max(132, spaceBelow)
-
-        const left =
-            scrollX +
-            Math.max(
-                viewportPadding,
-                Math.min(
-                    rect.right - menuWidth,
-                    window.innerWidth - menuWidth - viewportPadding
-                )
-            )
-        const top = scrollY + rect.bottom + 10
-
-        setMenuPosition({
-            top,
-            left,
-            width: menuWidth,
-            maxHeight,
-            placement: 'bottom',
-        })
-    }, [])
-
-    React.useEffect(() => {
-        if (!open) {
-            setMenuPosition(null)
-            setHoverId(null)
-            return
-        }
-
-        updateMenuPosition()
-
-        function onDoc(e) {
-            const target = e.target
-            if (
-                wrapRef.current?.contains(target) ||
-                menuRef.current?.contains(target)
-            ) {
-                return
-            }
-            setOpen(false)
-        }
-        function onKey(e) {
-            if (e.key === 'Escape') setOpen(false)
-        }
-        function onViewportChange() {
-            updateMenuPosition()
-        }
-
-        document.addEventListener('mousedown', onDoc)
-        document.addEventListener('keydown', onKey)
-        window.addEventListener('resize', onViewportChange)
-        window.addEventListener('scroll', onViewportChange, true)
-
-        return () => {
-            document.removeEventListener('mousedown', onDoc)
-            document.removeEventListener('keydown', onKey)
-            window.removeEventListener('resize', onViewportChange)
-            window.removeEventListener('scroll', onViewportChange, true)
-        }
-    }, [open, updateMenuPosition])
-
-    React.useLayoutEffect(() => {
-        if (!open) return
-        updateMenuPosition()
-    }, [open, updateMenuPosition])
-
-    const menu =
-        open && menuPosition && typeof document !== 'undefined'
-            ? createPortal(
-                  <AnimatePresence>
-                      <motion.div
-                          key={listboxId}
-                          ref={menuRef}
-                          role="listbox"
-                          id={listboxId}
-                          initial={{
-                              opacity: 0,
-                              y: menuPosition.placement === 'bottom' ? -8 : 8,
-                              scale: 0.92,
-                              filter: 'blur(8px)',
-                          }}
-                          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                          exit={{
-                              opacity: 0,
-                              y: menuPosition.placement === 'bottom' ? -8 : 8,
-                              scale: 0.96,
-                              filter: 'blur(6px)',
-                          }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                          className={cn(
-                              'absolute isolate z-[140] overflow-hidden rounded-2xl border border-black/[0.08] p-1.5',
-                              'bg-[radial-gradient(ellipse_90%_70%_at_50%_-10%,#ffffff_0%,#FAF6FA_72%)]',
-                              'shadow-[0_1px_2px_rgba(108,48,110,.06),0_24px_60px_-18px_rgba(108,48,110,.22)]'
-                          )}
-                          style={{
-                              top: menuPosition.top,
-                              left: menuPosition.left,
-                              width: menuPosition.width,
-                              maxHeight: menuPosition.maxHeight,
-                              transformOrigin: 'top right',
-                              willChange: 'transform, opacity, filter',
-                          }}
-                      >
-                          <div
-                              aria-hidden
-                              className="pointer-events-none absolute inset-0 opacity-[0.04] mix-blend-overlay"
-                              style={{
-                                  backgroundImage: LIQUID_MATTE_NOISE,
-                                  backgroundSize: '240px 240px',
-                              }}
-                          />
-                          <div
-                              aria-hidden
-                              className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(108,48,110,0.035)_0%,transparent_30%,transparent_72%,rgba(108,48,110,0.055)_100%)]"
-                          />
-                          <LayoutGroup id="liquid-model-menu">
-                              <div
-                                  className="relative z-10 max-h-[inherit] overflow-y-auto overscroll-contain"
-                                  onMouseLeave={() => setHoverId(null)}
-                              >
-                                  {MODELS.map((m) => {
-                                      const Icon = m.icon
-                                      const selected = m.id === value
-                                      const highlighted = hoverId === m.id || (!hoverId && selected)
-                                      return (
-                                          <button
-                                              key={m.id}
-                                              role="option"
-                                              aria-selected={selected}
-                                              onMouseEnter={() => setHoverId(m.id)}
-                                              onFocus={() => setHoverId(m.id)}
-                                              onClick={() => {
-                                                  onChange(m.id)
-                                                  setOpen(false)
-                                              }}
-                                              className={cn(
-                                                  'group/opt relative flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left outline-none cursor-pointer',
-                                                  'transition-colors',
-                                                  highlighted ? 'text-[#241224]' : 'text-slate-700'
-                                              )}
-                                          >
-                                              {highlighted && (
-                                                  <motion.span
-                                                      layoutId="liquid-model-menu-highlight"
-                                                      className="absolute inset-0 rounded-xl bg-white/80 ring-1 ring-[#6C306E]/10 shadow-2xs"
-                                                      transition={{
-                                                          type: 'spring',
-                                                          stiffness: 400,
-                                                          damping: 32,
-                                                          mass: 0.6,
-                                                      }}
-                                                      style={{ willChange: 'transform' }}
-                                                      aria-hidden
-                                                  />
-                                              )}
-
-                                              <span
-                                                  className={cn(
-                                                      'relative z-10 mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors',
-                                                      selected
-                                                          ? 'bg-[#6C306E] text-white'
-                                                          : 'bg-[#FAF6FA] text-slate-500',
-                                                      highlighted && 'bg-[#6C306E]/10 text-[#6C306E]'
-                                                  )}
-                                              >
-                                                  <Icon size={15} />
-                                              </span>
-                                              <span className="relative z-10 min-w-0 flex-1">
-                                                  <span className="flex items-center gap-1.5">
-                                                      <span className="text-[13px] font-semibold leading-tight tracking-tight text-[#241224]">
-                                                          {m.label}
-                                                      </span>
-                                                      <AnimatePresence>
-                                                          {selected && (
-                                                              <motion.span
-                                                                  key="check"
-                                                                  initial={{ scale: 0, opacity: 0 }}
-                                                                  animate={{ scale: 1, opacity: 1 }}
-                                                                  exit={{ scale: 0, opacity: 0 }}
-                                                                  transition={{
-                                                                      type: 'spring',
-                                                                      stiffness: 500,
-                                                                      damping: 28,
-                                                                  }}
-                                                                  className="text-[#6C306E]"
-                                                                  style={{ willChange: 'transform' }}
-                                                              >
-                                                                  <IconCheck size={13} stroke={3} />
-                                                              </motion.span>
-                                                          )}
-                                                      </AnimatePresence>
-                                                  </span>
-                                                  <span className="mt-0.5 block text-[11.5px] leading-snug text-slate-500 font-normal">
-                                                      {m.blurb}
-                                                  </span>
-                                              </span>
-                                          </button>
-                                      )
-                                  })}
-                              </div>
-                          </LayoutGroup>
-                      </motion.div>
-                  </AnimatePresence>,
-                  document.body
-              )
-            : null
-
-    return (
-        <div ref={wrapRef} className="relative">
-            <button
-                ref={buttonRef}
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={open}
-                aria-controls={open ? listboxId : undefined}
-                aria-label={`Model: ${current.label}`}
-                onClick={() => setOpen((v) => !v)}
-                className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium transition-all duration-200 cursor-pointer',
-                    'bg-transparent text-slate-600 hover:text-[#6C306E] hover:bg-[#6C306E]/10',
-                    open && 'bg-[#6C306E]/10 text-[#6C306E]'
-                )}
-            >
-                <span className="text-inherit">
-                    <CurrentIcon size={16} />
-                </span>
-                <span>{current.label}</span>
-                <motion.span
-                    aria-hidden
-                    animate={{ rotate: open ? 180 : 0 }}
-                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                    className="inline-flex text-inherit opacity-70"
-                    style={{ willChange: 'transform' }}
-                >
-                    <IconChevronDown size={14} />
-                </motion.span>
-            </button>
-            {menu}
         </div>
     )
 }
