@@ -18,7 +18,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { message, image, sessionId, history = [] } = body;
+        const { message, image, sessionId, model, history = [] } = body;
         messageText = message || '';
 
         if ((!message || !message.trim()) && !image) {
@@ -49,6 +49,7 @@ export async function POST(request) {
             messages: conversationHistory,
             image: image || null,
             user,
+            modelPreference: model || 'pro',
         });
 
         // Persist to PostgreSQL if database is active

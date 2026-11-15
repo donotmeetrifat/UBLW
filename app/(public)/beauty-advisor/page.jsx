@@ -10,12 +10,8 @@ import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
-import {
-    CameraIcon,
-    SendIcon,
-    TrashIcon,
-    CloseIcon,
-} from '@/components/icons'
+import { LiquidMultimodalInput } from '@/components/ui/liquid-multimodal-input'
+import { TrashIcon } from '@/components/icons'
 
 const DEFAULT_WELCOME = {
     id: 'full-welcome',
@@ -29,14 +25,12 @@ export default function BeautyAdvisorPage() {
     const dispatch = useDispatch();
     const [currentUser, setCurrentUser] = useState(null);
     const [messages, setMessages] = useState([DEFAULT_WELCOME]);
-    const [inputText, setInputText] = useState('');
-    const [attachedImage, setAttachedImage] = useState(null);
+    const [selectedModel, setSelectedModel] = useState('pro');
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState('');
     const [isClearConfirming, setIsClearConfirming] = useState(false);
 
     const messagesEndRef = useRef(null);
-    const fileInputRef = useRef(null);
 
     // Compute dynamic contextual suggestions from the last user message
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
@@ -127,51 +121,60 @@ export default function BeautyAdvisorPage() {
         scrollToBottom();
     }, [messages]);
 
-    // Image Upload & Canvas Compression (<800px)
-    const handleImageSelect = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please select an image file (JPG, PNG, WebP).');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new window.Image();
-            img.onload = () => {
-                const maxDim = 800;
-                let { width, height } = img;
-                if (width > maxDim || height > maxDim) {
-                    if (width > height) {
-                        height = Math.round((height * maxDim) / width);
-                        width = maxDim;
-                    } else {
-                        width = Math.round((width * maxDim) / height);
-                        height = maxDim;
+    // Image Compression Helper (<800px)
+    const compressFileToBase64 = (file) => {
+        return new Promise((resolve) => {
+            if (!file || !file.type.startsWith('image/')) {
+                resolve(null);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new window.Image();
+                img.onload = () => {
+                    const maxDim = 800;
+                    let { width, height } = img;
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
                     }
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const compressed = canvas.toDataURL('image/jpeg', 0.82);
-                setAttachedImage(compressed);
-                toast.success('Product photo loaded!');
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                };
+                img.onerror = () => resolve(event.target.result);
+                img.src = event.target.result;
             };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // Submit handler from LiquidMultimodalInput
+    const handleLiquidSubmit = async (value, files, model) => {
+        let photo = null;
+        if (files && files.length > 0) {
+            const imageFile = files.find(f => f.type.startsWith('image/'));
+            if (imageFile) {
+                photo = await compressFileToBase64(imageFile);
+            }
+        }
+        handleSendMessage(value, photo, model);
     };
 
     // Send Message
-    const handleSendMessage = async (textToSend = null, photoToSend = null) => {
-        const text = (textToSend !== null ? textToSend : inputText).trim();
-        const photo = photoToSend !== null ? photoToSend : attachedImage;
+    const handleSendMessage = async (textToSend = null, photoToSend = null, modelToUse = null) => {
+        const text = (textToSend !== null ? textToSend : '').trim();
+        const photo = photoToSend !== null ? photoToSend : null;
+        const model = modelToUse || selectedModel || 'pro';
 
         if (!text && !photo) return;
         if (isSending) return;
@@ -185,8 +188,6 @@ export default function BeautyAdvisorPage() {
         };
 
         setMessages(prev => [...prev, userMsg]);
-        setInputText('');
-        setAttachedImage(null);
         setIsSending(true);
 
         try {
@@ -197,6 +198,7 @@ export default function BeautyAdvisorPage() {
                     message: text,
                     image: photo,
                     sessionId: sessionId,
+                    model: model,
                     history: messages.slice(-10),
                 }),
             });
@@ -442,84 +444,27 @@ export default function BeautyAdvisorPage() {
                 </div>
             </main>
 
-            {/* 3. Sticky Bottom Area: Suggestions Carousel + Pill Input Capsule */}
-            <footer className="shrink-0 bg-white/80 backdrop-blur-xl border-t border-[#EFE0EF]/80 px-4 sm:px-6 py-3 shadow-[0_-4px_20px_rgba(58,12,56,0.03)] z-10">
+            {/* 3. Sticky Bottom Area: Suggestions Carousel + Liquid Multimodal Input */}
+            <footer className="shrink-0 bg-white/70 backdrop-blur-xl border-t border-[#EFE0EF]/80 px-3 sm:px-6 py-3 shadow-[0_-4px_20px_rgba(58,12,56,0.03)] z-10">
                 <div className="max-w-3xl sm:max-w-4xl mx-auto w-full space-y-2.5">
-                    {/* Suggestions Carousel: Left/Right Arrow Navigation (RIFAT Ai Style) */}
+                    {/* Suggestions Carousel: Left/Right Arrow Navigation with Smooth Edge Fading */}
                     <AiSuggestionBar
                         suggestions={dynamicSuggestions}
-                        onSelect={(query) => handleSendMessage(query, null)}
+                        onSelect={(query) => handleSendMessage(query, null, selectedModel)}
                         disabled={isSending}
                     />
 
-                    {/* Attached Image Preview */}
-                    {attachedImage && (
-                        <div className="flex items-center justify-between bg-white border border-[#EFE0EF] rounded-2xl px-3.5 py-2 shadow-2xs">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <img
-                                    src={attachedImage}
-                                    alt="Product bottle"
-                                    className="size-9 rounded-xl object-cover border border-[#EFE0EF]"
-                                />
-                                <span className="text-xs font-semibold text-[#6C306E] truncate">
-                                    Product bottle photo attached
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setAttachedImage(null)}
-                                className="p-1 rounded-full text-slate-400 hover:text-rose-500 cursor-pointer"
-                            >
-                                <CloseIcon size={14} color="currentColor" />
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Input Capsule Pill (RIFAT Ai Style) */}
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSendMessage();
-                        }}
-                        className="rounded-full bg-white border border-[#EFE0EF] shadow-[0_2px_15px_rgba(58,12,56,0.06)] pl-3.5 pr-2 py-1.5 sm:py-2 flex items-center gap-2 focus-within:border-[#6C306E] focus-within:shadow-[0_4px_24px_rgba(108,48,110,0.12)] transition-all"
-                    >
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleImageSelect}
-                            className="hidden"
-                        />
-
-                        {/* Camera / Bottle Photo Upload */}
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            title="Snap or upload product bottle photo"
-                            className="size-9 rounded-full text-slate-400 hover:text-[#6C306E] hover:bg-[#6C306E]/10 flex items-center justify-center transition cursor-pointer shrink-0"
-                        >
-                            <CameraIcon size={18} color="currentColor" />
-                        </button>
-
-                        {/* Text Field */}
-                        <input
-                            type="text"
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            placeholder="Ask Emma AI anything..."
+                    {/* Liquid Multimodal Input (Exact requested design) */}
+                    <div className="w-full flex justify-center">
+                        <LiquidMultimodalInput
+                            placeholder="Ask Emma AI anything, or drop product photos…"
+                            onSubmit={handleLiquidSubmit}
                             disabled={isSending}
-                            className="flex-1 bg-transparent text-xs sm:text-sm text-[#241224] placeholder:text-slate-400 outline-none font-medium min-w-0"
+                            defaultModel={selectedModel}
+                            onModelChange={setSelectedModel}
+                            className="w-full max-w-none"
                         />
-
-                        {/* Circular Send Button (RIFAT Ai Style) */}
-                        <button
-                            type="submit"
-                            disabled={isSending || (!inputText.trim() && !attachedImage)}
-                            className="size-9 sm:size-10 rounded-full bg-[#6C306E] hover:bg-[#562258] disabled:bg-slate-200 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition active:scale-95 shadow-xs cursor-pointer"
-                        >
-                            <SendIcon size={15} color="white" />
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </footer>
         </div>
