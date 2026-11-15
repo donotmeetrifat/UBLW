@@ -107,7 +107,7 @@ export default function MobileBottomNav() {
     return (
         <aside
             aria-label="Mobile Navigation Bar"
-            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFE0EF] shadow-[0_-2px_16px_rgba(58,12,56,0.04)] pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-1.5 px-2 select-none"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-t border-[#EFE0EF]/80 shadow-[0_-4px_24px_rgba(58,12,56,0.06)] pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-1.5 px-2 select-none"
         >
             <LayoutGroup id="mobile-bottom-navigation-group">
                 <nav className="flex items-center justify-around max-w-md mx-auto">

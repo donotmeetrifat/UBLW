@@ -132,7 +132,7 @@ const Footer = () => {
                 </div>
 
                 {/* Subfooter */}
-                <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 text-center sm:text-left">
+                <div className="pt-6 pb-24 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 text-center sm:text-left">
                     <p>© 2026 UK Brand LOVER — Bringing Real UK Beauty to Bangladesh.</p>
                     <p className="font-medium text-[#6C306E] flex items-center gap-1.5 justify-center sm:justify-end">
                         <RoyalCrownIcon size={14} color="#6C306E" />
