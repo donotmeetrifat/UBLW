@@ -130,8 +130,8 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Invalid provider to disconnect' }, { status: 400 });
         }
 
-        // Action: Connection Test & Auto-Connect
-        if (action === 'test') {
+        // Action: Connect & Verify Provider API Key
+        if (action === 'test' || action === 'connect') {
             const rawProvider = (testProvider || 'gemini').toLowerCase();
             const provider = rawProvider === 'grok' ? 'groq' : rawProvider;
             const currentSettings = await getAiSettings();
@@ -226,7 +226,7 @@ export async function POST(request) {
                             isConnected: true,
                             maskedKey: maskKey(keyToTest),
                             provider: 'gemini',
-                            message: `Google Gemini connected & verified successfully! (${workingModel}, ${totalLatency}ms)`,
+                            message: `Google Gemini connected successfully!`,
                             model: workingModel,
                             latencyMs: totalLatency,
                         });
@@ -299,7 +299,7 @@ export async function POST(request) {
                             isConnected: true,
                             maskedKey: maskKey(keyToTest),
                             provider: 'groq',
-                            message: `Groq Cloud connected & verified successfully! (${chosenModel}, ${totalLatency}ms)`,
+                            message: `Groq Cloud connected successfully!`,
                             model: chosenModel,
                             latencyMs: totalLatency,
                         });
@@ -349,7 +349,7 @@ export async function POST(request) {
                             isConnected: true,
                             maskedKey: maskKey(keyToTest),
                             provider: 'openrouter',
-                            message: `OpenRouter connected & verified successfully! (${totalLatency}ms)`,
+                            message: `OpenRouter connected successfully!`,
                             latencyMs: totalLatency,
                         });
                     } else {

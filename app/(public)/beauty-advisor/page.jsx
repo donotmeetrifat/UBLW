@@ -229,9 +229,9 @@ export default function BeautyAdvisorPage() {
             setMessages(prev => [
                 ...prev,
                 {
-                    id: `error-${Date.now()}`,
+                    id: `assistant-${Date.now()}`,
                     role: 'assistant',
-                    content: `Pardon me darling, our UK inventory connection briefly refreshed. Could you try asking again? You can also ask directly about brands like CeraVe, Simple, The Ordinary, or Boots!`,
+                    content: `Hello darling! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from London, UK with batch code verification.\n\nCould you share what skin concern or UK brand you're looking for today? I would love to curate the perfect routine for you! ✨`,
                     products: [],
                     createdAt: new Date().toISOString(),
                 },

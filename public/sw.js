@@ -21,8 +21,6 @@ const PRECACHE_URLS = [
     '/icon.png',
     '/apple-icon.png',
     '/images/web-logo-optimized.png',
-    '/icon-192.png',
-    '/icon-maskable.png',
     '/api/products',
     '/api/categories',
     '/api/banners',
@@ -34,22 +32,19 @@ const PRECACHE_URLS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE).then(async (cache) => {
-            // Pre-cache URLs individually (both relative and absolute) so one failure does not abort the rest
+            // Pre-cache URLs individually so one failure does not abort the rest
             await Promise.allSettled(
-                PRECACHE_URLS.map(async (url) => {
-                    try {
-                        const res = await fetch(url, { cache: 'no-cache' });
-                        if (res && res.status === 200) {
-                            await cache.put(url, res.clone());
-                            try {
-                                const absUrl = new URL(url, self.location.origin).toString();
-                                await cache.put(absUrl, res);
-                            } catch (e) {}
-                        }
-                    } catch (err) {
-                        console.warn('[SW] Pre-cache item skipped:', url, err);
-                    }
-                })
+                PRECACHE_URLS.map((url) =>
+                    fetch(url, { cache: 'no-cache' })
+                        .then((res) => {
+                            if (res && res.status === 200) {
+                                return cache.put(url, res);
+                            }
+                        })
+                        .catch((err) => {
+                            console.warn('[SW] Pre-cache item skipped:', url, err);
+                        })
+                )
             );
         }).then(() => self.skipWaiting())
     );
@@ -74,8 +69,8 @@ self.addEventListener('activate', (event) => {
 // Real-time cache invalidation listener
 self.addEventListener('message', (event) => {
     if (event.data && (
-        event.data.type === 'CLEAR_API_CACHE' || 
-        event.data.type === 'PRODUCT_UPDATED' || 
+        event.data.type === 'CLEAR_API_CACHE' ||
+        event.data.type === 'PRODUCT_UPDATED' ||
         event.data.type === 'CLEAR_ALL_CACHES' ||
         event.data.type === 'CLEAR_IMAGE_CACHE' ||
         event.data.type === 'STORE_UPDATED' ||
@@ -142,7 +137,7 @@ self.addEventListener('fetch', (event) => {
                         const copy = networkResponse.clone();
                         caches.open(PAGES_CACHE).then((cache) => {
                             cache.put(cleanUrl.pathname, copy);
-                        }).catch(() => {});
+                        }).catch(() => { });
                     }
                     return networkResponse;
                 })
@@ -165,10 +160,8 @@ self.addEventListener('fetch', (event) => {
                         return offlinePage;
                     }
 
-                    // Guaranteed HTML offline page - never falls back to plain text or browser error
-                    return new Response(OFFLINE_HTML_FALLBACK, {
-                        status: 200,
-                        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+                    return new Response('You are offline. UK Brand Lover is running in offline mode.', {
+                        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
                     });
                 })
         );
@@ -176,13 +169,13 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 3. Core Store Catalog APIs: Always cache when online, synthesize offline product data from catalog
-    if (url.pathname.startsWith('/api/products') || 
-        url.pathname.startsWith('/api/categories') || 
-        url.pathname.startsWith('/api/banners') || 
-        url.pathname.startsWith('/api/promotions') || 
+    if (url.pathname.startsWith('/api/products') ||
+        url.pathname.startsWith('/api/categories') ||
+        url.pathname.startsWith('/api/banners') ||
+        url.pathname.startsWith('/api/promotions') ||
         url.pathname.startsWith('/api/homepage-sections') ||
         url.pathname.startsWith('/api/orders')) {
-        
+
         event.respondWith(
             fetch(request)
                 .then((apiResponse) => {
@@ -191,7 +184,7 @@ self.addEventListener('fetch', (event) => {
                         caches.open(API_CACHE).then((cache) => {
                             cache.put(cleanUrl.toString(), copy.clone());
                             cache.put(cleanUrl.pathname, copy);
-                        }).catch(() => {});
+                        }).catch(() => { });
                     }
                     return apiResponse;
                 })
@@ -226,7 +219,7 @@ self.addEventListener('fetch', (event) => {
                                         }
                                     }
                                 }
-                            } catch (e) {}
+                            } catch (e) { }
                         }
                     }
 
@@ -248,18 +241,18 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 4. Static Next.js Bundles, Scripts, Fonts, and Stylesheets: Cache-First with Stale-While-Revalidate
-    if (url.pathname.startsWith('/_next/static/') || 
-        url.pathname.endsWith('.css') || 
-        url.pathname.endsWith('.js') || 
-        url.pathname.endsWith('.woff2') || 
+    if (url.pathname.startsWith('/_next/static/') ||
+        url.pathname.endsWith('.css') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.woff2') ||
         url.pathname.endsWith('.woff')) {
-        
+
         event.respondWith(
             caches.match(request).then((cachedResponse) => {
                 const fetchPromise = fetch(request).then((networkResponse) => {
                     if (networkResponse && networkResponse.status === 200) {
                         const copy = networkResponse.clone();
-                        caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+                        caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => { });
                     }
                     return networkResponse;
                 }).catch(() => null);
@@ -271,23 +264,23 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 5. Images, Logos, and Banners: Cache-First with Network Revalidation & Fallback
-    if (request.destination === 'image' || 
-        url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|gif)$/i) || 
-        url.pathname.startsWith('/banner/') || 
+    if (request.destination === 'image' ||
+        url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|gif)$/i) ||
+        url.pathname.startsWith('/banner/') ||
         url.pathname.startsWith('/images/') ||
         url.pathname.startsWith('/uploads/')) {
-        
+
         event.respondWith(
             caches.match(request).then((cachedImage) => {
                 const fetchPromise = fetch(request)
                     .then((networkResponse) => {
                         if (networkResponse && networkResponse.status === 200) {
                             const copy = networkResponse.clone();
-                            caches.open(IMAGE_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+                            caches.open(IMAGE_CACHE).then((cache) => cache.put(request, copy)).catch(() => { });
                             return networkResponse;
                         }
                         if (networkResponse && (networkResponse.status === 404 || networkResponse.status === 410)) {
-                            caches.open(IMAGE_CACHE).then((cache) => cache.delete(request)).catch(() => {});
+                            caches.open(IMAGE_CACHE).then((cache) => cache.delete(request)).catch(() => { });
                         }
                         return networkResponse;
                     })

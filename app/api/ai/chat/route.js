@@ -1,15 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { executeAiConsultation } from '@/lib/aiBot';
+import {
+    executeAiConsultation,
+    getLiveCatalogContext,
+    getAiSettings,
+    localGroundedAdvisor,
+    extractProductCards
+} from '@/lib/aiBot';
 import { getUserFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request) {
+    let user = null;
+    let messageText = '';
+
     try {
         const body = await request.json();
         const { message, image, sessionId, history = [] } = body;
+        messageText = message || '';
 
         if ((!message || !message.trim()) && !image) {
             return NextResponse.json({
@@ -18,7 +28,7 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const user = getUserFromRequest(request);
+        user = getUserFromRequest(request);
 
         // Build messages chain including previous context
         const conversationHistory = Array.isArray(history)
@@ -77,11 +87,37 @@ export async function POST(request) {
             provider: consultation.provider,
         });
     } catch (error) {
-        console.error('Error in AI Chat route:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'Sorry darling, our beauty advisor had a brief network interruption. Please try again.',
-            error: error.message,
-        }, { status: 500 });
+        // Strict requirement: Never display backend errors or network errors to the customer!
+        console.error('Error in AI Chat route (gracefully handled):', error);
+
+        try {
+            const [catalog, settings] = await Promise.all([
+                getLiveCatalogContext(),
+                getAiSettings(),
+            ]);
+
+            const fallbackReply = localGroundedAdvisor({
+                query: messageText || 'skincare recommendations',
+                catalog,
+                botName: settings.botName || 'Emma',
+                customerName: user?.name || null,
+            });
+
+            const { message: safeMessage, products } = extractProductCards(fallbackReply, catalog);
+
+            return NextResponse.json({
+                success: true,
+                message: safeMessage,
+                products: products || [],
+                provider: 'emma_grounded_consultant',
+            });
+        } catch (innerErr) {
+            return NextResponse.json({
+                success: true,
+                message: "Hello darling! Delighted to assist you at UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from London with batch code verification.\n\nCould you share what skin concern or UK brand you're looking for today? I'd love to curate the perfect routine for you! ✨",
+                products: [],
+                provider: 'emma_saleswoman_fallback',
+            });
+        }
     }
 }

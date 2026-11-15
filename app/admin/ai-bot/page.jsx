@@ -103,8 +103,8 @@ export default function AdminAiBotPage() {
         fetchSettings()
     }, [])
 
-    // Connect & Test API Key
-    const handleConnectAndTest = async (provider) => {
+    // Connect API Key
+    const handleConnect = async (provider) => {
         const key = provider === 'gemini' ? geminiKey : provider === 'groq' ? groqKey : openRouterKey
 
         if (!key || !key.trim()) {
@@ -118,7 +118,7 @@ export default function AdminAiBotPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'test',
+                    action: 'connect',
                     testProvider: provider,
                     testKey: key,
                 }),
@@ -126,7 +126,8 @@ export default function AdminAiBotPage() {
 
             const data = await res.json()
             if (data.success && data.isConnected) {
-                toast.success(data.message, { duration: 5000 })
+                const provName = provider === 'gemini' ? 'Google Gemini' : provider === 'groq' ? 'Groq Cloud' : 'OpenRouter'
+                toast.success(`${provName} connected successfully!`, { duration: 4000 })
 
                 // Update connected state immediately
                 if (provider === 'gemini') {
@@ -142,7 +143,7 @@ export default function AdminAiBotPage() {
                     setOpenRouterKey(data.maskedKey || key)
                 }
             } else {
-                toast.error(data.message || 'Connection test failed', { duration: 6000 })
+                toast.error(data.message || 'Connection failed', { duration: 6000 })
             }
         } catch (err) {
             toast.error(`Connection error: ${err.message}`)
@@ -435,44 +436,34 @@ export default function AdminAiBotPage() {
                             </div>
                         </div>
 
-                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        {/* Card Actions: Connect OR Disconnect */}
                         <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
                             {isGeminiConnected ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDisconnect('gemini')}
-                                        disabled={disconnectingProvider === 'gemini'}
-                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                    >
-                                        <DisconnectIcon size={13} color="currentColor" />
-                                        <span>{disconnectingProvider === 'gemini' ? 'Disconnecting...' : 'Disconnect'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleConnectAndTest('gemini')}
-                                        disabled={testingProvider === 'gemini'}
-                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                    >
-                                        {testingProvider === 'gemini' ? 'Testing...' : 'Re-test'}
-                                    </button>
-                                </>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDisconnect('gemini')}
+                                    disabled={disconnectingProvider === 'gemini'}
+                                    className="w-full h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                >
+                                    <DisconnectIcon size={13} color="currentColor" />
+                                    <span>{disconnectingProvider === 'gemini' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                </button>
                             ) : (
                                 <button
                                     type="button"
-                                    onClick={() => handleConnectAndTest('gemini')}
+                                    onClick={() => handleConnect('gemini')}
                                     disabled={testingProvider === 'gemini'}
                                     className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
                                     {testingProvider === 'gemini' ? (
                                         <>
                                             <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Connecting & Testing...</span>
+                                            <span>Connecting...</span>
                                         </>
                                     ) : (
                                         <>
                                             <SparklesIcon size={13} color="white" />
-                                            <span>Connect & Test</span>
+                                            <span>Connect</span>
                                         </>
                                     )}
                                 </button>
@@ -540,44 +531,34 @@ export default function AdminAiBotPage() {
                             </div>
                         </div>
 
-                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        {/* Card Actions: Connect OR Disconnect */}
                         <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
                             {isGroqConnected ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDisconnect('groq')}
-                                        disabled={disconnectingProvider === 'groq'}
-                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                    >
-                                        <DisconnectIcon size={13} color="currentColor" />
-                                        <span>{disconnectingProvider === 'groq' ? 'Disconnecting...' : 'Disconnect'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleConnectAndTest('groq')}
-                                        disabled={testingProvider === 'groq'}
-                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                    >
-                                        {testingProvider === 'groq' ? 'Testing...' : 'Re-test'}
-                                    </button>
-                                </>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDisconnect('groq')}
+                                    disabled={disconnectingProvider === 'groq'}
+                                    className="w-full h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                >
+                                    <DisconnectIcon size={13} color="currentColor" />
+                                    <span>{disconnectingProvider === 'groq' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                </button>
                             ) : (
                                 <button
                                     type="button"
-                                    onClick={() => handleConnectAndTest('groq')}
+                                    onClick={() => handleConnect('groq')}
                                     disabled={testingProvider === 'groq'}
                                     className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
                                     {testingProvider === 'groq' ? (
                                         <>
                                             <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Connecting & Testing...</span>
+                                            <span>Connecting...</span>
                                         </>
                                     ) : (
                                         <>
                                             <SparklesIcon size={13} color="white" />
-                                            <span>Connect & Test</span>
+                                            <span>Connect</span>
                                         </>
                                     )}
                                 </button>
@@ -645,44 +626,34 @@ export default function AdminAiBotPage() {
                             </div>
                         </div>
 
-                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        {/* Card Actions: Connect OR Disconnect */}
                         <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
                             {isOpenRouterConnected ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDisconnect('openrouter')}
-                                        disabled={disconnectingProvider === 'openrouter'}
-                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                    >
-                                        <DisconnectIcon size={13} color="currentColor" />
-                                        <span>{disconnectingProvider === 'openrouter' ? 'Disconnecting...' : 'Disconnect'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleConnectAndTest('openrouter')}
-                                        disabled={testingProvider === 'openrouter'}
-                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                    >
-                                        {testingProvider === 'openrouter' ? 'Testing...' : 'Re-test'}
-                                    </button>
-                                </>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDisconnect('openrouter')}
+                                    disabled={disconnectingProvider === 'openrouter'}
+                                    className="w-full h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                >
+                                    <DisconnectIcon size={13} color="currentColor" />
+                                    <span>{disconnectingProvider === 'openrouter' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                </button>
                             ) : (
                                 <button
                                     type="button"
-                                    onClick={() => handleConnectAndTest('openrouter')}
+                                    onClick={() => handleConnect('openrouter')}
                                     disabled={testingProvider === 'openrouter'}
                                     className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
                                     {testingProvider === 'openrouter' ? (
                                         <>
                                             <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Connecting & Testing...</span>
+                                            <span>Connecting...</span>
                                         </>
                                     ) : (
                                         <>
                                             <SparklesIcon size={13} color="white" />
-                                            <span>Connect & Test</span>
+                                            <span>Connect</span>
                                         </>
                                     )}
                                 </button>
