@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import toast from 'react-hot-toast'
+import AiProductCard from '@/components/AiProductCard'
 import {
     SparklesIcon,
     CloseIcon,
@@ -443,84 +444,90 @@ export default function AiChatWidget() {
 
                                         {/* Chat Bubble */}
                                         <div
-                                            className={`max-w-[86%] sm:max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-[12.5px] leading-relaxed ${
+                                            className={`max-w-[88%] sm:max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-[12.5px] leading-relaxed ${
                                                 isUser
                                                     ? 'bg-gradient-to-r from-[#6C306E] to-[#4A154D] text-white rounded-br-xs shadow-xs font-medium'
                                                     : 'bg-[#FAF6FA] text-[#241224] border border-[#EFE0EF] rounded-bl-xs shadow-2xs'
                                             }`}
                                         >
-                                            <div className="whitespace-pre-wrap select-text">
-                                                {m.content}
-                                            </div>
+                                            {isUser || !m.content ? (
+                                                <div className="whitespace-pre-wrap select-text">
+                                                    {m.content}
+                                                </div>
+                                            ) : (
+                                                <div className="select-text space-y-2">
+                                                    {(() => {
+                                                        const products = Array.isArray(m.products) ? m.products : [];
+                                                        const productMap = new Map();
+                                                        products.forEach(p => productMap.set(p.id, p));
+
+                                                        const hasTags = /\[{1,2}PRODUCT:\s*[a-zA-Z0-9_\-]+\]{1,2}/i.test(m.content);
+
+                                                        if (!hasTags) {
+                                                            return (
+                                                                <div className="whitespace-pre-wrap leading-relaxed">
+                                                                    {m.content}
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        const parts = m.content.split(/(\[{1,2}PRODUCT:\s*[a-zA-Z0-9_\-]+\]{1,2})/gi);
+
+                                                        return parts.map((part, pIdx) => {
+                                                            const match = part.match(/^\[{1,2}PRODUCT:\s*([a-zA-Z0-9_\-]+)\]{1,2}$/i);
+                                                            if (match) {
+                                                                const prodId = match[1];
+                                                                const matchedProd = productMap.get(prodId);
+                                                                if (matchedProd) {
+                                                                    return (
+                                                                        <AiProductCard
+                                                                            key={`inline-${prodId}-${pIdx}`}
+                                                                            product={matchedProd}
+                                                                            onQuickAdd={handleQuickAdd}
+                                                                            onCloseChat={() => setIsOpen(false)}
+                                                                        />
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            }
+
+                                                            const trimmed = part.trim();
+                                                            if (!trimmed) return null;
+
+                                                            return (
+                                                                <div key={`txt-${pIdx}`} className="whitespace-pre-wrap leading-relaxed">
+                                                                    {part}
+                                                                </div>
+                                                            );
+                                                        });
+                                                    })()}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {/* Structured In-Chat Product Cards */}
-                                        {!isUser && Array.isArray(m.products) && m.products.length > 0 && (
-                                            <div className="w-full max-w-[94%] space-y-2 mt-1">
-                                                {m.products.map(p => (
-                                                    <div
-                                                        key={p.id}
-                                                        className="p-2.5 rounded-xl bg-white border border-[#EFE0EF] shadow-2xs hover:border-[#6C306E]/40 transition flex items-center justify-between gap-2.5"
-                                                    >
-                                                        <Link
-                                                            href={`/product/${p.id}`}
-                                                            onClick={() => setIsOpen(false)}
-                                                            className="flex items-center gap-2.5 min-w-0 flex-1 group"
-                                                        >
-                                                            <div className="relative size-12 rounded-lg bg-[#FAF6FA] border border-[#EFE0EF] p-1 shrink-0 overflow-hidden">
-                                                                {p.image ? (
-                                                                    <img
-                                                                        src={p.image}
-                                                                        alt={p.name}
-                                                                        className="w-full h-full object-contain group-hover:scale-105 transition"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                                        <BagIcon size={16} />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <p className="text-[10px] font-bold text-[#6C306E] uppercase tracking-wide truncate">
-                                                                    {p.brand || 'UK Brand'}
-                                                                </p>
-                                                                <h4 className="text-xs font-extrabold text-[#241224] truncate group-hover:text-[#6C306E] transition">
-                                                                    {p.name}
-                                                                </h4>
-                                                                <div className="flex items-center gap-1.5 mt-0.5">
-                                                                    <span className="text-xs font-black text-[#6C306E]">
-                                                                        ৳{p.price}
-                                                                    </span>
-                                                                    {p.mrp && p.mrp > p.price && (
-                                                                        <span className="text-[10px] text-slate-400 line-through">
-                                                                            ৳{p.mrp}
-                                                                        </span>
-                                                                    )}
-                                                                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                                                                        p.inStock
-                                                                            ? 'bg-emerald-50 text-emerald-700'
-                                                                            : 'bg-amber-50 text-amber-700'
-                                                                    }`}>
-                                                                        {p.inStock ? 'In Stock' : 'Out of Stock'}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </Link>
+                                        {/* Products not placed inline */}
+                                        {!isUser && Array.isArray(m.products) && m.products.length > 0 && (() => {
+                                            const inlineIds = new Set(
+                                                (m.content?.match(/\[{1,2}PRODUCT:\s*([a-zA-Z0-9_\-]+)\]{1,2}/gi) || [])
+                                                    .map(tag => tag.replace(/\[{1,2}PRODUCT:\s*/i, '').replace(/\]{1,2}/, '').trim())
+                                            );
+                                            const remainingProducts = m.products.filter(p => !inlineIds.has(p.id));
 
-                                                        {/* Quick Add Button */}
-                                                        {p.inStock && (
-                                                            <button
-                                                                onClick={() => handleQuickAdd(p)}
-                                                                className="size-8 rounded-lg bg-[#6C306E] hover:bg-[#562258] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-2xs transition"
-                                                                title="Add to shopping bag"
-                                                            >
-                                                                <BagIcon size={14} color="white" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                            if (remainingProducts.length === 0) return null;
+
+                                            return (
+                                                <div className="w-full max-w-[94%] space-y-2 mt-1">
+                                                    {remainingProducts.map(p => (
+                                                        <AiProductCard
+                                                            key={`fallback-${p.id}`}
+                                                            product={p}
+                                                            onQuickAdd={handleQuickAdd}
+                                                            onCloseChat={() => setIsOpen(false)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 );
                             })}
