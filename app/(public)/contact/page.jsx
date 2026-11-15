@@ -232,33 +232,33 @@ export default function ContactPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="rounded-3xl border border-[#EFE0EF] bg-white p-7 sm:p-10 shadow-[0_4px_24px_rgba(58,12,56,0.03)]" 
+                            className="rounded-2xl sm:rounded-3xl border border-[#EFE0EF] bg-white p-4 sm:p-7 lg:p-10 shadow-[0_4px_24px_rgba(58,12,56,0.03)]" 
                             aria-labelledby="contact-form-title"
                         >
                             <p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B56D]">
                                 DIRECT INQUIRY
                             </p>
-                            <h2 id="contact-form-title" className="mt-1 text-2xl font-bold text-[#241224]">
+                            <h2 id="contact-form-title" className="mt-0.5 text-lg sm:text-2xl font-bold text-[#241224]">
                                 Send Us a Message
                             </h2>
-                            <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                            <p className="mt-1 text-[11px] sm:text-xs text-slate-500 leading-relaxed">
                                 Submit your inquiry and our team will get back to you shortly.
                             </p>
 
                             {/* SIGNED-IN USER FORM */}
                             {isSignedIn ? (
-                                <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-xs">
+                                <form onSubmit={handleSubmit} className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 text-xs">
                                     {/* Account Connection Pill */}
-                                    <div className="p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl flex items-center justify-between text-xs">
+                                    <div className="p-2 sm:p-2.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl flex items-center justify-between text-xs">
                                         <div className="flex items-center gap-2">
-                                            <div className="size-6 rounded-full bg-[#6C306E]/10 text-[#6C306E] flex items-center justify-center font-bold text-[10px]">
+                                            <div className="size-5 sm:size-6 rounded-full bg-[#6C306E]/10 text-[#6C306E] flex items-center justify-center font-bold text-[9px] sm:text-[10px]">
                                                 {(currentUser?.name || 'U')[0].toUpperCase()}
                                             </div>
                                             <div>
-                                                <span className="font-bold text-[#241224]">
+                                                <span className="font-bold text-[#241224] text-[11px] sm:text-xs">
                                                     {currentUser?.name || 'Customer Account'}
                                                 </span>
-                                                <span className="text-[10px] text-slate-400 block sm:inline sm:ml-2">
+                                                <span className="text-[9.5px] sm:text-[10px] text-slate-400 block sm:inline sm:ml-2">
                                                     ({currentUser?.email || email})
                                                 </span>
                                             </div>
@@ -272,7 +272,7 @@ export default function ContactPage() {
                                                 initial={{ opacity: 0, y: -4 }} 
                                                 animate={{ opacity: 1, y: 0 }} 
                                                 exit={{ opacity: 0, y: -4 }}
-                                                className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl font-semibold text-xs flex items-center gap-2"
+                                                className="p-2.5 sm:p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl font-semibold text-[11px] sm:text-xs flex items-center gap-2"
                                             >
                                                 <span className="size-1.5 rounded-full bg-red-500 shrink-0" />
                                                 <span>{errorMessage}</span>
@@ -284,7 +284,7 @@ export default function ContactPage() {
                                                 initial={{ opacity: 0, y: -4 }} 
                                                 animate={{ opacity: 1, y: 0 }} 
                                                 exit={{ opacity: 0, y: -4 }}
-                                                className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl font-semibold text-xs flex items-center gap-2"
+                                                className="p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl font-semibold text-[11px] sm:text-xs flex items-center gap-2"
                                             >
                                                 <CheckIcon size={14} color="#059669" />
                                                 <span>{successMessage}</span>
@@ -293,9 +293,9 @@ export default function ContactPage() {
                                     </AnimatePresence>
 
                                     {/* Name & Email Fields */}
-                                    <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                                         <div>
-                                            <label className="block font-bold text-[#241224] mb-1.5">
+                                            <label className="block font-bold text-[#241224] text-[10.5px] sm:text-xs mb-1">
                                                 Your Full Name <span className="text-red-500">*</span>
                                             </label>
                                             <input 
@@ -303,13 +303,13 @@ export default function ContactPage() {
                                                 type="text" 
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 sm:px-3 text-[11px] sm:text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="Enter your name" 
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block font-bold text-[#241224] mb-1.5">
+                                            <label className="block font-bold text-[#241224] text-[10.5px] sm:text-xs mb-1">
                                                 Email Address <span className="text-red-500">*</span>
                                             </label>
                                             <input 
@@ -317,29 +317,29 @@ export default function ContactPage() {
                                                 type="email" 
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 sm:px-3 text-[11px] sm:text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="you@example.com" 
                                             />
                                         </div>
                                     </div>
 
                                     {/* Phone & Subject Fields */}
-                                    <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                                         <div>
-                                            <label className="block font-bold text-[#241224] mb-1.5">
+                                            <label className="block font-bold text-[#241224] text-[10.5px] sm:text-xs mb-1">
                                                 Contact Phone / WhatsApp
                                             </label>
                                             <input 
                                                 type="tel" 
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
-                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 sm:px-3 text-[11px] sm:text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="01XXXXXXXXX" 
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block font-bold text-[#241224] mb-1.5">
+                                            <label className="block font-bold text-[#241224] text-[10.5px] sm:text-xs mb-1">
                                                 Inquiry Subject <span className="text-red-500">*</span>
                                             </label>
                                             <input 
@@ -347,7 +347,7 @@ export default function ContactPage() {
                                                 type="text" 
                                                 value={subject}
                                                 onChange={(e) => setSubject(e.target.value)}
-                                                className="w-full h-8.5 sm:h-9 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-3.5 py-1.5 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
+                                                className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] px-2.5 sm:px-3 text-[11px] sm:text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium" 
                                                 placeholder="e.g. Order Tracking, Shade Advice, Authenticity" 
                                             />
                                         </div>
@@ -355,7 +355,7 @@ export default function ContactPage() {
 
                                     {/* Message Textarea */}
                                     <div>
-                                        <label className="block font-bold text-[#241224] mb-1.5">
+                                        <label className="block font-bold text-[#241224] text-[10.5px] sm:text-xs mb-1">
                                             Message <span className="text-red-500">*</span>
                                         </label>
                                         <textarea 
@@ -363,61 +363,61 @@ export default function ContactPage() {
                                             rows={3} 
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
-                                            className="w-full resize-none rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] p-3 text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium min-h-[80px]" 
+                                            className="w-full resize-none rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] p-2.5 sm:p-3 text-[11px] sm:text-xs text-[#241224] outline-none focus:border-[#6C306E] focus:bg-white transition placeholder:text-slate-400 font-medium min-h-[64px] sm:min-h-[76px]" 
                                             placeholder="Write your message here... Please include order number if applicable." 
                                         />
                                     </div>
 
                                     {/* Submit Action */}
-                                    <div className="pt-2">
+                                    <div className="pt-1 sm:pt-2">
                                         <motion.button 
                                             whileHover={{ scale: 1.015, y: -1 }}
                                             whileTap={{ scale: 0.985 }}
                                             disabled={submitting}
                                             type="submit" 
-                                            className="group relative overflow-hidden bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white inline-flex items-center justify-center gap-2.5 rounded-full px-9 py-3.5 text-xs font-bold transition-all duration-300 shadow-[0_6px_20px_rgba(108,48,110,0.35)] hover:shadow-[0_12px_28px_rgba(108,48,110,0.55)] cursor-pointer border border-white/20 shimmer-active disabled:opacity-60"
+                                            className="group relative overflow-hidden bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white inline-flex items-center justify-center gap-2 rounded-full px-5 sm:px-7 py-2 sm:py-2.5 text-[11px] sm:text-xs font-bold transition-all duration-300 shadow-[0_4px_16px_rgba(108,48,110,0.3)] hover:shadow-[0_8px_24px_rgba(108,48,110,0.45)] cursor-pointer border border-white/20 shimmer-active disabled:opacity-60"
                                         >
                                             <span className="tracking-wide">
                                                 {submitting ? 'Submitting Inquiry...' : 'Submit Inquiry Message'}
                                             </span>
                                             {!submitting && (
-                                                <ArrowRightIcon size={14} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                                                <ArrowRightIcon size={13} color="#FFFFFF" className="group-hover:translate-x-1.5 transition-transform duration-300" />
                                             )}
                                         </motion.button>
                                     </div>
                                 </form>
                             ) : (
                                 /* SIGN-IN REQUIRED PROMPT FOR UNAUTHENTICATED VISITORS */
-                                <div className="mt-8 text-center p-8 bg-[#FAF6FA] border border-[#EFE0EF] rounded-3xl">
-                                    <div className="size-16 rounded-2xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mx-auto mb-4 shadow-2xs">
-                                        <LockIcon size={28} color="#6C306E" />
+                                <div className="mt-6 text-center p-5 sm:p-8 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl sm:rounded-3xl">
+                                    <div className="size-12 sm:size-16 rounded-xl sm:rounded-2xl bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mx-auto mb-3 sm:mb-4 shadow-2xs">
+                                        <LockIcon size={22} color="#6C306E" className="sm:size-7" />
                                     </div>
-                                    <h3 className="text-base sm:text-lg font-extrabold text-[#241224]">
+                                    <h3 className="text-sm sm:text-lg font-extrabold text-[#241224]">
                                         Sign In Required to Submit Inquiries
                                     </h3>
-                                    <p className="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 max-w-md mx-auto leading-relaxed">
                                         To protect customer communications and ensure our staff can directly trace and resolve inquiries with your account, please sign in before sending a message.
                                     </p>
 
-                                    <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                                    <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3">
                                         <button
                                             type="button"
                                             onClick={() => requireSignIn('Please sign in to submit an inquiry message.')}
-                                            className="group relative overflow-hidden inline-flex items-center gap-2 bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white px-7 py-3 rounded-full text-xs font-bold transition shadow-md hover:shadow-lg cursor-pointer"
+                                            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] text-white px-5 sm:px-7 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-bold transition shadow-md hover:shadow-lg cursor-pointer w-full sm:w-auto"
                                         >
-                                            <UserIcon size={14} color="#FFFFFF" />
+                                            <UserIcon size={13} color="#FFFFFF" />
                                             <span>Sign In to Send Message</span>
                                             <ArrowRightIcon size={12} color="#FFFFFF" className="group-hover:translate-x-1 transition-transform" />
                                         </button>
                                         <Link 
                                             href="/signup" 
-                                            className="text-xs font-bold text-[#6C306E] hover:underline px-4 py-2"
+                                            className="text-[11px] sm:text-xs font-bold text-[#6C306E] hover:underline px-3 py-1.5"
                                         >
                                             Create an Account
                                         </Link>
                                     </div>
 
-                                    <div className="mt-5 pt-4 border-t border-[#EFE0EF] flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+                                    <div className="mt-4 pt-3 border-t border-[#EFE0EF] flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-slate-400">
                                         <ShieldCheckIcon size={13} color="#059669" />
                                         <span>Instant WhatsApp assistance is also available above</span>
                                     </div>
@@ -426,7 +426,7 @@ export default function ContactPage() {
                         </motion.section>
 
                         {/* UK Brand Lover HQ Business Details */}
-                        <aside className="rounded-3xl border border-[#EFE0EF] bg-[#FAF6FA] p-7 sm:p-9 flex flex-col justify-between" aria-label="Business contact details">
+                        <aside className="rounded-2xl sm:rounded-3xl border border-[#EFE0EF] bg-[#FAF6FA] p-4 sm:p-7 lg:p-9 flex flex-col justify-between" aria-label="Business contact details">
                             <div>
                                 <div className="flex size-13 items-center justify-center rounded-2xl bg-white text-[#6C306E] shadow-2xs border border-[#EFE0EF]">
                                     <MapPinIcon size={22} color="#6C306E" />

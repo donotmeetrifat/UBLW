@@ -487,7 +487,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                         {/* 6-Digit OTP Form */}
                         <form onSubmit={handleVerifyOtp} className="space-y-4">
                             <div>
-                                <label className="block text-center text-xs font-bold text-[#241224] mb-2">
+                                <label className="block text-center text-[11px] sm:text-xs font-bold text-[#241224] mb-1.5">
                                     Enter 6-Digit Verification Code
                                 </label>
                                 <input
@@ -499,9 +499,9 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     value={otpCode}
                                     onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                                     placeholder="••••••"
-                                    className="w-full text-center tracking-[0.45em] font-mono text-2xl font-black py-3.5 bg-[#FAF6FA]/80 border-2 border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl outline-none transition text-[#241224] placeholder:tracking-normal placeholder:font-sans placeholder:text-slate-300 shadow-2xs"
+                                    className="w-full text-center tracking-[0.4em] font-mono text-xl sm:text-2xl font-black py-2.5 sm:py-3.5 bg-[#FAF6FA]/80 border-2 border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl sm:rounded-2xl outline-none transition text-[#241224] placeholder:tracking-normal placeholder:font-sans placeholder:text-slate-300 shadow-2xs"
                                 />
-                                <p className="text-[11px] text-center text-slate-400 mt-2">
+                                <p className="text-[10.5px] sm:text-[11px] text-center text-slate-400 mt-1.5">
                                     You can also click the direct confirmation link sent to your inbox.
                                 </p>
                             </div>
@@ -511,7 +511,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 whileTap={{ scale: 0.99 }}
                                 type="submit"
                                 disabled={verifying || otpCode.trim().length < 6}
-                                className="w-full bg-[#6C306E] hover:bg-[#521C54] text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                                className="w-full bg-[#6C306E] hover:bg-[#521C54] text-white py-2.5 sm:py-3.5 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                             >
                                 <span>{verifying ? 'Verifying Code...' : 'Verify & Activate Account'}</span>
                                 {!verifying && <ShieldCheckIcon size={16} />}
@@ -562,12 +562,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <label className="block text-[#241224] font-bold mb-1.5">
+                                <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                     Full Name <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <UserIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <UserIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type="text"
@@ -575,7 +575,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="e.g. Ayesha Rahman"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                 </div>
                             </motion.div>
@@ -583,12 +583,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
 
                         {/* EMAIL ADDRESS (Strictly required for both Sign In and Sign Up) */}
                         <div>
-                            <label className="block text-[#241224] font-bold mb-1.5">
+                            <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                 Email Address <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <MailIcon size={15} color="#6C306E" />
+                                <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <MailIcon size={14} color="#6C306E" />
                                 </div>
                                 <input
                                     type="email"
@@ -596,7 +596,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@example.com"
-                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                    className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                 />
                             </div>
                         </div>
@@ -609,12 +609,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <label className="block text-[#241224] font-bold mb-1.5">
+                                <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                     Phone Number <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <PhoneIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <PhoneIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type="tel"
@@ -622,7 +622,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="01XXXXXXXXX"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3.5 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                 </div>
                             </motion.div>
@@ -631,8 +631,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
                         {/* PASSWORD (Sign In & Sign Up) */}
                         {mode !== 'forgot' && (
                             <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label className="text-[#241224] font-bold">
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-[#241224] font-bold text-[10.5px] sm:text-xs">
                                         Password <span className="text-red-500">*</span>
                                     </label>
                                     {mode === 'signin' && (
@@ -643,15 +643,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                                 setErrorMsg(null)
                                                 setSuccessMsg(null)
                                             }}
-                                            className="text-[11px] font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                            className="text-[10.5px] sm:text-[11px] font-bold text-[#6C306E] hover:underline cursor-pointer"
                                         >
                                             Forgot password?
                                         </button>
                                     )}
                                 </div>
                                 <div className="relative">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <LockIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <LockIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type={showPassword ? 'text' : 'password'}
@@ -659,15 +659,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-10 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-8.5 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                                     >
-                                        {showPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                        {showPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                     </button>
                                 </div>
                             </div>
@@ -681,12 +681,12 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <label className="block text-[#241224] font-bold mb-1.5">
+                                <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                     Confirm Password <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <LockIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <LockIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type={showConfirmPassword ? 'text' : 'password'}
@@ -694,15 +694,15 @@ export default function AuthSection({ initialMode = 'signin' }) {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-10 h-8.5 sm:h-9 text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
+                                        className="w-full bg-[#FAF6FA]/60 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-8.5 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none transition font-medium text-[#241224] placeholder:text-slate-400 shadow-2xs"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                                     >
-                                        {showConfirmPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                        {showConfirmPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                     </button>
                                 </div>
                             </motion.div>
@@ -714,7 +714,7 @@ export default function AuthSection({ initialMode = 'signin' }) {
                             whileTap={{ scale: 0.99 }}
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-2 bg-[#6C306E] hover:bg-[#521C54] text-white py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+                            className="w-full mt-2 bg-[#6C306E] hover:bg-[#521C54] text-white py-2.5 sm:py-3 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
                         >
                             <span>
                                 {loading

@@ -345,7 +345,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
 
                     {/* Review Text Area */}
                     <div>
-                        <label className="block text-slate-700 font-bold mb-1.5">
+                        <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[10.5px] sm:text-xs">
                             Your Personal Review Experience
                         </label>
                         <textarea
@@ -353,7 +353,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                             value={review}
                             onChange={(e) => setReview(e.target.value)}
                             placeholder="Share your honest experience — how does it feel on your skin, did you check the batch code, and how was the packaging/delivery?"
-                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl p-2.5 outline-none text-xs text-[#241224] transition resize-none leading-relaxed min-h-[70px]"
+                            className="w-full bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl p-2 sm:p-2.5 outline-none text-[10.5px] sm:text-xs text-[#241224] transition resize-none leading-relaxed min-h-[58px] sm:min-h-[70px]"
                         />
                     </div>
 
@@ -418,11 +418,11 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
 
                     {/* Photo & Video Upload */}
                     <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-slate-700 font-bold">
+                        <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+                            <label className="text-slate-700 font-bold text-[10.5px] sm:text-xs">
                                 Add Photos & Video (Optional)
                             </label>
-                            <span className="text-[10px] text-slate-400">Up to 4 photos + 1 video</span>
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-400">Up to 4 photos + 1 video</span>
                         </div>
 
                         {/* Upload Trigger Buttons */}
@@ -439,9 +439,9 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={images.length >= 4 || isUploading}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] hover:bg-white hover:border-[#6C306E] transition text-[#6C306E] font-bold text-xs cursor-pointer disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] hover:bg-white hover:border-[#6C306E] transition text-[#6C306E] font-bold text-[10.5px] sm:text-xs cursor-pointer disabled:opacity-50"
                             >
-                                <CameraIcon size={15} color="#6C306E" />
+                                <CameraIcon size={14} color="#6C306E" />
                                 <span>Add Photos ({images.length}/4)</span>
                             </button>
 
@@ -456,9 +456,9 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                                 type="button"
                                 onClick={() => videoInputRef.current?.click()}
                                 disabled={videos.length >= 1 || isUploading}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] hover:bg-white hover:border-[#6C306E] transition text-[#6C306E] font-bold text-xs cursor-pointer disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] hover:bg-white hover:border-[#6C306E] transition text-[#6C306E] font-bold text-[10.5px] sm:text-xs cursor-pointer disabled:opacity-50"
                             >
-                                <VideoIcon size={15} color="#6C306E" />
+                                <VideoIcon size={14} color="#6C306E" />
                                 <span>Add Video ({videos.length}/1)</span>
                             </button>
                         </div>
@@ -467,7 +467,7 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                         {(images.length > 0 || videos.length > 0) && (
                             <div className="flex flex-wrap gap-2 pt-1">
                                 {images.map((imgUrl, idx) => (
-                                    <div key={`img-${idx}`} className="relative size-16 rounded-xl overflow-hidden border border-[#EFE0EF] group bg-white shadow-2xs">
+                                    <div key={`img-${idx}`} className="relative size-14 sm:size-16 rounded-lg sm:rounded-xl overflow-hidden border border-[#EFE0EF] group bg-white shadow-2xs">
                                         <Image src={imgUrl} alt={`Upload ${idx + 1}`} fill className="object-cover" />
                                         <button
                                             type="button"
@@ -480,10 +480,10 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                                 ))}
 
                                 {videos.map((vidUrl, idx) => (
-                                    <div key={`vid-${idx}`} className="relative size-16 rounded-xl overflow-hidden border border-[#6C306E] group bg-black shadow-2xs flex items-center justify-center">
+                                    <div key={`vid-${idx}`} className="relative size-14 sm:size-16 rounded-lg sm:rounded-xl overflow-hidden border border-[#6C306E] group bg-black shadow-2xs flex items-center justify-center">
                                         <video src={vidUrl} className="w-full h-full object-cover opacity-80" />
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <VideoIcon size={16} color="#FFFFFF" />
+                                            <VideoIcon size={14} color="#FFFFFF" />
                                         </div>
                                         <button
                                             type="button"
@@ -500,16 +500,16 @@ const RatingModal = ({ ratingModal, setRatingModal, onReviewSubmitted }) => {
                 </div>
 
                 {/* Footer Submit Button */}
-                <div className="pt-3 border-t border-[#EFE0EF]">
+                <div className="pt-2.5 sm:pt-3 border-t border-[#EFE0EF]">
                     <motion.button
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         type="button"
                         onClick={handleSubmit}
                         disabled={isSubmitting || isUploading || review.trim().length < 5}
-                        className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-[11px] sm:text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
-                        <ReviewBadgeIcon size={16} color="#FFFFFF" />
+                        <ReviewBadgeIcon size={15} color="#FFFFFF" />
                         <span>{isSubmitting ? 'Publishing Review...' : 'Publish Verified Review'}</span>
                     </motion.button>
                 </div>

@@ -487,12 +487,12 @@ export default function AuthModal({
                         {/* FULL NAME (Sign Up only) */}
                         {mode === 'signup' && (
                             <div>
-                                <label className="block text-[#241224] font-bold mb-1">
+                                <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                     Full Name <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <UserIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <UserIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type="text"
@@ -500,7 +500,7 @@ export default function AuthModal({
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="e.g. Ayesha Rahman"
-                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                     />
                                 </div>
                             </div>
@@ -508,12 +508,12 @@ export default function AuthModal({
 
                         {/* EMAIL ADDRESS (Strictly Email for Sign In and Sign Up) */}
                         <div>
-                            <label className="block text-[#241224] font-bold mb-1">
+                            <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                 Email Address <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <MailIcon size={15} color="#6C306E" />
+                                <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <MailIcon size={14} color="#6C306E" />
                                 </div>
                                 <input
                                     type="email"
@@ -521,7 +521,7 @@ export default function AuthModal({
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@example.com"
-                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                 />
                             </div>
                         </div>
@@ -529,12 +529,12 @@ export default function AuthModal({
                         {/* PHONE NUMBER (Sign Up only) */}
                         {mode === 'signup' && (
                             <div>
-                                <label className="block text-[#241224] font-bold mb-1">
+                                <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                     Phone Number <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <PhoneIcon size={15} color="#6C306E" />
+                                    <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <PhoneIcon size={14} color="#6C306E" />
                                     </div>
                                     <input
                                         type="tel"
@@ -542,7 +542,7 @@ export default function AuthModal({
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="01XXXXXXXXX"
-                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-3 h-8.5 text-xs outline-none text-[#241224] font-medium placeholder:text-slate-400 transition"
+                                        className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none text-[#241224] font-medium placeholder:text-slate-400 transition"
                                     />
                                 </div>
                             </div>
@@ -550,12 +550,12 @@ export default function AuthModal({
 
                         {/* PASSWORD */}
                         <div>
-                            <label className="block text-[#241224] font-bold mb-1">
+                            <label className="block text-[#241224] font-bold text-[10.5px] sm:text-xs mb-1">
                                 Password <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                    <LockIcon size={15} color="#6C306E" />
+                                <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <LockIcon size={14} color="#6C306E" />
                                 </div>
                                 <input
                                     type={showPassword ? 'text' : 'password'}
@@ -563,15 +563,15 @@ export default function AuthModal({
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-9 pr-9 h-8.5 text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
+                                    className="w-full bg-[#FAF6FA]/70 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-8.5 h-[30px] sm:h-[34px] text-[11px] sm:text-xs outline-none text-[#241224] placeholder:text-slate-400 transition"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    {showPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                    {showPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                 </button>
                             </div>
                         </div>

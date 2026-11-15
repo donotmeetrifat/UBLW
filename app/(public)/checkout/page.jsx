@@ -795,7 +795,7 @@ export default function CheckoutPage() {
 
                                 <div className="space-y-2">
                                     <div>
-                                        <label className="block text-[11px] font-bold text-[#241224] mb-1">
+                                        <label className="block text-[10.5px] sm:text-[11px] font-bold text-[#241224] mb-1">
                                             Transaction ID (TrxID) <span className="text-rose-600">*</span>
                                         </label>
                                         <input
@@ -803,12 +803,12 @@ export default function CheckoutPage() {
                                             placeholder="e.g. BK92810X72"
                                             value={transactionId}
                                             onChange={(e) => setTransactionId(e.target.value.toUpperCase())}
-                                            className="w-full h-8.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider outline-none text-[#241224]"
+                                            className="w-full h-[30px] sm:h-[34px] bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl px-2.5 sm:px-3 text-[10.5px] sm:text-xs font-mono font-bold uppercase tracking-wider outline-none text-[#241224]"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-bold text-[#241224] mb-1">
+                                        <label className="block text-[10.5px] sm:text-[11px] font-bold text-[#241224] mb-1">
                                             Sender Mobile Number <span className="text-rose-600">*</span>
                                         </label>
                                         <input
@@ -816,7 +816,7 @@ export default function CheckoutPage() {
                                             placeholder="e.g. 01959524393 or 017XXXXXXXX"
                                             value={senderNumber}
                                             onChange={(e) => setSenderNumber(e.target.value)}
-                                            className="w-full h-8.5 bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl px-3 py-1.5 text-xs font-mono font-bold outline-none text-[#241224]"
+                                            className="w-full h-[30px] sm:h-[34px] bg-white border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl px-2.5 sm:px-3 text-[10.5px] sm:text-xs font-mono font-bold outline-none text-[#241224]"
                                             required
                                         />
                                     </div>
@@ -826,9 +826,9 @@ export default function CheckoutPage() {
 
                         {/* Card Payment Notice */}
                         {paymentMethod === 'card' && (
-                            <div className="p-4 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl text-xs text-[#503E50] space-y-1">
+                            <div className="p-3.5 sm:p-4 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl sm:rounded-2xl text-[11px] sm:text-xs text-[#503E50] space-y-1">
                                 <p className="font-bold text-xs text-[#241224]">Card / Online Banking Checkout</p>
-                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <p className="text-[10.5px] sm:text-[11px] text-slate-500 leading-relaxed">
                                     Our beauty concierge will send you a secure SSLCommerz payment link right after booking your authentic UK products.
                                 </p>
                             </div>
@@ -836,14 +836,14 @@ export default function CheckoutPage() {
 
                         {/* 3. Delivery Notes */}
                         <div className="pt-3 border-t border-[#EFE0EF]">
-                            <label className="block text-xs font-bold text-[#241224] mb-1.5">
+                            <label className="block text-[10.5px] sm:text-xs font-bold text-[#241224] mb-1 sm:mb-1.5">
                                 Delivery Instructions & Notes (Optional)
                             </label>
                             <textarea
                                 value={customerNotes}
                                 onChange={(e) => setCustomerNotes(e.target.value)}
                                 placeholder="e.g. Deliver between 3 PM to 6 PM, please call when near the gate..."
-                                className="w-full p-2.5 text-xs bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl outline-none resize-none min-h-[56px]"
+                                className="w-full p-2 sm:p-2.5 text-[10.5px] sm:text-xs bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl outline-none resize-none min-h-[50px] font-medium"
                             />
                         </div>
                     </div>

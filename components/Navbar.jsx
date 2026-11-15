@@ -389,14 +389,14 @@ const Navbar = () => {
                     </div>
 
                     {/* Mobile Search Bar Row - Sleek & Compact */}
-                    <div className="sm:hidden mt-1.5 pb-0.5">
+                    <div className="sm:hidden mt-1 pb-0.5">
                         <form
                             onSubmit={handleSearch}
-                            className="w-full flex items-center text-xs gap-2 px-2.5 h-8 rounded-full bg-white/60 focus-within:bg-white/95 backdrop-blur-md border border-[#EFE0EF]/80 focus-within:border-[#6C306E] transition-all shadow-2xs"
+                            className="w-full flex items-center text-[10.5px] gap-1.5 px-2.5 h-[30px] rounded-full bg-white/70 focus-within:bg-white/95 backdrop-blur-md border border-[#EFE0EF]/80 focus-within:border-[#6C306E] transition-all shadow-2xs"
                         >
-                            <SearchIcon size={13} color="#6C306E" className="shrink-0" />
+                            <SearchIcon size={12} color="#6C306E" className="shrink-0" />
                             <input
-                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-[11px] font-medium leading-none"
+                                className="w-full bg-transparent outline-none placeholder-[#8A758A] text-[#241224] text-[10.5px] placeholder:text-[10.5px] font-medium leading-none"
                                 type="text"
                                 placeholder="Search authentic UK beauty..."
                                 value={search}
@@ -409,7 +409,7 @@ const Navbar = () => {
                                     className="p-1 rounded-full text-slate-400 hover:text-slate-600 transition cursor-pointer shrink-0"
                                     aria-label="Clear search"
                                 >
-                                    <CloseIcon size={11} />
+                                    <CloseIcon size={10} />
                                 </button>
                             )}
                         </form>

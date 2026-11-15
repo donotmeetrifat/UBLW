@@ -184,51 +184,51 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Full Name */}
                         <div>
-                            <label className="block text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1.5">
+                            <label className="block text-[10px] sm:text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1 sm:mb-1.5">
                                 Full Name
                             </label>
                             <div className="relative">
-                                <UserIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <UserIcon size={14} color="#6C306E" className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="text"
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Your Name"
-                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    className="w-full h-[30px] sm:h-[34px] pl-8 sm:pl-9 pr-3 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-[10.5px] sm:text-xs text-[#241224] transition font-medium"
                                 />
                             </div>
                         </div>
 
                         {/* Email (Read-only identifier) */}
                         <div>
-                            <label className="block text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1.5">
+                            <label className="block text-[10px] sm:text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1 sm:mb-1.5">
                                 Registered Email
                             </label>
                             <div className="relative">
-                                <MailIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <MailIcon size={14} color="#6C306E" className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="email"
                                     disabled
                                     value={email}
-                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-slate-100/70 text-slate-500 outline-none text-xs cursor-not-allowed font-medium"
+                                    className="w-full h-[30px] sm:h-[34px] pl-8 sm:pl-9 pr-3 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-slate-100/70 text-slate-500 outline-none text-[10.5px] sm:text-xs cursor-not-allowed font-medium"
                                 />
                             </div>
                         </div>
 
                         {/* Phone / WhatsApp */}
                         <div>
-                            <label className="block text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1.5">
+                            <label className="block text-[10px] sm:text-[11px] font-bold text-[#241224] uppercase tracking-wider mb-1 sm:mb-1.5">
                                 Contact Number
                             </label>
                             <div className="relative">
-                                <PhoneIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <PhoneIcon size={14} color="#6C306E" className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                     type="tel"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="01XXXXXXXXX"
-                                    className="w-full h-8.5 pl-9 pr-3 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                    className="w-full h-[30px] sm:h-[34px] pl-8 sm:pl-9 pr-3 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-[10.5px] sm:text-xs text-[#241224] transition font-medium"
                                 />
                             </div>
                         </div>
@@ -247,7 +247,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="New Password"
-                                            className="w-full h-8.5 pl-3 pr-8 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                            className="w-full h-[30px] sm:h-[34px] pl-2.5 sm:pl-3 pr-8 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-[10.5px] sm:text-xs text-[#241224] transition font-medium"
                                         />
                                         <button
                                             type="button"
@@ -264,7 +264,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="Confirm Password"
-                                            className="w-full h-8.5 pl-3 pr-8 rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-xs text-[#241224] transition font-medium"
+                                            className="w-full h-[30px] sm:h-[34px] pl-2.5 sm:pl-3 pr-8 rounded-lg sm:rounded-xl border border-[#EFE0EF] bg-[#FAF6FA] focus:bg-white focus:border-[#6C306E] outline-none text-[10.5px] sm:text-xs text-[#241224] transition font-medium"
                                         />
                                         <button
                                             type="button"
@@ -289,7 +289,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                                         placeholder="Enter 6-digit OTP"
-                                        className="w-full text-center py-2 rounded-xl border-2 border-[#EFE0EF] bg-white focus:border-[#6C306E] outline-none font-mono text-base font-black tracking-widest text-[#3A0C38]"
+                                        className="w-full text-center py-1.5 sm:py-2 rounded-lg sm:rounded-xl border-2 border-[#EFE0EF] bg-white focus:border-[#6C306E] outline-none font-mono text-sm sm:text-base font-black tracking-widest text-[#3A0C38]"
                                         required
                                     />
                                     <div className="flex items-center justify-between text-[10px] text-slate-500">
@@ -309,13 +309,13 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                         </div>
 
                         {/* Save Button */}
-                        <div className="pt-3">
+                        <div className="pt-2 sm:pt-3">
                             <motion.button
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 type="submit"
                                 disabled={loading || (otpStep && otp.length !== 6)}
-                                className="w-full py-3 rounded-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-xs transition duration-200 flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-60"
+                                className="w-full py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#6C306E] via-[#521C54] to-[#3A0C38] hover:from-[#7E3780] hover:to-[#451245] text-white font-bold text-[11px] sm:text-xs transition duration-200 flex items-center justify-center gap-2 shadow-xs sm:shadow-md cursor-pointer disabled:opacity-60"
                             >
                                 {loading ? (
                                     <span>Processing...</span>
@@ -324,7 +324,7 @@ export default function AccountModal({ isOpen, onClose, user, onUserUpdated }) {
                                         <span>
                                             {password ? (otpStep ? 'Verify OTP & Save Password' : 'Send OTP & Save Changes') : 'Save Changes'}
                                         </span>
-                                        <CheckIcon size={14} color="#FFFFFF" />
+                                        <CheckIcon size={13} color="#FFFFFF" />
                                     </>
                                 )}
                             </motion.button>
