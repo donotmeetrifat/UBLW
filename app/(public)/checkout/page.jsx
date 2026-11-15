@@ -64,6 +64,7 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [confirmedOrder, setConfirmedOrder] = useState(null)
     const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+    const [isQrZoomOpen, setIsQrZoomOpen] = useState(false)
 
     // 0. Strict authentication check: visitors cannot proceed to checkout without signing in
     useEffect(() => {
@@ -754,16 +755,22 @@ export default function CheckoutPage() {
 
                                         {/* Large, High-Contrast QR Code Container */}
                                         <div className="flex flex-col items-center justify-center pt-1">
-                                            <div className="relative group p-4 sm:p-5 bg-white rounded-2xl border-2 border-[#EFE0EF] shadow-sm hover:border-[#6C306E]/40 transition-all duration-200">
-                                                <div className="max-w-full w-48 h-48 min-[380px]:w-56 min-[380px]:h-56 sm:w-64 sm:h-64 flex items-center justify-center overflow-hidden bg-white rounded-xl">
-                                                    <Image
+                                            <div
+                                                onClick={() => setIsQrZoomOpen(true)}
+                                                title="Click to view full size QR code"
+                                                className="relative group w-full max-w-[320px] sm:max-w-[380px] bg-white rounded-2xl border-2 border-[#EFE0EF] shadow-sm hover:border-[#6C306E]/50 hover:shadow-md transition-all duration-200 cursor-pointer p-2 sm:p-2.5 flex items-center justify-center overflow-hidden"
+                                            >
+                                                <div className="w-full flex items-center justify-center overflow-hidden bg-white rounded-xl">
+                                                    <img
                                                         src={settings.payments[paymentMethod].qrCode}
                                                         alt={`${paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code`}
-                                                        width={320}
-                                                        height={320}
-                                                        className="w-full h-full object-contain"
-                                                        priority
+                                                        className="w-full h-auto max-h-[420px] sm:max-h-[480px] object-contain rounded-xl select-none transition-transform duration-200 group-hover:scale-[1.01]"
                                                     />
+                                                </div>
+
+                                                {/* Tap to zoom hint badge */}
+                                                <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md border border-[#EFE0EF] rounded-full px-2.5 py-1 text-[10px] font-bold text-[#6C306E] shadow-2xs opacity-90 group-hover:opacity-100 flex items-center gap-1">
+                                                    <span>Tap to enlarge</span>
                                                 </div>
                                             </div>
                                             <p className="text-[11px] text-slate-500 text-center mt-3 max-w-sm font-medium">
@@ -1106,6 +1113,57 @@ export default function CheckoutPage() {
                     onClose={() => setShowInvoiceModal(false)}
                 />
             )}
+
+            {/* QR Code Fullscreen Zoom Lightbox Modal */}
+            <AnimatePresence>
+                {isQrZoomOpen && settings.payments[paymentMethod]?.qrCode && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsQrZoomOpen(false)}
+                        className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none cursor-pointer"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.92, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.92, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative bg-white rounded-3xl p-4 sm:p-6 max-w-md w-full shadow-2xl border border-white/40 flex flex-col items-center cursor-default"
+                        >
+                            <div className="w-full flex items-center justify-between pb-3 border-b border-[#EFE0EF]">
+                                <div>
+                                    <h4 className="font-extrabold text-sm sm:text-base text-[#241224]">
+                                        {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} QR Code
+                                    </h4>
+                                    <p className="text-[11px] text-slate-500 font-medium">
+                                        Scan with your app camera to pay <strong className="text-[#6C306E] font-bold">{currency}{finalTotal.toLocaleString()}</strong>
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsQrZoomOpen(false)}
+                                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                                >
+                                    <CloseIcon size={18} color="currentColor" />
+                                </button>
+                            </div>
+
+                            <div className="w-full flex items-center justify-center p-2 mt-3 bg-white rounded-2xl border border-[#EFE0EF]">
+                                <img
+                                    src={settings.payments[paymentMethod].qrCode}
+                                    alt="Enlarged QR Code"
+                                    className="w-full h-auto max-h-[70vh] object-contain rounded-xl"
+                                />
+                            </div>
+
+                            <p className="text-xs text-slate-400 text-center mt-3 font-medium">
+                                Tap anywhere outside to close
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
