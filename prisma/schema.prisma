@@ -66,6 +66,7 @@ model User {
     orders      Order[]     @relation("CustomerOrders")
     ratings     Rating[]
     inquiries   Inquiry[]
+    chatMessages ChatMessage[] @relation("UserChatMessages")
     store       Store?
 }
 
@@ -260,5 +261,22 @@ model Inquiry {
 
     @@index([userId])
     @@index([status])
+    @@index([createdAt])
+}
+
+model ChatMessage {
+    id        String   @id @default(cuid())
+    userId    String?
+    sessionId String?
+    role      String   // "user" or "assistant"
+    content   String
+    products  Json?    // Optional structured products attached to this response: [{ id, name, brand, price, mrp, image, inStock }]
+    image     String?  // Optional image attachment (URL or base64)
+    createdAt DateTime @default(now())
+
+    user User? @relation("UserChatMessages", fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([sessionId])
     @@index([createdAt])
 }

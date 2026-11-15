@@ -595,4 +595,13 @@ export const AlertTriangleIcon = ({ size = 20, className = '', color = 'currentC
     </svg>
 )
 
+// 48. Clean Send Plane Icon
+export const SendIcon = ({ size = 18, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <line x1="22" y1="2" x2="11" y2="13" />
+        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+)
+
+
 

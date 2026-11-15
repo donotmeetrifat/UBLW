@@ -52,6 +52,12 @@ const navSections = [
         ]
     },
     {
+        section: 'AI & Sales Automation',
+        items: [
+            { name: 'AI Saleswoman Bot', href: '/admin/ai-bot', icon: SparklesIcon },
+        ]
+    },
+    {
         section: 'Store Settings',
         items: [
             { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
