@@ -51,7 +51,7 @@ export default function CheckoutPage() {
     const [coupon, setCoupon] = useState(null)
     const [couponInput, setCouponInput] = useState('')
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
-    const [paymentMethod, setPaymentMethod] = useState('cod')
+    const [paymentMethod, setPaymentMethod] = useState('bkash')
     const [transactionId, setTransactionId] = useState('')
     const [senderNumber, setSenderNumber] = useState('')
     const [customerNotes, setCustomerNotes] = useState('')
@@ -568,38 +568,13 @@ export default function CheckoutPage() {
                             <p className="text-[11px] text-slate-400 mt-0.5">Choose your preferred payment channel</p>
                         </div>
 
-                        {/* Payment Options List */}
+                        {/* Payment Options List: bKash, Nagad, Rocket, Cash on Delivery */}
                         <div className="space-y-3">
-                            {/* Option 1: Cash on Delivery */}
-                            {settings.payments.cod?.enabled !== false && (
-                                <div
-                                    onClick={() => setPaymentMethod('cod')}
-                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
-                                        paymentMethod === 'cod'
-                                            ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
-                                            : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                            paymentMethod === 'cod' ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300 bg-white'
-                                        }`}>
-                                            {paymentMethod === 'cod' && <div className="size-1.5 rounded-full bg-white" />}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.cod?.label || 'Cash on Delivery'}</p>
-                                            <p className="text-[10px] text-slate-500">{settings.payments.cod?.sub || 'Pay cash upon product inspection (Nationwide)'}</p>
-                                        </div>
-                                    </div>
-                                    <CashDeliveryIcon size={22} color={paymentMethod === 'cod' ? '#6C306E' : '#7B667B'} />
-                                </div>
-                            )}
-
-                            {/* Option 2: bKash Send Money */}
+                            {/* Option 1: bKash */}
                             {settings.payments.bkash?.enabled !== false && (
                                 <div
                                     onClick={() => setPaymentMethod('bkash')}
-                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                    className={`p-3.5 sm:p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                         paymentMethod === 'bkash'
                                             ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
                                             : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
@@ -611,22 +586,19 @@ export default function CheckoutPage() {
                                         }`}>
                                             {paymentMethod === 'bkash' && <div className="size-1.5 rounded-full bg-white" />}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.bkash?.label || 'bKash Send Money'}</p>
-                                            <p className="text-[10px] text-slate-500 font-mono">
-                                                {settings.payments.bkash?.number || '01959-524393'} ({settings.payments.bkash?.type || 'Personal'})
-                                            </p>
-                                        </div>
+                                        <p className="font-bold text-xs sm:text-sm text-[#241224]">bKash</p>
                                     </div>
-                                    <MobileBankingIcon size={22} color={paymentMethod === 'bkash' ? '#6C306E' : '#7B667B'} />
+                                    <div className="size-8 sm:size-9 flex items-center justify-center shrink-0">
+                                        <img src="/payments/bkash.png" alt="bKash" className="size-7 sm:size-8 object-contain" />
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Option 3: Nagad Wallet */}
+                            {/* Option 2: Nagad */}
                             {settings.payments.nagad?.enabled !== false && (
                                 <div
                                     onClick={() => setPaymentMethod('nagad')}
-                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                    className={`p-3.5 sm:p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                         paymentMethod === 'nagad'
                                             ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
                                             : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
@@ -638,49 +610,67 @@ export default function CheckoutPage() {
                                         }`}>
                                             {paymentMethod === 'nagad' && <div className="size-1.5 rounded-full bg-white" />}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.nagad?.label || 'Nagad Wallet'}</p>
-                                            <p className="text-[10px] text-slate-500 font-mono">
-                                                {settings.payments.nagad?.number || '01959-524393'} ({settings.payments.nagad?.type || 'Personal'})
-                                            </p>
-                                        </div>
+                                        <p className="font-bold text-xs sm:text-sm text-[#241224]">Nagad</p>
                                     </div>
-                                    <MobileBankingIcon size={22} color={paymentMethod === 'nagad' ? '#6C306E' : '#7B667B'} />
+                                    <div className="size-8 sm:size-9 flex items-center justify-center shrink-0">
+                                        <img src="/payments/nagad.png" alt="Nagad" className="size-7 sm:size-8 object-contain" />
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Option 4: Rocket App */}
+                            {/* Option 3: Rocket */}
                             {settings.payments.rocket?.enabled !== false && (
                                 <div
                                     onClick={() => setPaymentMethod('rocket')}
-                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                    className={`p-3.5 sm:p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                         paymentMethod === 'rocket'
-                                            ? 'border-[#8C3494] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#8C3494]/30'
-                                            : 'border-[#EFE0EF] bg-white hover:border-[#8C3494]/40'
+                                            ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
+                                            : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                            paymentMethod === 'rocket' ? 'border-[#8C3494] bg-[#8C3494]' : 'border-slate-300 bg-white'
+                                            paymentMethod === 'rocket' ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300 bg-white'
                                         }`}>
                                             {paymentMethod === 'rocket' && <div className="size-1.5 rounded-full bg-white" />}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.rocket?.label || 'Rocket App'}</p>
-                                            <p className="text-[10px] text-slate-500 font-mono">
-                                                {settings.payments.rocket?.number || '01959-524393'} ({settings.payments.rocket?.type || 'Personal'})
-                                            </p>
-                                        </div>
+                                        <p className="font-bold text-xs sm:text-sm text-[#241224]">Rocket</p>
                                     </div>
-                                    <RocketIcon size={22} color={paymentMethod === 'rocket' ? '#8C3494' : '#7B667B'} />
+                                    <div className="size-8 sm:size-9 flex items-center justify-center shrink-0">
+                                        <img src="/payments/rocket.png" alt="Rocket" className="size-7 sm:size-8 object-contain" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Option 4: Cash on Delivery */}
+                            {settings.payments.cod?.enabled !== false && (
+                                <div
+                                    onClick={() => setPaymentMethod('cod')}
+                                    className={`p-3.5 sm:p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                        paymentMethod === 'cod'
+                                            ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
+                                            : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`size-4.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                            paymentMethod === 'cod' ? 'border-[#6C306E] bg-[#6C306E]' : 'border-slate-300 bg-white'
+                                        }`}>
+                                            {paymentMethod === 'cod' && <div className="size-1.5 rounded-full bg-white" />}
+                                        </div>
+                                        <p className="font-bold text-xs sm:text-sm text-[#241224]">Cash on Delivery</p>
+                                    </div>
+                                    <div className="size-8 sm:size-9 flex items-center justify-center shrink-0">
+                                        <img src="/payments/cash.png" alt="Cash on Delivery" className="size-7 sm:size-8 object-contain" />
+                                    </div>
                                 </div>
                             )}
 
                             {/* Option 5: Debit / Credit Card */}
-                            {settings.payments.card?.enabled !== false && (
+                            {settings.payments.card?.enabled && (
                                 <div
                                     onClick={() => setPaymentMethod('card')}
-                                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                                    className={`p-3.5 sm:p-4 rounded-2xl border text-xs cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                         paymentMethod === 'card'
                                             ? 'border-[#6C306E] bg-[#FAF6FA] shadow-2xs ring-1 ring-[#6C306E]/30'
                                             : 'border-[#EFE0EF] bg-white hover:border-[#6C306E]/40'
@@ -692,10 +682,7 @@ export default function CheckoutPage() {
                                         }`}>
                                             {paymentMethod === 'card' && <div className="size-1.5 rounded-full bg-white" />}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-xs text-[#241224]">{settings.payments.card?.label || 'Debit / Credit Card'}</p>
-                                            <p className="text-[10px] text-slate-500">{settings.payments.card?.sub || 'Visa, Mastercard & online banking'}</p>
-                                        </div>
+                                        <p className="font-bold text-xs sm:text-sm text-[#241224]">Debit / Credit Card</p>
                                     </div>
                                     <CardPaymentIcon size={22} color={paymentMethod === 'card' ? '#6C306E' : '#7B667B'} />
                                 </div>
