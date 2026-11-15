@@ -11,7 +11,8 @@ import {
     RoyalCrownIcon,
     CloseIcon,
     ShieldCheckIcon,
-    PhoneIcon
+    PhoneIcon,
+    CameraIcon
 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -22,6 +23,7 @@ import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { FlowButton } from "@/components/ui/flow-button";
 import AccountModal from "@/components/AccountModal";
+import VisualSearchModal from "@/components/VisualSearchModal";
 import { requireSignIn } from "@/lib/clientAuth";
 import { sanitizeCartWithProducts } from "@/lib/features/cart/cartSlice";
 
@@ -34,7 +36,15 @@ const Navbar = () => {
     const [isCartBumping, setIsCartBumping] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+    const [isVisualSearchOpen, setIsVisualSearchOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+
+    // Allow opening visual search from custom events
+    useEffect(() => {
+        const handleOpen = () => setIsVisualSearchOpen(true);
+        window.addEventListener('open-visual-search', handleOpen);
+        return () => window.removeEventListener('open-visual-search', handleOpen);
+    }, []);
 
     const cart = useSelector(state => state.cart);
     const products = useSelector(state => state.product.list);
@@ -232,12 +242,12 @@ const Navbar = () => {
 
                         {/* Actions: Search, Cart, Account - Uniform Height & Pixel-Perfect Alignment */}
                         <div className="flex items-center gap-2.5 sm:gap-3">
-                            {/* 1. Smooth Expanding Search Bar (h-8) */}
+                            {/* 1. Smooth Expanding Search Bar (h-8) with Visual Camera Search */}
                             <form
                                 onSubmit={handleSearch}
-                                className={`hidden sm:flex items-center text-xs gap-2 px-3 h-8 rounded-full border transition-all duration-300 select-none ${isSearchFocused
-                                        ? 'w-52 lg:w-64 bg-white/95 border-[#6C306E] shadow-2xs'
-                                        : 'w-40 lg:w-52 bg-white/60 backdrop-blur-md border-[#EFE0EF]/80 hover:border-[#6C306E]/40'
+                                className={`hidden sm:flex items-center text-xs gap-1.5 pl-3 pr-1.5 h-8 rounded-full border transition-all duration-300 select-none ${isSearchFocused
+                                        ? 'w-56 lg:w-68 bg-white/95 border-[#6C306E] shadow-2xs'
+                                        : 'w-44 lg:w-56 bg-white/60 backdrop-blur-md border-[#EFE0EF]/80 hover:border-[#6C306E]/40'
                                     }`}
                             >
                                 <SearchIcon size={13} color="#6C306E" className="shrink-0 transition-transform group-focus-within:scale-110" />
@@ -250,6 +260,25 @@ const Navbar = () => {
                                     onBlur={() => setIsSearchFocused(false)}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
+                                {search && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearch('')}
+                                        className="p-0.5 rounded-full text-slate-400 hover:text-slate-600 transition cursor-pointer shrink-0"
+                                        aria-label="Clear search"
+                                    >
+                                        <CloseIcon size={10} />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsVisualSearchOpen(true)}
+                                    className="p-1 rounded-full text-slate-400 hover:text-[#6C306E] hover:bg-[#FAF6FA] transition cursor-pointer shrink-0 flex items-center justify-center"
+                                    title="Search by capturing or uploading product image"
+                                    aria-label="Visual Product Search"
+                                >
+                                    <CameraIcon size={14} color="#6C306E" />
+                                </button>
                             </form>
 
                             {/* 2. Luxury Cart / Bag Button (Desktop only: hidden on mobile/portrait devices where MobileBottomNav already has Bag) */}
@@ -388,7 +417,7 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Mobile Search Bar Row - Sleek & Compact */}
+                    {/* Mobile Search Bar Row - Sleek & Compact with Visual Search Camera Button */}
                     <div className="sm:hidden mt-1 pb-0.5">
                         <form
                             onSubmit={handleSearch}
@@ -412,6 +441,15 @@ const Navbar = () => {
                                     <CloseIcon size={10} />
                                 </button>
                             )}
+                            <button
+                                type="button"
+                                onClick={() => setIsVisualSearchOpen(true)}
+                                className="p-1 rounded-full text-[#6C306E] hover:bg-[#FAF6FA] transition cursor-pointer shrink-0 flex items-center justify-center"
+                                title="Search by capturing or uploading product image"
+                                aria-label="Visual Product Search"
+                            >
+                                <CameraIcon size={13} color="#6C306E" />
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -423,6 +461,12 @@ const Navbar = () => {
                 onClose={() => setIsAccountModalOpen(false)}
                 user={currentUser}
                 onUserUpdated={(updated) => setCurrentUser(updated)}
+            />
+
+            {/* Visual Product Search & Match Modal */}
+            <VisualSearchModal
+                isOpen={isVisualSearchOpen}
+                onClose={() => setIsVisualSearchOpen(false)}
             />
         </>
     );
