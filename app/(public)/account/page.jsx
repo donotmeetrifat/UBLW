@@ -225,7 +225,7 @@ export default function AccountPage() {
 
     const tabs = [
         { id: 'profile', label: 'Personal Details', icon: UserIcon },
-        { id: 'addresses', label: 'Delivery Addresses', icon: MapPinIcon },
+        { id: 'addresses', label: 'Delivery Address', icon: MapPinIcon },
         { id: 'security', label: 'Password & Security', icon: LockIcon },
     ]
 
@@ -265,22 +265,22 @@ export default function AccountPage() {
     }
 
     return (
-        <div className="min-h-[80vh] max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-slate-800">
+        <div className="min-h-[80vh] max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 text-slate-800">
             {/* Header */}
-            <div className="pb-6 border-b border-[#EFE0EF]">
-                <span className="text-[10px] font-bold text-[#6C306E] uppercase tracking-widest bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1 rounded-full">
+            <div className="pb-4 sm:pb-6 border-b border-[#EFE0EF]">
+                <span className="text-[9px] sm:text-[10px] font-bold text-[#6C306E] uppercase tracking-widest bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">
                     Customer Account Management
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#241224] mt-2">
+                <h1 className="text-xl sm:text-3xl font-extrabold text-[#241224] mt-1.5 sm:mt-2">
                     Manage My Account
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                <p className="text-[11px] sm:text-sm text-slate-500 mt-1">
                     Update your contact information, delivery addresses, and login credentials.
                 </p>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex flex-wrap gap-2 my-6 p-1.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl max-w-lg">
+            {/* Navigation Tabs - Strict Single Line Grid across All Devices */}
+            <div className="grid grid-cols-3 gap-1 sm:gap-2 my-4 sm:my-6 p-1 sm:p-1.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl sm:rounded-2xl w-full max-w-2xl">
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id
                     const Icon = tab.icon
@@ -289,14 +289,14 @@ export default function AccountPage() {
                             key={tab.id}
                             type="button"
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                            className={`w-full py-2 sm:py-2.5 px-1 sm:px-3.5 rounded-lg sm:rounded-xl text-[10px] min-[360px]:text-[10.5px] min-[400px]:text-[11.5px] sm:text-xs font-bold transition flex items-center justify-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap select-none ${
                                 isActive 
                                     ? 'bg-gradient-to-r from-[#6C306E] to-[#401242] text-white shadow-xs' 
                                     : 'text-slate-600 hover:text-[#6C306E] hover:bg-white'
                             }`}
                         >
-                            <Icon size={14} color={isActive ? '#FFFFFF' : 'currentColor'} />
-                            <span>{tab.label}</span>
+                            <Icon size={12} className="shrink-0 hidden min-[390px]:block sm:block sm:size-3.5" color={isActive ? '#FFFFFF' : 'currentColor'} />
+                            <span className="whitespace-nowrap">{tab.label}</span>
                         </button>
                     )
                 })}
@@ -307,72 +307,72 @@ export default function AccountPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white border border-[#EFE0EF] rounded-3xl p-6 sm:p-8 max-w-2xl shadow-2xs"
+                    className="bg-white border border-[#EFE0EF] rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-2xl shadow-2xs"
                 >
-                    <h2 className="text-base font-bold text-[#241224] mb-1">Personal & Contact Information</h2>
-                    <p className="text-xs text-slate-500 mb-6">Manage how your name and contact info appear on orders</p>
+                    <h2 className="text-sm sm:text-base font-bold text-[#241224] mb-0.5 sm:mb-1">Personal & Contact Information</h2>
+                    <p className="text-[11px] sm:text-xs text-slate-500 mb-4 sm:mb-6">Manage how your name and contact info appear on orders</p>
 
-                    <form onSubmit={handleUpdateProfile} className="space-y-4 text-xs">
+                    <form onSubmit={handleUpdateProfile} className="space-y-3 sm:space-y-4 text-xs">
                         <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">Full Name</label>
+                            <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[11px] sm:text-xs">Full Name</label>
                             <div className="relative">
-                                <UserIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <UserIcon size={13} color="#6C306E" className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none sm:size-3.5" />
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your full name"
-                                    className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 outline-none text-[#241224] text-xs font-medium"
+                                    className="w-full h-8 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 sm:pr-3.5 outline-none text-[#241224] text-[11px] sm:text-xs font-medium"
                                     required
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">
+                            <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[11px] sm:text-xs">
                                 WhatsApp / Mobile Contact Number
                             </label>
                             <div className="relative">
-                                <PhoneIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <PhoneIcon size={13} color="#6C306E" className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none sm:size-3.5" />
                                 <input
                                     type="tel"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="019XXXXXXXX or 017XXXXXXXX"
-                                    className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-3.5 outline-none text-[#241224] text-xs font-mono font-bold"
+                                    className="w-full h-8 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-3 sm:pr-3.5 outline-none text-[#241224] text-[11px] sm:text-xs font-mono font-bold"
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">Used for courier delivery updates & dispatch notices</p>
+                            <p className="text-[9.5px] sm:text-[10px] text-slate-400 mt-0.5 sm:mt-1">Used for courier delivery updates & dispatch notices</p>
                         </div>
 
                         <div>
-                            <label className="block text-slate-700 font-bold mb-1.5">Email Address</label>
+                            <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[11px] sm:text-xs">Email Address</label>
                             <div className="relative">
-                                <MailIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                                <MailIcon size={13} color="#6C306E" className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60 sm:size-3.5" />
                                 <input
                                     type="email"
                                     readOnly
                                     disabled
                                     value={email}
                                     placeholder="customer@email.com"
-                                    className="w-full h-8.5 sm:h-9 bg-slate-100/70 border border-[#EFE0EF] rounded-xl pl-9 pr-9 outline-none text-slate-500 text-xs font-medium cursor-not-allowed select-none"
+                                    className="w-full h-8 sm:h-9 bg-slate-100/70 border border-[#EFE0EF] rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-8 sm:pr-9 outline-none text-slate-500 text-[11px] sm:text-xs font-medium cursor-not-allowed select-none"
                                 />
-                                <LockIcon size={13} color="#94A3B8" className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <LockIcon size={12} color="#94A3B8" className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none sm:size-3.5" />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">
+                            <p className="text-[9.5px] sm:text-[10px] text-slate-400 mt-0.5 sm:mt-1">
                                 Registered email is permanently linked to your account for security and cannot be changed.
                             </p>
                         </div>
 
-                        <div className="pt-3">
+                        <div className="pt-2 sm:pt-3">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
                                 disabled={profileSaving}
-                                className="px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                                className="w-full sm:w-auto px-5 py-2 sm:px-8 sm:py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-[10.5px] sm:text-xs uppercase tracking-wider transition shadow-xs sm:shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
                             >
-                                <CheckIcon size={14} color="#FFFFFF" />
+                                <CheckIcon size={13} color="#FFFFFF" className="sm:size-3.5" />
                                 <span>{profileSaving ? 'Saving Changes...' : 'Save Profile Changes'}</span>
                             </motion.button>
                         </div>
@@ -471,98 +471,98 @@ export default function AccountPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white border border-[#EFE0EF] rounded-3xl p-6 sm:p-8 max-w-2xl shadow-2xs"
+                    className="bg-white border border-[#EFE0EF] rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-2xl shadow-2xs"
                 >
                     {!otpStep ? (
                         <>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs">
-                                    <LockIcon size={18} color="#6C306E" />
+                            <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+                                <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shadow-2xs shrink-0">
+                                    <LockIcon size={15} color="#6C306E" className="sm:size-[18px]" />
                                 </div>
                                 <div>
-                                    <h2 className="text-base font-bold text-[#241224]">Change Account Password</h2>
-                                    <p className="text-xs text-slate-500">Requires verified 6-digit OTP to protect your account</p>
+                                    <h2 className="text-sm sm:text-base font-bold text-[#241224]">Change Account Password</h2>
+                                    <p className="text-[11px] sm:text-xs text-slate-500">Requires verified 6-digit OTP to protect your account</p>
                                 </div>
                             </div>
 
-                            <form onSubmit={handleRequestPasswordOtp} className="space-y-4 text-xs">
+                            <form onSubmit={handleRequestPasswordOtp} className="space-y-3 sm:space-y-4 text-xs">
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1.5">New Password</label>
+                                    <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[11px] sm:text-xs">New Password</label>
                                     <div className="relative">
-                                        <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <LockIcon size={13} color="#6C306E" className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none sm:size-3.5" />
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="Enter at least 6 characters"
-                                            className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full h-8 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-9 sm:pr-10 outline-none text-[#241224] text-[11px] sm:text-xs font-medium"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
+                                            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
                                             aria-label={showPassword ? "Hide password" : "Show password"}
                                         >
-                                            {showPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                            {showPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1.5">Confirm New Password</label>
+                                    <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-[11px] sm:text-xs">Confirm New Password</label>
                                     <div className="relative">
-                                        <LockIcon size={14} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <LockIcon size={13} color="#6C306E" className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none sm:size-3.5" />
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="Re-enter new password"
-                                            className="w-full h-8.5 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-xl pl-9 pr-10 outline-none text-[#241224] text-xs font-medium"
+                                            className="w-full h-8 sm:h-9 bg-[#FAF6FA] border border-[#EFE0EF] focus:border-[#6C306E] rounded-lg sm:rounded-xl pl-8 sm:pl-9 pr-9 sm:pr-10 outline-none text-[#241224] text-[11px] sm:text-xs font-medium"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
+                                            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#6C306E] transition cursor-pointer"
                                             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                                         >
-                                            {showConfirmPassword ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
+                                            {showConfirmPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="pt-3">
+                                <div className="pt-2 sm:pt-3">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
                                         disabled={isSendingOtp}
-                                        className="px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                                        className="w-full sm:w-auto px-5 py-2 sm:px-8 sm:py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-[10.5px] sm:text-xs uppercase tracking-wider transition shadow-xs sm:shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
                                     >
-                                        <ShieldCheckIcon size={16} color="#FFFFFF" />
+                                        <ShieldCheckIcon size={14} color="#FFFFFF" className="sm:size-4" />
                                         <span>{isSendingOtp ? 'Sending OTP Code...' : 'Send OTP & Continue'}</span>
                                     </motion.button>
                                 </div>
                             </form>
                         </>
                     ) : (
-                        <div className="space-y-5 text-xs">
-                            <div className="flex items-center gap-3 pb-4 border-b border-[#EFE0EF]">
-                                <div className="size-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs">
-                                    <ShieldCheckIcon size={20} color="#059669" />
+                        <div className="space-y-4 sm:space-y-5 text-xs">
+                            <div className="flex items-center gap-2.5 sm:gap-3 pb-3 sm:pb-4 border-b border-[#EFE0EF]">
+                                <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
+                                    <ShieldCheckIcon size={16} color="#059669" className="sm:size-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-base font-bold text-[#241224]">Enter Verification Code (OTP)</h2>
-                                    <p className="text-xs text-slate-500">
+                                    <h2 className="text-sm sm:text-base font-bold text-[#241224]">Enter Verification Code (OTP)</h2>
+                                    <p className="text-[11px] sm:text-xs text-slate-500">
                                         We sent a 6-digit security code to your email <strong className="text-[#6C306E] font-mono">{otpTarget}</strong>. Copy the code from your inbox and enter it below.
                                     </p>
                                 </div>
                             </div>
 
-                            <form onSubmit={handleVerifyAndUpdatePassword} className="space-y-4">
+                            <form onSubmit={handleVerifyAndUpdatePassword} className="space-y-3 sm:space-y-4">
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1.5 text-center">
+                                    <label className="block text-slate-700 font-bold mb-1 sm:mb-1.5 text-center text-[11px] sm:text-xs">
                                         6-Digit Verification Code
                                     </label>
                                     <div className="max-w-xs mx-auto">
@@ -573,13 +573,13 @@ export default function AccountPage() {
                                             value={otp}
                                             onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                                             placeholder="• • • • • •"
-                                            className="w-full bg-[#FAF6FA] border-2 border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-2xl py-3.5 text-center font-mono text-xl font-extrabold tracking-[0.4em] text-[#3A0C38] outline-none shadow-inner transition"
+                                            className="w-full bg-[#FAF6FA] border-2 border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl sm:rounded-2xl py-2.5 sm:py-3.5 text-center font-mono text-lg sm:text-xl font-extrabold tracking-[0.4em] text-[#3A0C38] outline-none shadow-inner transition"
                                             required
                                         />
                                     </div>
                                 </div>
 
-                                <div className="text-center text-xs text-slate-500">
+                                <div className="text-center text-[11px] sm:text-xs text-slate-500">
                                     {countdown > 0 ? (
                                         <span>Resend code in <strong className="font-mono text-[#6C306E]">{countdown}s</strong></span>
                                     ) : (
@@ -594,22 +594,22 @@ export default function AccountPage() {
                                     )}
                                 </div>
 
-                                <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 justify-center">
+                                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 justify-center">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
                                         disabled={passwordSaving || otp.length !== 6}
-                                        className="w-full sm:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-xs uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto px-5 py-2 sm:px-8 sm:py-3 rounded-full bg-gradient-to-r from-[#6C306E] to-[#401242] text-white font-bold text-[10.5px] sm:text-xs uppercase tracking-wider transition shadow-xs sm:shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
                                     >
-                                        <CheckIcon size={14} color="#FFFFFF" />
+                                        <CheckIcon size={13} color="#FFFFFF" className="sm:size-3.5" />
                                         <span>{passwordSaving ? 'Verifying & Updating...' : 'Verify OTP & Change Password'}</span>
                                     </motion.button>
 
                                     <button
                                         type="button"
                                         onClick={() => { setOtpStep(false); setOtp(''); }}
-                                        className="w-full sm:w-auto px-5 py-3 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-slate-600 font-bold text-xs transition cursor-pointer"
+                                        className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-3 rounded-full bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-slate-600 font-bold text-[10.5px] sm:text-xs transition cursor-pointer"
                                     >
                                         Back / Edit Password
                                     </button>
