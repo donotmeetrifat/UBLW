@@ -419,7 +419,7 @@ export default function AdminDashboard() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                                     transition={{ duration: 0.15 }}
-                                    className="absolute right-0 mt-2 z-50 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl w-72 sm:w-80 overflow-hidden text-xs"
+                                    className="absolute left-0 mt-2 z-50 bg-white border border-[#EFE0EF] rounded-2xl shadow-xl w-[calc(100vw-2rem)] max-w-xs sm:w-80 overflow-hidden text-xs"
                                 >
                                     {/* Dropdown Header */}
                                     <div className="px-3.5 py-2.5 bg-[#FAF6FA] border-b border-[#EFE0EF] flex items-center justify-between">
@@ -638,15 +638,6 @@ export default function AdminDashboard() {
                     >
                         <PlusIcon size={14} />
                         <span>Manage Products</span>
-                    </Link>
-
-                    {/* 4. Views Analytics */}
-                    <Link
-                        href="/admin/analytics"
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-[#FAF6FA] text-[#6C306E] border border-[#EFE0EF] px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-2xs"
-                    >
-                        <TrendIcon size={14} color="#6C306E" />
-                        <span>Views Analytics</span>
                     </Link>
                 </div>
             </div>
