@@ -21,17 +21,36 @@ export async function GET(request) {
 
         const inStockCount = catalog.filter(p => p.inStock).length;
 
+        const hasGemini = Boolean(settings.geminiKey && settings.geminiKey.trim());
+        const hasGroq = Boolean(settings.groqKey && settings.groqKey.trim());
+        const hasOpenRouter = Boolean(settings.openRouterKey && settings.openRouterKey.trim());
+
         return NextResponse.json({
             success: true,
             settings: {
-                hasGeminiKey: Boolean(settings.geminiKey && settings.geminiKey.trim()),
+                hasGeminiKey: hasGemini,
                 maskedGeminiKey: maskKey(settings.geminiKey),
-                hasGroqKey: Boolean(settings.groqKey && settings.groqKey.trim()),
+                hasGroqKey: hasGroq,
                 maskedGroqKey: maskKey(settings.groqKey),
-                hasGrokKey: Boolean(settings.groqKey && settings.groqKey.trim()),
+                hasGrokKey: hasGroq,
                 maskedGrokKey: maskKey(settings.groqKey),
-                hasOpenRouterKey: Boolean(settings.openRouterKey && settings.openRouterKey.trim()),
+                hasOpenRouterKey: hasOpenRouter,
                 maskedOpenRouterKey: maskKey(settings.openRouterKey),
+
+                // Explicit connection status objects
+                gemini: {
+                    isConnected: hasGemini,
+                    maskedKey: maskKey(settings.geminiKey),
+                },
+                groq: {
+                    isConnected: hasGroq,
+                    maskedKey: maskKey(settings.groqKey),
+                },
+                openrouter: {
+                    isConnected: hasOpenRouter,
+                    maskedKey: maskKey(settings.openRouterKey),
+                },
+
                 preferredProvider: settings.preferredProvider || 'gemini',
                 customInstructions: settings.customInstructions || '',
                 botName: settings.botName || 'Emma - UK Beauty Specialist',
@@ -72,11 +91,46 @@ export async function POST(request) {
             action,
             testProvider,
             testKey,
+            provider: disconnectProvider,
         } = body;
 
         const effectiveGroqKey = groqKey !== undefined ? groqKey : grokKey;
 
-        // Action: Connection Test
+        // Action: Disconnect Provider API Key
+        if (action === 'disconnect') {
+            const rawTarget = (testProvider || disconnectProvider || '').toLowerCase();
+            const target = rawTarget === 'grok' ? 'groq' : rawTarget;
+
+            if (target === 'gemini') {
+                await saveAiSettings({ geminiKey: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'gemini',
+                    message: 'Google Gemini API disconnected successfully.',
+                });
+            } else if (target === 'groq') {
+                await saveAiSettings({ groqKey: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'groq',
+                    message: 'Groq Cloud API disconnected successfully.',
+                });
+            } else if (target === 'openrouter') {
+                await saveAiSettings({ openRouterKey: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'openrouter',
+                    message: 'OpenRouter API disconnected successfully.',
+                });
+            }
+
+            return NextResponse.json({ success: false, message: 'Invalid provider to disconnect' }, { status: 400 });
+        }
+
+        // Action: Connection Test & Auto-Connect
         if (action === 'test') {
             const rawProvider = (testProvider || 'gemini').toLowerCase();
             const provider = rawProvider === 'grok' ? 'groq' : rawProvider;
@@ -94,16 +148,15 @@ export async function POST(request) {
             if (!keyToTest) {
                 return NextResponse.json({
                     success: false,
-                    message: `No API key provided or saved for ${provider.toUpperCase()}`,
+                    message: `Please paste a valid ${provider.toUpperCase()} API key first.`,
                 }, { status: 400 });
             }
 
             const startTime = Date.now();
 
-            // 1. Google Gemini Dynamic Discovery & Multi-Candidate Ping
+            // 1. Google Gemini Dynamic Discovery & Verification
             if (provider === 'gemini') {
                 try {
-                    // Check API key validity via Google's ModelService
                     const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${keyToTest}`;
                     const listRes = await fetch(listUrl);
 
@@ -121,9 +174,8 @@ export async function POST(request) {
                     const allSupported = (listData.models || [])
                         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
                         .map(m => m.name.replace(/^models\//, ''))
-                        .filter(n => !n.includes('2.5') && !n.includes('8b')); // Exclude deprecated 2.5 or discontinued 8b
+                        .filter(n => !n.includes('2.5') && !n.includes('8b'));
 
-                    // Prioritized stable models queue
                     const priorityCandidates = [
                         'gemini-1.5-flash',
                         'gemini-1.5-flash-latest',
@@ -166,9 +218,15 @@ export async function POST(request) {
                     const totalLatency = Date.now() - startTime;
 
                     if (workingModel) {
+                        // Automatically persist verified key into database!
+                        await saveAiSettings({ geminiKey: keyToTest });
+
                         return NextResponse.json({
                             success: true,
-                            message: `Google Gemini (${workingModel}) connected successfully! Latency: ${totalLatency}ms`,
+                            isConnected: true,
+                            maskedKey: maskKey(keyToTest),
+                            provider: 'gemini',
+                            message: `Google Gemini connected & verified successfully! (${workingModel}, ${totalLatency}ms)`,
                             model: workingModel,
                             latencyMs: totalLatency,
                         });
@@ -233,9 +291,15 @@ export async function POST(request) {
                     const totalLatency = Date.now() - startTime;
 
                     if (pingRes.ok) {
+                        // Automatically persist verified key into database!
+                        await saveAiSettings({ groqKey: keyToTest });
+
                         return NextResponse.json({
                             success: true,
-                            message: `Groq Cloud verified successfully using ${chosenModel}! Latency: ${totalLatency}ms`,
+                            isConnected: true,
+                            maskedKey: maskKey(keyToTest),
+                            provider: 'groq',
+                            message: `Groq Cloud connected & verified successfully! (${chosenModel}, ${totalLatency}ms)`,
                             model: chosenModel,
                             latencyMs: totalLatency,
                         });
@@ -277,9 +341,15 @@ export async function POST(request) {
                     const totalLatency = Date.now() - startTime;
 
                     if (pingRes.ok) {
+                        // Automatically persist verified key into database!
+                        await saveAiSettings({ openRouterKey: keyToTest });
+
                         return NextResponse.json({
                             success: true,
-                            message: `OpenRouter verified successfully! Latency: ${totalLatency}ms`,
+                            isConnected: true,
+                            maskedKey: maskKey(keyToTest),
+                            provider: 'openrouter',
+                            message: `OpenRouter connected & verified successfully! (${totalLatency}ms)`,
                             latencyMs: totalLatency,
                         });
                     } else {
@@ -300,7 +370,7 @@ export async function POST(request) {
             }
         }
 
-        // Action: Save Settings
+        // Action: Save All Settings
         const updatePayload = {
             preferredProvider: preferredProvider === 'grok' ? 'groq' : preferredProvider,
             customInstructions,

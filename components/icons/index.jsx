@@ -603,5 +603,14 @@ export const SendIcon = ({ size = 18, className = '', color = 'currentColor', st
     </svg>
 )
 
+// 49. Disconnect / Unlink Icon
+export const DisconnectIcon = ({ size = 16, className = '', color = 'currentColor', strokeWidth = 1.75, ...props }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <path d="M18.84 12.25l1.72-1.71a4.5 4.5 0 0 0-6.36-6.36l-1.72 1.71" />
+        <path d="M5.16 11.75l-1.72 1.71a4.5 4.5 0 0 0 6.36 6.36l1.72-1.71" />
+        <line x1="2" y1="2" x2="22" y2="22" />
+    </svg>
+)
+
 
 

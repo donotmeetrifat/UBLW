@@ -13,24 +13,28 @@ import {
     SendIcon,
     CameraIcon,
     BagIcon,
-    EyeIcon
+    EyeIcon,
+    DisconnectIcon
 } from '@/components/icons'
 
 export default function AdminAiBotPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [testingProvider, setTestingProvider] = useState(null) // 'gemini' | 'groq' | 'openrouter' | null
+    const [disconnectingProvider, setDisconnectingProvider] = useState(null)
 
-    // Settings State
-    const [hasGeminiKey, setHasGeminiKey] = useState(false)
+    // Connection States
+    const [isGeminiConnected, setIsGeminiConnected] = useState(false)
     const [geminiKey, setGeminiKey] = useState('')
     const [showGeminiKey, setShowGeminiKey] = useState(false)
+    const [geminiModel, setGeminiModel] = useState('')
 
-    const [hasGroqKey, setHasGroqKey] = useState(false)
+    const [isGroqConnected, setIsGroqConnected] = useState(false)
     const [groqKey, setGroqKey] = useState('')
     const [showGroqKey, setShowGroqKey] = useState(false)
+    const [groqModel, setGroqModel] = useState('')
 
-    const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false)
+    const [isOpenRouterConnected, setIsOpenRouterConnected] = useState(false)
     const [openRouterKey, setOpenRouterKey] = useState('')
     const [showOpenRouterKey, setShowOpenRouterKey] = useState(false)
 
@@ -60,22 +64,28 @@ export default function AdminAiBotPage() {
             const data = await res.json()
 
             if (data.success && data.settings) {
-                setHasGeminiKey(data.settings.hasGeminiKey)
-                setGeminiKey(data.settings.maskedGeminiKey || '')
+                const s = data.settings
 
-                const hasGroq = data.settings.hasGroqKey || data.settings.hasGrokKey
-                const maskedGroq = data.settings.maskedGroqKey || data.settings.maskedGrokKey || ''
-                setHasGroqKey(hasGroq)
-                setGroqKey(maskedGroq)
+                // Gemini Status
+                const geminiConn = Boolean(s.gemini?.isConnected || s.hasGeminiKey)
+                setIsGeminiConnected(geminiConn)
+                setGeminiKey(s.gemini?.maskedKey || s.maskedGeminiKey || '')
 
-                setHasOpenRouterKey(data.settings.hasOpenRouterKey)
-                setOpenRouterKey(data.settings.maskedOpenRouterKey || '')
+                // Groq Status
+                const groqConn = Boolean(s.groq?.isConnected || s.hasGroqKey || s.hasGrokKey)
+                setIsGroqConnected(groqConn)
+                setGroqKey(s.groq?.maskedKey || s.maskedGroqKey || s.maskedGrokKey || '')
 
-                const normPref = data.settings.preferredProvider === 'grok' ? 'groq' : (data.settings.preferredProvider || 'gemini')
+                // OpenRouter Status
+                const openRouterConn = Boolean(s.openrouter?.isConnected || s.hasOpenRouterKey)
+                setIsOpenRouterConnected(openRouterConn)
+                setOpenRouterKey(s.openrouter?.maskedKey || s.maskedOpenRouterKey || '')
+
+                const normPref = s.preferredProvider === 'grok' ? 'groq' : (s.preferredProvider || 'gemini')
                 setPreferredProvider(normPref)
-                setCustomInstructions(data.settings.customInstructions || '')
-                setBotName(data.settings.botName || 'Emma - UK Beauty Specialist')
-                setEnabled(data.settings.enabled !== false)
+                setCustomInstructions(s.customInstructions || '')
+                setBotName(s.botName || 'Emma - UK Beauty Specialist')
+                setEnabled(s.enabled !== false)
 
                 if (data.catalogStats) {
                     setCatalogStats(data.catalogStats)
@@ -93,12 +103,12 @@ export default function AdminAiBotPage() {
         fetchSettings()
     }, [])
 
-    // Test API Connection
-    const handleTestConnection = async (provider) => {
+    // Connect & Test API Key
+    const handleConnectAndTest = async (provider) => {
         const key = provider === 'gemini' ? geminiKey : provider === 'groq' ? groqKey : openRouterKey
 
         if (!key || !key.trim()) {
-            toast.error(`Please enter a ${provider.toUpperCase()} API key first.`)
+            toast.error(`Please paste your ${provider === 'gemini' ? 'Google Gemini' : provider === 'groq' ? 'Groq Cloud' : 'OpenRouter'} API key first.`)
             return
         }
 
@@ -115,19 +125,76 @@ export default function AdminAiBotPage() {
             })
 
             const data = await res.json()
-            if (data.success) {
-                toast.success(data.message)
+            if (data.success && data.isConnected) {
+                toast.success(data.message, { duration: 5000 })
+
+                // Update connected state immediately
+                if (provider === 'gemini') {
+                    setIsGeminiConnected(true)
+                    setGeminiKey(data.maskedKey || key)
+                    if (data.model) setGeminiModel(data.model)
+                } else if (provider === 'groq') {
+                    setIsGroqConnected(true)
+                    setGroqKey(data.maskedKey || key)
+                    if (data.model) setGroqModel(data.model)
+                } else if (provider === 'openrouter') {
+                    setIsOpenRouterConnected(true)
+                    setOpenRouterKey(data.maskedKey || key)
+                }
             } else {
                 toast.error(data.message || 'Connection test failed', { duration: 6000 })
             }
         } catch (err) {
-            toast.error(`Connection test error: ${err.message}`)
+            toast.error(`Connection error: ${err.message}`)
         } finally {
             setTestingProvider(null)
         }
     }
 
-    // Save All AI Settings
+    // Disconnect API Key
+    const handleDisconnect = async (provider) => {
+        const providerName = provider === 'gemini' ? 'Google Gemini' : provider === 'groq' ? 'Groq Cloud' : 'OpenRouter'
+        const confirm = window.confirm(`Are you sure you want to disconnect ${providerName}? The API key will be deleted.`)
+        if (!confirm) return
+
+        setDisconnectingProvider(provider)
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'disconnect',
+                    provider,
+                }),
+            })
+
+            const data = await res.json()
+            if (data.success) {
+                toast.success(data.message)
+
+                if (provider === 'gemini') {
+                    setIsGeminiConnected(false)
+                    setGeminiKey('')
+                    setGeminiModel('')
+                } else if (provider === 'groq') {
+                    setIsGroqConnected(false)
+                    setGroqKey('')
+                    setGroqModel('')
+                } else if (provider === 'openrouter') {
+                    setIsOpenRouterConnected(false)
+                    setOpenRouterKey('')
+                }
+            } else {
+                toast.error(data.message || 'Failed to disconnect')
+            }
+        } catch (err) {
+            toast.error(`Error: ${err.message}`)
+        } finally {
+            setDisconnectingProvider(null)
+        }
+    }
+
+    // Save All AI Settings (Instructions, Provider Preference, Bot Name)
     const handleSaveSettings = async (e) => {
         if (e) e.preventDefault()
         setSaving(true)
@@ -223,7 +290,7 @@ export default function AdminAiBotPage() {
                         AI Saleswoman Bot (Emma)
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                        Configure free AI provider keys (Google Gemini, Groq Cloud, OpenRouter) and custom saleswoman instructions. The bot automatically reads and updates live catalog data directly from your database.
+                        Connect and test your free AI provider keys (Google Gemini, Groq Cloud, OpenRouter). Once tested, each provider shows its verified Connected status with an instant Disconnect option.
                     </p>
                 </div>
 
@@ -296,168 +363,330 @@ export default function AdminAiBotPage() {
                 </div>
             </div>
 
-            {/* 3. API Keys Configuration (Triple Fallback) */}
+            {/* 3. API Keys Configuration with Live Connected Status & Disconnect Action */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-6">
                 <div>
                     <h2 className="text-base font-black text-[#241224] tracking-tight">
                         AI Provider API Keys (Triple Fallback Architecture)
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                        Configure free keys for Google Gemini, Groq Cloud, and OpenRouter. If one provider runs out of free requests, Emma automatically switches to the next fallback seamlessly!
+                        Paste your API key and click <strong>Connect & Test</strong>. Once successfully tested, the key is saved and marked as <strong>Connected</strong>. You can disconnect anytime.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {/* 1. Google Gemini (Primary) */}
-                    <div className={`p-4 rounded-2xl border transition-all ${
-                        preferredProvider === 'gemini' ? 'bg-[#FAF6FA]/80 border-[#6C306E]/60 shadow-2xs' : 'bg-white border-[#EFE0EF]'
+                    <div className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
+                        isGeminiConnected
+                            ? 'bg-gradient-to-b from-emerald-50/40 to-white border-emerald-300/80 shadow-xs'
+                            : 'bg-white border-[#EFE0EF]'
                     }`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-base">✨</span>
-                                <h4 className="font-extrabold text-xs text-[#241224]">Google Gemini</h4>
+                        <div>
+                            {/* Card Header with Connection Badge */}
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-base">✨</span>
+                                    <h4 className="font-extrabold text-xs text-[#241224]">Google Gemini</h4>
+                                </div>
+                                {isGeminiConnected ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Connected
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                        <span className="size-1.5 rounded-full bg-slate-400" />
+                                        Not Connected
+                                    </span>
+                                )}
                             </div>
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                Free Tier
-                            </span>
+
+                            <p className="text-[11px] text-slate-500 mb-3">
+                                Free tier multimodal vision + text via Gemini 1.5/2.0 Flash from aistudio.google.com.
+                            </p>
+
+                            {/* Input Field */}
+                            <div className="space-y-1.5 mb-4">
+                                <div className="relative">
+                                    <input
+                                        type={showGeminiKey ? 'text' : 'password'}
+                                        value={geminiKey}
+                                        onChange={(e) => setGeminiKey(e.target.value)}
+                                        placeholder="Paste Gemini API key (AIza...)"
+                                        className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
+                                            isGeminiConnected
+                                                ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
+                                                : 'bg-[#FAF6FA] border border-[#EFE0EF] focus:bg-white focus:border-[#6C306E] text-[#241224]'
+                                        }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGeminiKey(!showGeminiKey)}
+                                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <EyeIcon size={14} />
+                                    </button>
+                                </div>
+                                {isGeminiConnected && geminiModel && (
+                                    <p className="text-[10px] text-emerald-700 font-semibold px-1">
+                                        Active Model: {geminiModel}
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-[11px] text-slate-500 mb-3">
-                            Fast multimodal vision + text via Gemini 2.0 / 1.5 Flash.
-                        </p>
 
-                        <div className="space-y-2">
-                            <div className="relative">
-                                <input
-                                    type={showGeminiKey ? 'text' : 'password'}
-                                    value={geminiKey}
-                                    onChange={(e) => setGeminiKey(e.target.value)}
-                                    placeholder="Enter Gemini API key (AIza...)"
-                                    className="w-full h-9 pl-3 pr-8 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] focus:outline-none text-[#241224]"
-                                />
+                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
+                            {isGeminiConnected ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDisconnect('gemini')}
+                                        disabled={disconnectingProvider === 'gemini'}
+                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                    >
+                                        <DisconnectIcon size={13} color="currentColor" />
+                                        <span>{disconnectingProvider === 'gemini' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleConnectAndTest('gemini')}
+                                        disabled={testingProvider === 'gemini'}
+                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                    >
+                                        {testingProvider === 'gemini' ? 'Testing...' : 'Re-test'}
+                                    </button>
+                                </>
+                            ) : (
                                 <button
                                     type="button"
-                                    onClick={() => setShowGeminiKey(!showGeminiKey)}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                >
-                                    <EyeIcon size={14} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-1">
-                                <span className="text-[10px] text-slate-400">
-                                    {hasGeminiKey ? '✓ Key Saved' : 'No key saved'}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleTestConnection('gemini')}
+                                    onClick={() => handleConnectAndTest('gemini')}
                                     disabled={testingProvider === 'gemini'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
+                                    className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
-                                    {testingProvider === 'gemini' ? 'Testing...' : 'Test Key'}
+                                    {testingProvider === 'gemini' ? (
+                                        <>
+                                            <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Connecting & Testing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <SparklesIcon size={13} color="white" />
+                                            <span>Connect & Test</span>
+                                        </>
+                                    )}
                                 </button>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* 2. Groq Cloud (Free Tier - 1st Backup) */}
-                    <div className={`p-4 rounded-2xl border transition-all ${
-                        preferredProvider === 'groq' ? 'bg-[#FAF6FA]/80 border-[#6C306E]/60 shadow-2xs' : 'bg-white border-[#EFE0EF]'
+                    {/* 2. Groq Cloud (Free LPU Tier) */}
+                    <div className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
+                        isGroqConnected
+                            ? 'bg-gradient-to-b from-emerald-50/40 to-white border-emerald-300/80 shadow-xs'
+                            : 'bg-white border-[#EFE0EF]'
                     }`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-base">⚡</span>
-                                <h4 className="font-extrabold text-xs text-[#241224]">Groq Cloud</h4>
+                        <div>
+                            {/* Card Header with Connection Badge */}
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-base">⚡</span>
+                                    <h4 className="font-extrabold text-xs text-[#241224]">Groq Cloud</h4>
+                                </div>
+                                {isGroqConnected ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Connected
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                        <span className="size-1.5 rounded-full bg-slate-400" />
+                                        Not Connected
+                                    </span>
+                                )}
                             </div>
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                                Free LPU Tier
-                            </span>
+
+                            <p className="text-[11px] text-slate-500 mb-3">
+                                Free ultra-fast LPU inference (Llama 3.3 70B & 3.1) from console.groq.com.
+                            </p>
+
+                            {/* Input Field */}
+                            <div className="space-y-1.5 mb-4">
+                                <div className="relative">
+                                    <input
+                                        type={showGroqKey ? 'text' : 'password'}
+                                        value={groqKey}
+                                        onChange={(e) => setGroqKey(e.target.value)}
+                                        placeholder="Paste Groq API key (gsk_...)"
+                                        className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
+                                            isGroqConnected
+                                                ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
+                                                : 'bg-[#FAF6FA] border border-[#EFE0EF] focus:bg-white focus:border-[#6C306E] text-[#241224]'
+                                        }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGroqKey(!showGroqKey)}
+                                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <EyeIcon size={14} />
+                                    </button>
+                                </div>
+                                {isGroqConnected && groqModel && (
+                                    <p className="text-[10px] text-emerald-700 font-semibold px-1">
+                                        Active Model: {groqModel}
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-[11px] text-slate-500 mb-3">
-                            Free ultra-fast LPU inference (Llama 3.3 70B & 3.1) from console.groq.com.
-                        </p>
 
-                        <div className="space-y-2">
-                            <div className="relative">
-                                <input
-                                    type={showGroqKey ? 'text' : 'password'}
-                                    value={groqKey}
-                                    onChange={(e) => setGroqKey(e.target.value)}
-                                    placeholder="Enter Groq API key (gsk_...)"
-                                    className="w-full h-9 pl-3 pr-8 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] focus:outline-none text-[#241224]"
-                                />
+                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
+                            {isGroqConnected ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDisconnect('groq')}
+                                        disabled={disconnectingProvider === 'groq'}
+                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                    >
+                                        <DisconnectIcon size={13} color="currentColor" />
+                                        <span>{disconnectingProvider === 'groq' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleConnectAndTest('groq')}
+                                        disabled={testingProvider === 'groq'}
+                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                    >
+                                        {testingProvider === 'groq' ? 'Testing...' : 'Re-test'}
+                                    </button>
+                                </>
+                            ) : (
                                 <button
                                     type="button"
-                                    onClick={() => setShowGroqKey(!showGroqKey)}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                >
-                                    <EyeIcon size={14} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-1">
-                                <span className="text-[10px] text-slate-400">
-                                    {hasGroqKey ? '✓ Key Saved' : 'No key saved'}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleTestConnection('groq')}
+                                    onClick={() => handleConnectAndTest('groq')}
                                     disabled={testingProvider === 'groq'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
+                                    className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
-                                    {testingProvider === 'groq' ? 'Testing...' : 'Test Key'}
+                                    {testingProvider === 'groq' ? (
+                                        <>
+                                            <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Connecting & Testing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <SparklesIcon size={13} color="white" />
+                                            <span>Connect & Test</span>
+                                        </>
+                                    )}
                                 </button>
-                            </div>
+                            )}
                         </div>
                     </div>
 
                     {/* 3. OpenRouter (2nd Backup) */}
-                    <div className={`p-4 rounded-2xl border transition-all ${
-                        preferredProvider === 'openrouter' ? 'bg-[#FAF6FA]/80 border-[#6C306E]/60 shadow-2xs' : 'bg-white border-[#EFE0EF]'
+                    <div className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
+                        isOpenRouterConnected
+                            ? 'bg-gradient-to-b from-emerald-50/40 to-white border-emerald-300/80 shadow-xs'
+                            : 'bg-white border-[#EFE0EF]'
                     }`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-base">🌐</span>
-                                <h4 className="font-extrabold text-xs text-[#241224]">OpenRouter</h4>
+                        <div>
+                            {/* Card Header with Connection Badge */}
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-base">🌐</span>
+                                    <h4 className="font-extrabold text-xs text-[#241224]">OpenRouter</h4>
+                                </div>
+                                {isOpenRouterConnected ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide uppercase">
+                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Connected
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                        <span className="size-1.5 rounded-full bg-slate-400" />
+                                        Not Connected
+                                    </span>
+                                )}
                             </div>
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
-                                2nd Backup
-                            </span>
+
+                            <p className="text-[11px] text-slate-500 mb-3">
+                                Connects to free models (Gemini Flash, Llama 3.3) from openrouter.ai/keys.
+                            </p>
+
+                            {/* Input Field */}
+                            <div className="space-y-1.5 mb-4">
+                                <div className="relative">
+                                    <input
+                                        type={showOpenRouterKey ? 'text' : 'password'}
+                                        value={openRouterKey}
+                                        onChange={(e) => setOpenRouterKey(e.target.value)}
+                                        placeholder="Paste OpenRouter key (sk-or-...)"
+                                        className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
+                                            isOpenRouterConnected
+                                                ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
+                                                : 'bg-[#FAF6FA] border border-[#EFE0EF] focus:bg-white focus:border-[#6C306E] text-[#241224]'
+                                        }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
+                                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <EyeIcon size={14} />
+                                    </button>
+                                </div>
+                                {isOpenRouterConnected && (
+                                    <p className="text-[10px] text-emerald-700 font-semibold px-1">
+                                        Active Model: Gemini 2.0 Flash (Free)
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-[11px] text-slate-500 mb-3">
-                            Connects to free models (Gemini Flash, Llama 3.3) from openrouter.ai.
-                        </p>
 
-                        <div className="space-y-2">
-                            <div className="relative">
-                                <input
-                                    type={showOpenRouterKey ? 'text' : 'password'}
-                                    value={openRouterKey}
-                                    onChange={(e) => setOpenRouterKey(e.target.value)}
-                                    placeholder="Enter OpenRouter key (sk-or-...)"
-                                    className="w-full h-9 pl-3 pr-8 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] focus:outline-none text-[#241224]"
-                                />
+                        {/* Card Actions: Connect & Test OR Disconnect & Re-test */}
+                        <div className="pt-2 border-t border-[#EFE0EF]/80 flex items-center justify-between gap-2">
+                            {isOpenRouterConnected ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDisconnect('openrouter')}
+                                        disabled={disconnectingProvider === 'openrouter'}
+                                        className="flex-1 h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                    >
+                                        <DisconnectIcon size={13} color="currentColor" />
+                                        <span>{disconnectingProvider === 'openrouter' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleConnectAndTest('openrouter')}
+                                        disabled={testingProvider === 'openrouter'}
+                                        className="px-3 h-8 rounded-xl border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                    >
+                                        {testingProvider === 'openrouter' ? 'Testing...' : 'Re-test'}
+                                    </button>
+                                </>
+                            ) : (
                                 <button
                                     type="button"
-                                    onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                >
-                                    <EyeIcon size={14} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-1">
-                                <span className="text-[10px] text-slate-400">
-                                    {hasOpenRouterKey ? '✓ Key Saved' : 'No key saved'}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleTestConnection('openrouter')}
+                                    onClick={() => handleConnectAndTest('openrouter')}
                                     disabled={testingProvider === 'openrouter'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
+                                    className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                                 >
-                                    {testingProvider === 'openrouter' ? 'Testing...' : 'Test Key'}
+                                    {testingProvider === 'openrouter' ? (
+                                        <>
+                                            <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Connecting & Testing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <SparklesIcon size={13} color="white" />
+                                            <span>Connect & Test</span>
+                                        </>
+                                    )}
                                 </button>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -472,21 +701,22 @@ export default function AdminAiBotPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         {[
-                            { id: 'gemini', label: 'Gemini (Recommended)' },
-                            { id: 'groq', label: 'Groq (Free LPU)' },
-                            { id: 'openrouter', label: 'OpenRouter' }
+                            { id: 'gemini', label: 'Gemini (Recommended)', connected: isGeminiConnected },
+                            { id: 'groq', label: 'Groq (Free LPU)', connected: isGroqConnected },
+                            { id: 'openrouter', label: 'OpenRouter', connected: isOpenRouterConnected }
                         ].map((p) => (
                             <button
                                 key={p.id}
                                 type="button"
                                 onClick={() => setPreferredProvider(p.id)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                                     preferredProvider === p.id
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'bg-white border border-[#EFE0EF] text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
-                                {p.label}
+                                <span className={`size-1.5 rounded-full ${p.connected ? 'bg-emerald-400' : 'bg-slate-300'}`} />
+                                <span>{p.label}</span>
                             </button>
                         ))}
                     </div>
