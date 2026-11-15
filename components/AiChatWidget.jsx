@@ -8,6 +8,8 @@ import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
+import { PromptBox } from '@/components/PromptBox'
+import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
 import {
     SparklesIcon,
     CloseIcon,
@@ -27,13 +29,6 @@ const DEFAULT_WELCOME_MESSAGE = {
     createdAt: new Date().toISOString(),
 };
 
-const SUGGESTED_CHIPS = [
-    "Is CeraVe Hydrating Cleanser in stock?",
-    "Best serum for dark spots & glow?",
-    "Help me build an acne & blemish routine",
-    "Recommend an authentic British sunscreen"
-];
-
 export default function AiChatWidget() {
     const dispatch = useDispatch();
     const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +42,47 @@ export default function AiChatWidget() {
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
+
+    // Compute dynamic contextual suggestions from the last user message
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    const dynamicSuggestions = getContextualSuggestions(lastUserMessage?.content || '');
+
+    // Image compression helper for PromptBox attachments
+    const compressFileToBase64 = (file) => {
+        return new Promise((resolve) => {
+            if (!file || !file.type.startsWith('image/')) {
+                resolve(null);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new window.Image();
+                img.onload = () => {
+                    const maxDim = 800;
+                    let { width, height } = img;
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                };
+                img.onerror = () => resolve(null);
+                img.src = event.target.result;
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+        });
+    };
 
     // Initialize session ID for guest tracking
     useEffect(() => {
@@ -136,7 +172,7 @@ export default function AiChatWidget() {
                             setMessages(parsed);
                             return;
                         }
-                    } catch {}
+                    } catch { }
                 }
             }
         };
@@ -149,7 +185,7 @@ export default function AiChatWidget() {
         if (!currentUser && typeof window !== 'undefined' && messages.length > 0) {
             try {
                 localStorage.setItem('ukbl_guest_ai_messages', JSON.stringify(messages));
-            } catch {}
+            } catch { }
         }
     }, [messages, currentUser]);
 
@@ -219,9 +255,9 @@ export default function AiChatWidget() {
     };
 
     // Send Message Handler
-    const handleSendMessage = async (textToSend = null) => {
+    const handleSendMessage = async (textToSend = null, photoToSend = null) => {
         const text = (textToSend !== null ? textToSend : inputText).trim();
-        const photo = attachedImage;
+        const photo = photoToSend !== null ? photoToSend : attachedImage;
 
         if (!text && !photo) return;
         if (isSending) return;
@@ -289,7 +325,7 @@ export default function AiChatWidget() {
             await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sessionId)}`, {
                 method: 'DELETE',
             });
-        } catch {}
+        } catch { }
 
         if (typeof window !== 'undefined') {
             localStorage.removeItem('ukbl_guest_ai_messages');
@@ -444,11 +480,10 @@ export default function AiChatWidget() {
 
                                         {/* Chat Bubble */}
                                         <div
-                                            className={`max-w-[88%] sm:max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-[12.5px] leading-relaxed ${
-                                                isUser
+                                            className={`max-w-[88%] sm:max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-[12.5px] leading-relaxed ${isUser
                                                     ? 'bg-gradient-to-r from-[#6C306E] to-[#4A154D] text-white rounded-br-xs shadow-xs font-medium'
                                                     : 'bg-[#FAF6FA] text-[#241224] border border-[#EFE0EF] rounded-bl-xs shadow-2xs'
-                                            }`}
+                                                }`}
                                         >
                                             {isUser || !m.content ? (
                                                 <div className="whitespace-pre-wrap select-text">
@@ -547,90 +582,30 @@ export default function AiChatWidget() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Quick Suggestion Chips */}
-                        <div className="px-3 py-1.5 bg-[#FAF6FA]/80 border-t border-[#EFE0EF] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                            {SUGGESTED_CHIPS.map((chip, cIdx) => (
-                                <button
-                                    key={cIdx}
-                                    onClick={() => handleSendMessage(chip)}
-                                    disabled={isSending}
-                                    className="px-2.5 py-1 rounded-full bg-white border border-[#EFE0EF] text-[10.5px] font-semibold text-[#4A304A] hover:bg-[#6C306E] hover:text-white hover:border-[#6C306E] transition whitespace-nowrap shrink-0 shadow-2xs cursor-pointer disabled:opacity-50"
-                                >
-                                    {chip}
-                                </button>
-                            ))}
+                        {/* Dynamic Swipeable Suggestions Bar (Strictly clean text, NO icons, swipeable left-right) */}
+                        <div className="bg-[#FAF6FA]/90 border-t border-[#EFE0EF] shrink-0">
+                            <AiSuggestionBar
+                                suggestions={dynamicSuggestions}
+                                onSelect={(query) => handleSendMessage(query, null)}
+                                disabled={isSending}
+                            />
                         </div>
 
-                        {/* Input & Upload Bar */}
-                        <div className="p-2.5 bg-white border-t border-[#EFE0EF] shrink-0">
-                            {/* Attached image preview banner */}
-                            {attachedImage && (
-                                <div className="flex items-center justify-between bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl px-2.5 py-1.5 mb-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <img
-                                            src={attachedImage}
-                                            alt="Preview"
-                                            className="size-8 rounded-lg object-cover border border-[#EFE0EF]"
-                                        />
-                                        <span className="text-[11px] font-semibold text-[#6C306E] truncate">
-                                            Bottle photo attached
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => setAttachedImage(null)}
-                                        className="p-1 rounded-full text-slate-400 hover:text-rose-500"
-                                    >
-                                        <CloseIcon size={13} color="currentColor" />
-                                    </button>
-                                </div>
-                            )}
-
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSendMessage();
+                        {/* Luxury PromptBox Input */}
+                        <div className="p-2 sm:p-2.5 bg-white border-t border-[#EFE0EF] shrink-0">
+                            <PromptBox
+                                onSubmit={async ({ text, attachments }) => {
+                                    let photo = null;
+                                    if (attachments && attachments.length > 0 && attachments[0].file) {
+                                        photo = await compressFileToBase64(attachments[0].file);
+                                    }
+                                    handleSendMessage(text, photo);
                                 }}
-                                className="flex items-center gap-1.5"
-                            >
-                                {/* Hidden File Input */}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    accept="image/*"
-                                    capture="environment"
-                                    onChange={handleImageSelect}
-                                    className="hidden"
-                                />
-
-                                {/* Camera / Photo Upload Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    title="Snap or upload product bottle"
-                                    className="size-9 rounded-xl border border-[#EFE0EF] hover:border-[#6C306E] bg-[#FAF6FA] hover:bg-white text-[#6C306E] flex items-center justify-center shrink-0 cursor-pointer transition shadow-2xs"
-                                >
-                                    <CameraIcon size={16} color="#6C306E" />
-                                </button>
-
-                                {/* Compact Text Input */}
-                                <input
-                                    type="text"
-                                    value={inputText}
-                                    onChange={(e) => setInputText(e.target.value)}
-                                    placeholder="Ask Emma about UK skincare & stock..."
-                                    disabled={isSending}
-                                    className="flex-1 h-9 px-3 text-xs bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:bg-white focus:border-[#6C306E] focus:outline-none transition text-[#241224] placeholder:text-slate-400"
-                                />
-
-                                {/* Send Button */}
-                                <button
-                                    type="submit"
-                                    disabled={isSending || (!inputText.trim() && !attachedImage)}
-                                    className="size-9 rounded-xl bg-[#6C306E] hover:bg-[#562258] disabled:bg-slate-200 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 cursor-pointer transition shadow-2xs"
-                                >
-                                    <SendIcon size={15} color="white" />
-                                </button>
-                            </form>
+                                busy={isSending}
+                                placeholder="Ask Emma about UK skincare & stock..."
+                                minRows={1}
+                                maxRows={4}
+                            />
                         </div>
                     </motion.div>
                 )}
