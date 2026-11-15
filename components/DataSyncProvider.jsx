@@ -181,6 +181,12 @@ export default function DataSyncProvider({ children }) {
                     try {
                         const parsedPromos = JSON.parse(storedPromos)
                         if (parsedPromos && typeof parsedPromos === 'object') {
+                            if (parsedPromos.mainCard?.badge && typeof parsedPromos.mainCard.badge === 'string' &&
+                                (parsedPromos.mainCard.badge.toLowerCase().includes('straight from the uk') ||
+                                 parsedPromos.mainCard.badge.toLowerCase().includes('original receipt included'))) {
+                                parsedPromos.mainCard.badge = ''
+                                localStorage.setItem('ukbl_cached_promotions', JSON.stringify(parsedPromos))
+                            }
                             if (parsedPromos.mainCard?.image?.includes('hero_card_img1.png') || 
                                 parsedPromos.sideCardTop?.image?.includes('hero_card_img2.png') ||
                                 parsedPromos.sideCardBottom?.image?.includes('hero_card_img3.png')) {

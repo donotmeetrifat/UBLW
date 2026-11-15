@@ -1,7 +1,7 @@
 'use client'
 
 import { assets } from '@/assets/assets'
-import { ArrowRightIcon, ChevronRightIcon, RoyalCrownIcon, SparklesIcon } from '@/components/icons'
+import { ArrowRightIcon } from '@/components/icons'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -50,13 +50,6 @@ const Hero = () => {
                         <div className='absolute -top-12 -left-12 size-48 rounded-full bg-[#6C306E]/4 blur-2xl pointer-events-none' />
 
                         <div className={`relative my-auto flex flex-col justify-center ${mainCard.image ? 'max-w-[55%] min-[400px]:max-w-[58%] sm:max-w-md' : 'max-w-xl'}`}>
-                            {mainCard.badge && (
-                                <div className='relative z-20 hidden sm:inline-flex items-center gap-1.5 bg-white text-[#6C306E] border border-[#EFE0EF] px-3 py-1 rounded-full text-xs font-semibold mb-2 sm:mb-3 shadow-2xs'>
-                                    <RoyalCrownIcon size={12} color="#D8B56D" />
-                                    <span>{mainCard.badge}</span>
-                                </div>
-                            )}
-
                             <div className="relative z-20">
                                 <h2 className='text-[15px] min-[360px]:text-base min-[400px]:text-lg sm:text-3xl lg:text-4xl font-extrabold text-[#241224] leading-tight sm:leading-snug tracking-tight'>
                                     {mainCard.title} <br className='hidden sm:inline' />
