@@ -76,6 +76,7 @@ export default function BeautyAdvisorPage() {
     // Load messages from DB or localStorage
     useEffect(() => {
         const loadMessages = async () => {
+            const sid = typeof window !== 'undefined' ? localStorage.getItem('ukbl_ai_session_id') : '';
             if (currentUser) {
                 try {
                     const res = await fetch('/api/ai/history');
@@ -97,6 +98,18 @@ export default function BeautyAdvisorPage() {
                             return;
                         }
                     } catch {}
+                }
+                if (sid) {
+                    try {
+                        const res = await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sid)}`);
+                        const data = await res.json();
+                        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                            setMessages([DEFAULT_WELCOME, ...data.messages]);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Could not load guest session history:', e.message);
+                    }
                 }
             }
         };

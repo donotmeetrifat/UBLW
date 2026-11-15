@@ -130,6 +130,19 @@ export default function AiChatWidget() {
                         }
                     } catch {}
                 }
+                const sid = localStorage.getItem('ukbl_ai_session_id');
+                if (sid) {
+                    try {
+                        const res = await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sid)}`);
+                        const data = await res.json();
+                        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                            setMessages([DEFAULT_WELCOME_MESSAGE, ...data.messages]);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Could not load guest history from DB:', e.message);
+                    }
+                }
             }
         };
 
