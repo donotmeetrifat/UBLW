@@ -324,86 +324,94 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* EXECUTIVE METRICS SUMMARY CARDS */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-[#EFE0EF] p-5 rounded-2xl shadow-2xs flex items-center justify-between">
-                    <div>
-                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                <div className="bg-white border border-[#EFE0EF] p-3.5 sm:p-5 rounded-2xl shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-1.5">
+                        <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
                             Total Page Impressions
                         </div>
-                        <div className="text-2xl font-black text-[#241224] mt-1">
+                        <div className="size-8 sm:size-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 aspect-square">
+                            <EyeIcon size={16} color="#059669" className="sm:size-5" />
+                        </div>
+                    </div>
+                    <div className="mt-2 sm:mt-3">
+                        <div className="text-xl sm:text-2xl font-black text-[#241224] tracking-tight">
                             {Number(summary.totalViews || 0).toLocaleString()}
                         </div>
-                        <div className="text-[10px] text-emerald-600 font-semibold mt-1">
+                        <div className="text-[9.5px] sm:text-[10px] text-emerald-600 font-semibold mt-0.5 truncate" title="True database verified visits">
                             True database verified visits
                         </div>
                     </div>
-                    <div className="size-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                        <EyeIcon size={20} color="#059669" />
-                    </div>
                 </div>
 
-                <div className="bg-white border border-[#EFE0EF] p-5 rounded-2xl shadow-2xs flex items-center justify-between">
-                    <div>
-                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="bg-white border border-[#EFE0EF] p-3.5 sm:p-5 rounded-2xl shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-1.5">
+                        <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
                             Active In-Bag Items
                         </div>
-                        <div className="text-2xl font-black text-[#6C306E] mt-1">
+                        <div className="size-8 sm:size-10 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 aspect-square">
+                            <BagIcon size={16} color="#6C306E" className="sm:size-5" />
+                        </div>
+                    </div>
+                    <div className="mt-2 sm:mt-3">
+                        <div className="text-xl sm:text-2xl font-black text-[#6C306E] tracking-tight">
                             {summary.totalCartItems || 0}
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1">
+                        <div className="text-[9.5px] sm:text-[10px] text-slate-400 mt-0.5 truncate" title="Units currently added in carts">
                             Units currently added in carts
                         </div>
                     </div>
-                    <div className="size-11 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E]">
-                        <BagIcon size={20} color="#6C306E" />
-                    </div>
                 </div>
 
-                <div className="bg-white border border-[#EFE0EF] p-5 rounded-2xl shadow-2xs flex items-center justify-between">
-                    <div>
-                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="bg-white border border-[#EFE0EF] p-3.5 sm:p-5 rounded-2xl shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-1.5">
+                        <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
                             Total Units Purchased
                         </div>
-                        <div className="text-2xl font-black text-[#241224] mt-1">
+                        <div className="size-8 sm:size-10 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 aspect-square">
+                            <TagIcon size={16} color="#6C306E" className="sm:size-5" />
+                        </div>
+                    </div>
+                    <div className="mt-2 sm:mt-3">
+                        <div className="text-xl sm:text-2xl font-black text-[#241224] tracking-tight">
                             {summary.totalUnitsSold || 0}
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1">
+                        <div className="text-[9.5px] sm:text-[10px] text-slate-400 mt-0.5 truncate" title={`Across ${summary.totalOrders || 0} customer orders`}>
                             Across {summary.totalOrders || 0} customer orders
                         </div>
                     </div>
-                    <div className="size-11 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E]">
-                        <TagIcon size={20} color="#6C306E" />
-                    </div>
                 </div>
 
-                <div className="bg-white border border-[#EFE0EF] p-5 rounded-2xl shadow-2xs flex items-center justify-between">
-                    <div>
-                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="bg-white border border-[#EFE0EF] p-3.5 sm:p-5 rounded-2xl shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-1.5">
+                        <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-tight">
                             View-to-Sale Conversion
                         </div>
-                        <div className="text-2xl font-black text-emerald-700 mt-1">
-                            {summary.overallConversion || 0}%
-                        </div>
-                        <div className="text-[10px] text-emerald-800 font-semibold mt-1">
-                            Real conversion efficiency
+                        <div className="size-8 sm:size-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 aspect-square">
+                            <TrendIcon size={16} color="#059669" className="sm:size-5" />
                         </div>
                     </div>
-                    <div className="size-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                        <TrendIcon size={20} color="#059669" />
+                    <div className="mt-2 sm:mt-3">
+                        <div className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
+                            {summary.overallConversion || 0}%
+                        </div>
+                        <div className="text-[9.5px] sm:text-[10px] text-emerald-800 font-semibold mt-0.5 truncate" title="Real conversion efficiency">
+                            Real conversion efficiency
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* SEARCH & CATEGORY FILTER BAR */}
-            <div className="bg-white border border-[#EFE0EF] p-4 rounded-2xl shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="bg-white border border-[#EFE0EF] p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
                 <div className="relative w-full sm:max-w-md">
-                    <SearchIcon size={16} color="#6C306E" className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <SearchIcon size={14} color="#6C306E" className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none sm:size-4" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search products by name or brand..."
-                        className="w-full bg-[#FAF6FA]/50 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-full pl-10 pr-4 py-2 text-xs outline-none transition"
+                        placeholder="Search products or brand..."
+                        className="w-full bg-[#FAF6FA]/50 border border-[#EFE0EF] focus:border-[#6C306E] focus:bg-white rounded-xl pl-8.5 sm:pl-9 pr-3 py-1.5 sm:py-2 text-[11px] sm:text-xs outline-none transition font-medium"
                     />
                 </div>
 
@@ -414,6 +422,7 @@ export default function AdminAnalyticsPage() {
                         onChange={setCategoryFilter}
                         options={categories.map(cat => ({ value: cat, label: cat }))}
                         className="w-full sm:w-52"
+                        buttonClassName="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl"
                     />
                 </div>
             </div>
