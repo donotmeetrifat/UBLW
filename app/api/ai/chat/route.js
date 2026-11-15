@@ -55,14 +55,15 @@ export async function POST(request) {
             modelPreference: model || 'pro',
         });
 
-        // Persist to PostgreSQL if database is active
-        if (isDatabaseConfigured() && prisma.chatMessage) {
+        // Persist to PostgreSQL ONLY if customer is logged into their account
+        // If customer is not logged in, their conversation is saved strictly in browser cache (localStorage)
+        if (user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
             try {
                 // User message
                 await prisma.chatMessage.create({
                     data: {
-                        userId: user?.id || null,
-                        sessionId: !user ? (sessionId || null) : null,
+                        userId: user.id,
+                        sessionId: null,
                         role: 'user',
                         content: message ? message.trim() : 'Sent product image for identification',
                         image: image || null,
@@ -72,8 +73,8 @@ export async function POST(request) {
                 // Assistant reply
                 await prisma.chatMessage.create({
                     data: {
-                        userId: user?.id || null,
-                        sessionId: !user ? (sessionId || null) : null,
+                        userId: user.id,
+                        sessionId: null,
                         role: 'assistant',
                         content: consultation.message,
                         products: consultation.products && consultation.products.length > 0 ? consultation.products : null,

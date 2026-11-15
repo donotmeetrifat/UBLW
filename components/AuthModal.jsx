@@ -137,6 +137,9 @@ export default function AuthModal({
 
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    if (data.token) {
+                        localStorage.setItem('ukbl_auth_token', data.token)
+                    }
                     window.dispatchEvent(new Event('auth-change'))
                 }
 
@@ -187,6 +190,9 @@ export default function AuthModal({
 
             if (typeof window !== 'undefined') {
                 localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                if (data.token) {
+                    localStorage.setItem('ukbl_auth_token', data.token)
+                }
                 window.dispatchEvent(new Event('auth-change'))
             }
 
@@ -231,6 +237,9 @@ export default function AuthModal({
 
             if (typeof window !== 'undefined') {
                 localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                if (data.token) {
+                    localStorage.setItem('ukbl_auth_token', data.token)
+                }
                 window.dispatchEvent(new Event('auth-change'))
             }
 

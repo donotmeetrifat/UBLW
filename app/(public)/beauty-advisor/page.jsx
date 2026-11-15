@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
-import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import { isClientSignedIn, requireSignIn, getAuthHeaders } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
@@ -73,47 +73,84 @@ export default function BeautyAdvisorPage() {
         };
     }, []);
 
-    // Load messages from DB or localStorage
+    // Load messages:
+    // - Authenticated: Load from PostgreSQL under customer account (cross-device sync)
+    // - Unauthenticated: Load strictly from browser cache (localStorage)
     useEffect(() => {
+        let isMounted = true;
+
         const loadMessages = async () => {
-            const sid = typeof window !== 'undefined' ? localStorage.getItem('ukbl_ai_session_id') : '';
-            if (currentUser) {
+            if (currentUser && currentUser.id) {
+                // 1. If guest had conversation in browser cache before signing in, migrate it into their account
+                if (typeof window !== 'undefined') {
+                    const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
+                    if (guestSaved) {
+                        try {
+                            const parsedGuest = JSON.parse(guestSaved);
+                            if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
+                                const toMigrate = parsedGuest.filter(m => m.id !== 'full-welcome' && m.id !== 'welcome-0');
+                                if (toMigrate.length > 0) {
+                                    await fetch('/api/ai/history', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            ...getAuthHeaders(),
+                                        },
+                                        body: JSON.stringify({ guestMessages: toMigrate }),
+                                    });
+                                }
+                            }
+                            localStorage.removeItem('ukbl_guest_ai_messages');
+                        } catch (e) {
+                            console.warn('Guest migration note:', e.message);
+                        }
+                    }
+                }
+
+                // 2. Fetch authenticated customer's account messages from database
                 try {
-                    const res = await fetch('/api/ai/history');
+                    const res = await fetch('/api/ai/history', {
+                        headers: {
+                            ...getAuthHeaders(),
+                        },
+                    });
                     const data = await res.json();
+                    if (!isMounted) return;
+
                     if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
                         setMessages([DEFAULT_WELCOME, ...data.messages]);
+                        return;
+                    } else {
+                        setMessages([DEFAULT_WELCOME]);
                         return;
                     }
                 } catch (e) {
                     console.warn('Could not load history:', e.message);
+                    if (isMounted) setMessages([DEFAULT_WELCOME]);
                 }
-            } else if (typeof window !== 'undefined') {
-                const local = localStorage.getItem('ukbl_guest_ai_messages');
-                if (local) {
-                    try {
-                        const parsed = JSON.parse(local);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            setMessages(parsed);
-                            return;
-                        }
-                    } catch {}
-                }
-                if (sid) {
-                    try {
-                        const res = await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sid)}`);
-                        const data = await res.json();
-                        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                            setMessages([DEFAULT_WELCOME, ...data.messages]);
-                            return;
-                        }
-                    } catch (e) {
-                        console.warn('Could not load guest session history:', e.message);
+            } else {
+                // Unauthenticated Guest: Strictly load from browser cache (localStorage)
+                if (typeof window !== 'undefined') {
+                    const local = localStorage.getItem('ukbl_guest_ai_messages');
+                    if (local) {
+                        try {
+                            const parsed = JSON.parse(local);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                if (isMounted) setMessages(parsed);
+                                return;
+                            }
+                        } catch {}
                     }
                 }
+                if (isMounted) setMessages([DEFAULT_WELCOME]);
             }
         };
+
         loadMessages();
+
+        return () => {
+            isMounted = false;
+        };
     }, [currentUser]);
 
     // Save for guests
@@ -211,7 +248,10 @@ export default function BeautyAdvisorPage() {
         try {
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders(),
+                },
                 body: JSON.stringify({
                     message: text,
                     image: photo,
@@ -256,8 +296,11 @@ export default function BeautyAdvisorPage() {
     // Clear history
     const handleClearChat = async () => {
         try {
-            await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sessionId)}`, {
+            await fetch('/api/ai/history', {
                 method: 'DELETE',
+                headers: {
+                    ...getAuthHeaders(),
+                },
             });
         } catch {}
 

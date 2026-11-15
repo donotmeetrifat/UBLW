@@ -8,23 +8,22 @@ export const revalidate = 0;
 export async function GET(request) {
     try {
         const user = getUserFromRequest(request);
-        const { searchParams } = new URL(request.url);
-        const sessionId = searchParams.get('sessionId');
+
+        // Strict Requirement: Unauthenticated guests store their chat strictly in browser cache (localStorage).
+        // Database account history is strictly isolated for authenticated customers only.
+        if (!user || !user.id) {
+            return NextResponse.json({ success: true, messages: [] });
+        }
 
         if (!isDatabaseConfigured() || !prisma.chatMessage) {
             return NextResponse.json({ success: true, messages: [] });
         }
 
-        if (!user && !sessionId) {
-            return NextResponse.json({ success: true, messages: [] });
-        }
-
+        // Fetch customer's account conversation history across devices
         const messages = await prisma.chatMessage.findMany({
-            where: user
-                ? { userId: user.id }
-                : { sessionId: sessionId },
+            where: { userId: user.id },
             orderBy: { createdAt: 'asc' },
-            take: 50,
+            take: 200,
         });
 
         return NextResponse.json({
@@ -100,20 +99,14 @@ export async function POST(request) {
 export async function DELETE(request) {
     try {
         const user = getUserFromRequest(request);
-        const { searchParams } = new URL(request.url);
-        const sessionId = searchParams.get('sessionId');
 
         if (!isDatabaseConfigured() || !prisma.chatMessage) {
             return NextResponse.json({ success: true, cleared: true });
         }
 
-        if (user) {
+        if (user && user.id) {
             await prisma.chatMessage.deleteMany({
                 where: { userId: user.id },
-            });
-        } else if (sessionId) {
-            await prisma.chatMessage.deleteMany({
-                where: { sessionId: sessionId },
             });
         }
 

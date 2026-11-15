@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
-import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import { isClientSignedIn, requireSignIn, getAuthHeaders } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
@@ -83,70 +83,84 @@ export default function AiChatWidget() {
         };
     }, []);
 
-    // Load chat history (from DB for logged-in, or localStorage for guest)
+    // Load chat history:
+    // - Authenticated: Load from PostgreSQL under user account (persists across devices)
+    // - Unauthenticated guest: Load strictly from browser cache (localStorage)
     useEffect(() => {
+        let isMounted = true;
+
         const loadHistory = async () => {
-            if (currentUser) {
+            if (currentUser && currentUser.id) {
+                // 1. If guest had conversation in browser cache before signing in, migrate it into their account
                 if (typeof window !== 'undefined') {
                     const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
                     if (guestSaved) {
                         try {
                             const parsedGuest = JSON.parse(guestSaved);
                             if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
-                                const toMigrate = parsedGuest.filter(m => m.id !== 'welcome-0');
+                                const toMigrate = parsedGuest.filter(m => m.id !== 'welcome-0' && m.id !== 'full-welcome');
                                 if (toMigrate.length > 0) {
                                     await fetch('/api/ai/history', {
                                         method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            ...getAuthHeaders(),
+                                        },
                                         body: JSON.stringify({ guestMessages: toMigrate }),
                                     });
-                                    localStorage.removeItem('ukbl_guest_ai_messages');
                                 }
                             }
+                            localStorage.removeItem('ukbl_guest_ai_messages');
                         } catch (e) {
                             console.warn('Guest migration note:', e.message);
                         }
                     }
                 }
 
+                // 2. Fetch authenticated user's account messages from database
                 try {
-                    const res = await fetch('/api/ai/history');
+                    const res = await fetch('/api/ai/history', {
+                        headers: {
+                            ...getAuthHeaders(),
+                        },
+                    });
                     const data = await res.json();
+                    if (!isMounted) return;
+
                     if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
                         setMessages([DEFAULT_WELCOME_MESSAGE, ...data.messages]);
+                        return;
+                    } else {
+                        setMessages([DEFAULT_WELCOME_MESSAGE]);
                         return;
                     }
                 } catch (e) {
                     console.warn('Failed to fetch user chat history:', e.message);
+                    if (isMounted) setMessages([DEFAULT_WELCOME_MESSAGE]);
                 }
-            } else if (typeof window !== 'undefined') {
-                const local = localStorage.getItem('ukbl_guest_ai_messages');
-                if (local) {
-                    try {
-                        const parsed = JSON.parse(local);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            setMessages(parsed);
-                            return;
-                        }
-                    } catch {}
-                }
-                const sid = localStorage.getItem('ukbl_ai_session_id');
-                if (sid) {
-                    try {
-                        const res = await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sid)}`);
-                        const data = await res.json();
-                        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                            setMessages([DEFAULT_WELCOME_MESSAGE, ...data.messages]);
-                            return;
-                        }
-                    } catch (e) {
-                        console.warn('Could not load guest history from DB:', e.message);
+            } else {
+                // Guest: strictly load from browser cache (localStorage)
+                if (typeof window !== 'undefined') {
+                    const local = localStorage.getItem('ukbl_guest_ai_messages');
+                    if (local) {
+                        try {
+                            const parsed = JSON.parse(local);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                if (isMounted) setMessages(parsed);
+                                return;
+                            }
+                        } catch {}
                     }
                 }
+                if (isMounted) setMessages([DEFAULT_WELCOME_MESSAGE]);
             }
         };
 
         loadHistory();
+
+        return () => {
+            isMounted = false;
+        };
     }, [currentUser]);
 
     // Save to localStorage for guests
@@ -247,7 +261,10 @@ export default function AiChatWidget() {
         try {
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders(),
+                },
                 body: JSON.stringify({
                     message: text,
                     image: photo,
@@ -288,8 +305,11 @@ export default function AiChatWidget() {
     // Clear Chat
     const handleClearChat = async () => {
         try {
-            await fetch(`/api/ai/history?sessionId=${encodeURIComponent(sessionId)}`, {
+            await fetch('/api/ai/history', {
                 method: 'DELETE',
+                headers: {
+                    ...getAuthHeaders(),
+                },
             });
         } catch {}
 

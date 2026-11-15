@@ -190,6 +190,7 @@ const Navbar = () => {
 
         if (typeof window !== 'undefined') {
             localStorage.removeItem('ukbl_current_user');
+            localStorage.removeItem('ukbl_auth_token');
             window.dispatchEvent(new Event('auth-change'));
         }
         setCurrentUser(null);
