@@ -338,68 +338,70 @@ export default function AdminHomepageSectionsPage() {
     return (
         <div className="max-w-[1520px] w-full mx-auto space-y-6">
             {/* Top Showcase Studio Hero & Actions Container */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-7 shadow-subtle flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 sm:gap-6">
                 <div className="space-y-1.5 max-w-3xl">
                     {/* Studio Pill Sub-heading */}
                     <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-purple-50 text-plum font-semibold text-[11px] tracking-wide uppercase border border-purple-100">
                         <span>Homepage Showcase Studio</span>
                     </div>
                     {/* Page Title */}
-                    <h1 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
+                    <h1 className="text-xl sm:text-2xl font-bold font-display text-slate-900 tracking-tight">
                         Homepage Curated Sections & Priorities
                     </h1>
                 </div>
 
                 {/* Studio Actions Buttons */}
-                <div className="flex items-center gap-2.5 shrink-0 w-full xl:w-auto justify-start xl:justify-end">
-                    {/* View Live Store */}
-                    <Link
-                        href="/"
-                        target="_blank"
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs"
-                    >
-                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                            <path d="M2 3h20v14H2z"></path>
-                            <path d="M8 21h8"></path>
-                            <path d="M12 17v4"></path>
-                        </svg>
-                        <span>View Live Store</span>
-                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path d="M7 17L17 7M17 7H7M17 7V17"></path>
-                        </svg>
-                    </Link>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto xl:justify-end">
+                    <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:items-center">
+                        {/* View Live Store */}
+                        <Link
+                            href="/"
+                            target="_blank"
+                            className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[11px] sm:text-xs font-semibold text-slate-700 transition shadow-2xs whitespace-nowrap"
+                        >
+                            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M2 3h20v14H2z"></path>
+                                <path d="M8 21h8"></path>
+                                <path d="M12 17v4"></path>
+                            </svg>
+                            <span className="whitespace-nowrap">View Live Store</span>
+                            <svg className="w-3 h-3 text-slate-400 shrink-0 hidden min-[360px]:inline-block" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path d="M7 17L17 7M17 7H7M17 7V17"></path>
+                            </svg>
+                        </Link>
 
-                    {/* Clear Section */}
-                    <button
-                        onClick={handleResetDefaults}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer"
-                        type="button"
-                    >
-                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                        </svg>
-                        <span>Clear Section</span>
-                    </button>
+                        {/* Reset Auto */}
+                        <button
+                            onClick={handleResetDefaults}
+                            className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[11px] sm:text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer whitespace-nowrap"
+                            type="button"
+                        >
+                            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            <span className="whitespace-nowrap">Reset Auto</span>
+                        </button>
+                    </div>
 
                     {/* Save & Publish Showcase (Primary Action) */}
                     <button
                         onClick={handleSaveAndPublish}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition active:scale-[0.98] disabled:opacity-75 cursor-pointer shrink-0"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 h-9 rounded-xl bg-plum hover:bg-plum-hover text-white text-[11.5px] sm:text-xs font-bold sm:font-semibold shadow-xs transition active:scale-[0.98] disabled:opacity-75 cursor-pointer w-full sm:w-auto shrink-0 whitespace-nowrap"
                         type="button"
                     >
                         {saving ? (
                             <>
                                 <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
-                                <span>Publishing Showcase...</span>
+                                <span className="whitespace-nowrap">Publishing Showcase...</span>
                             </>
                         ) : (
                             <>
                                 <svg className="w-3.5 h-3.5 text-white/90 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
-                                <span>Save & Publish Showcase</span>
+                                <span className="whitespace-nowrap">Save & Publish Showcase</span>
                             </>
                         )}
                     </button>
