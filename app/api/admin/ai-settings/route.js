@@ -173,13 +173,13 @@ export async function POST(request) {
                     const listData = await listRes.json();
                     const allSupported = (listData.models || [])
                         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-                        .map(m => m.name.replace(/^models\//, ''))
-                        .filter(n => !n.includes('2.5') && !n.includes('8b'));
+                        .map(m => m.name.replace(/^models\//, ''));
 
                     const priorityCandidates = [
+                        'gemini-2.0-flash',
                         'gemini-1.5-flash',
                         'gemini-1.5-flash-latest',
-                        'gemini-2.0-flash',
+                        'gemini-2.5-flash',
                         'gemini-2.0-flash-exp',
                         'gemini-1.5-pro',
                         'gemini-pro',

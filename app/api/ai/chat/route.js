@@ -15,11 +15,14 @@ export const revalidate = 0;
 export async function POST(request) {
     let user = null;
     let messageText = '';
+    let imagePayload = null;
+    let conversationHistory = [];
 
     try {
         const body = await request.json();
         const { message, image, sessionId, model, history = [] } = body;
         messageText = message || '';
+        imagePayload = image || null;
 
         if ((!message || !message.trim()) && !image) {
             return NextResponse.json({
@@ -31,7 +34,7 @@ export async function POST(request) {
         user = getUserFromRequest(request);
 
         // Build messages chain including previous context
-        const conversationHistory = Array.isArray(history)
+        conversationHistory = Array.isArray(history)
             ? history.map(h => ({
                   role: h.role === 'assistant' ? 'assistant' : 'user',
                   content: h.content || '',
@@ -99,9 +102,11 @@ export async function POST(request) {
 
             const fallbackReply = localGroundedAdvisor({
                 query: messageText || 'skincare recommendations',
+                image: imagePayload,
                 catalog,
                 botName: settings.botName || 'Emma',
                 customerName: user?.name || null,
+                isFollowUp: conversationHistory.length > 1,
             });
 
             const { message: safeMessage, products } = extractProductCards(fallbackReply, catalog);
