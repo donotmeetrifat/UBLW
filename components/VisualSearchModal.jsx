@@ -189,15 +189,11 @@ export default function VisualSearchModal({ isOpen, onClose }) {
     const processImage = async (dataUrl, filename = '') => {
         setSelectedImage(dataUrl)
         setStep('analyzing')
-        setAnalysisStatus('Scanning product packaging & labels...')
+        setAnalysisStatus('Scanning product...')
 
         const t1 = setTimeout(() => {
-            setAnalysisStatus('Identifying brand & formulation...')
-        }, 800)
-
-        const t2 = setTimeout(() => {
-            setAnalysisStatus('Matching against verified UK Brand Lover stock...')
-        }, 1600)
+            setAnalysisStatus('Checking store availability...')
+        }, 1200)
 
         try {
             const controller = new AbortController()
@@ -211,7 +207,6 @@ export default function VisualSearchModal({ isOpen, onClose }) {
             })
             clearTimeout(timeoutId)
             clearTimeout(t1)
-            clearTimeout(t2)
 
             const data = await res.json()
 
@@ -225,7 +220,6 @@ export default function VisualSearchModal({ isOpen, onClose }) {
             setStep('results')
         } catch (err) {
             clearTimeout(t1)
-            clearTimeout(t2)
             console.error('Visual search error:', err)
             // Fallback gracefully so customer gets instant results
             setSearchResult({
@@ -454,47 +448,39 @@ export default function VisualSearchModal({ isOpen, onClose }) {
                             </div>
                         )}
 
-                        {/* STEP 3: CLEAN SCANNING ANIMATION (NO BLACK BACKGROUND, WEBSITE COLOR LASER) */}
+                        {/* STEP 3: SIMPLE & CLEAN SCANNING / LOADING STATE */}
                         {step === 'analyzing' && (
-                            <div className="space-y-4 text-center py-2">
-                                <div className="relative w-48 sm:w-56 h-60 sm:h-72 mx-auto rounded-2xl overflow-hidden border-2 border-[#6C306E]/30 bg-white shadow-sm flex items-center justify-center p-2">
-                                    {selectedImage && (
-                                        <Image
-                                            src={selectedImage}
-                                            alt="Scanned product"
-                                            fill
-                                            className="object-contain p-1"
-                                            unoptimized
-                                        />
-                                    )}
+                            <div className="py-10 sm:py-14 flex flex-col items-center justify-center text-center space-y-4">
+                                {/* Clean Circular Scanner with Thumbnail */}
+                                <div className="relative size-20 sm:size-22 flex items-center justify-center">
+                                    {/* Outer Track */}
+                                    <div className="absolute inset-0 rounded-full border-2 border-[#EFE0EF]" />
+                                    {/* Spinning Brand Accent */}
+                                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#6C306E] border-r-[#6C306E] animate-spin" />
 
-                                    {/* Purple Brand Website Laser Scan Line */}
-                                    <motion.div
-                                        animate={{ y: [-130, 130, -130] }}
-                                        transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-                                        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#9956A1] to-transparent shadow-[0_0_16px_rgba(108,48,110,0.95)] z-20"
-                                    />
-
-                                    {/* Soft Purple Ambient Laser Glow Sweep */}
-                                    <motion.div
-                                        animate={{ y: [-100, 100, -100], opacity: [0.3, 0.7, 0.3] }}
-                                        transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-                                        className="absolute left-0 right-0 h-12 bg-gradient-to-b from-[#6C306E]/15 to-transparent pointer-events-none z-10"
-                                    />
+                                    {/* Center Image Thumbnail or Icon */}
+                                    <div className="relative size-14 sm:size-16 rounded-full overflow-hidden bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center shadow-2xs">
+                                        {selectedImage ? (
+                                            <Image
+                                                src={selectedImage}
+                                                alt="Scanning"
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <CameraIcon size={20} color="#6C306E" />
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6FA] border border-[#EFE0EF]">
-                                        <span className="size-2 rounded-full bg-[#6C306E] animate-ping" />
-                                        <span className="text-[11px] font-bold text-[#6C306E]">
-                                            AI Vision Engine Scanning
-                                        </span>
-                                    </div>
-                                    <h4 className="text-xs sm:text-sm font-bold text-[#241224] animate-pulse">
-                                        {analysisStatus}
+                                {/* Clean & Simple Status Text */}
+                                <div className="space-y-1">
+                                    <h4 className="text-sm font-bold text-[#241224]">
+                                        {analysisStatus || 'Scanning product...'}
                                     </h4>
-                                    <p className="text-[10px] text-slate-400">
-                                        Checking authentic UK stock across our Bangladesh inventory...
+                                    <p className="text-xs text-slate-500">
+                                        Checking availability in our UK catalog
                                     </p>
                                 </div>
                             </div>
