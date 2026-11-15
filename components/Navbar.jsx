@@ -11,9 +11,7 @@ import {
     RoyalCrownIcon,
     CloseIcon,
     ShieldCheckIcon,
-    PhoneIcon,
-    CameraIcon,
-    SparklesIcon
+    CameraIcon
 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -236,9 +234,8 @@ const Navbar = () => {
                                 Shop
                                 <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
                             </Link>
-                            <Link href="/beauty-advisor" className="relative hover:text-[#6C306E] text-[#6C306E] transition-colors py-1 group flex items-center gap-1.5">
-                                <SparklesIcon size={14} color="#6C306E" />
-                                <span>AI Beauty Advisor</span>
+                            <Link href="/beauty-advisor" className="relative hover:text-[#6C306E] transition-colors py-1 group">
+                                AI Beauty Advisor
                                 <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#6C306E] rounded-full transition-all duration-300 group-hover:w-full" />
                             </Link>
                             <Link href="/contact" className="relative hover:text-[#6C306E] transition-colors py-1 group">
@@ -388,16 +385,6 @@ const Navbar = () => {
                                                     >
                                                         <ReviewBadgeIcon size={15} color="#6C306E" />
                                                         <span>My Reviews</span>
-                                                    </Link>
-
-                                                    {/* 4. Contact */}
-                                                    <Link
-                                                        href="/contact"
-                                                        onClick={() => setIsProfileOpen(false)}
-                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium cursor-pointer"
-                                                    >
-                                                        <PhoneIcon size={15} color="#6C306E" />
-                                                        <span>Contact</span>
                                                     </Link>
                                                 </div>
 
