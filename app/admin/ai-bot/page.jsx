@@ -19,16 +19,16 @@ import {
 export default function AdminAiBotPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [testingProvider, setTestingProvider] = useState(null) // 'gemini' | 'grok' | 'openrouter' | null
+    const [testingProvider, setTestingProvider] = useState(null) // 'gemini' | 'groq' | 'openrouter' | null
 
     // Settings State
     const [hasGeminiKey, setHasGeminiKey] = useState(false)
     const [geminiKey, setGeminiKey] = useState('')
     const [showGeminiKey, setShowGeminiKey] = useState(false)
 
-    const [hasGrokKey, setHasGrokKey] = useState(false)
-    const [grokKey, setGrokKey] = useState('')
-    const [showGrokKey, setShowGrokKey] = useState(false)
+    const [hasGroqKey, setHasGroqKey] = useState(false)
+    const [groqKey, setGroqKey] = useState('')
+    const [showGroqKey, setShowGroqKey] = useState(false)
 
     const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false)
     const [openRouterKey, setOpenRouterKey] = useState('')
@@ -63,13 +63,16 @@ export default function AdminAiBotPage() {
                 setHasGeminiKey(data.settings.hasGeminiKey)
                 setGeminiKey(data.settings.maskedGeminiKey || '')
 
-                setHasGrokKey(data.settings.hasGrokKey)
-                setGrokKey(data.settings.maskedGrokKey || '')
+                const hasGroq = data.settings.hasGroqKey || data.settings.hasGrokKey
+                const maskedGroq = data.settings.maskedGroqKey || data.settings.maskedGrokKey || ''
+                setHasGroqKey(hasGroq)
+                setGroqKey(maskedGroq)
 
                 setHasOpenRouterKey(data.settings.hasOpenRouterKey)
                 setOpenRouterKey(data.settings.maskedOpenRouterKey || '')
 
-                setPreferredProvider(data.settings.preferredProvider || 'gemini')
+                const normPref = data.settings.preferredProvider === 'grok' ? 'groq' : (data.settings.preferredProvider || 'gemini')
+                setPreferredProvider(normPref)
                 setCustomInstructions(data.settings.customInstructions || '')
                 setBotName(data.settings.botName || 'Emma - UK Beauty Specialist')
                 setEnabled(data.settings.enabled !== false)
@@ -92,7 +95,7 @@ export default function AdminAiBotPage() {
 
     // Test API Connection
     const handleTestConnection = async (provider) => {
-        const key = provider === 'gemini' ? geminiKey : provider === 'grok' ? grokKey : openRouterKey
+        const key = provider === 'gemini' ? geminiKey : provider === 'groq' ? groqKey : openRouterKey
 
         if (!key || !key.trim()) {
             toast.error(`Please enter a ${provider.toUpperCase()} API key first.`)
@@ -115,7 +118,7 @@ export default function AdminAiBotPage() {
             if (data.success) {
                 toast.success(data.message)
             } else {
-                toast.error(data.message || 'Connection test failed')
+                toast.error(data.message || 'Connection test failed', { duration: 6000 })
             }
         } catch (err) {
             toast.error(`Connection test error: ${err.message}`)
@@ -141,8 +144,8 @@ export default function AdminAiBotPage() {
             if (geminiKey && !geminiKey.includes('••••')) {
                 payload.geminiKey = geminiKey
             }
-            if (grokKey && !grokKey.includes('••••')) {
-                payload.grokKey = grokKey
+            if (groqKey && !groqKey.includes('••••')) {
+                payload.groqKey = groqKey
             }
             if (openRouterKey && !openRouterKey.includes('••••')) {
                 payload.openRouterKey = openRouterKey
@@ -220,7 +223,7 @@ export default function AdminAiBotPage() {
                         AI Saleswoman Bot (Emma)
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                        Configure free AI provider keys (Gemini, Grok, OpenRouter) and custom saleswoman instructions. The bot automatically reads and updates live catalog data directly from your database.
+                        Configure free AI provider keys (Google Gemini, Groq Cloud, OpenRouter) and custom saleswoman instructions. The bot automatically reads and updates live catalog data directly from your database.
                     </p>
                 </div>
 
@@ -300,7 +303,7 @@ export default function AdminAiBotPage() {
                         AI Provider API Keys (Triple Fallback Architecture)
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                        Configure free keys for Google Gemini, xAI Grok, and OpenRouter. If one provider runs out of free requests, Emma automatically switches to the next fallback seamlessly!
+                        Configure free keys for Google Gemini, Groq Cloud, and OpenRouter. If one provider runs out of free requests, Emma automatically switches to the next fallback seamlessly!
                     </p>
                 </div>
 
@@ -319,7 +322,7 @@ export default function AdminAiBotPage() {
                             </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mb-3">
-                            Fast multimodal vision + text. Recommended primary engine.
+                            Fast multimodal vision + text via Gemini 2.0 / 1.5 Flash.
                         </p>
 
                         <div className="space-y-2">
@@ -348,7 +351,7 @@ export default function AdminAiBotPage() {
                                     type="button"
                                     onClick={() => handleTestConnection('gemini')}
                                     disabled={testingProvider === 'gemini'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50"
+                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
                                 >
                                     {testingProvider === 'gemini' ? 'Testing...' : 'Test Key'}
                                 </button>
@@ -356,35 +359,35 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    {/* 2. xAI Grok (1st Backup) */}
+                    {/* 2. Groq Cloud (Free Tier - 1st Backup) */}
                     <div className={`p-4 rounded-2xl border transition-all ${
-                        preferredProvider === 'grok' ? 'bg-[#FAF6FA]/80 border-[#6C306E]/60 shadow-2xs' : 'bg-white border-[#EFE0EF]'
+                        preferredProvider === 'groq' ? 'bg-[#FAF6FA]/80 border-[#6C306E]/60 shadow-2xs' : 'bg-white border-[#EFE0EF]'
                     }`}>
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
                                 <span className="text-base">⚡</span>
-                                <h4 className="font-extrabold text-xs text-[#241224]">xAI Grok</h4>
+                                <h4 className="font-extrabold text-xs text-[#241224]">Groq Cloud</h4>
                             </div>
                             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                                1st Backup
+                                Free LPU Tier
                             </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mb-3">
-                            Direct from api.x.ai for intelligent reasoning & sales advisory.
+                            Free ultra-fast LPU inference (Llama 3.3 70B & 3.1) from console.groq.com.
                         </p>
 
                         <div className="space-y-2">
                             <div className="relative">
                                 <input
-                                    type={showGrokKey ? 'text' : 'password'}
-                                    value={grokKey}
-                                    onChange={(e) => setGrokKey(e.target.value)}
-                                    placeholder="Enter Grok API key (xai-...)"
+                                    type={showGroqKey ? 'text' : 'password'}
+                                    value={groqKey}
+                                    onChange={(e) => setGroqKey(e.target.value)}
+                                    placeholder="Enter Groq API key (gsk_...)"
                                     className="w-full h-9 pl-3 pr-8 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] focus:outline-none text-[#241224]"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => setShowGrokKey(!showGrokKey)}
+                                    onClick={() => setShowGroqKey(!showGroqKey)}
                                     className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
                                 >
                                     <EyeIcon size={14} />
@@ -393,15 +396,15 @@ export default function AdminAiBotPage() {
 
                             <div className="flex items-center justify-between gap-2 pt-1">
                                 <span className="text-[10px] text-slate-400">
-                                    {hasGrokKey ? '✓ Key Saved' : 'No key saved'}
+                                    {hasGroqKey ? '✓ Key Saved' : 'No key saved'}
                                 </span>
                                 <button
                                     type="button"
-                                    onClick={() => handleTestConnection('grok')}
-                                    disabled={testingProvider === 'grok'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50"
+                                    onClick={() => handleTestConnection('groq')}
+                                    disabled={testingProvider === 'groq'}
+                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
                                 >
-                                    {testingProvider === 'grok' ? 'Testing...' : 'Test Key'}
+                                    {testingProvider === 'groq' ? 'Testing...' : 'Test Key'}
                                 </button>
                             </div>
                         </div>
@@ -421,7 +424,7 @@ export default function AdminAiBotPage() {
                             </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mb-3">
-                            Connects to free models (Gemini Flash, Llama 3.3) with 0 downtime.
+                            Connects to free models (Gemini Flash, Llama 3.3) from openrouter.ai.
                         </p>
 
                         <div className="space-y-2">
@@ -450,7 +453,7 @@ export default function AdminAiBotPage() {
                                     type="button"
                                     onClick={() => handleTestConnection('openrouter')}
                                     disabled={testingProvider === 'openrouter'}
-                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50"
+                                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-[#EFE0EF] hover:bg-[#FAF6FA] text-[#6C306E] transition disabled:opacity-50 cursor-pointer"
                                 >
                                     {testingProvider === 'openrouter' ? 'Testing...' : 'Test Key'}
                                 </button>
@@ -468,18 +471,22 @@ export default function AdminAiBotPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        {['gemini', 'grok', 'openrouter'].map((p) => (
+                        {[
+                            { id: 'gemini', label: 'Gemini (Recommended)' },
+                            { id: 'groq', label: 'Groq (Free LPU)' },
+                            { id: 'openrouter', label: 'OpenRouter' }
+                        ].map((p) => (
                             <button
-                                key={p}
+                                key={p.id}
                                 type="button"
-                                onClick={() => setPreferredProvider(p)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition cursor-pointer ${
-                                    preferredProvider === p
+                                onClick={() => setPreferredProvider(p.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                    preferredProvider === p.id
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'bg-white border border-[#EFE0EF] text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
-                                {p === 'gemini' ? 'Gemini (Recommended)' : p === 'grok' ? 'xAI Grok' : 'OpenRouter'}
+                                {p.label}
                             </button>
                         ))}
                     </div>
@@ -534,7 +541,7 @@ export default function AdminAiBotPage() {
                     <button
                         type="submit"
                         disabled={testSending || !testQuery.trim()}
-                        className="h-10 px-4 rounded-xl bg-[#6C306E] hover:bg-[#562258] disabled:bg-slate-200 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+                        className="h-10 px-4 rounded-xl bg-[#6C306E] hover:bg-[#562258] disabled:bg-slate-200 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
                     >
                         {testSending ? 'Thinking...' : 'Test Ask'}
                         <SendIcon size={14} color="white" />

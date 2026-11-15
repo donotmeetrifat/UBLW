@@ -26,8 +26,10 @@ export async function GET(request) {
             settings: {
                 hasGeminiKey: Boolean(settings.geminiKey && settings.geminiKey.trim()),
                 maskedGeminiKey: maskKey(settings.geminiKey),
-                hasGrokKey: Boolean(settings.grokKey && settings.grokKey.trim()),
-                maskedGrokKey: maskKey(settings.grokKey),
+                hasGroqKey: Boolean(settings.groqKey && settings.groqKey.trim()),
+                maskedGroqKey: maskKey(settings.groqKey),
+                hasGrokKey: Boolean(settings.groqKey && settings.groqKey.trim()),
+                maskedGrokKey: maskKey(settings.groqKey),
                 hasOpenRouterKey: Boolean(settings.openRouterKey && settings.openRouterKey.trim()),
                 maskedOpenRouterKey: maskKey(settings.openRouterKey),
                 preferredProvider: settings.preferredProvider || 'gemini',
@@ -60,6 +62,7 @@ export async function POST(request) {
         const body = await request.json();
         const {
             geminiKey,
+            groqKey,
             grokKey,
             openRouterKey,
             preferredProvider,
@@ -71,13 +74,22 @@ export async function POST(request) {
             testKey,
         } = body;
 
+        const effectiveGroqKey = groqKey !== undefined ? groqKey : grokKey;
+
         // Action: Connection Test
         if (action === 'test') {
-            const provider = testProvider || 'gemini';
+            const rawProvider = (testProvider || 'gemini').toLowerCase();
+            const provider = rawProvider === 'grok' ? 'groq' : rawProvider;
             const currentSettings = await getAiSettings();
-            const keyToTest = (testKey && testKey.trim())
-                ? testKey.trim()
-                : (provider === 'gemini' ? currentSettings.geminiKey : provider === 'grok' ? currentSettings.grokKey : currentSettings.openRouterKey);
+
+            let keyToTest = (testKey && testKey.trim()) ? testKey.trim() : '';
+            if (!keyToTest) {
+                keyToTest = provider === 'gemini'
+                    ? currentSettings.geminiKey
+                    : provider === 'groq'
+                    ? currentSettings.groqKey
+                    : currentSettings.openRouterKey;
+            }
 
             if (!keyToTest) {
                 return NextResponse.json({
@@ -88,62 +100,97 @@ export async function POST(request) {
 
             const startTime = Date.now();
 
+            // 1. Google Gemini Connection Test with resilient model fallback
             if (provider === 'gemini') {
-                const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keyToTest}`;
-                const res = await fetch(testUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ role: 'user', parts: [{ text: 'Respond with exactly the single word "VERIFIED".' }] }],
-                    }),
-                });
-                const latencyMs = Date.now() - startTime;
-                if (!res.ok) {
-                    const err = await res.text();
-                    return NextResponse.json({
-                        success: false,
-                        message: `Gemini verification failed (${res.status}): ${err.substring(0, 200)}`,
-                        latencyMs,
-                    }, { status: 400 });
+                const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+                let lastError = null;
+
+                for (const model of modelsToTry) {
+                    try {
+                        const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToTest}`;
+                        const res = await fetch(testUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ role: 'user', parts: [{ text: 'Respond with exactly the single word "VERIFIED".' }] }],
+                            }),
+                        });
+                        const latencyMs = Date.now() - startTime;
+
+                        if (res.ok) {
+                            return NextResponse.json({
+                                success: true,
+                                message: `Gemini (${model}) connected successfully! Latency: ${latencyMs}ms`,
+                                latencyMs,
+                            });
+                        } else {
+                            const errText = await res.text();
+                            lastError = errText;
+                        }
+                    } catch (e) {
+                        lastError = e.message;
+                    }
                 }
+
                 return NextResponse.json({
-                    success: true,
-                    message: `Gemini connected successfully! Latency: ${latencyMs}ms`,
-                    latencyMs,
-                });
-            } else if (provider === 'grok') {
-                const res = await fetch('https://api.x.ai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${keyToTest}`,
-                    },
-                    body: JSON.stringify({
-                        model: 'grok-beta',
-                        messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
-                        max_tokens: 10,
-                    }),
-                });
-                const latencyMs = Date.now() - startTime;
-                if (!res.ok) {
-                    const err = await res.text();
-                    return NextResponse.json({
-                        success: false,
-                        message: `Grok verification failed (${res.status}): ${err.substring(0, 200)}`,
-                        latencyMs,
-                    }, { status: 400 });
+                    success: false,
+                    message: `Gemini verification failed: ${lastError ? lastError.substring(0, 250) : 'Service unavailable'}`,
+                    latencyMs: Date.now() - startTime,
+                }, { status: 400 });
+            }
+
+            // 2. Groq Cloud (Free LPU) Connection Test
+            else if (provider === 'groq') {
+                const modelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+                let lastError = null;
+
+                for (const model of modelsToTry) {
+                    try {
+                        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${keyToTest}`,
+                            },
+                            body: JSON.stringify({
+                                model,
+                                messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
+                                max_tokens: 10,
+                            }),
+                        });
+                        const latencyMs = Date.now() - startTime;
+
+                        if (res.ok) {
+                            return NextResponse.json({
+                                success: true,
+                                message: `Groq Cloud (${model}) connected successfully! Latency: ${latencyMs}ms`,
+                                latencyMs,
+                            });
+                        } else {
+                            const err = await res.text();
+                            lastError = err;
+                        }
+                    } catch (e) {
+                        lastError = e.message;
+                    }
                 }
+
                 return NextResponse.json({
-                    success: true,
-                    message: `Grok connected successfully! Latency: ${latencyMs}ms`,
-                    latencyMs,
-                });
-            } else if (provider === 'openrouter') {
+                    success: false,
+                    message: `Groq verification failed: ${lastError ? lastError.substring(0, 250) : 'Unable to connect to api.groq.com'}`,
+                    latencyMs: Date.now() - startTime,
+                }, { status: 400 });
+            }
+
+            // 3. OpenRouter Connection Test
+            else if (provider === 'openrouter') {
                 const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${keyToTest}`,
+                        'HTTP-Referer': 'https://ukbrandlover.com',
+                        'X-Title': 'UK Brand Lover Beauty Advisor',
                     },
                     body: JSON.stringify({
                         model: 'google/gemini-2.0-flash-exp:free',
@@ -169,9 +216,8 @@ export async function POST(request) {
         }
 
         // Action: Save Settings
-        // Only update keys if a non-masked value was submitted
         const updatePayload = {
-            preferredProvider,
+            preferredProvider: preferredProvider === 'grok' ? 'groq' : preferredProvider,
             customInstructions,
             botName,
             enabled,
@@ -180,8 +226,8 @@ export async function POST(request) {
         if (geminiKey !== undefined && !geminiKey.includes('••••')) {
             updatePayload.geminiKey = geminiKey;
         }
-        if (grokKey !== undefined && !grokKey.includes('••••')) {
-            updatePayload.grokKey = grokKey;
+        if (effectiveGroqKey !== undefined && !effectiveGroqKey.includes('••••')) {
+            updatePayload.groqKey = effectiveGroqKey;
         }
         if (openRouterKey !== undefined && !openRouterKey.includes('••••')) {
             updatePayload.openRouterKey = openRouterKey;
