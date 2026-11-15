@@ -6,26 +6,39 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
-import { isClientSignedIn, requireSignIn, getAuthHeaders } from '@/lib/clientAuth'
+import { isClientSignedIn, requireSignIn, getAuthHeaders, getClientUser } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
 import { LiquidMultimodalInput } from '@/components/ui/liquid-multimodal-input'
 import { TrashIcon } from '@/components/icons'
-
-const DEFAULT_WELCOME = {
-    id: 'full-welcome',
-    role: 'assistant',
-    content: `Hello! I am Emma, your beauty consultant at UK Brand Lover. How can I assist you today? You can ask about product availability, skincare routines, or upload a photo of any product bottle to check our stock.`,
-    products: [],
-    createdAt: new Date().toISOString(),
-};
+import {
+    DEFAULT_WELCOME_MESSAGE,
+    getCachedAiMessages,
+    saveCachedAiMessages,
+    clearCachedAiMessages,
+    dispatchAiChatSync,
+    mergeAiMessages,
+} from '@/lib/aiChatStore'
 
 export default function BeautyAdvisorPage() {
     const dispatch = useDispatch();
-    const [currentUser, setCurrentUser] = useState(null);
-    const [messages, setMessages] = useState([DEFAULT_WELCOME]);
+
+    const [currentUser, setCurrentUser] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('ukbl_current_user');
+                return saved ? JSON.parse(saved) : null;
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    });
+
+    // 0ms Instant Cache Load: Populates immediately from localStorage for both guests and authenticated customers
+    const [messages, setMessages] = useState(() => getCachedAiMessages(currentUser));
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState('');
     const [isClearConfirming, setIsClearConfirming] = useState(false);
@@ -52,16 +65,8 @@ export default function BeautyAdvisorPage() {
     useEffect(() => {
         const syncUser = () => {
             if (typeof window !== 'undefined') {
-                const saved = localStorage.getItem('ukbl_current_user');
-                if (saved) {
-                    try {
-                        setCurrentUser(JSON.parse(saved));
-                    } catch {
-                        setCurrentUser(null);
-                    }
-                } else {
-                    setCurrentUser(null);
-                }
+                const user = getClientUser();
+                setCurrentUser(user);
             }
         };
         syncUser();
@@ -73,94 +78,102 @@ export default function BeautyAdvisorPage() {
         };
     }, []);
 
-    // Load messages:
-    // - Authenticated: Load from PostgreSQL under customer account (cross-device sync)
-    // - Unauthenticated: Load strictly from browser cache (localStorage)
-    useEffect(() => {
-        let isMounted = true;
+    // Server history fetcher with smart non-destructive merge
+    const fetchServerHistory = async (userToFetch = currentUser) => {
+        if (!userToFetch || !userToFetch.id) return;
 
-        const loadMessages = async () => {
-            if (currentUser && currentUser.id) {
-                // 1. If guest had conversation in browser cache before signing in, migrate it into their account
-                if (typeof window !== 'undefined') {
-                    const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
-                    if (guestSaved) {
-                        try {
-                            const parsedGuest = JSON.parse(guestSaved);
-                            if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
-                                const toMigrate = parsedGuest.filter(m => m.id !== 'full-welcome' && m.id !== 'welcome-0');
-                                if (toMigrate.length > 0) {
-                                    await fetch('/api/ai/history', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            ...getAuthHeaders(),
-                                        },
-                                        body: JSON.stringify({ guestMessages: toMigrate }),
-                                    });
-                                }
-                            }
-                            localStorage.removeItem('ukbl_guest_ai_messages');
-                        } catch (e) {
-                            console.warn('Guest migration note:', e.message);
-                        }
-                    }
-                }
-
-                // 2. Fetch authenticated customer's account messages from database
+        // 1. Migrate guest messages to user account if any exist
+        if (typeof window !== 'undefined') {
+            const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
+            if (guestSaved) {
                 try {
-                    const res = await fetch('/api/ai/history', {
-                        headers: {
-                            ...getAuthHeaders(),
-                        },
-                    });
-                    const data = await res.json();
-                    if (!isMounted) return;
-
-                    if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                        setMessages([DEFAULT_WELCOME, ...data.messages]);
-                        return;
+                    const parsedGuest = JSON.parse(guestSaved);
+                    if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
+                        const toMigrate = parsedGuest.filter(m => !m.id?.includes('welcome'));
+                        if (toMigrate.length > 0) {
+                            localStorage.removeItem('ukbl_guest_ai_messages');
+                            await fetch('/api/ai/history', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...getAuthHeaders(),
+                                },
+                                body: JSON.stringify({ guestMessages: toMigrate }),
+                            });
+                        }
                     } else {
-                        setMessages([DEFAULT_WELCOME]);
-                        return;
+                        localStorage.removeItem('ukbl_guest_ai_messages');
                     }
                 } catch (e) {
-                    console.warn('Could not load history:', e.message);
-                    if (isMounted) setMessages([DEFAULT_WELCOME]);
+                    console.warn('Guest migration note:', e.message);
                 }
-            } else {
-                // Unauthenticated Guest: Strictly load from browser cache (localStorage)
-                if (typeof window !== 'undefined') {
-                    const local = localStorage.getItem('ukbl_guest_ai_messages');
-                    if (local) {
-                        try {
-                            const parsed = JSON.parse(local);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                if (isMounted) setMessages(parsed);
-                                return;
-                            }
-                        } catch {}
-                    }
-                }
-                if (isMounted) setMessages([DEFAULT_WELCOME]);
+            }
+        }
+
+        // 2. Fetch authenticated customer's account messages from PostgreSQL
+        try {
+            const res = await fetch('/api/ai/history', {
+                headers: {
+                    ...getAuthHeaders(),
+                },
+            });
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                setMessages(prev => {
+                    const merged = mergeAiMessages(prev, data.messages);
+                    saveCachedAiMessages(userToFetch, merged);
+                    return merged;
+                });
+            }
+        } catch (e) {
+            console.warn('Could not load history:', e.message);
+        }
+    };
+
+    // Load chat history whenever currentUser changes
+    useEffect(() => {
+        // Immediate local cache load for this user
+        const cached = getCachedAiMessages(currentUser);
+        setMessages(cached);
+
+        if (currentUser && currentUser.id) {
+            fetchServerHistory(currentUser);
+        }
+    }, [currentUser]);
+
+    // Cross-Component Real-Time Synchronization Listener
+    useEffect(() => {
+        const handleAiSync = (e) => {
+            const { messages: incoming, userId, source } = e.detail || {};
+            if (source === 'page') return; // Ignore our own dispatches
+
+            const currentUserId = currentUser?.id || 'guest';
+            if (userId === currentUserId && Array.isArray(incoming)) {
+                setMessages(incoming);
             }
         };
 
-        loadMessages();
+        const handleStorageSync = (e) => {
+            const currentUserId = currentUser?.id;
+            const expectedKey = currentUserId ? `ukbl_user_ai_messages_${currentUserId}` : 'ukbl_guest_ai_messages';
+            if (e.key === expectedKey && e.newValue) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    if (Array.isArray(parsed)) {
+                        setMessages(parsed);
+                    }
+                } catch {}
+            }
+        };
 
+        window.addEventListener('ukbl_ai_chat_sync', handleAiSync);
+        window.addEventListener('storage', handleStorageSync);
         return () => {
-            isMounted = false;
+            window.removeEventListener('ukbl_ai_chat_sync', handleAiSync);
+            window.removeEventListener('storage', handleStorageSync);
         };
     }, [currentUser]);
-
-    // Save for guests
-    useEffect(() => {
-        if (!currentUser && typeof window !== 'undefined' && messages.length > 0) {
-            try {
-                localStorage.setItem('ukbl_guest_ai_messages', JSON.stringify(messages));
-            } catch {}
-        }
-    }, [messages, currentUser]);
 
     // Scroll to bottom purely inside the chat container (never scrolls window)
     const scrollToBottom = () => {
@@ -225,7 +238,7 @@ export default function BeautyAdvisorPage() {
         handleSendMessage(value, photo);
     };
 
-    // Send Message
+    // Send Message Handler with zero-latency optimistic dispatch & sync
     const handleSendMessage = async (textToSend = null, photoToSend = null, modelToUse = 'pro') => {
         const text = (textToSend !== null ? textToSend : '').trim();
         const photo = photoToSend !== null ? photoToSend : null;
@@ -234,15 +247,20 @@ export default function BeautyAdvisorPage() {
         if (!text && !photo) return;
         if (isSending) return;
 
+        const optimisticUserId = `user-${Date.now()}`;
         const userMsg = {
-            id: `user-${Date.now()}`,
+            id: optimisticUserId,
             role: 'user',
             content: text || 'Please check this product for availability in our UK catalog.',
             image: photo || null,
             createdAt: new Date().toISOString(),
         };
 
-        setMessages(prev => [...prev, userMsg]);
+        const updatedHistory = [...messages, userMsg];
+        setMessages(updatedHistory);
+        saveCachedAiMessages(currentUser, updatedHistory);
+        dispatchAiChatSync(updatedHistory, currentUser, 'page');
+
         setIsSending(true);
 
         try {
@@ -263,31 +281,42 @@ export default function BeautyAdvisorPage() {
 
             const data = await res.json();
             if (data.success && data.message) {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `assistant-${Date.now()}`,
-                        role: 'assistant',
-                        content: data.message,
-                        products: data.products || [],
-                        createdAt: new Date().toISOString(),
-                    },
-                ]);
+                const assistantMsg = {
+                    id: data.assistantMessageId || `assistant-${Date.now()}`,
+                    role: 'assistant',
+                    content: data.message,
+                    products: data.products || [],
+                    createdAt: data.createdAt || new Date().toISOString(),
+                };
+
+                setMessages(prev => {
+                    let next = prev;
+                    if (data.userMessageId) {
+                        next = next.map(m => (m.id === optimisticUserId ? { ...m, id: data.userMessageId } : m));
+                    }
+                    next = [...next, assistantMsg];
+                    saveCachedAiMessages(currentUser, next);
+                    dispatchAiChatSync(next, currentUser, 'page');
+                    return next;
+                });
             } else {
                 throw new Error(data.message || 'Error occurred');
             }
         } catch (err) {
             console.error('Advisor error:', err);
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: `assistant-${Date.now()}`,
-                    role: 'assistant',
-                    content: `Hello! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from the UK with verified batch codes.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to recommend the best option for you.`,
-                    products: [],
-                    createdAt: new Date().toISOString(),
-                },
-            ]);
+            const fallbackMsg = {
+                id: `assistant-${Date.now()}`,
+                role: 'assistant',
+                content: `Hello! Delighted to assist you at UK Brand Lover. Every skincare and cosmetic item in our boutique is 100% genuine and imported directly from the UK with verified batch codes.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to recommend the best option for you.`,
+                products: [],
+                createdAt: new Date().toISOString(),
+            };
+            setMessages(prev => {
+                const next = [...prev, fallbackMsg];
+                saveCachedAiMessages(currentUser, next);
+                dispatchAiChatSync(next, currentUser, 'page');
+                return next;
+            });
         } finally {
             setIsSending(false);
         }
@@ -304,11 +333,11 @@ export default function BeautyAdvisorPage() {
             });
         } catch {}
 
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('ukbl_guest_ai_messages');
-        }
-
-        setMessages([DEFAULT_WELCOME]);
+        clearCachedAiMessages(currentUser);
+        const resetMessages = [DEFAULT_WELCOME_MESSAGE];
+        setMessages(resetMessages);
+        saveCachedAiMessages(currentUser, resetMessages);
+        dispatchAiChatSync(resetMessages, currentUser, 'page');
         setIsClearConfirming(false);
         toast.success('Consultation history cleared.');
     };
@@ -328,7 +357,7 @@ export default function BeautyAdvisorPage() {
 
     return (
         <div className="h-full w-full flex flex-col bg-gradient-to-b from-[#FAF6FA]/60 via-white to-[#FAF6FA]/80 overflow-hidden font-sans select-none">
-            {/* 1. Clean Top Header Bar (Exact RIFAT Ai Style, Full Browser Width) */}
+            {/* 1. Clean Top Header Bar (Full Browser Width) */}
             <header className="px-4 sm:px-8 py-3.5 bg-white/80 backdrop-blur-xl border-b border-[#EFE0EF]/80 flex items-center justify-between shrink-0 shadow-2xs z-10">
                 <div className="flex items-center gap-3.5">
                     <div className="relative">
@@ -421,7 +450,7 @@ export default function BeautyAdvisorPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    /* Assistant Message: Emma Avatar on Left + Clean White Card (RIFAT Ai Style) */
+                                    /* Assistant Message: Emma Avatar on Left + Clean White Card */
                                     <div className="flex items-start gap-3">
                                         <EmmaAvatar size={34} className="mt-1 shadow-2xs" />
                                         <div className="max-w-[85%] sm:max-w-[80%] space-y-2.5">
@@ -523,17 +552,17 @@ export default function BeautyAdvisorPage() {
                 </div>
             </main>
 
-            {/* 3. Bottom Prompt Capsule & Suggestions (Seamless transition, border line removed) */}
+            {/* 3. Bottom Prompt Capsule & Suggestions */}
             <footer className="shrink-0 bg-transparent px-3 sm:px-6 py-2 sm:py-3 z-10">
                 <div className="max-w-2xl sm:max-w-3xl mx-auto w-full space-y-2">
-                    {/* Suggestions Carousel: Left/Right Arrow Navigation with Smooth Edge Fading */}
+                    {/* Suggestions Carousel: Left/Right Arrow Navigation */}
                     <AiSuggestionBar
                         suggestions={dynamicSuggestions}
                         onSelect={(query) => handleSendMessage(query, null)}
                         disabled={isSending}
                     />
 
-                    {/* Liquid Multimodal Input (Exact requested design) */}
+                    {/* Liquid Multimodal Input */}
                     <div className="w-full flex justify-center">
                         <LiquidMultimodalInput
                             placeholder="Ask Emma AI anything, or drop product photos…"

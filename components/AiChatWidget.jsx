@@ -3,14 +3,23 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
-import { isClientSignedIn, requireSignIn, getAuthHeaders } from '@/lib/clientAuth'
+import { isClientSignedIn, requireSignIn, getAuthHeaders, getClientUser } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
+import {
+    DEFAULT_WELCOME_MESSAGE,
+    getCachedAiMessages,
+    saveCachedAiMessages,
+    clearCachedAiMessages,
+    dispatchAiChatSync,
+    mergeAiMessages,
+} from '@/lib/aiChatStore'
 import {
     CloseIcon,
     CameraIcon,
@@ -18,19 +27,25 @@ import {
     TrashIcon,
 } from '@/components/icons'
 
-const DEFAULT_WELCOME_MESSAGE = {
-    id: 'welcome-0',
-    role: 'assistant',
-    content: `Hello! I am Emma, your beauty consultant at UK Brand Lover. How can I assist you today? You can ask about product availability, skincare routines, or upload a photo of any product bottle to check our stock.`,
-    products: [],
-    createdAt: new Date().toISOString(),
-};
-
 export default function AiChatWidget() {
     const dispatch = useDispatch();
+    const pathname = usePathname();
+
     const [isOpen, setIsOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-    const [messages, setMessages] = useState([DEFAULT_WELCOME_MESSAGE]);
+    const [currentUser, setCurrentUser] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('ukbl_current_user');
+                return saved ? JSON.parse(saved) : null;
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    });
+
+    // 0ms Instant Cache Load: Populates immediately from localStorage for both guests and authenticated customers
+    const [messages, setMessages] = useState(() => getCachedAiMessages(currentUser));
     const [inputText, setInputText] = useState('');
     const [attachedImage, setAttachedImage] = useState(null);
     const [isSending, setIsSending] = useState(false);
@@ -56,21 +71,12 @@ export default function AiChatWidget() {
         }
     }, []);
 
-    // Load active user and synchronize
+    // Synchronize active user from auth storage
     useEffect(() => {
         const syncUser = () => {
             if (typeof window !== 'undefined') {
-                const saved = localStorage.getItem('ukbl_current_user');
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        setCurrentUser(parsed);
-                    } catch {
-                        setCurrentUser(null);
-                    }
-                } else {
-                    setCurrentUser(null);
-                }
+                const user = getClientUser();
+                setCurrentUser(user);
             }
         };
 
@@ -83,94 +89,115 @@ export default function AiChatWidget() {
         };
     }, []);
 
-    // Load chat history:
-    // - Authenticated: Load from PostgreSQL under user account (persists across devices)
-    // - Unauthenticated guest: Load strictly from browser cache (localStorage)
-    useEffect(() => {
-        let isMounted = true;
+    // Server history fetcher with smart non-destructive merge
+    const fetchServerHistory = async (userToFetch = currentUser) => {
+        if (!userToFetch || !userToFetch.id) return;
 
-        const loadHistory = async () => {
-            if (currentUser && currentUser.id) {
-                // 1. If guest had conversation in browser cache before signing in, migrate it into their account
-                if (typeof window !== 'undefined') {
-                    const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
-                    if (guestSaved) {
-                        try {
-                            const parsedGuest = JSON.parse(guestSaved);
-                            if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
-                                const toMigrate = parsedGuest.filter(m => m.id !== 'welcome-0' && m.id !== 'full-welcome');
-                                if (toMigrate.length > 0) {
-                                    await fetch('/api/ai/history', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            ...getAuthHeaders(),
-                                        },
-                                        body: JSON.stringify({ guestMessages: toMigrate }),
-                                    });
-                                }
-                            }
-                            localStorage.removeItem('ukbl_guest_ai_messages');
-                        } catch (e) {
-                            console.warn('Guest migration note:', e.message);
-                        }
-                    }
-                }
-
-                // 2. Fetch authenticated user's account messages from database
+        // 1. Migrate guest messages to user account if any exist
+        if (typeof window !== 'undefined') {
+            const guestSaved = localStorage.getItem('ukbl_guest_ai_messages');
+            if (guestSaved) {
                 try {
-                    const res = await fetch('/api/ai/history', {
-                        headers: {
-                            ...getAuthHeaders(),
-                        },
-                    });
-                    const data = await res.json();
-                    if (!isMounted) return;
-
-                    if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                        setMessages([DEFAULT_WELCOME_MESSAGE, ...data.messages]);
-                        return;
+                    const parsedGuest = JSON.parse(guestSaved);
+                    if (Array.isArray(parsedGuest) && parsedGuest.length > 1) {
+                        const toMigrate = parsedGuest.filter(m => !m.id?.includes('welcome'));
+                        if (toMigrate.length > 0) {
+                            localStorage.removeItem('ukbl_guest_ai_messages');
+                            await fetch('/api/ai/history', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...getAuthHeaders(),
+                                },
+                                body: JSON.stringify({ guestMessages: toMigrate }),
+                            });
+                        }
                     } else {
-                        setMessages([DEFAULT_WELCOME_MESSAGE]);
-                        return;
+                        localStorage.removeItem('ukbl_guest_ai_messages');
                     }
                 } catch (e) {
-                    console.warn('Failed to fetch user chat history:', e.message);
-                    if (isMounted) setMessages([DEFAULT_WELCOME_MESSAGE]);
+                    console.warn('Guest migration note:', e.message);
                 }
-            } else {
-                // Guest: strictly load from browser cache (localStorage)
-                if (typeof window !== 'undefined') {
-                    const local = localStorage.getItem('ukbl_guest_ai_messages');
-                    if (local) {
-                        try {
-                            const parsed = JSON.parse(local);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                if (isMounted) setMessages(parsed);
-                                return;
-                            }
-                        } catch {}
-                    }
-                }
-                if (isMounted) setMessages([DEFAULT_WELCOME_MESSAGE]);
+            }
+        }
+
+        // 2. Fetch authenticated customer's account messages from PostgreSQL
+        try {
+            const res = await fetch('/api/ai/history', {
+                headers: {
+                    ...getAuthHeaders(),
+                },
+            });
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                setMessages(prev => {
+                    const merged = mergeAiMessages(prev, data.messages);
+                    saveCachedAiMessages(userToFetch, merged);
+                    return merged;
+                });
+            }
+        } catch (e) {
+            console.warn('Failed to fetch user chat history:', e.message);
+        }
+    };
+
+    // Load chat history whenever currentUser changes
+    useEffect(() => {
+        // Immediate local cache load for this user
+        const cached = getCachedAiMessages(currentUser);
+        setMessages(cached);
+
+        if (currentUser && currentUser.id) {
+            fetchServerHistory(currentUser);
+        }
+    }, [currentUser]);
+
+    // When widget opens: refresh from local cache instantly & refresh from server
+    useEffect(() => {
+        if (isOpen) {
+            const cached = getCachedAiMessages(currentUser);
+            if (cached && cached.length > 0) {
+                setMessages(prev => (cached.length >= prev.length ? cached : prev));
+            }
+            if (currentUser && currentUser.id) {
+                fetchServerHistory(currentUser);
+            }
+        }
+    }, [isOpen]);
+
+    // Cross-Component Real-Time Synchronization Listener
+    useEffect(() => {
+        const handleAiSync = (e) => {
+            const { messages: incoming, userId, source } = e.detail || {};
+            if (source === 'widget') return; // Ignore our own dispatches
+
+            const currentUserId = currentUser?.id || 'guest';
+            if (userId === currentUserId && Array.isArray(incoming)) {
+                setMessages(incoming);
             }
         };
 
-        loadHistory();
+        const handleStorageSync = (e) => {
+            const currentUserId = currentUser?.id;
+            const expectedKey = currentUserId ? `ukbl_user_ai_messages_${currentUserId}` : 'ukbl_guest_ai_messages';
+            if (e.key === expectedKey && e.newValue) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    if (Array.isArray(parsed)) {
+                        setMessages(parsed);
+                    }
+                } catch {}
+            }
+        };
 
+        window.addEventListener('ukbl_ai_chat_sync', handleAiSync);
+        window.addEventListener('storage', handleStorageSync);
         return () => {
-            isMounted = false;
+            window.removeEventListener('ukbl_ai_chat_sync', handleAiSync);
+            window.removeEventListener('storage', handleStorageSync);
         };
     }, [currentUser]);
-
-    // Save to localStorage for guests
-    useEffect(() => {
-        if (!currentUser && typeof window !== 'undefined' && messages.length > 0) {
-            try {
-                localStorage.setItem('ukbl_guest_ai_messages', JSON.stringify(messages));
-            } catch {}
-        }
-    }, [messages, currentUser]);
 
     // Auto-scroll chat to bottom
     const scrollToBottom = (behavior = 'smooth') => {
@@ -236,7 +263,7 @@ export default function AiChatWidget() {
         reader.readAsDataURL(file);
     };
 
-    // Send Message Handler
+    // Send Message Handler with zero-latency optimistic dispatch & sync
     const handleSendMessage = async (textToSend = null, photoToSend = null) => {
         const text = (textToSend !== null ? textToSend : inputText).trim();
         const photo = photoToSend !== null ? photoToSend : attachedImage;
@@ -244,16 +271,20 @@ export default function AiChatWidget() {
         if (!text && !photo) return;
         if (isSending) return;
 
+        const optimisticUserId = `user-${Date.now()}`;
         const userMsg = {
-            id: `user-${Date.now()}`,
+            id: optimisticUserId,
             role: 'user',
-            content: text || 'Please check this product bottle for availability and recommendations.',
+            content: text || 'Please check this product for availability in our UK catalog.',
             image: photo || null,
             createdAt: new Date().toISOString(),
         };
 
         const updatedHistory = [...messages, userMsg];
         setMessages(updatedHistory);
+        saveCachedAiMessages(currentUser, updatedHistory);
+        dispatchAiChatSync(updatedHistory, currentUser, 'widget');
+
         setInputText('');
         setAttachedImage(null);
         setIsSending(true);
@@ -277,13 +308,23 @@ export default function AiChatWidget() {
 
             if (data.success && data.message) {
                 const assistantMsg = {
-                    id: `assistant-${Date.now()}`,
+                    id: data.assistantMessageId || `assistant-${Date.now()}`,
                     role: 'assistant',
                     content: data.message,
                     products: data.products || [],
-                    createdAt: new Date().toISOString(),
+                    createdAt: data.createdAt || new Date().toISOString(),
                 };
-                setMessages(prev => [...prev, assistantMsg]);
+
+                setMessages(prev => {
+                    let next = prev;
+                    if (data.userMessageId) {
+                        next = next.map(m => (m.id === optimisticUserId ? { ...m, id: data.userMessageId } : m));
+                    }
+                    next = [...next, assistantMsg];
+                    saveCachedAiMessages(currentUser, next);
+                    dispatchAiChatSync(next, currentUser, 'widget');
+                    return next;
+                });
             } else {
                 throw new Error(data.message || 'Error communicating with beauty advisor');
             }
@@ -296,7 +337,12 @@ export default function AiChatWidget() {
                 products: [],
                 createdAt: new Date().toISOString(),
             };
-            setMessages(prev => [...prev, fallbackMsg]);
+            setMessages(prev => {
+                const next = [...prev, fallbackMsg];
+                saveCachedAiMessages(currentUser, next);
+                dispatchAiChatSync(next, currentUser, 'widget');
+                return next;
+            });
         } finally {
             setIsSending(false);
         }
@@ -313,11 +359,11 @@ export default function AiChatWidget() {
             });
         } catch {}
 
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('ukbl_guest_ai_messages');
-        }
-
-        setMessages([DEFAULT_WELCOME_MESSAGE]);
+        clearCachedAiMessages(currentUser);
+        const resetMessages = [DEFAULT_WELCOME_MESSAGE];
+        setMessages(resetMessages);
+        saveCachedAiMessages(currentUser, resetMessages);
+        dispatchAiChatSync(resetMessages, currentUser, 'widget');
         setIsClearConfirming(false);
         toast.success('Chat history cleared.');
     };
@@ -336,9 +382,14 @@ export default function AiChatWidget() {
         window.dispatchEvent(new Event('cart-bump'));
     };
 
+    // Do not show floating widget on the full dedicated /beauty-advisor page
+    if (pathname === '/beauty-advisor') {
+        return null;
+    }
+
     return (
         <>
-            {/* 1. Floating Circular Avatar Launcher Button (Exact RIFAT Ai Style with Interactive Mascot) */}
+            {/* 1. Floating Circular Avatar Launcher Button (Exact Mascot Style) */}
             <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 select-none">
                 <motion.div
                     role="button"
@@ -359,7 +410,7 @@ export default function AiChatWidget() {
                 </motion.div>
             </div>
 
-            {/* 2. Floating AI Chat Modal (Exact RIFAT Ai UI Design + Frosted White-Blur Theme) */}
+            {/* 2. Floating AI Chat Modal (Clean Frosted White-Blur Theme) */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -369,7 +420,7 @@ export default function AiChatWidget() {
                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                         className="fixed bottom-20 right-2 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-16px)] sm:w-[410px] h-[590px] max-h-[85vh] rounded-[30px] bg-white/85 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 shadow-[0_24px_70px_-15px_rgba(58,12,56,0.2),0_0_0_1px_rgba(239,224,239,0.7)] flex flex-col overflow-hidden select-none font-sans"
                     >
-                        {/* Top Header: Clean, open, white-theme (RIFAT Ai Style) */}
+                        {/* Top Header: Clean, open, white-theme */}
                         <div className="px-5 py-3.5 border-b border-[#EFE0EF]/70 flex items-center justify-between shrink-0 bg-white/40">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
@@ -470,7 +521,7 @@ export default function AiChatWidget() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            /* Assistant Message: Avatar on the left + Clean White Card (RIFAT Ai Style) */
+                                            /* Assistant Message: Avatar on the left + Clean White Card */
                                             <div className="flex items-start gap-2.5">
                                                 <EmmaAvatar size={30} className="mt-0.5 shadow-2xs" />
                                                 <div className="max-w-[85%] space-y-2">
@@ -575,7 +626,7 @@ export default function AiChatWidget() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Suggestions Bar: Text only, Left & Right Arrow Buttons (Exact RIFAT Ai Style) */}
+                        {/* Suggestions Bar: Text only, Left & Right Arrow Buttons */}
                         <div className="px-3.5 py-1.5 bg-white/40 border-t border-[#EFE0EF]/60 shrink-0">
                             <AiSuggestionBar
                                 suggestions={dynamicSuggestions}
@@ -584,7 +635,7 @@ export default function AiChatWidget() {
                             />
                         </div>
 
-                        {/* Input Capsule: Pill shape with Camera + Input + Circular Send Button (Exact RIFAT Ai Style) */}
+                        {/* Input Capsule: Pill shape with Camera + Input + Circular Send Button */}
                         <div className="p-3.5 pt-1.5 shrink-0 bg-white/50 backdrop-blur-md">
                             {/* Attached image preview banner */}
                             {attachedImage && (
@@ -644,7 +695,7 @@ export default function AiChatWidget() {
                                     className="flex-1 bg-transparent text-xs sm:text-[13px] text-[#241224] placeholder:text-slate-400 outline-none font-medium min-w-0"
                                 />
 
-                                {/* Circular Send Button (RIFAT Ai Style) */}
+                                {/* Circular Send Button */}
                                 <button
                                     type="submit"
                                     disabled={isSending || (!inputText.trim() && !attachedImage)}

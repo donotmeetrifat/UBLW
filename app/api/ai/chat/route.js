@@ -17,6 +17,7 @@ export async function POST(request) {
     let messageText = '';
     let imagePayload = null;
     let conversationHistory = [];
+    const DEFAULT_IMAGE_PROMPT = 'Please check this product for availability in our UK catalog.';
 
     try {
         const body = await request.json();
@@ -42,9 +43,10 @@ export async function POST(request) {
             : [];
 
         // Append current message
+        const userContent = (message && message.trim()) ? message.trim() : DEFAULT_IMAGE_PROMPT;
         conversationHistory.push({
             role: 'user',
-            content: message ? message.trim() : 'Please check this product photo for availability.',
+            content: userContent,
         });
 
         // Run multi-model saleswoman consultation
@@ -55,23 +57,26 @@ export async function POST(request) {
             modelPreference: model || 'pro',
         });
 
+        let savedUserMsg = null;
+        let savedAssistantMsg = null;
+
         // Persist to PostgreSQL ONLY if customer is logged into their account
         // If customer is not logged in, their conversation is saved strictly in browser cache (localStorage)
         if (user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
             try {
                 // User message
-                await prisma.chatMessage.create({
+                savedUserMsg = await prisma.chatMessage.create({
                     data: {
                         userId: user.id,
                         sessionId: null,
                         role: 'user',
-                        content: message ? message.trim() : 'Sent product image for identification',
+                        content: userContent,
                         image: image || null,
                     },
                 });
 
                 // Assistant reply
-                await prisma.chatMessage.create({
+                savedAssistantMsg = await prisma.chatMessage.create({
                     data: {
                         userId: user.id,
                         sessionId: null,
@@ -90,6 +95,9 @@ export async function POST(request) {
             message: consultation.message,
             products: consultation.products || [],
             provider: consultation.provider,
+            userMessageId: savedUserMsg?.id || null,
+            assistantMessageId: savedAssistantMsg?.id || null,
+            createdAt: savedAssistantMsg?.createdAt || new Date().toISOString(),
         });
     } catch (error) {
         // Strict requirement: Never display backend errors or network errors to the customer!
@@ -112,11 +120,44 @@ export async function POST(request) {
 
             const { message: safeMessage, products } = extractProductCards(fallbackReply, catalog);
 
+            let savedUserMsg = null;
+            let savedAssistantMsg = null;
+
+            if (user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
+                try {
+                    const userContent = (messageText && messageText.trim()) ? messageText.trim() : DEFAULT_IMAGE_PROMPT;
+                    savedUserMsg = await prisma.chatMessage.create({
+                        data: {
+                            userId: user.id,
+                            sessionId: null,
+                            role: 'user',
+                            content: userContent,
+                            image: imagePayload || null,
+                        },
+                    });
+
+                    savedAssistantMsg = await prisma.chatMessage.create({
+                        data: {
+                            userId: user.id,
+                            sessionId: null,
+                            role: 'assistant',
+                            content: safeMessage,
+                            products: products && products.length > 0 ? products : null,
+                        },
+                    });
+                } catch (dbErr) {
+                    console.warn('Fallback DB save warning:', dbErr.message);
+                }
+            }
+
             return NextResponse.json({
                 success: true,
                 message: safeMessage,
                 products: products || [],
                 provider: 'emma_grounded_consultant',
+                userMessageId: savedUserMsg?.id || null,
+                assistantMessageId: savedAssistantMsg?.id || null,
+                createdAt: savedAssistantMsg?.createdAt || new Date().toISOString(),
             });
         } catch (innerErr) {
             return NextResponse.json({
@@ -124,6 +165,7 @@ export async function POST(request) {
                 message: "Hello! Welcome to UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from the UK with batch code verification.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to assist you.",
                 products: [],
                 provider: 'emma_saleswoman_fallback',
+                createdAt: new Date().toISOString(),
             });
         }
     }

@@ -5,12 +5,16 @@ import { getUserFromRequest } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+/**
+ * GET /api/ai/history
+ * Fetch conversation history for authenticated customer from PostgreSQL.
+ * Unauthenticated guests store their chat strictly in browser cache (localStorage).
+ */
 export async function GET(request) {
     try {
         const user = getUserFromRequest(request);
 
-        // Strict Requirement: Unauthenticated guests store their chat strictly in browser cache (localStorage).
-        // Database account history is strictly isolated for authenticated customers only.
+        // Strict Requirement: Database account history is strictly isolated for authenticated customers only.
         if (!user || !user.id) {
             return NextResponse.json({ success: true, messages: [] });
         }
@@ -20,11 +24,14 @@ export async function GET(request) {
         }
 
         // Fetch customer's account conversation history across devices
-        const messages = await prisma.chatMessage.findMany({
+        // Fetch the most recent 150 messages and reverse to ascending order
+        const recentMessages = await prisma.chatMessage.findMany({
             where: { userId: user.id },
-            orderBy: { createdAt: 'asc' },
-            take: 200,
+            orderBy: { createdAt: 'desc' },
+            take: 150,
         });
+
+        const messages = recentMessages.reverse();
 
         return NextResponse.json({
             success: true,
@@ -47,12 +54,13 @@ export async function GET(request) {
 }
 
 /**
- * Sync guest messages into user account upon sign-in
+ * POST /api/ai/history
+ * Sync guest messages into user account upon customer sign-in.
  */
 export async function POST(request) {
     try {
         const user = getUserFromRequest(request);
-        if (!user) {
+        if (!user || !user.id) {
             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -64,13 +72,25 @@ export async function POST(request) {
         const { guestMessages } = body;
 
         if (Array.isArray(guestMessages) && guestMessages.length > 0) {
+            // Find existing user messages to avoid duplicate insertions
+            const existing = await prisma.chatMessage.findMany({
+                where: { userId: user.id },
+                select: { content: true, role: true },
+                orderBy: { createdAt: 'desc' },
+                take: 100,
+            });
+
             const records = guestMessages
-                .filter(m => m && (m.content || m.image))
+                .filter(m => m && (m.content || m.image) && !m.id?.includes('welcome'))
+                .filter(m => {
+                    const text = (m.content || '').trim();
+                    return !existing.some(e => e.role === m.role && (e.content || '').trim() === text);
+                })
                 .map(m => ({
                     userId: user.id,
                     role: m.role === 'assistant' ? 'assistant' : 'user',
-                    content: m.content || (m.image ? 'Product photo attached' : ''),
-                    products: m.products || null,
+                    content: m.content || 'Please check this product for availability in our UK catalog.',
+                    products: m.products && m.products.length > 0 ? m.products : null,
                     image: (m.image && m.image !== '[Photo Attachment]') ? m.image : null,
                 }));
 
@@ -94,7 +114,8 @@ export async function POST(request) {
 }
 
 /**
- * Clear chat history
+ * DELETE /api/ai/history
+ * Clear customer chat history from PostgreSQL
  */
 export async function DELETE(request) {
     try {
