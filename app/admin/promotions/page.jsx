@@ -22,12 +22,12 @@ function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
 
     return (
         <div className="mt-3 p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        Image Size / Scale Adjustment
+                        Image Size / Scale
                     </span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#6C306E] text-white">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#6C306E] text-white shrink-0">
                         {scale}%
                     </span>
                 </div>
@@ -37,7 +37,7 @@ function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
                         onUpdate(cardKey, 'imageScale', 100)
                         onUpdate(cardKey, 'imageOffsetY', 0)
                     }}
-                    className="text-[11px] font-semibold text-[#6C306E] hover:underline cursor-pointer"
+                    className="text-[11px] font-semibold text-[#6C306E] hover:underline cursor-pointer whitespace-nowrap ml-auto"
                 >
                     Reset to 100%
                 </button>
@@ -48,11 +48,11 @@ function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
             </p>
 
             {/* Slider and - / + Nudge Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
                 <button
                     type="button"
                     onClick={() => onUpdate(cardKey, 'imageScale', Math.max(50, scale - 5))}
-                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-sm shrink-0"
+                    className="size-7 sm:size-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-xs sm:text-sm shrink-0"
                     title="Make image 5% smaller"
                 >
                     -
@@ -65,28 +65,30 @@ function ImageScaleControlSection({ cardKey, cardData, onUpdate }) {
                     step="1"
                     value={scale}
                     onChange={(e) => onUpdate(cardKey, 'imageScale', Number(e.target.value))}
-                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6C306E]"
+                    className="flex-1 min-w-0 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6C306E]"
                 />
 
                 <button
                     type="button"
                     onClick={() => onUpdate(cardKey, 'imageScale', Math.min(250, scale + 5))}
-                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-sm shrink-0"
+                    className="size-7 sm:size-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center transition shadow-2xs cursor-pointer text-xs sm:text-sm shrink-0"
                     title="Make image 5% larger"
                 >
                     +
                 </button>
 
-                <div className="flex items-center gap-1 w-20 shrink-0">
+                <div className="relative flex items-center shrink-0">
                     <input
                         type="number"
                         min="50"
                         max="250"
                         value={scale}
                         onChange={(e) => onUpdate(cardKey, 'imageScale', Math.max(50, Math.min(250, Number(e.target.value) || 100)))}
-                        className="w-14 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-center text-[#241224] focus:outline-none focus:border-[#6C306E]"
+                        className="w-14 sm:w-16 pl-1.5 sm:pl-2 pr-4 sm:pr-5 py-1 bg-white border border-slate-200 focus:border-[#6C306E] rounded-lg text-[11px] sm:text-xs font-bold text-center text-[#241224] outline-none shadow-2xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <span className="text-xs text-slate-500 font-bold">%</span>
+                    <span className="absolute right-1 sm:right-1.5 text-[10px] sm:text-[11px] font-bold text-slate-400 pointer-events-none">
+                        %
+                    </span>
                 </div>
             </div>
 
