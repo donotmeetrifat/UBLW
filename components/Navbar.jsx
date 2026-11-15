@@ -10,7 +10,8 @@ import {
     ReviewBadgeIcon,
     RoyalCrownIcon,
     CloseIcon,
-    ShieldCheckIcon
+    ShieldCheckIcon,
+    PhoneIcon
 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -352,11 +353,21 @@ const Navbar = () => {
                                                         <ReviewBadgeIcon size={15} color="#6C306E" />
                                                         <span>My Reviews</span>
                                                     </Link>
+
+                                                    {/* 4. Contact */}
+                                                    <Link
+                                                        href="/contact"
+                                                        onClick={() => setIsProfileOpen(false)}
+                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-700 hover:bg-[#FAF6FA] hover:text-[#6C306E] transition font-medium cursor-pointer"
+                                                    >
+                                                        <PhoneIcon size={15} color="#6C306E" />
+                                                        <span>Contact</span>
+                                                    </Link>
                                                 </div>
 
                                                 <div className="border-t border-[#EFE0EF] my-2" />
 
-                                                {/* 4. Logout */}
+                                                {/* 5. Logout */}
                                                 <button
                                                     type="button"
                                                     onClick={handleSignOut}
