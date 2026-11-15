@@ -1,17 +1,29 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
-import { GoogleGenAI } from '@google/genai';
+import { getAiSettings } from '@/lib/aiBot';
 import { createWorker } from 'tesseract.js';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
+const PREFERRED_GEMINI_MODELS = [
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
+    'gemini-3.7-flash',
+    'gemini-flash-latest',
+    'gemini-2.5-flash',
+];
+
 const POPULAR_UK_BRANDS = [
     'Garnier', 'Aveeno', 'The Ordinary', 'CeraVe', 'Simple', 'Neutrogena', 
     'La Roche-Posay', 'The Inkey List', 'L\'Oreal', 'Boots', 'Pixi', 
     'COSRX', 'Cetaphil', 'Dove', 'Nivea', 'Vaseline', 'Olay', 'Superdrug', 
-    'Revolution', 'Maybelline', 'Rimmel', 'Bioderma', 'Eucerin', 'Paula\'s Choice'
+    'Revolution', 'Maybelline', 'Rimmel', 'Bioderma', 'Eucerin', 'Paula\'s Choice',
+    'Soap & Glory', 'Dr. Jart+', 'Bioderma', 'Little & Good'
 ];
 
 const BEAUTY_PRODUCT_TYPES = [
@@ -22,7 +34,7 @@ const BEAUTY_PRODUCT_TYPES = [
 ];
 
 /**
- * Fast Color Profile Analyzer from image buffer bytes
+ * Fast Color Profile Analyzer from image buffer bytes (fallback hint)
  */
 function extractColorHints(buffer) {
     if (!buffer || buffer.length < 100) return null;
@@ -39,85 +51,121 @@ function extractColorHints(buffer) {
     const g = gSum / count;
     const b = bSum / count;
 
-    // Is it warm yellow/orange/citrus (Garnier Bright Complete tone)?
+    // Warm yellow/citrus tone (e.g. Garnier Vitamin C)
     const isYellowish = r > 110 && g > 100 && (r + g) > (b * 2.1);
-    // Is it blue/cyan/cool tone (Aveeno Baby Care tone)?
+    // Cool blue tone (e.g. Aveeno Baby Daily Care)
     const isCoolBlue = b > 115 && b > r && g > 100;
 
     return { isYellowish, isCoolBlue };
 }
 
 /**
- * Intelligent Image Analysis Engine
- * Safe execution with Gemini 3.8 Flash Vision (if key available)
- * and safe zero-crash local OCR with explicit workerPath and timeout.
+ * Multi-model Gemini Vision API caller with dynamic model failover
  */
-async function analyzeProductImage(imageBuffer, mimeType, filename = '') {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+async function queryGeminiVision({ apiKey, imageBuffer, mimeType, catalogSummary }) {
+    if (!apiKey || apiKey.trim().length < 5) return null;
 
-    // 1. Check Gemini Vision AI first if API key is present
-    if (apiKey && apiKey.trim().length > 5) {
-        try {
-            const ai = new GoogleGenAI({ apiKey });
-            const base64Data = imageBuffer.toString('base64');
+    const base64Data = imageBuffer.toString('base64');
+    const prompt = `You are an expert cosmetic and beauty product scanner for "UK Brand Lover", an authentic UK beauty boutique in Bangladesh.
+Carefully inspect this uploaded product packaging photo. Look closely at the packaging shape, label typography, brand logo, full product title, format, volume/size, and key ingredients.
 
-            const prompt = `You are an expert cosmetic and beauty product analyst for "UK Brand Lover", an authentic UK-imported beauty store in Bangladesh.
-Carefully inspect this product image. Look at the packaging, brand logo, product title, active ingredients, volume (e.g. 400ml, 250ml), and product type.
-Identify the exact product information and respond in strictly valid JSON format with no markdown formatting:
+1. Extract the exact brand name printed on the packaging (e.g. Garnier, CeraVe, Aveeno, Soap & Glory, The Ordinary, etc.).
+2. Extract the exact full specific product name, format (e.g. Face Wash, Cleanser, Serum, Cream, Lotion, Shampoo, Conditioner, etc.), active ingredients, and volume/size (e.g. 400ml, 250ml, 50ml).
+3. Compare against our active verified UK store catalog:
+${catalogSummary || 'No products currently listed'}
+
+Match Criteria:
+- If our store catalog contains this exact product or a direct same-brand/same-product packaging match, set "matchedCatalogId" to that product's ID, and "isExactMatch" to true.
+- If our store does NOT have this exact product in stock, set "matchedCatalogId" to null, and "isExactMatch" to false.
+
+Respond strictly in valid JSON format with no markdown tags:
 {
-  "brand": "Brand name, e.g. Garnier, Aveeno, CeraVe, The Ordinary, etc.",
-  "productName": "Full specific product title as printed on bottle/box",
-  "category": "One of: Skincare, Makeup, Haircare, Body Care, Fragrance & Perfumes, Personal Care, Baby Care, Beauty Accessories",
-  "keyIngredients": ["e.g. Vitamin C", "Colloidal Oatmeal", "Salicylic Acid"],
-  "sizeOrVolume": "e.g. 400ml, 250ml, 50ml, etc.",
-  "searchKeywords": ["List of 4-6 most important keywords to find this product in our database, e.g. Garnier, Bright Complete, Vitamin C, Face Wash, 400ml"],
+  "brand": "Brand name, e.g. Garnier",
+  "productName": "Full specific product name as printed on packaging",
+  "category": "Skincare | Haircare | Body Care | Makeup | Fragrance & Perfumes | Baby Care",
+  "format": "e.g. Face Wash, Cleanser, Serum, Cream, Lotion, Shampoo",
+  "keyIngredients": ["e.g. Vitamin C", "Lemon Extract"],
+  "sizeOrVolume": "e.g. 400ml",
+  "matchedCatalogId": "Catalog ID of matching product if we have it, or null",
+  "isExactMatch": true or false,
+  "searchKeywords": ["Keyword 1", "Keyword 2", "Keyword 3", "Keyword 4"],
   "confidence": "high",
-  "description": "One sentence summary of the identified product"
+  "description": "One sentence summary of the detected product"
 }`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                contents: [
+    const payload = {
+        contents: [
+            {
+                role: 'user',
+                parts: [
                     {
-                        role: 'user',
-                        parts: [
-                            {
-                                inlineData: {
-                                    mimeType: mimeType || 'image/jpeg',
-                                    data: base64Data
-                                }
-                            },
-                            { text: prompt }
-                        ]
-                    }
-                ],
-                config: {
-                    responseMimeType: 'application/json',
-                }
-            });
-
-            const rawText = response.text || '';
-            const cleaned = rawText.replace(/```(?:json)?/g, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(cleaned);
-            if (parsed && (parsed.brand || parsed.productName)) {
-                return {
-                    source: 'gemini-ai',
-                    brand: parsed.brand || '',
-                    productName: parsed.productName || '',
-                    category: parsed.category || 'Skincare',
-                    keyIngredients: Array.isArray(parsed.keyIngredients) ? parsed.keyIngredients : [],
-                    sizeOrVolume: parsed.sizeOrVolume || '',
-                    searchKeywords: Array.isArray(parsed.searchKeywords) ? parsed.searchKeywords : [],
-                    confidence: parsed.confidence || 'high',
-                    description: parsed.description || ''
-                };
+                        inline_data: {
+                            mime_type: mimeType || 'image/jpeg',
+                            data: base64Data
+                        }
+                    },
+                    { text: prompt }
+                ]
             }
-        } catch (geminiError) {
-            console.warn('Gemini vision analysis note, falling back to local matcher:', geminiError.message);
+        ],
+        generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1000,
+            response_mime_type: 'application/json'
+        }
+    };
+
+    for (const model of PREFERRED_GEMINI_MODELS) {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 12000);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+
+            if (res.ok) {
+                const data = await res.json();
+                const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const cleaned = rawText.replace(/```(?:json)?/g, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(cleaned);
+                if (parsed && (parsed.brand || parsed.productName)) {
+                    return {
+                        source: 'gemini-ai',
+                        model,
+                        brand: parsed.brand || '',
+                        productName: parsed.productName || '',
+                        category: parsed.category || 'Skincare',
+                        format: parsed.format || '',
+                        keyIngredients: Array.isArray(parsed.keyIngredients) ? parsed.keyIngredients : [],
+                        sizeOrVolume: parsed.sizeOrVolume || '',
+                        matchedCatalogId: parsed.matchedCatalogId || null,
+                        isExactMatch: Boolean(parsed.isExactMatch),
+                        searchKeywords: Array.isArray(parsed.searchKeywords) ? parsed.searchKeywords : [],
+                        confidence: parsed.confidence || 'high',
+                        description: parsed.description || ''
+                    };
+                }
+            } else {
+                console.warn(`Gemini vision model ${model} HTTP ${res.status}`);
+            }
+        } catch (err) {
+            console.warn(`Gemini vision model ${model} note:`, err.message);
         }
     }
 
-    // 2. Safe Local OCR & Feature Extraction
+    return null;
+}
+
+/**
+ * Safe local OCR fallback engine if cloud AI is unreachable
+ */
+async function analyzeLocally(imageBuffer, filename = '') {
     let extractedText = '';
     let worker = null;
 
@@ -146,11 +194,9 @@ Identify the exact product information and respond in strictly valid JSON format
         }
     }
 
-    // 3. Keyword Extraction from both OCR text and uploaded filename
     const combinedSourceText = `${extractedText} ${filename.replace(/[-_.]+/g, ' ')}`.trim();
     const normalizedText = combinedSourceText.replace(/\s+/g, ' ');
 
-    // Detect Brand
     let detectedBrand = '';
     for (const brand of POPULAR_UK_BRANDS) {
         const regex = new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
@@ -160,14 +206,12 @@ Identify the exact product information and respond in strictly valid JSON format
         }
     }
 
-    // Detect Volume / Size
     let sizeOrVolume = '';
     const sizeMatch = normalizedText.match(/\b(\d+\s*(?:ml|g|oz|fl\s*oz|l|litre))\b/i);
     if (sizeMatch) {
         sizeOrVolume = sizeMatch[1].replace(/\s+/g, '').toLowerCase();
     }
 
-    // Detect Product Type / Keywords
     const matchedKeywords = [];
     if (detectedBrand) matchedKeywords.push(detectedBrand);
 
@@ -178,7 +222,6 @@ Identify the exact product information and respond in strictly valid JSON format
         }
     }
 
-    // Active ingredients & distinctive markers
     const activeIngredients = ['Vitamin C', 'Niacinamide', 'Hyaluronic', 'Salicylic', 'Oatmeal', 'Ceramide', 'Retinol', 'Zinc', 'AHA', 'BHA', 'Bright Complete', 'Daily Care', 'Moisturising', 'Moisturizing'];
     for (const ing of activeIngredients) {
         if (new RegExp(`\\b${ing}\\b`, 'i').test(normalizedText)) {
@@ -186,7 +229,6 @@ Identify the exact product information and respond in strictly valid JSON format
         }
     }
 
-    // Clean candidate words
     const candidateWords = normalizedText
         .split(/[^a-zA-Z0-9]+/)
         .filter(w => w.length > 2 && !/^(the|and|for|with|from|made|pack|brand|use|daily|care|all|net|jpg|png|webp|jpeg)$/i.test(w))
@@ -194,7 +236,6 @@ Identify the exact product information and respond in strictly valid JSON format
 
     const allKeywords = Array.from(new Set([...matchedKeywords, ...candidateWords]));
 
-    // Guess category
     let category = 'Skincare';
     if (/baby|infant|toddler/i.test(normalizedText)) category = 'Baby Care';
     else if (/body|lotion|shower|bath|hand/i.test(normalizedText)) category = 'Body Care';
@@ -202,10 +243,7 @@ Identify the exact product information and respond in strictly valid JSON format
     else if (/perfume|fragrance|parfum|cologne/i.test(normalizedText)) category = 'Fragrance & Perfumes';
     else if (/mascara|lipstick|foundation|eyeliner|blush/i.test(normalizedText)) category = 'Makeup';
 
-    // Color profile check
     const colorHints = extractColorHints(imageBuffer);
-
-    // If text was sparse but color is distinctive, infer hints
     if (allKeywords.length === 0 && colorHints) {
         if (colorHints.isYellowish) {
             allKeywords.push('Garnier', 'Vitamin C', 'Bright Complete', 'Face Wash');
@@ -224,12 +262,15 @@ Identify the exact product information and respond in strictly valid JSON format
         brand: detectedBrand,
         productName: synthesizedTitle,
         category,
+        format: matchedKeywords.find(k => BEAUTY_PRODUCT_TYPES.includes(k)) || '',
         keyIngredients: matchedKeywords.filter(k => activeIngredients.includes(k)),
         sizeOrVolume,
+        matchedCatalogId: null,
+        isExactMatch: false,
         searchKeywords: allKeywords,
         colorHints,
-        confidence: detectedBrand ? 'high' : 'medium',
-        description: `Visual pattern match: ${synthesizedTitle}`
+        confidence: detectedBrand ? 'medium' : 'low',
+        description: `Visual scan: ${synthesizedTitle}`
     };
 }
 
@@ -293,6 +334,49 @@ function scoreProduct(product, analysis) {
     return score;
 }
 
+/**
+ * STRICT RULE: Only return alternative products if they belong to the exact same category / function
+ */
+function findStrictCategoryAlternatives(allProducts, analysis, excludeId = null) {
+    if (!analysis || !allProducts || allProducts.length === 0) return [];
+
+    const pCategory = (analysis.category || '').toLowerCase();
+    const pFormat = (analysis.format || '').toLowerCase();
+    const pName = (analysis.productName || '').toLowerCase();
+
+    const isHair = pCategory.includes('hair') || /shampoo|conditioner|scalp/i.test(pName) || /shampoo|conditioner/i.test(pFormat);
+    const isCleanser = /cleanser|face wash|wash|foam|scrub/i.test(pName) || /cleanser|face wash/i.test(pFormat);
+    const isSerum = /serum|drop|ampoule/i.test(pName) || pFormat.includes('serum');
+    const isMoisturizer = /cream|lotion|moistur/i.test(pName) || /cream|lotion|moistur/i.test(pFormat);
+    const isSunscreen = /sun|spf|uv/i.test(pName) || /sun|spf/i.test(pFormat);
+
+    return allProducts.filter(p => {
+        if (excludeId && p.id === excludeId) return false;
+        const name = (p.name || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+
+        if (isHair) {
+            return cat.includes('hair') || /shampoo|conditioner|scalp/i.test(name);
+        }
+        if (isCleanser) {
+            return (cat.includes('skin') || cat.includes('face')) && /cleanser|face wash|wash|foam/i.test(name);
+        }
+        if (isSerum) {
+            return (cat.includes('skin') || cat.includes('face')) && /serum|drop|ampoule/i.test(name);
+        }
+        if (isMoisturizer) {
+            return /cream|lotion|moistur/i.test(name);
+        }
+        if (isSunscreen) {
+            return /sun|spf|uv/i.test(name);
+        }
+        if (pCategory && cat === pCategory) {
+            return true;
+        }
+        return false;
+    }).slice(0, 4);
+}
+
 export async function POST(request) {
     try {
         let imageBuffer = null;
@@ -338,10 +422,7 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Image data is empty' }, { status: 400 });
         }
 
-        // 1. Analyze the image safely
-        const analysis = await analyzeProductImage(imageBuffer, mimeType, filename);
-
-        // 2. Fetch active catalog products
+        // 1. Fetch active products from database
         let allProducts = [];
         if (isDatabaseConfigured()) {
             try {
@@ -361,33 +442,63 @@ export async function POST(request) {
             allProducts = memoryStore.products || [];
         }
 
-        // 3. Score every product against image analysis
-        const scored = allProducts.map(product => ({
-            product,
-            score: scoreProduct(product, analysis)
-        })).sort((a, b) => b.score - a.score);
+        // 2. Format concise catalog context for Gemini Vision
+        const catalogSummary = allProducts
+            .map(p => `[ID: ${p.id}] "${p.name}" | Brand: ${p.brand} | Category: ${p.category} | Price: ৳${p.price}`)
+            .join('\n');
 
-        const top = scored[0];
-        const isExactMatch = top && top.score >= 50;
-        const isCloseMatch = top && top.score >= 25 && !isExactMatch;
+        // 3. Load admin-configured Gemini API Key
+        const settings = await getAiSettings();
+        const apiKey = settings.geminiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-        // Similar products
-        const similarMatches = scored
-            .filter(item => item.score >= 20 && item.product.id !== top?.product?.id)
-            .slice(0, 4)
-            .map(item => item.product);
-
-        // Category alternatives
-        let categoryAlternatives = [];
-        if (!isExactMatch) {
-            categoryAlternatives = allProducts
-                .filter(p => p.id !== top?.product?.id && (analysis.category ? (p.category || '').toLowerCase() === analysis.category.toLowerCase() : true))
-                .slice(0, 4);
+        // 4. Run Multimodal Gemini Vision AI
+        let analysis = null;
+        if (apiKey) {
+            analysis = await queryGeminiVision({
+                apiKey,
+                imageBuffer,
+                mimeType,
+                catalogSummary
+            });
         }
 
+        // Fallback to local OCR if Gemini is unavailable
+        if (!analysis) {
+            analysis = await analyzeLocally(imageBuffer, filename);
+        }
+
+        // 5. Match against catalog
+        let exactProduct = null;
         let matchType = 'not_available';
-        if (isExactMatch) matchType = 'exact';
-        else if (isCloseMatch) matchType = 'close';
+
+        // Check if Gemini Vision returned an exact verified catalog ID
+        if (analysis.matchedCatalogId) {
+            const found = allProducts.find(p => p.id === analysis.matchedCatalogId);
+            if (found) {
+                exactProduct = found;
+                matchType = 'exact';
+            }
+        }
+
+        // If not matched directly by ID, score products against extracted visual attributes
+        if (!exactProduct) {
+            const scored = allProducts.map(product => ({
+                product,
+                score: scoreProduct(product, analysis)
+            })).sort((a, b) => b.score - a.score);
+
+            const top = scored[0];
+            if (top && top.score >= 50) {
+                exactProduct = top.product;
+                matchType = 'exact';
+            } else if (top && top.score >= 25) {
+                exactProduct = top.product;
+                matchType = 'close';
+            }
+        }
+
+        // 6. Find STRICT same-category alternatives
+        const similarProducts = findStrictCategoryAlternatives(allProducts, analysis, exactProduct?.id);
 
         return NextResponse.json({
             success: true,
@@ -396,15 +507,15 @@ export async function POST(request) {
                 brand: analysis.brand,
                 productName: analysis.productName,
                 category: analysis.category,
+                format: analysis.format,
                 keyIngredients: analysis.keyIngredients,
                 sizeOrVolume: analysis.sizeOrVolume,
                 confidence: analysis.confidence,
                 engine: analysis.source,
                 description: analysis.description
             },
-            exactProduct: isExactMatch ? top.product : (isCloseMatch ? top.product : null),
-            similarProducts: similarMatches,
-            categoryAlternatives,
+            exactProduct,
+            similarProducts,
             totalScanned: allProducts.length
         });
     } catch (error) {
@@ -420,8 +531,7 @@ export async function POST(request) {
                 description: 'Product scanned'
             },
             exactProduct: null,
-            similarProducts: [],
-            categoryAlternatives: []
+            similarProducts: []
         });
     }
 }

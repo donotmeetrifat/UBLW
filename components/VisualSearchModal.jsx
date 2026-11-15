@@ -17,6 +17,7 @@ import {
     SearchIcon
 } from '@/components/icons'
 import { addToCart } from '@/lib/features/cart/cartSlice'
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
 
 export default function VisualSearchModal({ isOpen, onClose }) {
@@ -264,9 +265,13 @@ export default function VisualSearchModal({ isOpen, onClose }) {
         }
     }
 
-    // Add to cart helper
+    // Add to cart helper with strict authentication verification & live bag sync
     const handleAddToCart = (product) => {
         if (!product || !product.id) return
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add products to your shopping bag.')
+            return
+        }
         setIsAddingToCart(true)
         dispatch(addToCart({ productId: product.id, quantity: 1 }))
         toast.success(`Added ${product.name} to your bag!`)
@@ -617,7 +622,7 @@ export default function VisualSearchModal({ isOpen, onClose }) {
                                 {searchResult.similarProducts && searchResult.similarProducts.length > 0 && (
                                     <div className="pt-2">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                            Other Related Products in Stock:
+                                            {searchResult.exactProduct ? 'Other Related Products in Stock:' : 'Available In-Stock Alternatives in This Category:'}
                                         </p>
                                         <div className="space-y-2">
                                             {searchResult.similarProducts.map((p) => (
