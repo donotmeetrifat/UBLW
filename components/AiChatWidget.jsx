@@ -529,7 +529,7 @@ export default function AiChatWidget() {
                                     <button
                                         type="button"
                                         onClick={() => setIsVoiceCallOpen(true)}
-                                        title="Voice Call with Emma"
+                                        title="Call Emma"
                                         className="p-1 px-2.5 rounded-full bg-[#FAF6FA] hover:bg-[#6C306E] text-[#6C306E] hover:text-white border border-[#EFE0EF] transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shrink-0 shadow-2xs"
                                     >
                                         <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
