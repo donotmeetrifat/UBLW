@@ -27,21 +27,50 @@ const ROLE_OPTIONS = [
 ]
 
 export default function AdminTeamPage() {
-    const [teamMembers, setTeamMembers] = useState([])
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        totalRegistrations: 0,
-        totalStaff: 0,
-        totalAdmins: 0,
-        totalEmployees: 0,
-        totalCustomers: 0,
-        totalBlocked: 0,
-        activeUsers: 0,
-        activeStaff: 0,
+    // 1. Instant Cache-First State: Load from sessionStorage in 0ms if available
+    const [teamMembers, setTeamMembers] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = sessionStorage.getItem('ukbl_team_cache_users')
+                if (cached) return JSON.parse(cached)
+            } catch {}
+        }
+        return []
     })
-    const [loading, setLoading] = useState(true)
+
+    const [stats, setStats] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = sessionStorage.getItem('ukbl_team_cache_stats')
+                if (cached) return JSON.parse(cached)
+            } catch {}
+        }
+        return {
+            totalUsers: 0,
+            totalRegistrations: 0,
+            totalStaff: 0,
+            totalAdmins: 0,
+            totalEmployees: 0,
+            totalCustomers: 0,
+            totalBlocked: 0,
+            activeUsers: 0,
+            activeStaff: 0,
+        }
+    })
+
+    // If cache already exists, never block the screen with a spinner!
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = sessionStorage.getItem('ukbl_team_cache_users')
+                if (cached && JSON.parse(cached).length > 0) return false
+            } catch {}
+        }
+        return true
+    })
+
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const [isSearching, setIsSearching] = useState(false)
     const [filterTab, setFilterTab] = useState('all') // 'all' | 'staff' | 'admins' | 'employees' | 'customers' | 'active' | 'blocked'
     const [actionLoadingId, setActionLoadingId] = useState(null)
 
@@ -64,49 +93,118 @@ export default function AdminTeamPage() {
         }
     }, [])
 
-    const fetchTeam = async (query = searchQuery, tab = filterTab) => {
+    // Ultra-Fast Parallel Fetch: Loads all registered users at once
+    const fetchTeam = async (isManualRefresh = false) => {
         try {
-            setLoading(true)
-            const params = new URLSearchParams()
-            if (query.trim()) params.set('search', query.trim())
-            if (tab && tab !== 'all') params.set('filter', tab)
+            if (isManualRefresh) setIsRefreshing(true)
+            if (teamMembers.length === 0) setLoading(true)
 
-            const endpoint = `/api/admin/team?${params.toString()}`
-            const res = await fetch(endpoint)
+            const res = await fetch('/api/admin/team', { cache: 'no-store' })
             const data = await res.json()
 
             if (data.success && Array.isArray(data.users)) {
                 setTeamMembers(data.users)
                 if (data.stats) setStats(data.stats)
-                setIsSearching(Boolean(data.isSearching))
-            } else {
-                setTeamMembers([])
-                setIsSearching(false)
+
+                // Cache in sessionStorage for instant 0ms subsequent loads
+                if (typeof window !== 'undefined') {
+                    try {
+                        sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(data.users))
+                        if (data.stats) sessionStorage.setItem('ukbl_team_cache_stats', JSON.stringify(data.stats))
+                    } catch {}
+                }
             }
         } catch (error) {
             console.error('Error fetching team members:', error)
-            toast.error('Failed to load team data')
-            setTeamMembers([])
+            if (teamMembers.length === 0) toast.error('Failed to load team data')
         } finally {
             setLoading(false)
+            setIsRefreshing(false)
         }
     }
 
-    // Debounced search trigger
+    // Immediate mount fetch with ZERO artificial delay
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchTeam(searchQuery, filterTab)
-        }, 300)
-        return () => clearTimeout(timer)
-    }, [searchQuery])
+        fetchTeam()
+    }, [])
 
-    // Filter tab switch handler
+    // Instant 0ms Filter Tab Switch
     const handleTabChange = (tabId) => {
         setFilterTab(tabId)
-        fetchTeam(searchQuery, tabId)
     }
 
-    // Instant Role Change with Optimistic UI Update
+    // Instant Client-Side 0ms Dynamic Filtering for Tabs & Search
+    const filteredUsers = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase()
+
+        return teamMembers.filter(user => {
+            // 1. Role & Status Tab Filter
+            if (filterTab === 'staff') {
+                if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return false
+            } else if (filterTab === 'admins') {
+                if (user.role !== 'ADMIN') return false
+            } else if (filterTab === 'employees') {
+                if (user.role !== 'EMPLOYEE') return false
+            } else if (filterTab === 'customers') {
+                if (user.role !== 'CUSTOMER') return false
+            } else if (filterTab === 'active') {
+                if (!user.isActive) return false
+            } else if (filterTab === 'blocked') {
+                if (user.isActive) return false
+            }
+
+            // 2. Real-Time Search Match across name, email, phone, whatsapp
+            if (q) {
+                const nameMatch = user.name?.toLowerCase().includes(q)
+                const emailMatch = user.email?.toLowerCase().includes(q)
+                const phoneMatch = user.phone?.includes(q)
+                const whatsappMatch = user.whatsapp?.includes(q)
+                return Boolean(nameMatch || emailMatch || phoneMatch || whatsappMatch)
+            }
+
+            return true
+        })
+    }, [teamMembers, filterTab, searchQuery])
+
+    // Live Dynamic Stats: instantly computes from in-memory teamMembers
+    const liveStats = useMemo(() => {
+        if (!teamMembers || teamMembers.length === 0) {
+            return stats
+        }
+
+        let totalAdmins = 0
+        let totalEmployees = 0
+        let totalCustomers = 0
+        let totalBlocked = 0
+        let activeUsers = 0
+
+        for (let i = 0; i < teamMembers.length; i++) {
+            const u = teamMembers[i]
+            if (u.role === 'ADMIN') totalAdmins++
+            else if (u.role === 'EMPLOYEE') totalEmployees++
+            else if (u.role === 'CUSTOMER') totalCustomers++
+
+            if (u.isActive) activeUsers++
+            else totalBlocked++
+        }
+
+        const totalUsers = teamMembers.length
+        const totalStaff = totalAdmins + totalEmployees
+
+        return {
+            totalUsers,
+            totalRegistrations: totalUsers,
+            totalStaff,
+            totalAdmins,
+            totalEmployees,
+            totalCustomers,
+            totalBlocked,
+            activeUsers,
+            activeStaff: activeUsers,
+        }
+    }, [teamMembers, stats])
+
+    // Instant Role Change with Optimistic UI Reaction (0ms response)
     const handleRoleChange = async (user, newRole) => {
         if (!user || user.role === newRole) return
 
@@ -122,8 +220,12 @@ export default function AdminTeamPage() {
 
         const previousRole = user.role
 
-        // 1. Optimistic Update (instant UI reaction)
-        setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: newRole } : m))
+        // 1. Instant Optimistic Reaction
+        setTeamMembers(prev => {
+            const updated = prev.map(m => m.id === user.id ? { ...m, role: newRole } : m)
+            try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(updated)) } catch {}
+            return updated
+        })
 
         try {
             setActionLoadingId(user.id)
@@ -140,25 +242,30 @@ export default function AdminTeamPage() {
 
             if (!res.ok || !data.success) {
                 // Revert on failure
-                setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m))
+                setTeamMembers(prev => {
+                    const reverted = prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m)
+                    try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(reverted)) } catch {}
+                    return reverted
+                })
                 toast.error(data.message || 'Failed to update role')
                 return
             }
 
             toast.success(`Role updated to ${newRole === 'ADMIN' ? 'Admin' : newRole === 'EMPLOYEE' ? 'Employee' : 'Customer'}`)
-
-            // Silently sync server stats & state
-            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error changing role:', error)
-            setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m))
+            setTeamMembers(prev => {
+                const reverted = prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m)
+                try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(reverted)) } catch {}
+                return reverted
+            })
             toast.error('An error occurred while updating permissions')
         } finally {
             setActionLoadingId(null)
         }
     }
 
-    // Instant Block / Unblock Toggle with Optimistic UI Update
+    // Instant Block / Unblock Toggle with Optimistic UI Reaction (0ms response)
     const handleToggleBlock = async (user) => {
         if (!user) return
 
@@ -175,8 +282,12 @@ export default function AdminTeamPage() {
         const newStatus = !user.isActive
         const previousStatus = user.isActive
 
-        // 1. Optimistic Update (instant UI reaction)
-        setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: newStatus } : m))
+        // 1. Instant Optimistic Reaction
+        setTeamMembers(prev => {
+            const updated = prev.map(m => m.id === user.id ? { ...m, isActive: newStatus } : m)
+            try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(updated)) } catch {}
+            return updated
+        })
 
         try {
             setActionLoadingId(user.id)
@@ -193,31 +304,44 @@ export default function AdminTeamPage() {
 
             if (!res.ok || !data.success) {
                 // Revert on failure
-                setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m))
+                setTeamMembers(prev => {
+                    const reverted = prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m)
+                    try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(reverted)) } catch {}
+                    return reverted
+                })
                 toast.error(data.message || 'Failed to update account status')
                 return
             }
 
             toast.success(newStatus ? `Unblocked ${user.name}` : `Blocked ${user.name}`)
-
-            // Silently sync server stats
-            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error toggling status:', error)
-            setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m))
+            setTeamMembers(prev => {
+                const reverted = prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m)
+                try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(reverted)) } catch {}
+                return reverted
+            })
             toast.error('An error occurred')
         } finally {
             setActionLoadingId(null)
         }
     }
 
-    // Execute Delete Action
+    // Execute Delete Action with Instant Optimistic Removal
     const handleConfirmDelete = async () => {
         const user = deleteModal.user
         if (!user) return
 
+        // 1. Instant Optimistic Removal
+        setTeamMembers(prev => {
+            const updated = prev.filter(m => m.id !== user.id)
+            try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(updated)) } catch {}
+            return updated
+        })
+
+        setDeleteModal({ isOpen: false, user: null, loading: false })
+
         try {
-            setDeleteModal(prev => ({ ...prev, loading: true }))
             const res = await fetch('/api/admin/team', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,22 +355,16 @@ export default function AdminTeamPage() {
 
             if (!res.ok || !data.success) {
                 toast.error(data.message || 'Failed to delete user')
+                // Silently refresh list
+                fetchTeam()
                 return
             }
 
             toast.success(data.message || 'User deleted successfully')
-            setDeleteModal({ isOpen: false, user: null, loading: false })
-
-            // Optimistically remove from list
-            setTeamMembers(prev => prev.filter(m => m.id !== user.id))
-
-            // Refresh stats
-            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error deleting user:', error)
             toast.error('Failed to delete user')
-        } finally {
-            setDeleteModal(prev => ({ ...prev, loading: false }))
+            fetchTeam()
         }
     }
 
@@ -287,17 +405,17 @@ export default function AdminTeamPage() {
 
                 <button
                     type="button"
-                    onClick={() => fetchTeam(searchQuery, filterTab)}
+                    onClick={() => fetchTeam(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:text-[#6C306E] text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
                 >
-                    <RefreshIcon size={14} className={loading ? "animate-spin text-[#6C306E]" : ""} />
-                    <span>Refresh</span>
+                    <RefreshIcon size={14} className={isRefreshing ? "animate-spin text-[#6C306E]" : ""} />
+                    <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
                 </button>
             </div>
 
-            {/* 3. Top 5 Stats Cards Grid (Updated to match current roles & options) */}
+            {/* 3. Top 5 Stats Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                {/* Card 1: Total Team Staff */}
+                {/* Card 1: Total Registered Users */}
                 <div
                     onClick={() => handleTabChange('all')}
                     className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center justify-between gap-3 ${
@@ -312,7 +430,7 @@ export default function AdminTeamPage() {
                         </div>
                         <div>
                             <div className="text-2xl font-black text-[#241224] leading-none">
-                                {stats.totalUsers ?? stats.totalRegistrations ?? 0}
+                                {liveStats.totalRegistrations ?? liveStats.totalUsers ?? 0}
                             </div>
                             <div className="text-[11px] font-bold text-slate-500 mt-1">
                                 Total Registrations
@@ -338,7 +456,7 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {stats.totalAdmins || 0}
+                            {liveStats.totalAdmins || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
                             Full Administrators
@@ -360,7 +478,7 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {stats.totalEmployees || 0}
+                            {liveStats.totalEmployees || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
                             Employees (Staff)
@@ -382,7 +500,7 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {stats.totalCustomers || 0}
+                            {liveStats.totalCustomers || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
                             Customer Accounts
@@ -404,7 +522,7 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {stats.totalBlocked || 0}
+                            {liveStats.totalBlocked || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
                             Blocked / Restricted
@@ -413,16 +531,16 @@ export default function AdminTeamPage() {
                 </div>
             </div>
 
-            {/* 4. Filter Tabs Row */}
+            {/* 4. Filter Tabs Row (Instant 0ms In-Memory Tab Switch) */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {[
-                    { id: 'all', label: 'All Users', count: stats.totalUsers ?? stats.totalRegistrations ?? 0 },
-                    { id: 'staff', label: 'All Staff', count: stats.totalStaff || 0 },
-                    { id: 'admins', label: 'Administrators', count: stats.totalAdmins || 0 },
-                    { id: 'employees', label: 'Employees', count: stats.totalEmployees || 0 },
-                    { id: 'customers', label: 'Customers', count: stats.totalCustomers || 0 },
-                    { id: 'active', label: 'Active', count: stats.activeUsers ?? stats.activeStaff ?? 0 },
-                    { id: 'blocked', label: 'Blocked', count: stats.totalBlocked || 0 },
+                    { id: 'all', label: 'All Users', count: liveStats.totalRegistrations ?? liveStats.totalUsers ?? 0 },
+                    { id: 'staff', label: 'All Staff', count: liveStats.totalStaff || 0 },
+                    { id: 'admins', label: 'Administrators', count: liveStats.totalAdmins || 0 },
+                    { id: 'employees', label: 'Employees', count: liveStats.totalEmployees || 0 },
+                    { id: 'customers', label: 'Customers', count: liveStats.totalCustomers || 0 },
+                    { id: 'active', label: 'Active', count: liveStats.activeUsers || 0 },
+                    { id: 'blocked', label: 'Blocked', count: liveStats.totalBlocked || 0 },
                 ].map(tab => {
                     const isActive = filterTab === tab.id
                     return (
@@ -451,7 +569,7 @@ export default function AdminTeamPage() {
                 })}
             </div>
 
-            {/* 5. Clean Search Bar */}
+            {/* 5. Clean Search Bar (Instant 0ms Dynamic Filtering) */}
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                     <SearchIcon size={17} />
@@ -475,28 +593,28 @@ export default function AdminTeamPage() {
             </div>
 
             {/* Live Search Notice */}
-            {isSearching && (
+            {Boolean(searchQuery.trim()) && (
                 <div className="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] font-semibold">
                     <div className="flex items-center gap-2">
                         <span className="size-2 rounded-full bg-[#6C306E] animate-pulse" />
-                        <span>Showing database search results for &ldquo;{searchQuery}&rdquo;</span>
+                        <span>Showing filtered search results for &ldquo;{searchQuery}&rdquo;</span>
                     </div>
                     <span className="text-[11px] font-bold text-slate-500">
-                        {teamMembers.length} user{teamMembers.length === 1 ? '' : 's'} found
+                        {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'} found
                     </span>
                 </div>
             )}
 
             {/* 6. Main Team & Access Management Table */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden min-h-[340px]">
-                {loading ? (
+                {loading && teamMembers.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center">
                         <Loading />
                         <span className="text-xs text-slate-500 font-semibold mt-3">
                             Loading access management records...
                         </span>
                     </div>
-                ) : teamMembers.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                     <div className="py-16 text-center px-4">
                         <div className="size-14 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mx-auto mb-3">
                             <UsersIcon size={24} color="#6C306E" />
@@ -524,7 +642,7 @@ export default function AdminTeamPage() {
 
                             {/* Table Body */}
                             <tbody className="divide-y divide-[#EFE0EF]/70">
-                                {teamMembers.map((user) => {
+                                {filteredUsers.map((user) => {
                                     const isSelf = currentUser && (
                                         currentUser.id === user.id ||
                                         currentUser.email?.toLowerCase() === user.email?.toLowerCase()

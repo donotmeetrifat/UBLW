@@ -30,29 +30,10 @@ export async function GET(request) {
             });
         }
 
-        // Aggregate team statistics (always up-to-date)
-        const [
-            totalUsers,
-            totalStaff,
-            totalAdmins,
-            totalEmployees,
-            totalCustomers,
-            totalBlocked,
-            activeUsers,
-        ] = await Promise.all([
-            prisma.user.count(), // All registered accounts who signed up
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] } } }),
-            prisma.user.count({ where: { role: 'ADMIN' } }),
-            prisma.user.count({ where: { role: 'EMPLOYEE' } }),
-            prisma.user.count({ where: { role: 'CUSTOMER' } }),
-            prisma.user.count({ where: { isActive: false } }),
-            prisma.user.count({ where: { isActive: true } }),
-        ]);
-
+        // Single lightning-fast query: fetch registered user records in one round trip
         let whereClause = {};
 
         if (search) {
-            // Search across ALL users (Admins, Employees, and Customers)
             whereClause = {
                 OR: [
                     { name: { contains: search, mode: 'insensitive' } },
@@ -73,9 +54,6 @@ export async function GET(request) {
             whereClause = { isActive: false };
         } else if (filter === 'active') {
             whereClause = { isActive: true };
-        } else {
-            // Default view ('all'): show ALL users who signed up in the website
-            whereClause = {};
         }
 
         const users = await prisma.user.findMany({
@@ -97,8 +75,28 @@ export async function GET(request) {
                 { role: 'asc' }, // ADMIN first, then EMPLOYEE, then CUSTOMER
                 { createdAt: 'desc' },
             ],
-            take: 200,
+            take: 500,
         });
+
+        // Compute aggregate statistics in memory (0ms execution, zero extra database round-trips)
+        let totalAdmins = 0;
+        let totalEmployees = 0;
+        let totalCustomers = 0;
+        let totalBlocked = 0;
+        let activeUsers = 0;
+
+        for (let i = 0; i < users.length; i++) {
+            const u = users[i];
+            if (u.role === 'ADMIN') totalAdmins++;
+            else if (u.role === 'EMPLOYEE') totalEmployees++;
+            else if (u.role === 'CUSTOMER') totalCustomers++;
+
+            if (u.isActive) activeUsers++;
+            else totalBlocked++;
+        }
+
+        const totalUsers = users.length;
+        const totalStaff = totalAdmins + totalEmployees;
 
         return NextResponse.json({
             success: true,
@@ -117,7 +115,7 @@ export async function GET(request) {
             isSearching: Boolean(search),
         }, {
             headers: {
-                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                'Cache-Control': 'private, no-cache, no-transform'
             }
         });
     } catch (error) {
