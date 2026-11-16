@@ -794,7 +794,7 @@ export default function AdminAiBotPage() {
                             <div>
                                 <div className="flex items-center gap-2.5">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <img src="/logos/elevenlabs.png" alt="ElevenLabs" className="size-6 object-contain" />
+                                        <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-6 object-contain" />
                                     </div>
                                     <div>
                                         <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
@@ -827,7 +827,7 @@ export default function AdminAiBotPage() {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1 max-w-md">
                                     <div className="flex items-center gap-1.5">
-                                        <img src="/logos/elevenlabs.png" alt="ElevenLabs" className="size-3.5 object-contain" />
+                                        <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
                                         <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
                                     </div>
                                     <p className="text-[11px] text-slate-500">
