@@ -147,21 +147,165 @@ const EXTRA_CHATCN_CSS = `
     color: #6b7280;
 }
 
-/* Call Control Buttons & Micro-Interactions */
+/* Call Control Buttons & Luxury Micro-Interactions */
 [data-slot="voice-controls"] {
-    background: rgba(255, 255, 255, 0.94) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    background: #ffffff !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    box-shadow: 0 10px 30px -4px rgba(108, 48, 110, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px #EFE0EF !important;
+    border-radius: 9999px !important;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border: 1px solid #EFE0EF !important;
 }
 .dark [data-slot="voice-controls"] {
-    background: rgba(24, 24, 27, 0.94) !important;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    background: #241224 !important;
+    border: 1px solid rgba(239, 224, 239, 0.2) !important;
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
+/* 1. Luxury Microphone Button */
+[data-slot="voice-controls-mute"] {
+    background-color: #FAF6FA !important;
+    border: 1.5px solid #E5D5E5 !important;
+    color: #6C306E !important;
+    border-radius: 9999px !important;
+    width: 42px !important;
+    height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 6px rgba(108, 48, 110, 0.06) !important;
+}
+.dark [data-slot="voice-controls-mute"] {
+    background-color: rgba(108, 48, 110, 0.25) !important;
+    border-color: rgba(239, 224, 239, 0.3) !important;
+    color: #F5EDF5 !important;
+}
+[data-slot="voice-controls-mute"]:hover {
+    transform: translateY(-1.5px) scale(1.06) !important;
+    background-color: #F3E4F3 !important;
+    border-color: #6C306E !important;
+    box-shadow: 0 6px 18px rgba(108, 48, 110, 0.22) !important;
+}
+.dark [data-slot="voice-controls-mute"]:hover {
+    background-color: rgba(108, 48, 110, 0.45) !important;
+    border-color: #D1A3D1 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
+[data-slot="voice-controls-mute"]:active {
+    transform: translateY(0.5px) scale(0.96) !important;
+}
+[data-slot="voice-controls-mute"] svg,
+[data-slot="voice-controls-mute"] svg * {
+    stroke: #6C306E !important;
+    color: #6C306E !important;
+    transition: stroke 0.2s ease, transform 0.22s ease !important;
+}
+.dark [data-slot="voice-controls-mute"] svg,
+.dark [data-slot="voice-controls-mute"] svg * {
+    stroke: #F5EDF5 !important;
+    color: #F5EDF5 !important;
+}
+[data-slot="voice-controls-mute"]:hover svg,
+[data-slot="voice-controls-mute"]:hover svg * {
+    stroke: #531E55 !important;
+    color: #531E55 !important;
+    transform: scale(1.08) !important;
+}
+.dark [data-slot="voice-controls-mute"]:hover svg,
+.dark [data-slot="voice-controls-mute"]:hover svg * {
+    stroke: #FFFFFF !important;
+    color: #FFFFFF !important;
+}
+/* Muted State */
+[data-slot="voice-controls-mute"][data-muted] {
+    background-color: #FEF2F2 !important;
+    border-color: #FCA5A5 !important;
+    color: #DC2626 !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15) !important;
+}
+.dark [data-slot="voice-controls-mute"][data-muted] {
+    background-color: rgba(185, 28, 28, 0.25) !important;
+    border-color: #EF4444 !important;
+    color: #FCA5A5 !important;
+}
+[data-slot="voice-controls-mute"][data-muted] svg,
+[data-slot="voice-controls-mute"][data-muted] svg * {
+    stroke: #DC2626 !important;
+    color: #DC2626 !important;
+}
+.dark [data-slot="voice-controls-mute"][data-muted] svg,
+.dark [data-slot="voice-controls-mute"][data-muted] svg * {
+    stroke: #FCA5A5 !important;
+    color: #FCA5A5 !important;
+}
+[data-slot="voice-controls-mute"][data-muted]:hover {
+    background-color: #FEE2E2 !important;
+    border-color: #EF4444 !important;
+}
+
+/* 2. Luxury Keyboard Button */
+[data-slot="voice-controls-keyboard"] {
+    background-color: #FAF6FA !important;
+    border: 1.5px solid #E5D5E5 !important;
+    color: #6C306E !important;
+    border-radius: 9999px !important;
+    width: 42px !important;
+    height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 6px rgba(108, 48, 110, 0.06) !important;
+}
+.dark [data-slot="voice-controls-keyboard"] {
+    background-color: rgba(108, 48, 110, 0.25) !important;
+    border-color: rgba(239, 224, 239, 0.3) !important;
+    color: #F5EDF5 !important;
+}
+[data-slot="voice-controls-keyboard"]:hover {
+    transform: translateY(-1.5px) scale(1.06) !important;
+    background-color: #F3E4F3 !important;
+    border-color: #6C306E !important;
+    box-shadow: 0 6px 18px rgba(108, 48, 110, 0.22) !important;
+}
+.dark [data-slot="voice-controls-keyboard"]:hover {
+    background-color: rgba(108, 48, 110, 0.45) !important;
+    border-color: #D1A3D1 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
+[data-slot="voice-controls-keyboard"]:active {
+    transform: translateY(0.5px) scale(0.96) !important;
+}
+[data-slot="voice-controls-keyboard"] svg,
+[data-slot="voice-controls-keyboard"] svg * {
+    stroke: #6C306E !important;
+    color: #6C306E !important;
+    transition: stroke 0.2s ease, transform 0.22s ease !important;
+}
+.dark [data-slot="voice-controls-keyboard"] svg,
+.dark [data-slot="voice-controls-keyboard"] svg * {
+    stroke: #F5EDF5 !important;
+    color: #F5EDF5 !important;
+}
+[data-slot="voice-controls-keyboard"]:hover svg,
+[data-slot="voice-controls-keyboard"]:hover svg * {
+    stroke: #531E55 !important;
+    color: #531E55 !important;
+    transform: scale(1.08) !important;
+}
+.dark [data-slot="voice-controls-keyboard"]:hover svg,
+.dark [data-slot="voice-controls-keyboard"]:hover svg * {
+    stroke: #FFFFFF !important;
+    color: #FFFFFF !important;
+}
+
+/* 3. Luxury End Call Button */
 [data-slot="voice-controls-end"] {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
     color: #ffffff !important;
     border-radius: 9999px !important;
     font-weight: 700 !important;
@@ -175,12 +319,11 @@ const EXTRA_CHATCN_CSS = `
     padding-right: 20px !important;
     height: 42px !important;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    position: relative !important;
 }
 [data-slot="voice-controls-end"]:hover {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-    transform: translateY(-2px) scale(1.05) !important;
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+    transform: translateY(-1.5px) scale(1.04) !important;
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
 }
 [data-slot="voice-controls-end"]:active {
     transform: translateY(0.5px) scale(0.96) !important;
@@ -197,48 +340,19 @@ const EXTRA_CHATCN_CSS = `
     transform: rotate(12deg) scale(1.1) !important;
 }
 
-[data-slot="voice-controls-mute"] {
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    border-radius: 9999px !important;
-}
-[data-slot="voice-controls-mute"]:hover {
-    transform: translateY(-1.5px) scale(1.06) !important;
-    background-color: var(--chatcn-fill-hover) !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08) !important;
-}
-[data-slot="voice-controls-mute"]:active {
-    transform: translateY(0) scale(0.95) !important;
-}
-[data-slot="voice-controls-mute"] svg {
-    transition: transform 0.22s ease !important;
-}
-[data-slot="voice-controls-mute"]:hover svg {
-    transform: scale(1.12) !important;
-}
-[data-slot="voice-controls-mute"][data-muted] {
-    background-color: #374151 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+/* Luxury Tooltip Palette */
+[data-slot="tooltip"] {
+    background: #4A1E4C !important;
+    color: #FAF6FA !important;
+    border: 1px solid rgba(239, 224, 239, 0.25) !important;
+    box-shadow: 0 4px 14px rgba(74, 30, 76, 0.3) !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    padding: 4px 8px !important;
 }
 
-[data-slot="voice-control-button"] {
-    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    border-radius: 9999px !important;
-}
-[data-slot="voice-control-button"]:hover {
-    transform: translateY(-1.5px) scale(1.06) !important;
-    background-color: var(--chatcn-fill-hover) !important;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07) !important;
-}
-[data-slot="voice-control-button"]:active {
-    transform: translateY(0) scale(0.95) !important;
-}
-[data-slot="voice-control-button"] svg {
-    transition: transform 0.22s ease !important;
-}
-[data-slot="voice-control-button"]:hover svg {
-    transform: scale(1.12) !important;
-}
 [data-slot="voice-control-button"][aria-pressed="true"] {
     background-color: rgba(108, 48, 110, 0.12) !important;
     color: #6C306E !important;
@@ -3314,7 +3428,7 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
     const errored = micError !== undefined;
     const lg = size === "lg";
     return (<SizeContext.Provider value={size}>
-      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-white dark:bg-[#27272a] border border-gray-200 dark:border-zinc-700 shadow-md inline-flex max-w-full items-center gap-2.5 p-1.5 rounded-full", className)} {...props}>
+      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-white/95 dark:bg-[#241224] border border-[#EFE0EF] dark:border-[rgba(239,224,239,0.2)] shadow-[0_10px_30px_-4px_rgba(108,48,110,0.12),0_4px_12px_-2px_rgba(0,0,0,0.05)] inline-flex max-w-full items-center gap-2.5 p-1.5 rounded-full backdrop-blur-md", className)} {...props}>
         {/* 1. Clean 2D Microphone Button */}
         <Tooltip content={errored ? ERROR_TITLES[micError] : muted ? "Unmute Microphone" : "Mute Microphone"}>
           <button
@@ -3336,7 +3450,7 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
               "size-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs border",
               muted || errored
                 ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-400 dark:border-red-900"
-                : "bg-gray-100 text-gray-900 border-gray-300/80 hover:bg-gray-200 hover:text-black dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-700"
+                : "bg-[#FAF6FA] text-[#6C306E] border-[#E5D5E5] hover:bg-[#F3E4F3] hover:border-[#6C306E] hover:text-[#531E55] dark:bg-[#6C306E]/25 dark:text-[#F5EDF5] dark:border-[#EFE0EF]/30 dark:hover:bg-[#6C306E]/45"
             )}
           >
             {muted || errored ? (
@@ -3349,7 +3463,7 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
                 <line x1="12" y1="19" x2="12" y2="22" />
               </svg>
             ) : (
-              <svg className="size-5 shrink-0 text-gray-900 dark:text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="size-5 shrink-0 text-[#6C306E] dark:text-[#F5EDF5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <line x1="12" y1="19" x2="12" y2="22" />
@@ -3366,9 +3480,9 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
             disabled={off}
             onClick={() => onModeChange?.("text")}
             data-slot="voice-controls-keyboard"
-            className="size-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 border border-gray-300/80 hover:bg-gray-200 hover:text-black dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-700 transition-all duration-200 cursor-pointer shadow-xs"
+            className="size-10 rounded-full flex items-center justify-center bg-[#FAF6FA] text-[#6C306E] border border-[#E5D5E5] hover:bg-[#F3E4F3] hover:border-[#6C306E] hover:text-[#531E55] dark:bg-[#6C306E]/25 dark:text-[#F5EDF5] dark:border-[#EFE0EF]/30 dark:hover:bg-[#6C306E]/45 transition-all duration-200 cursor-pointer shadow-xs"
           >
-            <svg className="size-5 shrink-0 text-gray-900 dark:text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="size-5 shrink-0 text-[#6C306E] dark:text-[#F5EDF5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="20" height="14" x="2" y="5" rx="3" />
               <line x1="6" y1="9" x2="6.01" y2="9" strokeWidth="2.5" />
               <line x1="10" y1="9" x2="10.01" y2="9" strokeWidth="2.5" />
