@@ -70,7 +70,7 @@ export default function AdminAiBotPage() {
     const fetchSettings = async () => {
         try {
             setLoading(true)
-            const res = await fetch('/api/admin/ai-settings')
+            const res = await fetch('/api/admin/ai-settings?_t=' + Date.now(), { cache: 'no-store' })
             const data = await res.json()
 
             if (data.success && data.settings) {
@@ -344,10 +344,16 @@ export default function AdminAiBotPage() {
     const handleToggleVoiceCall = async (nextVal) => {
         setVoiceCallEnabled(nextVal)
         try {
+            localStorage.setItem('ukbl_voice_call_enabled', String(nextVal))
+            sessionStorage.setItem('ukbl_voice_call_enabled', String(nextVal))
+        } catch {}
+
+        try {
             const res = await fetch('/api/admin/ai-settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    action: 'toggle_voice_call',
                     voiceCallEnabled: nextVal,
                 }),
             })
@@ -358,11 +364,19 @@ export default function AdminAiBotPage() {
             } else {
                 toast.error(data.message || 'Failed to update voice call setting')
                 setVoiceCallEnabled(!nextVal)
+                try {
+                    localStorage.setItem('ukbl_voice_call_enabled', String(!nextVal))
+                    sessionStorage.setItem('ukbl_voice_call_enabled', String(!nextVal))
+                } catch {}
             }
         } catch (err) {
             console.error('Error updating voice call setting:', err)
             toast.error('Network error updating voice call setting')
             setVoiceCallEnabled(!nextVal)
+            try {
+                localStorage.setItem('ukbl_voice_call_enabled', String(!nextVal))
+                sessionStorage.setItem('ukbl_voice_call_enabled', String(!nextVal))
+            } catch {}
         }
     }
 

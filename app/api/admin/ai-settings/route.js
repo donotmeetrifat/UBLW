@@ -196,6 +196,18 @@ export async function POST(request) {
             });
         }
 
+        // Action: Immediate Toggle Storefront Voice Call Feature
+        if (action === 'toggle_voice_call') {
+            const { voiceCallEnabled } = body;
+            const targetVal = Boolean(voiceCallEnabled);
+            await saveAiSettings({ voiceCallEnabled: targetVal });
+            return NextResponse.json({
+                success: true,
+                message: targetVal ? 'Storefront Voice Call enabled' : 'Storefront Voice Call disabled',
+                voiceCallEnabled: targetVal,
+            });
+        }
+
         // Action: Connect & Verify Provider API Key
         if (action === 'test' || action === 'connect') {
             const rawProvider = (testProvider || 'gemini').toLowerCase();

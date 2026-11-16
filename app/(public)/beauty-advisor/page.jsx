@@ -45,7 +45,7 @@ export default function BeautyAdvisorPage() {
     const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
     const [voiceCallEnabled, setVoiceCallEnabled] = useState(() => {
         if (typeof window !== 'undefined') {
-            const cached = sessionStorage.getItem('ukbl_voice_call_enabled');
+            const cached = localStorage.getItem('ukbl_voice_call_enabled') || sessionStorage.getItem('ukbl_voice_call_enabled');
             if (cached !== null) return cached === 'true';
         }
         return false;
@@ -94,12 +94,13 @@ export default function BeautyAdvisorPage() {
         let isMounted = true;
         const checkVoiceCallStatus = async () => {
             try {
-                const res = await fetch('/api/ai/voice', { cache: 'no-store' });
+                const res = await fetch('/api/ai/voice?_t=' + Date.now(), { cache: 'no-store' });
                 const data = await res.json();
-                if (isMounted && data.success) {
-                    const isEnabled = Boolean(data.voiceCallEnabled);
+                if (isMounted) {
+                    const isEnabled = Boolean(data.success && data.voiceCallEnabled);
                     setVoiceCallEnabled(isEnabled);
                     try {
+                        localStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
                         sessionStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
                     } catch {}
                 }
@@ -110,12 +111,16 @@ export default function BeautyAdvisorPage() {
 
         checkVoiceCallStatus();
 
-        const unsubscribe = subscribeToStoreSync((type, payload) => {
-            if (type === 'ai_settings' && payload) {
-                if (payload.voiceCallEnabled !== undefined) {
-                    const isEnabled = Boolean(payload.voiceCallEnabled);
-                    setVoiceCallEnabled(isEnabled);
+        // 1. Supabase Realtime mesh listener
+        const unsubscribe = subscribeToStoreSync((evt) => {
+            const type = evt?.type;
+            const data = evt?.data || evt;
+            if (type === 'ai_settings' && data) {
+                if (data.voiceCallEnabled !== undefined) {
+                    const isEnabled = Boolean(data.voiceCallEnabled);
+                    if (isMounted) setVoiceCallEnabled(isEnabled);
                     try {
+                        localStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
                         sessionStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
                     } catch {}
                 } else {
@@ -124,9 +129,30 @@ export default function BeautyAdvisorPage() {
             }
         });
 
+        // 2. Immediate local window custom event & storage event listener
+        const handleSyncEvent = (e) => {
+            const detail = e?.detail;
+            const voiceVal = detail?.voiceCallEnabled !== undefined ? detail.voiceCallEnabled : detail?.data?.voiceCallEnabled;
+            if (voiceVal !== undefined) {
+                const isEnabled = Boolean(voiceVal);
+                if (isMounted) setVoiceCallEnabled(isEnabled);
+                try {
+                    localStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
+                    sessionStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
+                } catch {}
+            }
+        };
+
+        window.addEventListener('store-sync-event', handleSyncEvent);
+        window.addEventListener('ai_settings-updated', handleSyncEvent);
+        window.addEventListener('storage', handleSyncEvent);
+
         return () => {
             isMounted = false;
             if (typeof unsubscribe === 'function') unsubscribe();
+            window.removeEventListener('store-sync-event', handleSyncEvent);
+            window.removeEventListener('ai_settings-updated', handleSyncEvent);
+            window.removeEventListener('storage', handleSyncEvent);
         };
     }, []);
 
