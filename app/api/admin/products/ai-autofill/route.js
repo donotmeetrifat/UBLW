@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/auth';
+import { getAiSettings, callGemini, callGroq, callOpenRouter } from '@/lib/aiBot';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 /**
  * Intelligent domain fallback generator following the Master Instruction
- * Guarantees 100% resilience if Google Gemini API hits 429 quota or 503 load spike.
+ * Guarantees 100% resilience if external AI APIs are temporarily unavailable.
  */
 function generateFallbackDescriptions({ title, category = '', brand = '' }) {
     const lowerTitle = title.toLowerCase();
@@ -21,13 +20,11 @@ function generateFallbackDescriptions({ title, category = '', brand = '' }) {
     const isHair = /shampoo|conditioner|hair|scalp/i.test(lowerTitle) || /hair/i.test(lowerCat);
     const isBody = /body wash|shower gel|body lotion|scrub/i.test(lowerTitle) || /body/i.test(lowerCat);
 
-    // Active ingredient detection
     const hasVitC = /vitamin c|yuzu|bright/i.test(lowerTitle);
     const hasNiacinamide = /niacinamide|zinc|blemish/i.test(lowerTitle);
     const hasHyaluronic = /hyaluronic|ha |water/i.test(lowerTitle);
     const hasRetinol = /retinol|age|wrinkle/i.test(lowerTitle);
     const hasSalicylic = /salicylic|bha|acne|pore/i.test(lowerTitle);
-    const hasOatmeal = /oat|colloidal/i.test(lowerTitle);
 
     let formulaProfile = '';
     let benefits = [];
@@ -102,7 +99,6 @@ function generateFallbackDescriptions({ title, category = '', brand = '' }) {
         ];
         whyYouWillLoveIt = `You will love the salon-fresh shine and luxurious softness this delivers right in your home. It transforms unmanageable, stressed locks into smooth, resilient hair with an intoxicating, clean British salon fragrance.`;
     } else {
-        // General premium UK beauty product
         formulaProfile = `A premium authentic UK beauty formulation designed to deliver visible, clinically backed results while caring for skin comfort and balance. Carefully engineered with high-purity active ingredients to target specific daily needs without causing sensitivity or irritation. Sourced directly to bring genuine British beauty standards to your vanity.`;
         benefits = [
             'Formulated with high-grade, authentic ingredients for optimal daily performance.',
@@ -119,76 +115,11 @@ function generateFallbackDescriptions({ title, category = '', brand = '' }) {
 }
 
 /**
- * Call Google Gemini with smart fallback candidate models
- */
-async function callGeminiForAutofill({ apiKey, systemPrompt, userPrompt }) {
-    const candidateModels = [
-        'gemini-flash-lite-latest',
-        'gemini-3.5-flash-lite',
-        'gemini-3.5-flash',
-        'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
-        'gemini-pro-latest'
-    ];
-
-    let lastError = null;
-
-    for (const model of candidateModels) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 12000);
-
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            role: 'user',
-                            parts: [
-                                { text: `${systemPrompt}\n\n${userPrompt}` }
-                            ]
-                        }
-                    ],
-                    generationConfig: {
-                        temperature: 0.6,
-                        maxOutputTokens: 1200,
-                    }
-                }),
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeout);
-
-            if (!res.ok) {
-                const errText = await res.text();
-                lastError = new Error(`Model ${model} returned ${res.status}: ${errText.substring(0, 150)}`);
-                continue;
-            }
-
-            const data = await res.json();
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawText && rawText.trim()) {
-                return rawText;
-            }
-        } catch (err) {
-            clearTimeout(timeout);
-            lastError = err;
-            continue;
-        }
-    }
-
-    throw lastError || new Error('All Gemini candidate models failed');
-}
-
-/**
  * Robust JSON extraction from LLM response text
  */
 function extractJsonFromText(rawText) {
     if (!rawText || typeof rawText !== 'string') return null;
 
-    // 1. Try stripping markdown code fences
     let clean = rawText.trim();
     clean = clean.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
 
@@ -197,7 +128,6 @@ function extractJsonFromText(rawText) {
         if (parsed && typeof parsed === 'object') return parsed;
     } catch {}
 
-    // 2. Try regex match for outermost { ... }
     const match = rawText.match(/\{[\s\S]*\}/);
     if (match) {
         try {
@@ -210,7 +140,7 @@ function extractJsonFromText(rawText) {
 }
 
 /**
- * Clean and structure the benefits array
+ * Clean and normalize benefits into 5 or 6 individual card entries
  */
 function normalizeBenefits(rawBenefits, fallbackBenefits = []) {
     let list = [];
@@ -224,17 +154,15 @@ function normalizeBenefits(rawBenefits, fallbackBenefits = []) {
     const cleaned = list
         .map(item => {
             return String(item || '')
-                .replace(/^[\s✓✔•\-\*\d\.\)\:]+/, '') // Remove leading checkmark, bullet, numbers
+                .replace(/^[\s✓✔•\-\*\d\.\)\:]+/, '') // Strip leading checkmark, bullet, numbers
                 .trim();
         })
         .filter(item => item.length > 5);
 
-    // Ensure 5 or 6 items
     if (cleaned.length >= 5) {
         return cleaned.slice(0, 6);
     }
 
-    // If fewer than 5, merge with fallback benefits
     const merged = [...cleaned];
     for (const fb of fallbackBenefits) {
         if (!merged.includes(fb) && merged.length < 6) {
@@ -265,23 +193,20 @@ export async function POST(request) {
             brand
         });
 
-        // Fetch Gemini API Key from settings or environment
-        let apiKey = process.env.GEMINI_API_KEY || '';
-        if (!apiKey) {
-            try {
-                const setting = await prisma.setting.findUnique({
-                    where: { key: 'ai_gemini_api_key' },
-                });
-                if (setting?.value) apiKey = setting.value.trim();
-            } catch (err) {
-                console.warn('Could not read ai_gemini_api_key setting:', err.message);
-            }
-        }
+        // 1. Retrieve AI settings (Gemini, Grok/Groq, and OpenRouter keys)
+        const settings = await getAiSettings();
 
-        let generatedData = null;
+        // 2. Exact requested multi-provider sequence:
+        //    1st option: Gemini
+        //    2nd option: Grok (Groq)
+        //    3rd option: OpenRouter
+        const providers = [
+            { name: 'Gemini', key: settings.geminiKey, fn: callGemini },
+            { name: 'Grok', key: settings.groqKey, fn: callGroq },
+            { name: 'OpenRouter', key: settings.openRouterKey, fn: callOpenRouter },
+        ];
 
-        if (apiKey) {
-            const systemPrompt = `# MASTER INSTRUCTION: PREMIUM UK BEAUTY E-COMMERCE PRODUCT DESCRIPTIONS
+        const systemPrompt = `# MASTER INSTRUCTION: PREMIUM UK BEAUTY E-COMMERCE PRODUCT DESCRIPTIONS
 
 You are a professional e-commerce copywriter specializing in premium beauty, skincare, cosmetics, haircare, baby care, and personal care products for UK Brand Lover (a premier UK authentic import store in Bangladesh).
 
@@ -310,46 +235,59 @@ CRITICAL: Return ONLY a valid JSON object matching this schema with no markdown 
   "whyYouWillLoveIt": "..."
 }`;
 
-            const userPrompt = `Product Title: "${trimmedTitle}"\nCategory: "${category || 'Beauty & Skincare'}"\nBrand: "${brand || 'UK Import'}"\n\nGenerate the 3 sections in valid JSON format.`;
+        const userPrompt = `Product Title: "${trimmedTitle}"\nCategory: "${category || 'Beauty & Skincare'}"\nBrand: "${brand || 'UK Import'}"\n\nGenerate the 3 sections in valid JSON format.`;
+
+        let generatedData = null;
+        let successfulProvider = null;
+
+        // 3. Try each provider sequentially in the exact requested order
+        for (const prov of providers) {
+            if (!prov.key || !prov.key.trim()) continue;
 
             try {
-                const aiRaw = await callGeminiForAutofill({
-                    apiKey,
+                const aiRaw = await prov.fn({
+                    apiKey: prov.key.trim(),
                     systemPrompt,
-                    userPrompt
+                    messages: [{ role: 'user', content: userPrompt }],
+                    isVoice: false,
                 });
 
-                const parsed = extractJsonFromText(aiRaw);
-                if (parsed && (parsed.formulaProfile || parsed.benefits || parsed.whyYouWillLoveIt)) {
-                    generatedData = {
-                        formulaProfile: (parsed.formulaProfile && String(parsed.formulaProfile).trim().length > 10)
-                            ? String(parsed.formulaProfile).trim()
-                            : fallback.formulaProfile,
-                        benefits: normalizeBenefits(parsed.benefits, fallback.benefits),
-                        whyYouWillLoveIt: (parsed.whyYouWillLoveIt && String(parsed.whyYouWillLoveIt).trim().length > 10)
-                            ? String(parsed.whyYouWillLoveIt).trim()
-                            : fallback.whyYouWillLoveIt,
-                    };
+                if (aiRaw && aiRaw.trim()) {
+                    const parsed = extractJsonFromText(aiRaw);
+                    if (parsed && (parsed.formulaProfile || parsed.benefits || parsed.whyYouWillLoveIt)) {
+                        generatedData = {
+                            formulaProfile: (parsed.formulaProfile && String(parsed.formulaProfile).trim().length > 10)
+                                ? String(parsed.formulaProfile).trim()
+                                : fallback.formulaProfile,
+                            benefits: normalizeBenefits(parsed.benefits, fallback.benefits),
+                            whyYouWillLoveIt: (parsed.whyYouWillLoveIt && String(parsed.whyYouWillLoveIt).trim().length > 10)
+                                ? String(parsed.whyYouWillLoveIt).trim()
+                                : fallback.whyYouWillLoveIt,
+                        };
+                        successfulProvider = prov.name;
+                        break;
+                    }
                 }
-            } catch (aiErr) {
-                console.warn('Gemini AI autofill fallback trigger:', aiErr.message);
+            } catch (provErr) {
+                console.warn(`Autofill provider ${prov.name} failed, falling back to next provider:`, provErr.message);
             }
         }
 
-        // If AI call failed or returned empty, use the domain fallback
+        // 4. If all cloud models failed or no keys configured, use local grounded beauty engine
         if (!generatedData) {
             generatedData = {
                 formulaProfile: fallback.formulaProfile,
                 benefits: fallback.benefits,
                 whyYouWillLoveIt: fallback.whyYouWillLoveIt,
             };
+            successfulProvider = 'Local Grounded Engine';
         }
 
-        // Return tailored response based on requested field
         return NextResponse.json({
             success: true,
             title: trimmedTitle,
             field,
+            provider: successfulProvider,
             formulaProfile: generatedData.formulaProfile,
             benefits: generatedData.benefits,
             whyYouWillLoveIt: generatedData.whyYouWillLoveIt,
