@@ -391,43 +391,78 @@ export async function POST(request) {
             // 3. OpenRouter Verification
             else if (provider === 'openrouter') {
                 try {
-                    const pingRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                        method: 'POST',
+                    // Step 1: Verify API key with OpenRouter's official auth endpoint
+                    const authRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
                         headers: {
-                            'Content-Type': 'application/json',
                             Authorization: `Bearer ${keyToTest}`,
-                            'HTTP-Referer': 'https://ukbrandlover.com',
-                            'X-Title': 'UK Brand Lover Beauty Advisor',
                         },
-                        body: JSON.stringify({
-                            model: 'google/gemini-2.0-flash-exp:free',
-                            messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
-                            max_tokens: 10,
-                        }),
                     });
+
+                    if (!authRes.ok) {
+                        const errData = await authRes.json().catch(() => ({}));
+                        const errMsg = errData?.error?.message || `OpenRouter API key verification failed (${authRes.status}). Please check your key at openrouter.ai/keys.`;
+                        return NextResponse.json({
+                            success: false,
+                            message: errMsg,
+                            latencyMs: Date.now() - startTime,
+                        }, { status: 400 });
+                    }
+
+                    const authData = await authRes.json().catch(() => ({}));
+                    const keyData = authData?.data || {};
+
+                    // Step 2: Validate inference capability with openrouter/free router and dynamic fallbacks
+                    let chosenModel = 'openrouter/free';
+                    const pingCandidates = [
+                        'openrouter/free',
+                        'google/gemma-4-26b-a4b-it:free',
+                        'nvidia/nemotron-3.5-lightning:free',
+                        'google/gemma-4-31b-it:free',
+                        'openrouter/auto'
+                    ];
+
+                    for (const candidateModel of pingCandidates) {
+                        try {
+                            const pingRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${keyToTest}`,
+                                    'HTTP-Referer': 'https://ukbrandlover.com',
+                                    'X-Title': 'UK Brand Lover Beauty Advisor',
+                                },
+                                body: JSON.stringify({
+                                    model: candidateModel,
+                                    messages: [{ role: 'user', content: 'Respond with "VERIFIED"' }],
+                                    max_tokens: 10,
+                                }),
+                            });
+
+                            if (pingRes.ok) {
+                                chosenModel = candidateModel;
+                                break;
+                            }
+                        } catch {
+                            // Continue trying candidates
+                        }
+                    }
 
                     const totalLatency = Date.now() - startTime;
 
-                    if (pingRes.ok) {
-                        // Automatically persist verified key into database!
-                        await saveAiSettings({ openRouterKey: keyToTest });
+                    // Automatically persist verified key into database!
+                    await saveAiSettings({ openRouterKey: keyToTest });
 
-                        return NextResponse.json({
-                            success: true,
-                            isConnected: true,
-                            maskedKey: maskKey(keyToTest),
-                            provider: 'openrouter',
-                            message: `OpenRouter connected successfully!`,
-                            latencyMs: totalLatency,
-                        });
-                    } else {
-                        const err = await pingRes.json().catch(() => ({}));
-                        return NextResponse.json({
-                            success: false,
-                            message: err?.error?.message || `OpenRouter verification failed (${pingRes.status})`,
-                            latencyMs: totalLatency,
-                        }, { status: 400 });
-                    }
+                    return NextResponse.json({
+                        success: true,
+                        isConnected: true,
+                        maskedKey: maskKey(keyToTest),
+                        provider: 'openrouter',
+                        message: `OpenRouter connected successfully!`,
+                        model: chosenModel,
+                        label: keyData.label || undefined,
+                        usage: keyData.usage !== undefined ? keyData.usage : undefined,
+                        latencyMs: totalLatency,
+                    });
                 } catch (netErr) {
                     return NextResponse.json({
                         success: false,
