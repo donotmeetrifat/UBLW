@@ -16,7 +16,6 @@ import {
     UsersIcon,
     UserCheckIcon,
     BanIcon,
-    ClockIcon,
     TrashIcon,
     AlertCircleIcon
 } from "@/components/icons"
@@ -30,18 +29,17 @@ const ROLE_OPTIONS = [
 export default function AdminTeamPage() {
     const [teamMembers, setTeamMembers] = useState([])
     const [stats, setStats] = useState({
-        totalRegistrations: 0,
         totalStaff: 0,
         totalAdmins: 0,
         totalEmployees: 0,
-        pendingApprovals: 0,
+        totalCustomers: 0,
         totalBlocked: 0,
-        activeApproved: 0,
+        activeStaff: 0,
     })
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearching, setIsSearching] = useState(false)
-    const [filterTab, setFilterTab] = useState('all') // 'all' | 'pending' | 'active' | 'employees' | 'admins' | 'blocked'
+    const [filterTab, setFilterTab] = useState('all') // 'all' | 'admins' | 'employees' | 'customers' | 'active' | 'blocked'
     const [actionLoadingId, setActionLoadingId] = useState(null)
 
     // Current logged-in user from localStorage to prevent self-lockout
@@ -63,12 +61,14 @@ export default function AdminTeamPage() {
         }
     }, [])
 
-    const fetchTeam = async (query = searchQuery) => {
+    const fetchTeam = async (query = searchQuery, tab = filterTab) => {
         try {
             setLoading(true)
-            const endpoint = query.trim()
-                ? `/api/admin/team?search=${encodeURIComponent(query.trim())}`
-                : '/api/admin/team'
+            const params = new URLSearchParams()
+            if (query.trim()) params.set('search', query.trim())
+            if (tab && tab !== 'all') params.set('filter', tab)
+
+            const endpoint = `/api/admin/team?${params.toString()}`
             const res = await fetch(endpoint)
             const data = await res.json()
 
@@ -92,51 +92,16 @@ export default function AdminTeamPage() {
     // Debounced search trigger
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchTeam(searchQuery)
+            fetchTeam(searchQuery, filterTab)
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
 
-    // Filter users based on active tab
-    const filteredUsers = useMemo(() => {
-        return teamMembers.filter(user => {
-            if (filterTab === 'pending') {
-                return user.isVerified === false
-            }
-            if (filterTab === 'active') {
-                return user.isActive === true && user.isVerified === true
-            }
-            if (filterTab === 'employees') {
-                return user.role === 'EMPLOYEE'
-            }
-            if (filterTab === 'admins') {
-                return user.role === 'ADMIN'
-            }
-            if (filterTab === 'blocked') {
-                return user.isActive === false
-            }
-            return true // 'all'
-        })
-    }, [teamMembers, filterTab])
-
-    // Dynamic counts for each filter tab
-    const tabCounts = useMemo(() => {
-        const total = teamMembers.length
-        const pending = teamMembers.filter(u => u.isVerified === false).length
-        const active = teamMembers.filter(u => u.isActive === true && u.isVerified === true).length
-        const employees = teamMembers.filter(u => u.role === 'EMPLOYEE').length
-        const admins = teamMembers.filter(u => u.role === 'ADMIN').length
-        const blocked = teamMembers.filter(u => u.isActive === false).length
-
-        return {
-            all: total,
-            pending: stats.pendingApprovals !== undefined ? stats.pendingApprovals : pending,
-            active: stats.activeApproved !== undefined ? stats.activeApproved : active,
-            employees: stats.totalEmployees !== undefined ? stats.totalEmployees : employees,
-            admins: stats.totalAdmins !== undefined ? stats.totalAdmins : admins,
-            blocked: stats.totalBlocked !== undefined ? stats.totalBlocked : blocked,
-        }
-    }, [teamMembers, stats])
+    // Filter tab switch handler
+    const handleTabChange = (tabId) => {
+        setFilterTab(tabId)
+        fetchTeam(searchQuery, tabId)
+    }
 
     // Instant Role Change with Optimistic UI Update
     const handleRoleChange = async (user, newRole) => {
@@ -180,11 +145,7 @@ export default function AdminTeamPage() {
             toast.success(`Role updated to ${newRole === 'ADMIN' ? 'Admin' : newRole === 'EMPLOYEE' ? 'Employee' : 'Customer'}`)
 
             // Silently sync server stats & state
-            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
-            const syncData = await syncRes.json()
-            if (syncData.success && syncData.stats) {
-                setStats(syncData.stats)
-            }
+            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error changing role:', error)
             setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m))
@@ -237,11 +198,7 @@ export default function AdminTeamPage() {
             toast.success(newStatus ? `Unblocked ${user.name}` : `Blocked ${user.name}`)
 
             // Silently sync server stats
-            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
-            const syncData = await syncRes.json()
-            if (syncData.success && syncData.stats) {
-                setStats(syncData.stats)
-            }
+            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error toggling status:', error)
             setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m))
@@ -281,12 +238,7 @@ export default function AdminTeamPage() {
             setTeamMembers(prev => prev.filter(m => m.id !== user.id))
 
             // Refresh stats
-            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
-            const syncData = await syncRes.json()
-            if (syncData.success) {
-                setTeamMembers(syncData.users)
-                if (syncData.stats) setStats(syncData.stats)
-            }
+            fetchTeam(searchQuery, filterTab)
         } catch (error) {
             console.error('Error deleting user:', error)
             toast.error('Failed to delete user')
@@ -332,7 +284,7 @@ export default function AdminTeamPage() {
 
                 <button
                     type="button"
-                    onClick={() => fetchTeam(searchQuery)}
+                    onClick={() => fetchTeam(searchQuery, filterTab)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#EFE0EF] hover:border-[#6C306E]/40 hover:text-[#6C306E] text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
                 >
                     <RefreshIcon size={14} className={loading ? "animate-spin text-[#6C306E]" : ""} />
@@ -340,11 +292,11 @@ export default function AdminTeamPage() {
                 </button>
             </div>
 
-            {/* 3. Top 5 Stats Cards Grid */}
+            {/* 3. Top 5 Stats Cards Grid (Updated to match current roles & options) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                {/* Card 1: Total Registrations */}
+                {/* Card 1: Total Team Staff */}
                 <div
-                    onClick={() => setFilterTab('all')}
+                    onClick={() => handleTabChange('all')}
                     className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center justify-between gap-3 ${
                         filterTab === 'all'
                             ? 'border-2 border-[#6C306E] ring-2 ring-[#6C306E]/10'
@@ -357,10 +309,10 @@ export default function AdminTeamPage() {
                         </div>
                         <div>
                             <div className="text-2xl font-black text-[#241224] leading-none">
-                                {stats.totalRegistrations || teamMembers.length}
+                                {stats.totalStaff || 0}
                             </div>
                             <div className="text-[11px] font-bold text-slate-500 mt-1">
-                                Total Registrations
+                                Total Staff
                             </div>
                         </div>
                     </div>
@@ -369,31 +321,9 @@ export default function AdminTeamPage() {
                     </span>
                 </div>
 
-                {/* Card 2: Pending Approvals */}
+                {/* Card 2: Full Administrators */}
                 <div
-                    onClick={() => setFilterTab('pending')}
-                    className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center gap-3 ${
-                        filterTab === 'pending'
-                            ? 'border-2 border-amber-500 ring-2 ring-amber-500/10'
-                            : 'border-[#EFE0EF] hover:border-amber-300'
-                    }`}
-                >
-                    <div className="size-11 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shrink-0">
-                        <ClockIcon size={20} color="#D97706" />
-                    </div>
-                    <div>
-                        <div className="text-2xl font-black text-[#241224] leading-none">
-                            {tabCounts.pending}
-                        </div>
-                        <div className="text-[11px] font-bold text-slate-500 mt-1">
-                            Pending Approvals
-                        </div>
-                    </div>
-                </div>
-
-                {/* Card 3: Full Administrators */}
-                <div
-                    onClick={() => setFilterTab('admins')}
+                    onClick={() => handleTabChange('admins')}
                     className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center gap-3 ${
                         filterTab === 'admins'
                             ? 'border-2 border-[#6C306E] ring-2 ring-[#6C306E]/10'
@@ -405,7 +335,7 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {tabCounts.admins}
+                            {stats.totalAdmins || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
                             Full Administrators
@@ -413,31 +343,53 @@ export default function AdminTeamPage() {
                     </div>
                 </div>
 
-                {/* Card 4: Employees */}
+                {/* Card 3: Employees */}
                 <div
-                    onClick={() => setFilterTab('employees')}
+                    onClick={() => handleTabChange('employees')}
                     className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center gap-3 ${
                         filterTab === 'employees'
-                            ? 'border-2 border-emerald-600 ring-2 ring-emerald-600/10'
-                            : 'border-[#EFE0EF] hover:border-emerald-300'
+                            ? 'border-2 border-blue-600 ring-2 ring-blue-600/10'
+                            : 'border-[#EFE0EF] hover:border-blue-300'
                     }`}
                 >
-                    <div className="size-11 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-emerald-600 shrink-0">
-                        <UserCheckIcon size={20} color="#059669" />
+                    <div className="size-11 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shrink-0">
+                        <UserCheckIcon size={20} color="#2563EB" />
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {tabCounts.employees}
+                            {stats.totalEmployees || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
-                            Employees
+                            Employees (Staff)
                         </div>
                     </div>
                 </div>
 
-                {/* Card 5: Rejected / Blocked */}
+                {/* Card 4: Customer Accounts */}
                 <div
-                    onClick={() => setFilterTab('blocked')}
+                    onClick={() => handleTabChange('customers')}
+                    className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center gap-3 ${
+                        filterTab === 'customers'
+                            ? 'border-2 border-slate-700 ring-2 ring-slate-700/10'
+                            : 'border-[#EFE0EF] hover:border-slate-300'
+                    }`}
+                >
+                    <div className="size-11 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+                        <UserIcon size={20} color="#475569" />
+                    </div>
+                    <div>
+                        <div className="text-2xl font-black text-[#241224] leading-none">
+                            {stats.totalCustomers || 0}
+                        </div>
+                        <div className="text-[11px] font-bold text-slate-500 mt-1">
+                            Customer Accounts
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 5: Blocked Accounts */}
+                <div
+                    onClick={() => handleTabChange('blocked')}
                     className={`bg-white rounded-2xl p-4 border transition-all duration-200 cursor-pointer shadow-2xs flex items-center gap-3 ${
                         filterTab === 'blocked'
                             ? 'border-2 border-rose-600 ring-2 ring-rose-600/10'
@@ -449,31 +401,31 @@ export default function AdminTeamPage() {
                     </div>
                     <div>
                         <div className="text-2xl font-black text-[#241224] leading-none">
-                            {tabCounts.blocked}
+                            {stats.totalBlocked || 0}
                         </div>
                         <div className="text-[11px] font-bold text-slate-500 mt-1">
-                            Rejected / Blocked
+                            Blocked / Restricted
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* 4. Filter Tabs Row (Pills) */}
+            {/* 4. Filter Tabs Row (Updated to match current roles & options) */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {[
-                    { id: 'all', label: 'All Users', count: tabCounts.all },
-                    { id: 'pending', label: 'Pending Approval', count: tabCounts.pending },
-                    { id: 'active', label: 'Active (Approved)', count: tabCounts.active },
-                    { id: 'employees', label: 'Employees', count: tabCounts.employees },
-                    { id: 'admins', label: 'Administrators', count: tabCounts.admins },
-                    { id: 'blocked', label: 'Blocked / Rejected', count: tabCounts.blocked },
+                    { id: 'all', label: 'All Staff', count: stats.totalStaff || 0 },
+                    { id: 'admins', label: 'Administrators', count: stats.totalAdmins || 0 },
+                    { id: 'employees', label: 'Employees', count: stats.totalEmployees || 0 },
+                    { id: 'customers', label: 'Customers', count: stats.totalCustomers || 0 },
+                    { id: 'active', label: 'Active', count: stats.activeStaff || 0 },
+                    { id: 'blocked', label: 'Blocked', count: stats.totalBlocked || 0 },
                 ].map(tab => {
                     const isActive = filterTab === tab.id
                     return (
                         <button
                             key={tab.id}
                             type="button"
-                            onClick={() => setFilterTab(tab.id)}
+                            onClick={() => handleTabChange(tab.id)}
                             className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold transition-all duration-150 cursor-pointer whitespace-nowrap shadow-2xs ${
                                 isActive
                                     ? 'bg-[#FAF6FA] border-2 border-[#6C306E] text-[#6C306E]'
@@ -526,7 +478,7 @@ export default function AdminTeamPage() {
                         <span>Showing database search results for &ldquo;{searchQuery}&rdquo;</span>
                     </div>
                     <span className="text-[11px] font-bold text-slate-500">
-                        {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'} found
+                        {teamMembers.length} user{teamMembers.length === 1 ? '' : 's'} found
                     </span>
                 </div>
             )}
@@ -540,7 +492,7 @@ export default function AdminTeamPage() {
                             Loading access management records...
                         </span>
                     </div>
-                ) : filteredUsers.length === 0 ? (
+                ) : teamMembers.length === 0 ? (
                     <div className="py-16 text-center px-4">
                         <div className="size-14 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mx-auto mb-3">
                             <UsersIcon size={24} color="#6C306E" />
@@ -568,7 +520,7 @@ export default function AdminTeamPage() {
 
                             {/* Table Body */}
                             <tbody className="divide-y divide-[#EFE0EF]/70">
-                                {filteredUsers.map((user) => {
+                                {teamMembers.map((user) => {
                                     const isSelf = currentUser && (
                                         currentUser.id === user.id ||
                                         currentUser.email?.toLowerCase() === user.email?.toLowerCase()
@@ -576,7 +528,6 @@ export default function AdminTeamPage() {
                                     const isAdmin = user.role === 'ADMIN'
                                     const isEmployee = user.role === 'EMPLOYEE'
                                     const isBlocked = user.isActive === false
-                                    const isPending = user.isVerified === false
                                     const isUpdating = actionLoadingId === user.id
 
                                     return (
@@ -621,22 +572,17 @@ export default function AdminTeamPage() {
                                                 )}
                                             </td>
 
-                                            {/* Column 3: Access Status */}
+                                            {/* Column 3: Access Status (Direct Active vs Blocked status) */}
                                             <td className="py-4 px-4 align-middle whitespace-nowrap">
                                                 {isBlocked ? (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold shadow-2xs">
                                                         <span className="size-1.5 rounded-full bg-rose-500" />
-                                                        <span>Blocked / Rejected</span>
-                                                    </span>
-                                                ) : isPending ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold shadow-2xs">
-                                                        <span className="size-1.5 rounded-full bg-amber-500" />
-                                                        <span>Pending Approval</span>
+                                                        <span>Blocked</span>
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold shadow-2xs">
                                                         <span className="size-1.5 rounded-full bg-emerald-500" />
-                                                        <span>Active (Approved)</span>
+                                                        <span>Active</span>
                                                     </span>
                                                 )}
                                             </td>
@@ -646,7 +592,7 @@ export default function AdminTeamPage() {
                                                 {formatDate(user.createdAt)}
                                             </td>
 
-                                            {/* Column 5: Management Actions (Dropdown Role + Block Button + Delete Button) */}
+                                            {/* Column 5: Management Actions (Role Dropdown + Block + Delete) */}
                                             <td className="py-4 px-5 sm:px-6 align-middle">
                                                 <div className="flex items-center gap-2.5">
                                                     {/* 1. Sleek Role Dropdown */}

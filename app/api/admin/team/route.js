@@ -19,90 +19,82 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search')?.trim() || '';
+        const filter = searchParams.get('filter')?.trim() || 'all';
 
         if (!isDatabaseConfigured()) {
             return NextResponse.json({
                 success: true,
                 users: [],
-                stats: { totalAdmins: 1, totalEmployees: 0, activeStaff: 1 },
+                stats: { totalRegistrations: 1, totalStaff: 1, totalAdmins: 1, totalEmployees: 0, totalCustomers: 0, totalBlocked: 0, activeStaff: 1 },
                 isSearching: false,
             });
         }
 
-        // Aggregate team statistics (always based on store staff)
+        // Aggregate team statistics (always up-to-date)
         const [
             totalStaff,
             totalAdmins,
             totalEmployees,
-            pendingApprovals,
+            totalCustomers,
             totalBlocked,
-            activeApproved
+            activeStaff,
         ] = await Promise.all([
             prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] } } }),
             prisma.user.count({ where: { role: 'ADMIN' } }),
             prisma.user.count({ where: { role: 'EMPLOYEE' } }),
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isVerified: false } }),
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: false } }),
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true, isVerified: true } }),
+            prisma.user.count({ where: { role: 'CUSTOMER' } }),
+            prisma.user.count({ where: { isActive: false } }),
+            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true } }),
         ]);
 
-        let users = [];
+        let whereClause = {};
 
         if (search) {
-            // Search across ALL users (Admins, Employees, and Customers) so Admin can promote anyone
-            users = await prisma.user.findMany({
-                where: {
-                    OR: [
-                        { name: { contains: search, mode: 'insensitive' } },
-                        { email: { contains: search, mode: 'insensitive' } },
-                        { phone: { contains: search } },
-                        { whatsapp: { contains: search } },
-                    ],
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    phone: true,
-                    whatsapp: true,
-                    role: true,
-                    isActive: true,
-                    isVerified: true,
-                    createdAt: true,
-                    lastActiveAt: true,
-                    image: true,
-                },
-                orderBy: [
-                    { role: 'asc' }, // ADMIN, then EMPLOYEE, then CUSTOMER
-                    { createdAt: 'desc' },
+            // Search across ALL users (Admins, Employees, and Customers)
+            whereClause = {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } },
+                    { phone: { contains: search } },
+                    { whatsapp: { contains: search } },
                 ],
-                take: 25,
-            });
+            };
+        } else if (filter === 'customers') {
+            whereClause = { role: 'CUSTOMER' };
+        } else if (filter === 'admins') {
+            whereClause = { role: 'ADMIN' };
+        } else if (filter === 'employees') {
+            whereClause = { role: 'EMPLOYEE' };
+        } else if (filter === 'blocked') {
+            whereClause = { isActive: false };
+        } else if (filter === 'active') {
+            whereClause = { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true };
         } else {
-            // Default view: STRICTLY only ADMIN and EMPLOYEE. No customers cluttering the page!
-            users = await prisma.user.findMany({
-                where: {
-                    role: { in: ['ADMIN', 'EMPLOYEE'] },
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    phone: true,
-                    whatsapp: true,
-                    role: true,
-                    isActive: true,
-                    isVerified: true,
-                    createdAt: true,
-                    lastActiveAt: true,
-                    image: true,
-                },
-                orderBy: [
-                    { role: 'asc' }, // ADMIN first, then EMPLOYEE
-                    { createdAt: 'desc' },
-                ],
-            });
+            // Default view: STRICTLY only ADMIN and EMPLOYEE staff members
+            whereClause = { role: { in: ['ADMIN', 'EMPLOYEE'] } };
         }
+
+        const users = await prisma.user.findMany({
+            where: whereClause,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                whatsapp: true,
+                role: true,
+                isActive: true,
+                isVerified: true,
+                createdAt: true,
+                lastActiveAt: true,
+                image: true,
+            },
+            orderBy: [
+                { role: 'asc' }, // ADMIN first, then EMPLOYEE, then CUSTOMER
+                { createdAt: 'desc' },
+            ],
+            take: filter === 'customers' || search ? 50 : undefined,
+        });
 
         return NextResponse.json({
             success: true,
@@ -112,9 +104,9 @@ export async function GET(request) {
                 totalStaff,
                 totalAdmins,
                 totalEmployees,
-                pendingApprovals,
+                totalCustomers,
                 totalBlocked,
-                activeApproved,
+                activeStaff,
             },
             isSearching: Boolean(search),
         }, {
