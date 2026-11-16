@@ -266,6 +266,20 @@ export default function AiChatWidget() {
         reader.readAsDataURL(file);
     };
 
+    // Quick Add to Bag
+    const handleQuickAdd = (product) => {
+        if (!product?.id) return;
+
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add authentic UK products to your shopping bag.');
+            return;
+        }
+
+        dispatch(addToCart({ productId: product.id, id: product.id, quantity: 1 }));
+        toast.success(`Added ${product.name} to your bag!`);
+        window.dispatchEvent(new Event('cart-bump'));
+    };
+
     // Send Message Handler with zero-latency optimistic dispatch & sync
     const handleSendMessage = async (textToSend = null, photoToSend = null) => {
         const text = (textToSend !== null ? textToSend : inputText).trim();
@@ -310,11 +324,16 @@ export default function AiChatWidget() {
             const data = await res.json();
 
             if (data.success && data.message) {
+                // Auto-Add to Bag if customer requested it via text or voice
+                if (data.addToCartProduct) {
+                    handleQuickAdd(data.addToCartProduct);
+                }
+
                 const assistantMsg = {
                     id: data.assistantMessageId || `assistant-${Date.now()}`,
                     role: 'assistant',
                     content: data.message,
-                    products: data.products || [],
+                    products: data.products || (data.addToCartProduct ? [data.addToCartProduct] : []),
                     createdAt: data.createdAt || new Date().toISOString(),
                 };
 
@@ -369,20 +388,6 @@ export default function AiChatWidget() {
         dispatchAiChatSync(resetMessages, currentUser, 'widget');
         setIsClearConfirming(false);
         toast.success('Chat history cleared.');
-    };
-
-    // Quick Add to Bag
-    const handleQuickAdd = (product) => {
-        if (!product?.id) return;
-
-        if (!isClientSignedIn()) {
-            requireSignIn('Please sign in to add authentic UK products to your shopping bag.');
-            return;
-        }
-
-        dispatch(addToCart({ productId: product.id, id: product.id, quantity: 1 }));
-        toast.success(`Added ${product.name} to your bag!`);
-        window.dispatchEvent(new Event('cart-bump'));
     };
 
     // Do not show floating widget on the full dedicated /beauty-advisor page

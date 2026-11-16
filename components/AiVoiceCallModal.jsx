@@ -508,7 +508,15 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     handleQuickAdd(prodToAdd);
                 }
 
-                speakEmmaResponse(data.message, returnedProducts.length > 0 ? returnedProducts : (prodToAdd ? [prodToAdd] : undefined));
+                let cardsToShow = returnedProducts;
+                if ((!cardsToShow || cardsToShow.length === 0) && prodToAdd) {
+                    cardsToShow = [prodToAdd];
+                }
+                if ((!cardsToShow || cardsToShow.length === 0) && isAddIntent && lastRecommendedProductsRef.current.length > 0) {
+                    cardsToShow = lastRecommendedProductsRef.current;
+                }
+
+                speakEmmaResponse(data.message, cardsToShow && cardsToShow.length > 0 ? cardsToShow : undefined);
             } else {
                 speakEmmaResponse("I'm sorry, I couldn't hear that clearly. Could you please repeat your question?");
             }

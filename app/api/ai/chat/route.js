@@ -60,15 +60,45 @@ export async function POST(request) {
 
         // Smart Add-to-Bag Detection & Execution
         let addToCartProduct = null;
-        const isAddToCartIntent = /(add.*(bag|cart)|put.*(bag|cart)|yes.*add|yeah.*add|buy.*this|order.*this|bag.*add|cart.*add|eta.*add)/i.test(userContent);
+        const isAddToCartIntent = /(add.*(bag|cart)|put.*(bag|cart)|yes.*add|yeah.*add|buy.*this|order.*this|bag.*add|cart.*add|eta.*add|kore.*dao|add.*koro|add.*korun|যোগ.*করুন|ব্যাগে.*অ্যাড|কার্টে.*অ্যাড|ব্যাগে.*দিন)/i.test(userContent);
 
         if (isAddToCartIntent) {
             const catalog = await getLiveCatalogContext();
             const productMap = new Map();
             catalog.forEach(p => productMap.set(p.id, p));
 
-            // 1. Check if consultation.products has an in-stock product
-            if (consultation.products && consultation.products.length > 0) {
+            // 1. Check if user explicitly named a product or brand in their current message
+            const lowerUser = userContent.toLowerCase();
+            let directProduct = null;
+            for (const p of catalog) {
+                if (p.name && lowerUser.includes(p.name.toLowerCase())) {
+                    directProduct = p;
+                    break;
+                }
+            }
+            if (!directProduct) {
+                if (lowerUser.includes('garnier')) {
+                    directProduct = catalog.find(p => /garnier/i.test((p.brand || '') + ' ' + (p.name || '')));
+                } else if (lowerUser.includes('aveeno')) {
+                    directProduct = catalog.find(p => /aveeno/i.test((p.brand || '') + ' ' + (p.name || '')));
+                } else if (lowerUser.includes('face wash') || lowerUser.includes('facewash') || lowerUser.includes('wash') || lowerUser.includes('cleanser')) {
+                    directProduct = catalog.find(p => /wash|cleans/i.test((p.category || '') + ' ' + (p.name || '')));
+                } else if (lowerUser.includes('lotion') || lowerUser.includes('moisturizer') || lowerUser.includes('cream')) {
+                    directProduct = catalog.find(p => /lotion|moistur|cream/i.test((p.category || '') + ' ' + (p.name || '')));
+                }
+            }
+
+            if (directProduct) {
+                addToCartProduct = {
+                    id: directProduct.id,
+                    name: directProduct.name,
+                    brand: directProduct.brand,
+                    price: directProduct.price,
+                    mrp: directProduct.mrp,
+                    image: directProduct.images && directProduct.images.length > 0 ? directProduct.images[0] : null,
+                    inStock: Boolean(directProduct.inStock && (directProduct.stockCount === null || directProduct.stockCount > 0)),
+                };
+            } else if (consultation.products && consultation.products.length > 0) {
                 addToCartProduct = consultation.products[0];
             } else {
                 // 2. Scan conversation history backwards for last mentioned product tag or name
@@ -129,9 +159,9 @@ export async function POST(request) {
         let savedUserMsg = null;
         let savedAssistantMsg = null;
 
-        // Persist to PostgreSQL ONLY if customer is logged into their account
-        // If customer is not logged in, their conversation is saved strictly in browser cache (localStorage)
-        if (user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
+        // Persist to PostgreSQL ONLY if customer is logged in AND this is NOT a live voice call!
+        // Live telephone voice calls are completely ephemeral and never pollute the AI Beauty Advisor or user account data.
+        if (!isVoice && user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
             try {
                 // User message
                 savedUserMsg = await prisma.chatMessage.create({
@@ -186,6 +216,7 @@ export async function POST(request) {
                 botName: settings.botName || 'Emma',
                 customerName: user?.name || null,
                 isFollowUp: conversationHistory.length > 1,
+                isVoice: Boolean(isVoice),
             });
 
             const { message: safeMessage, products } = extractProductCards(fallbackReply, catalog);
@@ -193,7 +224,7 @@ export async function POST(request) {
             let savedUserMsg = null;
             let savedAssistantMsg = null;
 
-            if (user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
+            if (!isVoice && user && user.id && isDatabaseConfigured() && prisma.chatMessage) {
                 try {
                     const userContent = (messageText && messageText.trim()) ? messageText.trim() : DEFAULT_IMAGE_PROMPT;
                     savedUserMsg = await prisma.chatMessage.create({
@@ -232,7 +263,9 @@ export async function POST(request) {
         } catch (innerErr) {
             return NextResponse.json({
                 success: true,
-                message: "Hello! Welcome to UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from the UK with batch code verification.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to assist you.",
+                message: isVoice
+                    ? "We have authentic UK skincare in stock. What can I help you find today?"
+                    : "Hello! Welcome to UK Brand Lover. Every item in our boutique is 100% genuine and imported directly from the UK with batch code verification.\n\nCould you share what skin concern or UK brand you are looking for today? I would be happy to assist you.",
                 products: [],
                 provider: 'emma_saleswoman_fallback',
                 createdAt: new Date().toISOString(),

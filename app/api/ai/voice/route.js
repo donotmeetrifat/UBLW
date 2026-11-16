@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getAiSettings } from '@/lib/aiBot';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 function cleanTextForSpeech(raw) {
     if (!raw || typeof raw !== 'string') return '';
@@ -74,7 +76,7 @@ export async function POST(request) {
 
         for (const modelId of candidateModels) {
             try {
-                const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=4`;
+                const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
                 const response = await fetch(ttsUrl, {
                     method: 'POST',
                     headers: {
@@ -86,10 +88,10 @@ export async function POST(request) {
                         text: speechText,
                         model_id: modelId,
                         voice_settings: {
-                            stability: 0.45,
+                            stability: 0.5,
                             similarity_boost: 0.75,
                             style: 0.0,
-                            use_speaker_boost: false,
+                            use_speaker_boost: true,
                         },
                     }),
                 });
@@ -101,6 +103,7 @@ export async function POST(request) {
 
                 const errData = await response.json().catch(() => ({}));
                 lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
+                console.warn(`[ElevenLabs TTS] Model ${modelId} with voice ${voiceId} returned ${response.status}:`, lastErrorMsg);
                 // If quota exceeded or 401 unauthorized, no need to retry other models
                 if (response.status === 401 || response.status === 429) {
                     ttsRes = response;
