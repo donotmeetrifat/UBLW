@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
+import AiProductCard from "@/components/AiProductCard";
 const CHATCN_CSS = ":root{--chatcn-accent:var(--chatcn-gray-1000);--chatcn-alpha-200:oklch(0 0 0 / 0.05);--chatcn-alpha-300:oklch(0 0 0 / 0.08);--chatcn-alpha-500:oklch(0 0 0 / 0.14);--chatcn-alpha-600:oklch(0 0 0 / 0.2);--chatcn-bg:oklch(1 0 0);--chatcn-bg-subtle:oklch(0.985 0 0);--chatcn-border:var(--chatcn-gray-400);--chatcn-border-strong:var(--chatcn-gray-600);--chatcn-card:oklch(1 0 0);--chatcn-ease-out:cubic-bezier(0.23, 1, 0.32, 1);--chatcn-ease-out-soft:cubic-bezier(0.25, 0.46, 0.45, 0.94);--chatcn-ease-standard:ease;--chatcn-fg:var(--chatcn-gray-1000);--chatcn-fg-faint:var(--chatcn-gray-700);--chatcn-fg-muted:var(--chatcn-gray-900);--chatcn-fg-subtle:var(--chatcn-gray-800);--chatcn-fill:var(--chatcn-gray-100);--chatcn-fill-active:var(--chatcn-gray-300);--chatcn-fill-hover:var(--chatcn-gray-200);--chatcn-gray-100:oklch(0.970 0 0);--chatcn-gray-1000:oklch(0.145 0 0);--chatcn-gray-200:oklch(0.950 0 0);--chatcn-gray-300:oklch(0.930 0 0);--chatcn-gray-400:oklch(0.910 0 0);--chatcn-gray-600:oklch(0.800 0 0);--chatcn-gray-700:oklch(0.700 0 0);--chatcn-gray-800:oklch(0.525 0 0);--chatcn-gray-900:oklch(0.440 0 0);--chatcn-inset:oklch(0.975 0 0);--chatcn-press-scale:0.97;--chatcn-press-scale-icon:0.94;--chatcn-primary:var(--chatcn-gray-1000);--chatcn-primary-fg:var(--chatcn-bg);--chatcn-primary-hover:var(--chatcn-gray-900);--chatcn-radius-2xl:24px;--chatcn-radius-lg:12px;--chatcn-radius-md:8px;--chatcn-radius-sm:6px;--chatcn-radius-xl:16px;--chatcn-radius-xs:4px;--chatcn-red:oklch(0.560 0.200 27);--chatcn-scrollbar:var(--chatcn-alpha-500);--chatcn-scrollbar-hover:var(--chatcn-alpha-600);--chatcn-shadow-border:0 0 0 1px oklch(0 0 0 / 0.08);--chatcn-shadow-lg:0 0 0 1px oklch(0 0 0 / 0.06), 0 4px 8px -2px oklch(0 0 0 / 0.06), 0 16px 32px -8px oklch(0 0 0 / 0.12);--chatcn-shadow-md:0 0 0 1px oklch(0 0 0 / 0.06), 0 2px 4px -1px oklch(0 0 0 / 0.06), 0 8px 16px -4px oklch(0 0 0 / 0.08);--chatcn-shadow-sm:0 0 0 1px oklch(0 0 0 / 0.06), 0 1px 2px -1px oklch(0 0 0 / 0.06), 0 2px 4px oklch(0 0 0 / 0.04);--chatcn-shadow-xs:0 0 0 1px oklch(0 0 0 / 0.08), 0 1px 2px oklch(0 0 0 / 0.04);--chatcn-surface:oklch(1 0 0)}.dark{--chatcn-accent:var(--chatcn-gray-1000);--chatcn-alpha-200:oklch(1 0 0 / 0.06);--chatcn-alpha-300:oklch(1 0 0 / 0.09);--chatcn-alpha-500:oklch(1 0 0 / 0.16);--chatcn-alpha-600:oklch(1 0 0 / 0.24);--chatcn-bg:oklch(0.145 0 0);--chatcn-bg-subtle:oklch(0.178 0 0);--chatcn-border:var(--chatcn-gray-400);--chatcn-border-strong:var(--chatcn-gray-600);--chatcn-card:oklch(0.175 0 0);--chatcn-fg:var(--chatcn-gray-1000);--chatcn-fg-faint:var(--chatcn-gray-700);--chatcn-fg-muted:var(--chatcn-gray-900);--chatcn-fg-subtle:var(--chatcn-gray-800);--chatcn-fill:var(--chatcn-gray-100);--chatcn-fill-active:var(--chatcn-gray-300);--chatcn-fill-hover:var(--chatcn-gray-200);--chatcn-gray-100:oklch(0.195 0 0);--chatcn-gray-1000:oklch(0.970 0 0);--chatcn-gray-200:oklch(0.225 0 0);--chatcn-gray-300:oklch(0.255 0 0);--chatcn-gray-400:oklch(0.285 0 0);--chatcn-gray-600:oklch(0.410 0 0);--chatcn-gray-700:oklch(0.500 0 0);--chatcn-gray-800:oklch(0.620 0 0);--chatcn-gray-900:oklch(0.720 0 0);--chatcn-inset:oklch(0.155 0 0);--chatcn-primary:var(--chatcn-gray-1000);--chatcn-primary-fg:var(--chatcn-bg);--chatcn-primary-hover:var(--chatcn-gray-900);--chatcn-red:oklch(0.700 0.175 22);--chatcn-scrollbar:var(--chatcn-alpha-500);--chatcn-scrollbar-hover:var(--chatcn-alpha-600);--chatcn-shadow-border:0 0 0 1px oklch(1 0 0 / 0.08);--chatcn-shadow-lg:0 0 0 1px oklch(1 0 0 / 0.1), inset 0 1px 0 oklch(1 0 0 / 0.05), 0 16px 32px -8px oklch(0 0 0 / 0.6);--chatcn-shadow-md:0 0 0 1px oklch(1 0 0 / 0.09), inset 0 1px 0 oklch(1 0 0 / 0.04), 0 8px 16px -4px oklch(0 0 0 / 0.5);--chatcn-shadow-sm:0 0 0 1px oklch(1 0 0 / 0.08), inset 0 1px 0 oklch(1 0 0 / 0.03), 0 2px 4px oklch(0 0 0 / 0.4);--chatcn-shadow-xs:0 0 0 1px oklch(1 0 0 / 0.08), 0 1px 2px oklch(0 0 0 / 0.4);--chatcn-surface:oklch(0.205 0 0)}.chatcn-focus{}.chatcn-focus:focus-visible{outline: 2px solid var(--chatcn-accent); outline-offset: 2px;}.chatcn-shimmer{color: transparent; background-image: linear-gradient(90deg, var(--chatcn-fg-subtle) 0%, var(--chatcn-fg-subtle) 40%, var(--chatcn-fg) 50%, var(--chatcn-fg-subtle) 60%, var(--chatcn-fg-subtle) 100%); background-size: 250% 100%; background-clip: text; -webkit-background-clip: text; animation: chatcn-shimmer 1.6s linear infinite;}.chatcn-spin{animation: chatcn-spin 0.8s linear infinite;}.chatcn-scroll{scrollbar-width: thin; scrollbar-color: var(--chatcn-scrollbar) transparent;}.chatcn-scroll:hover{scrollbar-color: var(--chatcn-scrollbar-hover) transparent;}.chatcn-scroll::-webkit-scrollbar{width: 10px; height: 10px;}.chatcn-scroll::-webkit-scrollbar-track, .chatcn-scroll::-webkit-scrollbar-corner{background: transparent;}.chatcn-scroll::-webkit-scrollbar-thumb{background-color: var(--chatcn-scrollbar); background-clip: content-box; border: 3px solid transparent; border-radius: 9999px;}.chatcn-scroll::-webkit-scrollbar-thumb:hover{background-color: var(--chatcn-scrollbar-hover);}.chatcn-scroll-fade{}@supports (animation-timeline: scroll()){.chatcn-scroll-fade{mask-size: 100% calc(100% + 24px); mask-repeat: no-repeat; animation: chatcn-scroll-fade linear both; animation-timeline: scroll(self); animation-range: 0 48px;}}@keyframes chatcn-spin { to { transform: rotate(360deg); } }@keyframes chatcn-shimmer { from { background-position: 100% 0; } to { background-position: 0% 0; } }@keyframes chatcn-scroll-fade { from { mask-image: linear-gradient(to bottom, transparent, #000 24px); mask-position: 0 -24px; } to { mask-image: linear-gradient(to bottom, transparent, #000 24px); mask-position: 0 0; } }@media (prefers-reduced-motion: reduce){.chatcn-shimmer{animation:none;color:var(--chatcn-fg-subtle);background-image:none}}@media (prefers-reduced-motion: reduce){:root{--chatcn-press-scale:1;--chatcn-press-scale-icon:1;--chatcn-enter-scale:1}}";
 const EXTRA_CHATCN_CSS = `
 [data-slot="voice-session"] {
@@ -308,6 +309,7 @@ export interface TranscriptSegment {
     interrupted?: boolean;
     unspoken?: string;
     live?: boolean;
+    products?: any[];
 }
 export type ChatcnLevel = number | (() => number);
 type AudioVisualizerVariant = "bars" | "radial" | "grid" | "line" | "dots";
@@ -322,6 +324,7 @@ type VoiceControlsSize = "md" | "lg";
 interface VoiceControlsProps extends Omit<React.ComponentProps<"div">, "children"> {
     muted?: boolean;
     onMutedChange?: (muted: boolean) => void;
+    onModeChange?: (mode: VoiceSessionMode) => void;
     captions?: boolean;
     onCaptionsChange?: (on: boolean) => void;
     microphones?: ChatcnAudioDevice[];
@@ -352,6 +355,7 @@ export interface VoiceSessionProps extends Omit<React.ComponentProps<"div">, "ti
     defaultMode?: VoiceSessionMode;
     onModeChange?: (mode: VoiceSessionMode) => void;
     onSendText?: (text: string) => void;
+    onQuickAdd?: (product: any) => void;
     muted?: boolean;
     onMutedChange?: (muted: boolean) => void;
     captions?: boolean;
@@ -1597,6 +1601,7 @@ interface TranscriptProps extends Omit<React.ComponentProps<"div">, "children"> 
     empty?: React.ReactNode;
     label?: string;
     announce?: boolean;
+    onQuickAdd?: (product: any) => void;
 }
 interface Group {
     key: string;
@@ -1635,6 +1640,8 @@ interface BodyProps {
     empty?: React.ReactNode;
     announce: boolean;
     announceFn?: (text: string) => void;
+    onQuickAdd?: (product: any) => void;
+    bottomRef?: React.RefObject<HTMLDivElement | null>;
 }
 function useAnnounce(segments: TranscriptSegment[], enabled: boolean, announce?: (t: string) => void) {
     const seen = React.useRef<Set<string> | null>(null);
@@ -1737,7 +1744,7 @@ function SegmentText({ segment }: {
       {segment.live ? (<StreamingCaret activity={`${segment.text}${segment.interim ?? ""}`}/>) : null}
     </>);
 }
-function TranscriptBody({ segments, groups, layout, showTimestamps, onSeek, activeId, empty, announce, announceFn, }: BodyProps) {
+function TranscriptBody({ segments, groups, layout, showTimestamps, onSeek, activeId, empty, announce, announceFn, onQuickAdd, bottomRef }: BodyProps) {
     useAnnounce(segments, announce, announceFn);
     if (segments.length === 0) {
         return (<div data-slot="transcript-empty" className="flex min-h-40 flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
@@ -1765,11 +1772,26 @@ function TranscriptBody({ segments, groups, layout, showTimestamps, onSeek, acti
                 <span title={group.speaker} className={cn("text-[0.8125rem]/[1.25rem] text-(color:--chatcn-fg) truncate leading-[22px] font-medium max-sm:col-start-2", i > 0 && "max-sm:hidden sm:invisible")}>
                   {group.speaker}
                 </span>
-                <p className={cn("text-[0.875rem]/[1.25rem] tracking-[-0.003em] min-w-0 leading-[22px] text-pretty [overflow-wrap:anywhere] max-sm:col-start-2", active || segment.role === "user" ? "text-(color:--chatcn-fg)" : "text-(color:--chatcn-fg-muted)")}>
-                  <SegmentText segment={segment}/>
-                </p>
+                <div className="min-w-0 max-sm:col-start-2 flex flex-col gap-1.5">
+                  <p className={cn("text-[0.875rem]/[1.25rem] tracking-[-0.003em] leading-[22px] text-pretty [overflow-wrap:anywhere]", active || segment.role === "user" ? "text-(color:--chatcn-fg)" : "text-(color:--chatcn-fg-muted)")}>
+                    <SegmentText segment={segment}/>
+                  </p>
+                  {segment.products && segment.products.length > 0 && (
+                    <div className="space-y-2 mt-1 max-w-[420px]">
+                      {segment.products.map((p: any) => (
+                        <AiProductCard
+                          key={p.id}
+                          product={p}
+                          onQuickAdd={onQuickAdd}
+                          onCloseChat={() => {}}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>);
             }))}
+        <div ref={bottomRef} className="h-4 w-full shrink-0" aria-hidden="true" />
       </div>);
     }
     return (<>
@@ -1796,13 +1818,31 @@ function TranscriptBody({ segments, groups, layout, showTimestamps, onSeek, acti
             <div className="flex flex-col gap-2">
               {group.segments.map((segment) => {
                     const active = segment.id === activeId;
-                    return (<p key={segment.id} data-slot="transcript-segment" data-role={segment.role} data-active={active ? "" : undefined} aria-current={active ? "true" : undefined} className={cn("text-[0.9375rem]/[1.5rem] tracking-[-0.006em] text-(color:--chatcn-fg) max-w-[68ch] text-pretty [overflow-wrap:anywhere]", "rounded-(--chatcn-radius-sm) -mx-2 px-2 transition-colors duration-150", active && "bg-(color:--chatcn-fill)")}>
-                    <SegmentText segment={segment}/>
-                  </p>);
+                    return (
+                      <div key={segment.id} className="flex flex-col gap-1.5">
+                        <p data-slot="transcript-segment" data-role={segment.role} data-active={active ? "" : undefined} aria-current={active ? "true" : undefined} className={cn("text-[0.9375rem]/[1.5rem] tracking-[-0.006em] text-(color:--chatcn-fg) max-w-[68ch] text-pretty [overflow-wrap:anywhere]", "rounded-(--chatcn-radius-sm) -mx-2 px-2 transition-colors duration-150", active && "bg-(color:--chatcn-fill)")}>
+                          <SegmentText segment={segment}/>
+                        </p>
+                        {segment.products && segment.products.length > 0 && (
+                          <div className="space-y-2 mt-1 max-w-[420px]">
+                            {segment.products.map((p: any) => (
+                              <AiProductCard
+                                key={p.id}
+                                product={p}
+                                onQuickAdd={onQuickAdd}
+                                onCloseChat={() => {}}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
                 })}
             </div>
           </section>);
         })}
+        {/* Dedicated auto-scroll target element */}
+        <div ref={bottomRef} className="h-4 w-full shrink-0" aria-hidden="true" />
     </>);
 }
 interface UseChatcnStickToBottomOptions {
@@ -2247,10 +2287,20 @@ function ScrollToBottom({ when = "far", showUnread = true, visible, className, o
       </span>
     </button>);
 }
-function Transcript({ segments, userLabel = "You", assistantLabel = "Assistant", follow = true, onSeek, activeId, showTimestamps = false, layout = "stacked", empty, label = "Transcript", announce = true, className, ...props }: TranscriptProps) {
+function Transcript({ segments, userLabel = "You", assistantLabel = "Assistant", follow = true, onSeek, activeId, showTimestamps = false, layout = "stacked", empty, label = "Transcript", announce = true, className, onQuickAdd, ...props }: TranscriptProps) {
     const groups = React.useMemo(() => groupSegments(segments, { user: userLabel, assistant: assistantLabel }), [segments, userLabel, assistantLabel]);
     const contentClass = cn("max-w-none px-4 sm:px-5", layout === "inline" ? "gap-0 py-3" : "gap-5 py-4", segments.length === 0 && "min-h-full");
     const staticRef = React.useRef<HTMLDivElement>(null);
+    const scrollBottomRef = React.useRef<HTMLDivElement>(null);
+
+    // Guaranteed auto-scroll to latest text whenever new segments arrive
+    React.useEffect(() => {
+        const t = setTimeout(() => {
+            scrollBottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 60);
+        return () => clearTimeout(t);
+    }, [segments]);
+
     React.useEffect(() => {
         if (follow || !activeId)
             return;
@@ -2297,6 +2347,8 @@ function Transcript({ segments, userLabel = "You", assistantLabel = "Assistant",
         activeId,
         empty,
         announce,
+        onQuickAdd,
+        bottomRef: scrollBottomRef,
     };
     if (!follow) {
         return (<div data-slot="transcript" data-layout={layout} className={cn("relative flex min-h-0 flex-1 flex-col overflow-hidden", className)} {...props}>
@@ -3255,7 +3307,7 @@ const microphoneErrorMessages: Record<ChatcnMicrophoneError, string> = {
 function PopoverClose(props: PopoverPrimitive.Close.Props) {
     return <PopoverPrimitive.Close data-slot="popover-close" {...props}/>;
 }
-function VoiceControls({ muted = false, onMutedChange, captions = false, onCaptionsChange, microphones, microphone, onMicrophoneChange, speakers, speaker, onSpeakerChange, inputLevel, micError, onRetryMicrophone, status = "active", onEnd, endLabel, disabled = false, size = "md", className, children, ...props }: VoiceControlsProps) {
+function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = false, onCaptionsChange, microphones, microphone, onMicrophoneChange, speakers, speaker, onSpeakerChange, inputLevel, micError, onRetryMicrophone, status = "active", onEnd, endLabel, disabled = false, size = "md", className, children, ...props }: VoiceControlsProps) {
     const micRef = React.useRef<HTMLButtonElement>(null);
     const [hintOpen, setHintOpen] = React.useState(false);
     React.useEffect(() => {
@@ -3263,57 +3315,80 @@ function VoiceControls({ muted = false, onMutedChange, captions = false, onCapti
     }, [micError]);
     const ended = status === "ended";
     const off = disabled || ended;
-    const hasMics = (microphones?.length ?? 0) > 0;
-    const hasSpeakers = (speakers?.length ?? 0) > 0;
-    const lg = size === "lg";
     const errored = micError !== undefined;
-    const micGlyph = errored ? (<MicOffIcon className="text-(color:--chatcn-red)"/>) : muted ? (<MicOffIcon />) : (<MicIcon />);
+    const lg = size === "lg";
     return (<SizeContext.Provider value={size}>
-      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-(color:--chatcn-card) shadow-(--chatcn-shadow-sm) inline-flex max-w-full items-center rounded-full", lg ? "gap-1.5 p-1.5" : "gap-1 p-1", className)} {...props}>
-        <div data-slot="voice-controls-mic" className="flex items-center">
-          <Tooltip content={errored ? ERROR_TITLES[micError] : muted ? "Unmute" : "Mute"}>
-            <button ref={micRef} type="button" aria-label="Mute microphone" aria-pressed={muted} disabled={off} data-slot="voice-controls-mute" data-muted={muted ? "" : undefined} onClick={() => {
-            if (errored) {
+      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-(color:--chatcn-card) shadow-(--chatcn-shadow-sm) inline-flex max-w-full items-center gap-2 p-1.5 rounded-full", className)} {...props}>
+        {/* 1. Clean 2D Microphone Button (No wave bars!) */}
+        <Tooltip content={errored ? ERROR_TITLES[micError] : muted ? "Unmute Microphone" : "Mute Microphone"}>
+          <button
+            ref={micRef}
+            type="button"
+            aria-label={muted ? "Unmute" : "Mute"}
+            aria-pressed={muted}
+            disabled={off}
+            data-slot="voice-controls-mute"
+            data-muted={muted ? "" : undefined}
+            onClick={() => {
+              if (errored) {
                 setHintOpen(true);
                 return;
-            }
-            onMutedChange?.(!muted);
-        }} className={cn(control, box[size], hasMics ? "rounded-s-full rounded-e-none" : "", lg ? "ps-3.5 pe-3" : "ps-3 pe-2.5", muted &&
-            !errored &&
-            "bg-(color:--chatcn-fg) text-(color:--chatcn-bg) hover:bg-(color:--chatcn-gray-900) hover:text-(color:--chatcn-bg)")}>
-              <span key={errored ? "error" : muted ? "muted" : "live"} className="flex items-center gap-1.5 motion-safe:animate-[chatcn-swap_150ms_var(--chatcn-ease-out)]">
-                {micGlyph}
-                <MicLevel level={inputLevel} silent={muted || errored}/>
-              </span>
-            </button>
-          </Tooltip>
-          {hasMics ? (<Menu>
-              <MenuTrigger disabled={off} aria-label="Choose microphone" data-slot="voice-controls-mic-menu" className={cn(control, box[size], "data-[popup-open]:bg-(color:--chatcn-fill-hover) data-[popup-open]:text-(color:--chatcn-fg) min-w-0 rounded-s-none rounded-e-full px-1.5", muted &&
-                !errored &&
-                "bg-(color:--chatcn-fg) text-(color:--chatcn-bg) hover:bg-(color:--chatcn-gray-900) hover:text-(color:--chatcn-bg) data-[popup-open]:bg-(color:--chatcn-gray-900) data-[popup-open]:text-(color:--chatcn-bg)", lg ? "w-7" : "w-6", "[&_svg]:size-3.5!")}>
-                <ChevronDownIcon aria-hidden="true"/>
-              </MenuTrigger>
-              <MenuContent side="top" align="start" className="w-64">
-                <DeviceMenuItems label="Microphone" devices={microphones ?? []} value={microphone} onValueChange={onMicrophoneChange}/>
-              </MenuContent>
-            </Menu>) : null}
-        </div>
+              }
+              onMutedChange?.(!muted);
+            }}
+            className={cn(
+              "size-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs",
+              muted || errored
+                ? "bg-slate-700 text-white hover:bg-slate-800"
+                : "bg-black/5 dark:bg-white/10 text-gray-800 dark:text-gray-100 hover:bg-black/10 dark:hover:bg-white/20"
+            )}
+          >
+            {muted || errored ? (
+              <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="2" y1="2" x2="22" y2="22" />
+                <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
+                <path d="M5 10v2a7 7 0 0 0 12 5" />
+                <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            ) : (
+              <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            )}
+          </button>
+        </Tooltip>
 
-        {hasSpeakers ? (<Menu>
-            <MenuTrigger disabled={off} aria-label="Choose speaker" data-slot="voice-controls-speaker" className={cn(control, box[size], "data-[popup-open]:bg-(color:--chatcn-fill-hover) data-[popup-open]:text-(color:--chatcn-fg)")}>
-              <Volume2Icon aria-hidden="true"/>
-            </MenuTrigger>
-            <MenuContent side="top" align="center" className="w-64">
-              <DeviceMenuItems label="Speaker" devices={speakers ?? []} value={speaker} onValueChange={onSpeakerChange}/>
-            </MenuContent>
-          </Menu>) : null}
-
-        {onCaptionsChange ? (<VoiceControlButton label="Captions" tooltip={captions ? "Hide captions" : "Show captions"} pressed={captions} disabled={off} onClick={() => onCaptionsChange(!captions)}>
-            <CaptionsIcon aria-hidden="true"/>
-          </VoiceControlButton>) : null}
+        {/* 2. Clean 2D Keyboard Button (Switch to text mode) */}
+        <Tooltip content="Type a message">
+          <button
+            type="button"
+            aria-label="Switch to keyboard"
+            disabled={off}
+            onClick={() => onModeChange?.("text")}
+            data-slot="voice-controls-keyboard"
+            className="size-10 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 text-gray-800 dark:text-gray-100 hover:bg-black/10 dark:hover:bg-white/20 transition-all duration-200 cursor-pointer shadow-xs"
+          >
+            <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="M6 8h.001" />
+              <path d="M10 8h.001" />
+              <path d="M14 8h.001" />
+              <path d="M18 8h.001" />
+              <path d="M8 12h.001" />
+              <path d="M12 12h.001" />
+              <path d="M16 12h.001" />
+              <path d="M7 16h10" />
+            </svg>
+          </button>
+        </Tooltip>
 
         {children}
 
+        {/* 3. Red End Call Button */}
         {!ended && onEnd ? (<button type="button" disabled={disabled} onClick={onEnd} data-slot="voice-controls-end" className={cn(control, box[size], "bg-(color:--chatcn-red) text-white hover:opacity-90 font-medium", "active:scale-(--chatcn-press-scale)", lg ? "text-[0.9375rem]/[1.5rem] tracking-[-0.006em] ms-1 ps-4 pe-5" : "text-[0.875rem]/[1.25rem] tracking-[-0.003em] ms-0.5 ps-3 pe-3.5")}>
             <PhoneOffIcon aria-hidden="true"/>
             {endLabel ?? (status === "connecting" ? "Cancel" : "End")}
@@ -3342,7 +3417,7 @@ function VoiceControls({ muted = false, onMutedChange, captions = false, onCapti
       </div>
     </SizeContext.Provider>);
 }
-export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, onClose, ...props }: VoiceSessionProps) {
+export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, onQuickAdd, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, onClose, ...props }: VoiceSessionProps) {
     const [mode, setMode] = useControllable(modeProp, defaultMode, onModeChange);
     const [captions, setCaptions] = useControllable(captionsProp, defaultCaptions, onCaptionsChange);
     const [draft, setDraft] = React.useState("");
@@ -3463,7 +3538,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
         </div>
       </div>
 
-      {showTranscript ? (<Transcript showTimestamps={false} segments={segments} userLabel={userLabel} assistantLabel={title} className={cn("border-(color:--chatcn-border) min-h-0 flex-1", !textMode && "border-t", "ease-(--chatcn-ease-out-soft) transition-opacity duration-150 starting:opacity-0")}/>) : null}
+      {showTranscript ? (<Transcript showTimestamps={false} segments={segments} onQuickAdd={onQuickAdd} userLabel={userLabel} assistantLabel={title} className={cn("border-(color:--chatcn-border) min-h-0 flex-1", !textMode && "border-t", "ease-(--chatcn-ease-out-soft) transition-opacity duration-150 starting:opacity-0")}/>) : null}
 
       <footer className="border-(color:--chatcn-border) shrink-0 border-t px-3 py-3">
         {textMode ? (<div ref={textareaWrap}>
@@ -3491,7 +3566,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
               Reconnect
             </Button>
           </div>) : (<div className="flex justify-center">
-            <VoiceControls {...controls} muted={muted} onMutedChange={onMutedChange} captions={captions} onCaptionsChange={setCaptions} inputLevel={live && !muted ? inputLevel : undefined} status={state === "connecting" || state === "reconnecting" ? "connecting" : "active"} onEnd={onEnd}/>
+            <VoiceControls {...controls} muted={muted} onMutedChange={onMutedChange} onModeChange={switchMode} captions={captions} onCaptionsChange={setCaptions} inputLevel={live && !muted ? inputLevel : undefined} status={state === "connecting" || state === "reconnecting" ? "connecting" : "active"} onEnd={onEnd}/>
           </div>)}
       </footer>
     </div>);

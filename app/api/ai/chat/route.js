@@ -58,6 +58,74 @@ export async function POST(request) {
             isVoice,
         });
 
+        // Smart Add-to-Bag Detection & Execution
+        let addToCartProduct = null;
+        const isAddToCartIntent = /(add.*(bag|cart)|put.*(bag|cart)|yes.*add|yeah.*add|buy.*this|order.*this|bag.*add|cart.*add|eta.*add)/i.test(userContent);
+
+        if (isAddToCartIntent) {
+            const catalog = await getLiveCatalogContext();
+            const productMap = new Map();
+            catalog.forEach(p => productMap.set(p.id, p));
+
+            // 1. Check if consultation.products has an in-stock product
+            if (consultation.products && consultation.products.length > 0) {
+                addToCartProduct = consultation.products[0];
+            } else {
+                // 2. Scan conversation history backwards for last mentioned product tag or name
+                for (let i = conversationHistory.length - 2; i >= 0; i--) {
+                    const prevMsg = conversationHistory[i]?.content || '';
+                    const tagMatch = prevMsg.match(/\[{1,2}PRODUCT:\s*([a-zA-Z0-9_\-]+)\]{1,2}/i);
+                    if (tagMatch && productMap.has(tagMatch[1])) {
+                        const p = productMap.get(tagMatch[1]);
+                        if (p) {
+                            addToCartProduct = {
+                                id: p.id,
+                                name: p.name,
+                                brand: p.brand,
+                                price: p.price,
+                                mrp: p.mrp,
+                                image: p.images && p.images.length > 0 ? p.images[0] : null,
+                                inStock: Boolean(p.inStock && (p.stockCount === null || p.stockCount > 0)),
+                            };
+                            break;
+                        }
+                    }
+
+                    // Check by product name in text
+                    const lowerPrev = prevMsg.toLowerCase();
+                    for (const p of catalog) {
+                        if (p.name && lowerPrev.includes(p.name.toLowerCase())) {
+                            addToCartProduct = {
+                                id: p.id,
+                                name: p.name,
+                                brand: p.brand,
+                                price: p.price,
+                                mrp: p.mrp,
+                                image: p.images && p.images.length > 0 ? p.images[0] : null,
+                                inStock: Boolean(p.inStock && (p.stockCount === null || p.stockCount > 0)),
+                            };
+                            break;
+                        }
+                    }
+                    if (addToCartProduct) break;
+                }
+            }
+
+            if (addToCartProduct) {
+                // Ensure consultation.products includes this product
+                if (!consultation.products || consultation.products.length === 0) {
+                    consultation.products = [addToCartProduct];
+                }
+
+                // If the model gave a generic "click the link on the card" message, rewrite to cheerful confirmation
+                if (/click.*(link|product card)|can easily add/i.test(consultation.message)) {
+                    consultation.message = `I've added the ${addToCartProduct.name} to your shopping bag! [[PRODUCT:${addToCartProduct.id}]] Would you like to proceed to checkout or look for another product?`;
+                } else if (!consultation.message.includes('[[PRODUCT:')) {
+                    consultation.message += ` [[PRODUCT:${addToCartProduct.id}]]`;
+                }
+            }
+        }
+
         let savedUserMsg = null;
         let savedAssistantMsg = null;
 
@@ -95,6 +163,7 @@ export async function POST(request) {
             success: true,
             message: consultation.message,
             products: consultation.products || [],
+            addToCartProduct: addToCartProduct || null,
             provider: consultation.provider,
             userMessageId: savedUserMsg?.id || null,
             assistantMessageId: savedAssistantMsg?.id || null,

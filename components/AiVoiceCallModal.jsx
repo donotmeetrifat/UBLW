@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '@/lib/features/cart/cartSlice';
+import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth';
+import toast from 'react-hot-toast';
 import { VoiceSession } from '@/components/ui/voice-session';
 
 // Clean text for speech synthesis (strip markdown, product tags, and strictly eliminate any pet names)
@@ -32,6 +36,7 @@ function cleanTextForDisplay(rawText) {
 const PROFESSIONAL_GREETING = "Hello! I am Emma, your beauty consultant at UK Brand Lover. How may I assist you today?";
 
 export default function AiVoiceCallModal({ isOpen, onClose }) {
+    const dispatch = useDispatch();
     const [state, setState] = useState('connecting');
     const [mode, setMode] = useState('voice');
     const [segments, setSegments] = useState([]);
@@ -51,6 +56,21 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const chatAbortControllerRef = useRef(null);
     const greetingTimerRef = useRef(null);
     const conversationHistoryRef = useRef([]);
+    const lastRecommendedProductsRef = useRef([]);
+
+    // Instant shopping bag add handler
+    const handleQuickAdd = useCallback((product) => {
+        if (!product?.id) return;
+
+        if (!isClientSignedIn()) {
+            requireSignIn('Please sign in to add authentic UK products to your shopping bag.');
+            return;
+        }
+
+        dispatch(addToCart({ productId: product.id, id: product.id, quantity: 1 }));
+        toast.success(`Added ${product.name} to your bag!`);
+        window.dispatchEvent(new Event('cart-bump'));
+    }, [dispatch]);
 
     isMutedRef.current = muted;
 
@@ -219,7 +239,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     }, []);
 
     // Speak Emma's response via ElevenLabs
-    const speakEmmaResponse = useCallback(async (rawText) => {
+    const speakEmmaResponse = useCallback(async (rawText, attachedProducts = undefined) => {
         if (!rawText || !rawText.trim() || !isCallActiveRef.current) return;
 
         const speechText = cleanTextForSpeech(rawText);
@@ -234,7 +254,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         isSpeakingRef.current = true;
         setState('speaking');
 
-        // Add assistant response to transcript
+        // Add assistant response to transcript with attached product cards
         const segmentId = 'emma-' + Date.now();
         setSegments(prev => {
             const cleaned = prev.filter(s => !s.live);
@@ -245,7 +265,8 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     role: 'assistant',
                     speaker: 'Emma',
                     text: displayText,
-                    channel: 'voice'
+                    channel: 'voice',
+                    products: attachedProducts
                 }
             ];
         });
@@ -386,7 +407,24 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     role: 'assistant',
                     content: data.message
                 });
-                speakEmmaResponse(data.message);
+
+                const returnedProducts = Array.isArray(data.products) && data.products.length > 0
+                    ? data.products
+                    : (data.addToCartProduct ? [data.addToCartProduct] : []);
+
+                if (returnedProducts.length > 0) {
+                    lastRecommendedProductsRef.current = returnedProducts;
+                }
+
+                // Auto-Add to Bag if customer requested it
+                const isAddIntent = /(add.*(bag|cart)|put.*(bag|cart)|yes.*add|yeah.*add|buy.*this|order.*this|bag.*add|cart.*add|eta.*add)/i.test(userMsg);
+                const prodToAdd = data.addToCartProduct || (isAddIntent && lastRecommendedProductsRef.current.length > 0 ? lastRecommendedProductsRef.current[0] : null);
+
+                if (prodToAdd) {
+                    handleQuickAdd(prodToAdd);
+                }
+
+                speakEmmaResponse(data.message, returnedProducts.length > 0 ? returnedProducts : (prodToAdd ? [prodToAdd] : undefined));
             } else {
                 speakEmmaResponse("I'm sorry, I couldn't hear that clearly. Could you please repeat your question?");
             }
@@ -561,6 +599,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     onModeChange={setMode}
                     segments={segments}
                     onSendText={(text) => handleUserQuery(text, 'text')}
+                    onQuickAdd={handleQuickAdd}
                     muted={muted}
                     onMutedChange={handleMutedChange}
                     captions={captions}
