@@ -132,6 +132,7 @@ export default function AdminProductsPage() {
     const [isDraggingOverDropzone, setIsDraggingOverDropzone] = useState(false)
     const dropzoneDragCounter = useRef(0)
     const fileInputRef = useRef(null)
+    const [aiGeneratingField, setAiGeneratingField] = useState(null) // null | 'all' | 'formulaProfile' | 'benefits' | 'whyYouWillLoveIt'
 
     // Load live categories & homepage curated sections from catalog
     useEffect(() => {
@@ -557,6 +558,69 @@ export default function AdminProductsPage() {
             ...prev,
             benefits: prev.benefits.filter((_, i) => i !== index)
         }))
+    }
+
+    // AI Autofill for Formulation, Benefits & Why You'll Love It based on Product Title
+    const handleAiAutofill = async (field = 'all') => {
+        const title = (formData.name || '').trim()
+        if (!title) {
+            toast.error('Please enter the Product Title first so AI can generate accurate details.')
+            return
+        }
+
+        try {
+            setAiGeneratingField(field)
+            const res = await fetch('/api/admin/products/ai-autofill', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    category: formData.category,
+                    brand: formData.brand,
+                    field
+                })
+            })
+
+            const data = await res.json()
+
+            if (!data.success) {
+                toast.error(data.message || 'AI generation failed')
+                return
+            }
+
+            if (field === 'all') {
+                setFormData(prev => ({
+                    ...prev,
+                    formulaProfile: data.formulaProfile || prev.formulaProfile,
+                    benefits: Array.isArray(data.benefits) && data.benefits.length > 0 ? data.benefits : prev.benefits,
+                    whyYouWillLoveIt: data.whyYouWillLoveIt || prev.whyYouWillLoveIt
+                }))
+                toast.success('Generated Formulation, Benefits & Why You’ll Love It!')
+            } else if (field === 'formulaProfile') {
+                setFormData(prev => ({
+                    ...prev,
+                    formulaProfile: data.formulaProfile || prev.formulaProfile
+                }))
+                toast.success('Formulation & Profile generated!')
+            } else if (field === 'benefits') {
+                setFormData(prev => ({
+                    ...prev,
+                    benefits: Array.isArray(data.benefits) && data.benefits.length > 0 ? data.benefits : prev.benefits
+                }))
+                toast.success(`Generated ${data.benefits?.length || 5} Key Proven Benefit cards!`)
+            } else if (field === 'whyYouWillLoveIt') {
+                setFormData(prev => ({
+                    ...prev,
+                    whyYouWillLoveIt: data.whyYouWillLoveIt || prev.whyYouWillLoveIt
+                }))
+                toast.success('Why You’ll Love It copy generated!')
+            }
+        } catch (error) {
+            console.error('Error generating with AI:', error)
+            toast.error('Failed to generate product details with AI')
+        } finally {
+            setAiGeneratingField(null)
+        }
     }
 
     // Save Product (Create or Edit)
@@ -1600,15 +1664,57 @@ export default function AdminProductsPage() {
 
                                 {/* SECTION 3: FORMULATION, PROVEN BENEFITS & SALES COPY */}
                                 <div className="space-y-4 pt-2">
-                                    <div className="text-xs font-black text-[#241224] uppercase tracking-wider border-b border-[#EFE0EF] pb-2 flex items-center gap-1.5">
-                                        <RoyalCrownIcon size={14} color="#6C306E" />
-                                        <span>3. Formulation, Benefits & Details</span>
+                                    <div className="flex items-center justify-between border-b border-[#EFE0EF] pb-2">
+                                        <div className="text-xs font-black text-[#241224] uppercase tracking-wider flex items-center gap-1.5">
+                                            <RoyalCrownIcon size={14} color="#6C306E" />
+                                            <span>3. Formulation, Benefits & Details</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAiAutofill('all')}
+                                            disabled={aiGeneratingField !== null}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-[#6C306E] to-[#3A0C38] hover:opacity-95 active:scale-95 text-white text-[11px] font-bold shadow-xs transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                                            title="Automatically fill all 3 sections with AI using the Product Title"
+                                        >
+                                            {aiGeneratingField === 'all' ? (
+                                                <>
+                                                    <span className="size-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    <span>Generating All 3...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <SparklesIcon size={12} color="#FFFFFF" />
+                                                    <span>Autofill All 3 with AI</span>
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-[#241224] mb-1">
-                                            Formulation & Profile (Overview Description)
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-xs font-bold text-[#241224]">
+                                                Formulation & Profile (Overview Description)
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAiAutofill('formulaProfile')}
+                                                disabled={aiGeneratingField !== null}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                                                title="Automatically generate Formulation & Profile with AI based on Product Title"
+                                            >
+                                                {aiGeneratingField === 'formulaProfile' ? (
+                                                    <>
+                                                        <span className="size-3 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin" />
+                                                        <span>Generating...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <SparklesIcon size={11} color="#6C306E" />
+                                                        <span>AI Autofill</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                         <textarea
                                             rows={3}
                                             value={formData.formulaProfile}
@@ -1624,13 +1730,34 @@ export default function AdminProductsPage() {
                                             <label className="text-xs font-bold text-[#241224]">
                                                 Key Proven Benefits (Checklist Cards)
                                             </label>
-                                            <button
-                                                type="button"
-                                                onClick={addBenefitField}
-                                                className="text-[10px] font-bold text-[#6C306E] hover:underline"
-                                            >
-                                                + Add Benefit Point
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAiAutofill('benefits')}
+                                                    disabled={aiGeneratingField !== null}
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                                                    title="Automatically generate 5-6 Key Proven Benefit cards with AI based on Product Title"
+                                                >
+                                                    {aiGeneratingField === 'benefits' ? (
+                                                        <>
+                                                            <span className="size-3 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin" />
+                                                            <span>Generating Cards...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <SparklesIcon size={11} color="#6C306E" />
+                                                            <span>AI Autofill</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={addBenefitField}
+                                                    className="text-[10px] font-bold text-[#6C306E] hover:underline"
+                                                >
+                                                    + Add Benefit Point
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {formData.benefits.map((benefit, bIdx) => (
@@ -1649,6 +1776,7 @@ export default function AdminProductsPage() {
                                                     type="button"
                                                     onClick={() => removeBenefitField(bIdx)}
                                                     className="p-1.5 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                                                    title="Remove benefit card"
                                                 >
                                                     <CloseIcon size={12} />
                                                 </button>
@@ -1658,9 +1786,30 @@ export default function AdminProductsPage() {
 
                                     {/* Why You'll Love It */}
                                     <div>
-                                        <label className="block text-xs font-bold text-[#241224] mb-1">
-                                            Why You'll Love It (Conversion Copy)
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-xs font-bold text-[#241224]">
+                                                Why You'll Love It (Conversion Copy)
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAiAutofill('whyYouWillLoveIt')}
+                                                disabled={aiGeneratingField !== null}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                                                title="Automatically generate Why You'll Love It copy with AI based on Product Title"
+                                            >
+                                                {aiGeneratingField === 'whyYouWillLoveIt' ? (
+                                                    <>
+                                                        <span className="size-3 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin" />
+                                                        <span>Generating...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <SparklesIcon size={11} color="#6C306E" />
+                                                        <span>AI Autofill</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                         <textarea
                                             rows={2}
                                             value={formData.whyYouWillLoveIt}
