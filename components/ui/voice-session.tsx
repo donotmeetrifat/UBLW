@@ -29,29 +29,263 @@ const EXTRA_CHATCN_CSS = `
 .text-\\(color\\:--chatcn-red\\) { color: var(--chatcn-red) !important; }
 .border-\\(color\\:--chatcn-border\\) { border-color: var(--chatcn-border) !important; }
 .border-\\(color\\:--chatcn-border-strong\\) { border-color: var(--chatcn-border-strong) !important; }
+
+/* Premium Keyframe Animations */
+@keyframes orbAuraBreathe {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(0.92);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.08);
+        opacity: 0.95;
+    }
+}
+
+@keyframes orbPulseWave {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(0.94);
+        opacity: 0.65;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.12);
+        opacity: 1;
+    }
+}
+
+@keyframes orbSpinGlow {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(0.95);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg) scale(1.06);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg) scale(0.95);
+    }
+}
+
+@keyframes transcriptGlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes transcriptGroupFade {
+    0% {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes interimBreathing {
+    0% { opacity: 0.55; transform: translateX(0); }
+    100% { opacity: 0.95; transform: translateX(1.5px); }
+}
+
+@keyframes textStatusFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalBackdropFade {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
+}
+
+@keyframes modalLuxuryPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.94) translateY(14px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Transcript Animations */
+[data-slot="transcript-group"] {
+    animation: transcriptGroupFade 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[data-slot="transcript-segment"] {
+    animation: transcriptGlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-slot="transcript-segment"]:hover {
+    background-color: rgba(108, 48, 110, 0.035) !important;
+}
+
+[data-slot="transcript-interim"] {
+    display: inline-block;
+    animation: interimBreathing 1.2s ease-in-out infinite alternate;
+    font-style: italic;
+    color: #6b7280;
+}
+
+/* Call Control Buttons & Micro-Interactions */
+[data-slot="voice-controls"] {
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.dark [data-slot="voice-controls"] {
+    background: rgba(24, 24, 27, 0.94) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
 [data-slot="voice-controls-end"] {
-    background-color: #ef4444 !important;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
     color: #ffffff !important;
     border-radius: 9999px !important;
     font-weight: 700 !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 8px !important;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     border: none !important;
     cursor: pointer !important;
-    padding-left: 16px !important;
-    padding-right: 18px !important;
-    height: 40px !important;
+    padding-left: 18px !important;
+    padding-right: 20px !important;
+    height: 42px !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
 }
 [data-slot="voice-controls-end"]:hover {
-    background-color: #dc2626 !important;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+[data-slot="voice-controls-end"]:active {
+    transform: translateY(0.5px) scale(0.96) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
 }
 [data-slot="voice-controls-end"] svg,
 [data-slot="voice-controls-end"] svg * {
     color: #ffffff !important;
     stroke: #ffffff !important;
     fill: none !important;
+    transition: transform 0.25s ease !important;
+}
+[data-slot="voice-controls-end"]:hover svg {
+    transform: rotate(12deg) scale(1.1) !important;
+}
+
+[data-slot="voice-controls-mute"] {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border-radius: 9999px !important;
+}
+[data-slot="voice-controls-mute"]:hover {
+    transform: translateY(-1.5px) scale(1.06) !important;
+    background-color: var(--chatcn-fill-hover) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08) !important;
+}
+[data-slot="voice-controls-mute"]:active {
+    transform: translateY(0) scale(0.95) !important;
+}
+[data-slot="voice-controls-mute"] svg {
+    transition: transform 0.22s ease !important;
+}
+[data-slot="voice-controls-mute"]:hover svg {
+    transform: scale(1.12) !important;
+}
+[data-slot="voice-controls-mute"][data-muted] {
+    background-color: #374151 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-slot="voice-control-button"] {
+    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border-radius: 9999px !important;
+}
+[data-slot="voice-control-button"]:hover {
+    transform: translateY(-1.5px) scale(1.06) !important;
+    background-color: var(--chatcn-fill-hover) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07) !important;
+}
+[data-slot="voice-control-button"]:active {
+    transform: translateY(0) scale(0.95) !important;
+}
+[data-slot="voice-control-button"] svg {
+    transition: transform 0.22s ease !important;
+}
+[data-slot="voice-control-button"]:hover svg {
+    transform: scale(1.12) !important;
+}
+[data-slot="voice-control-button"][aria-pressed="true"] {
+    background-color: rgba(108, 48, 110, 0.12) !important;
+    color: #6C306E !important;
+    box-shadow: inset 0 0 0 1px rgba(108, 48, 110, 0.25) !important;
+}
+
+[data-slot="voice-session-mode"] {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 9999px !important;
+    padding: 3px !important;
+    transition: all 0.2s ease !important;
+}
+.dark [data-slot="voice-session-mode"] {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-slot="voice-session-mode"] button {
+    border-radius: 9999px !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-weight: 600 !important;
+}
+[data-slot="voice-session-mode"] button:hover {
+    transform: translateY(-0.5px) scale(1.02) !important;
+}
+[data-slot="voice-session-mode"] button[aria-checked="true"] {
+    background: #ffffff !important;
+    color: #6C306E !important;
+    box-shadow: 0 2px 8px rgba(108, 48, 110, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+.dark [data-slot="voice-session-mode"] button[aria-checked="true"] {
+    background: #27272a !important;
+    color: #f472b6 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-slot="send-button"]:not([data-empty]) {
+    background: linear-gradient(135deg, #6C306E 0%, #53144C 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(108, 48, 110, 0.35) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+[data-slot="send-button"]:not([data-empty]):hover {
+    transform: translateY(-1.5px) scale(1.08) !important;
+    box-shadow: 0 4px 16px rgba(108, 48, 110, 0.5) !important;
+}
+[data-slot="send-button"]:not([data-empty]):active {
+    transform: translateY(0) scale(0.92) !important;
 }
 `;
 
@@ -3157,7 +3391,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
               type="button"
               onClick={onClose}
               aria-label="Close voice call"
-              className="size-8 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+              className="chatcn-close-btn size-8 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-300 hover:rotate-90 hover:scale-110 active:scale-95 cursor-pointer"
               title="Close"
             >
               <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -3171,17 +3405,49 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
 
       <div data-slot="voice-session-stage" className={cn("ease-(--chatcn-ease-out) grid shrink-0 transition-[grid-template-rows,opacity] duration-280 motion-reduce:transition-none", textMode ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100", !textMode && !showTranscript && "flex-1")} inert={textMode || undefined}>
         <div className="flex min-h-0 flex-col items-center justify-center overflow-hidden">
-          <div className="flex flex-col items-center gap-2 pt-3 pb-3">
-            <button type="button" disabled={!canInterrupt} onClick={onInterrupt} aria-label={canInterrupt ? `Interrupt ${title}` : undefined} tabIndex={canInterrupt ? 0 : -1} className={cn("chatcn-focus grid place-items-center rounded-full outline-offset-4", canInterrupt ? "cursor-pointer" : "cursor-default")}>
+          <div className="relative flex flex-col items-center gap-2 pt-3 pb-3">
+            {/* Ambient glowing luxury aura based on state */}
+            <div
+              aria-hidden="true"
+              className={cn(
+                "absolute top-1/2 left-1/2 pointer-events-none rounded-full blur-3xl transition-all duration-700 ease-out",
+                state === "speaking" && "size-64 bg-gradient-to-tr from-[#E08CE4]/40 via-[#6C306E]/30 to-[#f472b6]/25 animate-[orbAuraBreathe_3.2s_ease-in-out_infinite]",
+                state === "listening" && "size-60 bg-gradient-to-tr from-emerald-400/35 via-teal-500/25 to-cyan-400/20 animate-[orbPulseWave_2.4s_ease-in-out_infinite]",
+                state === "thinking" && "size-60 bg-gradient-to-tr from-amber-300/35 via-purple-400/25 to-rose-300/20 animate-[orbSpinGlow_6s_linear_infinite]",
+                (state === "idle" || state === "connecting" || state === "reconnecting") && "size-52 bg-gradient-to-tr from-purple-300/20 via-pink-300/15 to-transparent animate-[orbAuraBreathe_4s_ease-in-out_infinite]",
+                state === "muted" && "size-48 bg-slate-300/20 dark:bg-slate-700/20",
+                showTranscript ? "opacity-50 scale-75" : "opacity-100 scale-100"
+              )}
+            />
+
+            <button type="button" disabled={!canInterrupt} onClick={onInterrupt} aria-label={canInterrupt ? `Interrupt ${title}` : undefined} tabIndex={canInterrupt ? 0 : -1} className={cn("chatcn-focus relative z-10 grid place-items-center rounded-full outline-offset-4 transition-transform duration-300 hover:scale-[1.03] active:scale-[0.98]", canInterrupt ? "cursor-pointer" : "cursor-default")}>
               <span className={cn("grid place-items-center", "ease-(--chatcn-ease-out) transition-[scale] duration-280 motion-reduce:transition-none", showTranscript ? "-my-6 scale-[0.72]" : "scale-100")}>
                 {presence}
               </span>
             </button>
-            <div className="flex min-h-8 flex-col items-center gap-0.5 text-center">
-              <span className={cn("text-[0.875rem]/[1.25rem] tracking-[-0.003em] font-semibold", state === "error" ? "text-(color:--chatcn-fg)" : "text-(color:--chatcn-fg-muted)")}>
-                {state === "thinking" ? (<ShimmerText>Consulting catalog & advice...</ShimmerText>) : state === "ended" && elapsed !== undefined ? (`Call ended · ${formatElapsed(elapsed).replace(" ", NBSP)}`) : state === "connecting" || state === "reconnecting" ? (`${label}...`) : (label)}
-              </span>
-              <span className="text-[0.75rem]/[1rem] text-(color:--chatcn-fg-subtle) max-w-72 text-pretty">
+            <div className="relative z-10 flex min-h-9 flex-col items-center gap-1.5 text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.05] dark:border-white/[0.08] shadow-xs transition-all duration-300">
+                <span className="relative flex size-2.5">
+                  {live ? (
+                    <span className={cn(
+                      "absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping",
+                      state === "speaking" ? "bg-[#E08CE4]" : state === "listening" ? "bg-emerald-400" : "bg-amber-400"
+                    )} />
+                  ) : null}
+                  <span className={cn(
+                    "relative inline-flex size-2.5 rounded-full transition-colors duration-300",
+                    state === "speaking" ? "bg-[#6C306E]" :
+                    state === "listening" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" :
+                    state === "thinking" ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" :
+                    state === "muted" ? "bg-slate-400" :
+                    state === "error" ? "bg-red-500" : "bg-emerald-400"
+                  )} />
+                </span>
+                <span key={state} className={cn("text-[0.875rem]/[1.25rem] tracking-[-0.003em] font-semibold animate-[textStatusFadeIn_0.25s_ease-out]", state === "error" ? "text-(color:--chatcn-fg)" : "text-(color:--chatcn-fg-muted)")}>
+                  {state === "thinking" ? (<ShimmerText>Consulting catalog & advice...</ShimmerText>) : state === "ended" && elapsed !== undefined ? (`Call ended · ${formatElapsed(elapsed).replace(" ", NBSP)}`) : state === "connecting" || state === "reconnecting" ? (`${label}...`) : (label)}
+                </span>
+              </div>
+              <span className="text-[0.75rem]/[1rem] text-(color:--chatcn-fg-subtle) max-w-72 text-pretty transition-opacity duration-300">
                 {state === "error"
             ? (errorMessage ?? "Check your network, then reconnect.")
             : canInterrupt
@@ -3212,7 +3478,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
               <PromptInputSubmit />
             </PromptInput>
           </div>) : state === "idle" || state === "ended" ? (<div className="flex justify-center">
-            <Button variant="solid" size="lg" className="rounded-full ps-3.5 pe-4 bg-[#6C306E] text-white hover:bg-[#562258]" onClick={onStart}>
+            <Button variant="solid" size="lg" className="chatcn-primary-action-btn rounded-full ps-3.5 pe-4 bg-[#6C306E] text-white hover:bg-[#562258]" onClick={onStart}>
               <MicIcon />
               {state === "ended" ? "Start a new call" : "Start consultation"}
             </Button>
@@ -3220,7 +3486,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
             <Button size="lg" variant="outline" className="rounded-full" onClick={onEnd}>
               Close
             </Button>
-            <Button size="lg" variant="solid" className="rounded-full ps-3.5 pe-4 bg-[#6C306E] text-white" onClick={onReconnect}>
+            <Button size="lg" variant="solid" className="chatcn-primary-action-btn rounded-full ps-3.5 pe-4 bg-[#6C306E] text-white" onClick={onReconnect}>
               <RotateCcwIcon />
               Reconnect
             </Button>
