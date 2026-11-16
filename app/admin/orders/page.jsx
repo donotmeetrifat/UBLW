@@ -712,7 +712,7 @@ export default function AdminOrdersPage() {
                                     <AlertCircleIcon className="w-5 h-5 text-rose-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif font-bold text-lg text-slate-900">Admin Order Cancellation</h3>
+                                    <h3 className="font-bold text-lg text-slate-900">Admin Order Cancellation</h3>
                                     <p className="text-xs text-slate-500 font-mono">Order #{cancelTargetOrder.orderNumber || cancelTargetOrder.id}</p>
                                 </div>
                             </div>

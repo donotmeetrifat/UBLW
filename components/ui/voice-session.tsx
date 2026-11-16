@@ -126,13 +126,10 @@ const EXTRA_CHATCN_CSS = `
     }
 }
 
-/* Transcript Animations & Luxury Editorial Typography */
-[data-slot="voice-session-root"],
-[data-slot="transcript"],
+/* Transcript Spoken Conversation Dialogue ONLY: Noto Serif for English, Noto Serif Bengali for Bengali */
 [data-slot="transcript-segment"],
 [data-slot="transcript-interim"],
-[data-slot="transcript-group"] p,
-[data-slot="prompt-input-textarea"] {
+[data-slot="transcript-group"] p {
     font-family: 'Noto Serif', 'Noto Serif Bengali', Georgia, Cambria, 'Times New Roman', serif !important;
 }
 

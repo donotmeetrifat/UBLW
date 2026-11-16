@@ -739,7 +739,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             }}
         >
             {/* Generous, high-end, spacious card container with luxury pop entrance and ambient border radiance */}
-            <div className="relative w-full max-w-2xl lg:max-w-3xl h-[820px] max-h-[92vh] rounded-3xl shadow-[0_25px_60px_-15px_rgba(108,48,110,0.22),0_0_0_1px_rgba(108,48,110,0.1)] overflow-hidden border border-[#6C306E]/20 dark:border-[#6C306E]/30 bg-white dark:bg-[#1E0F20] text-foreground flex flex-col animate-[modalLuxuryPop_0.36s_cubic-bezier(0.16,1,0.3,1)] transition-all duration-300 font-ai-editorial">
+            <div className="relative w-full max-w-2xl lg:max-w-3xl h-[820px] max-h-[92vh] rounded-3xl shadow-[0_25px_60px_-15px_rgba(108,48,110,0.22),0_0_0_1px_rgba(108,48,110,0.1)] overflow-hidden border border-[#6C306E]/20 dark:border-[#6C306E]/30 bg-white dark:bg-[#1E0F20] text-foreground flex flex-col animate-[modalLuxuryPop_0.36s_cubic-bezier(0.16,1,0.3,1)] transition-all duration-300 font-sans">
                 {/* Turnkey VoiceSession Component from shadcn / chatcn with integrated Close button */}
                 <VoiceSession
                     state={state}

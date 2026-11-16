@@ -101,7 +101,7 @@ export default function AdminLayout({ children }) {
     // Non-staff block
     if (!isAuthorized) {
         return (
-            <div className="min-h-screen bg-[#FAF6FA]/60 flex flex-col items-center justify-center text-center px-6">
+            <div className="min-h-screen bg-[#FAF6FA]/60 flex flex-col items-center justify-center text-center px-6 font-sans">
                 <div className="size-16 rounded-full bg-white border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] mb-4 shadow-sm">
                     <LockIcon size={26} color="#6C306E" />
                 </div>
@@ -124,7 +124,7 @@ export default function AdminLayout({ children }) {
     const isRestrictedForEmployee = userRole === 'EMPLOYEE' && ADMIN_ONLY_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))
 
     return (
-        <div className="min-h-screen flex bg-[#FAF6FA]/30">
+        <div className="min-h-screen flex bg-[#FAF6FA]/30 font-sans">
             {/* Mobile Backdrop */}
             {mobileSidebarOpen && (
                 <div

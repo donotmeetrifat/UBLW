@@ -358,17 +358,22 @@ export default function AiSuggestionBar({
                     }}
                     className="overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-2 py-0.5 px-3 select-none touch-pan-x cursor-grab active:cursor-grabbing"
                 >
-                    {suggestions.map((item, idx) => (
-                        <button
-                            key={`${item}-${idx}`}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => onSelect?.(item)}
-                            className="whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer font-ai-editorial"
-                        >
-                            {item}
-                        </button>
-                    ))}
+                    {suggestions.map((item, idx) => {
+                        const isBn = /[\u0980-\u09FF]/.test(item);
+                        return (
+                            <button
+                                key={`${item}-${idx}`}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => onSelect?.(item)}
+                                className={`whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${
+                                    isBn ? 'font-bengali' : 'font-sans'
+                                }`}
+                            >
+                                {item}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white/95 via-white/70 to-transparent z-10" />

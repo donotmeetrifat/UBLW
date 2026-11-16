@@ -14,15 +14,16 @@
     --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
     --shadow-card: 0 4px 20px -2px rgba(83, 20, 76, 0.03), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
     --shadow-card-hover: 0 10px 25px -4px rgba(83, 20, 76, 0.07), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
-    --font-display: 'Plus Jakarta Sans', 'Noto Serif Bengali', sans-serif;
+    --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', 'Noto Serif Bengali', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .font-poppins {
-    font-family: 'Poppins', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Universal Noto Serif Bengali for all Bengali language text across the entire website */
