@@ -30,10 +30,20 @@ export async function GET(request) {
         }
 
         // Aggregate team statistics (always based on store staff)
-        const [totalAdmins, totalEmployees, activeStaff] = await Promise.all([
+        const [
+            totalStaff,
+            totalAdmins,
+            totalEmployees,
+            pendingApprovals,
+            totalBlocked,
+            activeApproved
+        ] = await Promise.all([
+            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] } } }),
             prisma.user.count({ where: { role: 'ADMIN' } }),
             prisma.user.count({ where: { role: 'EMPLOYEE' } }),
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true } }),
+            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isVerified: false } }),
+            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: false } }),
+            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true, isVerified: true } }),
         ]);
 
         let users = [];
@@ -98,9 +108,13 @@ export async function GET(request) {
             success: true,
             users,
             stats: {
+                totalRegistrations: totalStaff,
+                totalStaff,
                 totalAdmins,
                 totalEmployees,
-                activeStaff,
+                pendingApprovals,
+                totalBlocked,
+                activeApproved,
             },
             isSearching: Boolean(search),
         }, {
@@ -133,7 +147,7 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { targetUserId, newRole, isActive } = body;
+        const { targetUserId, newRole, isActive, isVerified, action } = body;
 
         if (!targetUserId) {
             return NextResponse.json({ success: false, message: 'Target user ID is required.' }, { status: 400 });
@@ -146,11 +160,62 @@ export async function POST(request) {
         // Fetch existing target user record
         const targetUser = await prisma.user.findUnique({
             where: { id: targetUserId },
-            select: { id: true, name: true, email: true, role: true, isActive: true },
+            select: { id: true, name: true, email: true, role: true, isActive: true, isVerified: true },
         });
 
         if (!targetUser) {
             return NextResponse.json({ success: false, message: 'User not found.' }, { status: 404 });
+        }
+
+        // Handle Delete User Action
+        if (action === 'delete') {
+            if (targetUser.id === currentUser.id) {
+                return NextResponse.json(
+                    { success: false, message: 'You cannot delete your own account.' },
+                    { status: 400 }
+                );
+            }
+            if (targetUser.role === 'ADMIN') {
+                const adminCount = await prisma.user.count({ where: { role: 'ADMIN', isActive: true } });
+                if (adminCount <= 1) {
+                    return NextResponse.json(
+                        { success: false, message: 'Cannot delete the only remaining active Administrator.' },
+                        { status: 400 }
+                    );
+                }
+            }
+
+            try {
+                // Check if user has orders or blocking relations
+                const orderCount = await prisma.order.count({ where: { userId: targetUserId } });
+                if (orderCount > 0) {
+                    // Soft delete: deactivate and revoke staff role to preserve order history
+                    await prisma.user.update({
+                        where: { id: targetUserId },
+                        data: { role: 'CUSTOMER', isActive: false },
+                    });
+                    return NextResponse.json({
+                        success: true,
+                        message: `Account deactivated and staff privileges revoked (orders preserved).`,
+                    });
+                }
+
+                await prisma.user.delete({ where: { id: targetUserId } });
+                return NextResponse.json({
+                    success: true,
+                    message: `User ${targetUser.name} deleted successfully.`,
+                });
+            } catch (err) {
+                // If cascade constraint fails, fallback to deactivate
+                await prisma.user.update({
+                    where: { id: targetUserId },
+                    data: { role: 'CUSTOMER', isActive: false },
+                });
+                return NextResponse.json({
+                    success: true,
+                    message: `Account deactivated and staff privileges revoked.`,
+                });
+            }
         }
 
         // 1. Safety Guard: Self-demotion prevention
@@ -187,6 +252,7 @@ export async function POST(request) {
             data: {
                 ...(newRole ? { role: newRole } : {}),
                 ...(typeof isActive === 'boolean' ? { isActive } : {}),
+                ...(typeof isVerified === 'boolean' ? { isVerified } : {}),
             },
             select: {
                 id: true,
