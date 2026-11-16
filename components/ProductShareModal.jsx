@@ -87,15 +87,13 @@ export default function ProductShareModal({ product, isOpen, onClose }) {
     const sharePlatforms = [
         {
             name: 'WhatsApp',
-            icon: OfficialWhatsAppIcon,
-            color: '#25D366',
+            logo: '/logos/whatsapp.png',
             url: `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`,
             target: '_blank'
         },
         {
             name: 'Messenger',
-            icon: OfficialMessengerIcon,
-            color: '#0084FF',
+            logo: '/logos/messenger.png',
             url: `fb-messenger://share/?link=${encodedUrl}&app_id=966242223397117`,
             fallbackUrl: `https://www.facebook.com/dialog/send?link=${encodedUrl}&app_id=966242223397117&redirect_uri=${encodedUrl}`,
             onClick: (e) => {
@@ -114,22 +112,19 @@ export default function ProductShareModal({ product, isOpen, onClose }) {
         },
         {
             name: 'Telegram',
-            icon: OfficialTelegramIcon,
-            color: '#229ED9',
+            logo: '/logos/telegram.png',
             url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
             target: '_blank'
         },
         {
             name: 'Facebook',
-            icon: OfficialFacebookIcon,
-            color: '#1877F2',
+            logo: '/logos/facebook.png',
             url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
             target: '_blank'
         },
         {
             name: 'X (Twitter)',
-            icon: OfficialXIcon,
-            color: '#000000',
+            logo: '/logos/x.png',
             url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
             target: '_blank'
         }
@@ -222,27 +217,28 @@ export default function ProductShareModal({ product, isOpen, onClose }) {
                         </p>
 
                         <div className="grid grid-cols-5 gap-2 text-center">
-                            {sharePlatforms.map((platform) => {
-                                const Icon = platform.icon
-                                return (
-                                    <a
-                                        key={platform.name}
-                                        href={platform.url}
-                                        target={platform.target || '_self'}
-                                        rel="noopener noreferrer"
-                                        onClick={platform.onClick}
-                                        className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-[#FAF6FA] border border-transparent hover:border-[#EFE0EF] transition-all group cursor-pointer"
-                                        title={`Share on ${platform.name}`}
-                                    >
-                                        <div className="size-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-xs">
-                                            <Icon size={38} />
-                                        </div>
-                                        <span className="text-[10px] font-semibold text-slate-600 group-hover:text-[#241224] truncate w-full">
-                                            {platform.name}
-                                        </span>
-                                    </a>
-                                )
-                            })}
+                            {sharePlatforms.map((platform) => (
+                                <a
+                                    key={platform.name}
+                                    href={platform.url}
+                                    target={platform.target || '_self'}
+                                    rel="noopener noreferrer"
+                                    onClick={platform.onClick}
+                                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-[#FAF6FA] border border-transparent hover:border-[#EFE0EF] transition-all group cursor-pointer"
+                                    title={`Share on ${platform.name}`}
+                                >
+                                    <div className="size-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
+                                        <img
+                                            src={platform.logo}
+                                            alt={platform.name}
+                                            className="size-9 object-contain drop-shadow-xs"
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-slate-600 group-hover:text-[#241224] truncate w-full">
+                                        {platform.name}
+                                    </span>
+                                </a>
+                            ))}
                         </div>
                     </div>
 

@@ -23,6 +23,7 @@ import {
     dispatchAiChatSync,
     mergeAiMessages,
 } from '@/lib/aiChatStore'
+import { subscribeToStoreSync } from '@/lib/realtimeSync'
 
 export default function BeautyAdvisorPage() {
     const dispatch = useDispatch();
@@ -42,6 +43,13 @@ export default function BeautyAdvisorPage() {
     // 0ms Instant Cache Load: Populates immediately from localStorage for both guests and authenticated customers
     const [messages, setMessages] = useState(() => getCachedAiMessages(currentUser));
     const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
+    const [voiceCallEnabled, setVoiceCallEnabled] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const cached = sessionStorage.getItem('ukbl_voice_call_enabled');
+            if (cached !== null) return cached === 'true';
+        }
+        return false;
+    });
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState('');
     const [isClearConfirming, setIsClearConfirming] = useState(false);
@@ -80,6 +88,54 @@ export default function BeautyAdvisorPage() {
             window.removeEventListener('storage', syncUser);
         };
     }, []);
+
+    // Live synchronization of Storefront Voice Call availability
+    useEffect(() => {
+        let isMounted = true;
+        const checkVoiceCallStatus = async () => {
+            try {
+                const res = await fetch('/api/ai/voice', { cache: 'no-store' });
+                const data = await res.json();
+                if (isMounted && data.success) {
+                    const isEnabled = Boolean(data.voiceCallEnabled);
+                    setVoiceCallEnabled(isEnabled);
+                    try {
+                        sessionStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
+                    } catch {}
+                }
+            } catch {
+                if (isMounted) setVoiceCallEnabled(false);
+            }
+        };
+
+        checkVoiceCallStatus();
+
+        const unsubscribe = subscribeToStoreSync((type, payload) => {
+            if (type === 'ai_settings' && payload) {
+                if (payload.voiceCallEnabled !== undefined) {
+                    const isEnabled = Boolean(payload.voiceCallEnabled);
+                    setVoiceCallEnabled(isEnabled);
+                    try {
+                        sessionStorage.setItem('ukbl_voice_call_enabled', String(isEnabled));
+                    } catch {}
+                } else {
+                    checkVoiceCallStatus();
+                }
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            if (typeof unsubscribe === 'function') unsubscribe();
+        };
+    }, []);
+
+    // Automatically close voice modal if disabled while open
+    useEffect(() => {
+        if (!voiceCallEnabled && isVoiceCallOpen) {
+            setIsVoiceCallOpen(false);
+        }
+    }, [voiceCallEnabled, isVoiceCallOpen]);
 
     // Server history fetcher with smart non-destructive merge
     const fetchServerHistory = async (userToFetch = currentUser) => {
@@ -380,16 +436,18 @@ export default function BeautyAdvisorPage() {
 
                 {/* Right: Voice Call & Clear Chat Controls */}
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setIsVoiceCallOpen(true)}
-                        className="h-8.5 px-3.5 rounded-full bg-[#6C306E] hover:bg-[#531e55] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                    >
-                        <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                        <span>Voice Call Emma</span>
-                    </button>
+                    {voiceCallEnabled && (
+                        <button
+                            type="button"
+                            onClick={() => setIsVoiceCallOpen(true)}
+                            className="h-8.5 px-3.5 rounded-full bg-[#6C306E] hover:bg-[#531e55] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        >
+                            <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                            <span>Call Emma</span>
+                        </button>
+                    )}
 
                     <button
                         type="button"
@@ -592,10 +650,12 @@ export default function BeautyAdvisorPage() {
             </footer>
 
             {/* In-Browser AI Voice Call with Emma */}
-            <AiVoiceCallModal
-                isOpen={isVoiceCallOpen}
-                onClose={() => setIsVoiceCallOpen(false)}
-            />
+            {voiceCallEnabled && (
+                <AiVoiceCallModal
+                    isOpen={isVoiceCallOpen}
+                    onClose={() => setIsVoiceCallOpen(false)}
+                />
+            )}
         </div>
     );
 }

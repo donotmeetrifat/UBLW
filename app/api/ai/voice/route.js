@@ -31,6 +31,27 @@ function cleanTextForSpeech(raw) {
         .trim();
 }
 
+export async function GET() {
+    try {
+        const settings = await getAiSettings();
+        const hasKey = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
+        const isEnabled = settings.voiceCallEnabled !== false && hasKey;
+
+        return NextResponse.json({
+            success: true,
+            voiceCallEnabled: isEnabled,
+            voiceId: settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL',
+            voiceName: settings.elevenLabsVoiceName || 'Sarah (Soft & Warm)',
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+        });
+    } catch {
+        return NextResponse.json({ success: false, voiceCallEnabled: false }, { status: 500 });
+    }
+}
+
 export async function POST(request) {
     try {
         const body = await request.json().catch(() => ({}));
@@ -44,6 +65,14 @@ export async function POST(request) {
         }
 
         const settings = await getAiSettings();
+
+        if (settings.voiceCallEnabled === false) {
+            return NextResponse.json({
+                success: false,
+                code: 'VOICE_CALL_DISABLED',
+                message: 'Voice calls are currently disabled by the store.',
+            }, { status: 403 });
+        }
 
         if (!settings.elevenLabsKey || !settings.elevenLabsKey.trim()) {
             return NextResponse.json({

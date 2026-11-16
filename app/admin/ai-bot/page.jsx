@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
+import { broadcastStoreChange } from '@/lib/realtimeSync'
 import {
     SparklesIcon,
     CheckIcon,
@@ -339,6 +340,32 @@ export default function AdminAiBotPage() {
         }
     }
 
+    // Immediate Auto-Save Toggle for Storefront Voice Call
+    const handleToggleVoiceCall = async (nextVal) => {
+        setVoiceCallEnabled(nextVal)
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    voiceCallEnabled: nextVal,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(nextVal ? 'Storefront Voice Call enabled' : 'Storefront Voice Call disabled')
+                broadcastStoreChange('ai_settings', { voiceCallEnabled: nextVal })
+            } else {
+                toast.error(data.message || 'Failed to update voice call setting')
+                setVoiceCallEnabled(!nextVal)
+            }
+        } catch (err) {
+            console.error('Error updating voice call setting:', err)
+            toast.error('Network error updating voice call setting')
+            setVoiceCallEnabled(!nextVal)
+        }
+    }
+
     // Save All AI Settings
     const handleSaveSettings = async (e) => {
         if (e) e.preventDefault()
@@ -377,6 +404,7 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success('AI settings saved successfully!')
+                broadcastStoreChange('ai_settings', { voiceCallEnabled })
                 fetchSettings()
             } else {
                 toast.error(data.message || 'Failed to save settings')
@@ -830,9 +858,6 @@ export default function AdminAiBotPage() {
                                         <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
                                         <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500">
-                                        Get your free key at <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="text-[#6C306E] font-bold underline">elevenlabs.io</a> (10,000 free characters every month, no credit card required).
-                                    </p>
                                 </div>
 
                                 <div className="flex items-center gap-2.5 flex-1 max-w-lg">
@@ -893,7 +918,7 @@ export default function AdminAiBotPage() {
                                     <input
                                         type="checkbox"
                                         checked={voiceCallEnabled}
-                                        onChange={(e) => setVoiceCallEnabled(e.target.checked)}
+                                        onChange={(e) => handleToggleVoiceCall(e.target.checked)}
                                         className="sr-only peer"
                                     />
                                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6C306E]"></div>
