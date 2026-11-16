@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
+import FormattedMessageText from '@/components/AiFormattedText'
 import {
     DEFAULT_WELCOME_MESSAGE,
     getCachedAiMessages,
@@ -55,9 +56,9 @@ export default function AiChatWidget() {
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
 
-    // Compute dynamic contextual suggestions from the last user message
+    // Compute dynamic contextual suggestions from the last user message and message count
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    const dynamicSuggestions = getContextualSuggestions(lastUserMessage?.content || '');
+    const dynamicSuggestions = getContextualSuggestions(lastUserMessage?.content || '', messages.length);
 
     // Initialize session ID for guest tracking
     useEffect(() => {
@@ -516,7 +517,7 @@ export default function AiChatWidget() {
                                                         </div>
                                                     )}
                                                     <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs font-medium select-text">
-                                                        {m.content}
+                                                        <FormattedMessageText text={m.content} isUser={true} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -535,9 +536,7 @@ export default function AiChatWidget() {
 
                                                             if (!hasTags) {
                                                                 return (
-                                                                    <div className="whitespace-pre-wrap leading-relaxed">
-                                                                        {m.content}
-                                                                    </div>
+                                                                    <FormattedMessageText text={m.content} />
                                                                 );
                                                             }
 
@@ -565,8 +564,8 @@ export default function AiChatWidget() {
                                                                 if (!trimmed) return null;
 
                                                                 return (
-                                                                    <div key={`txt-${pIdx}`} className="whitespace-pre-wrap leading-relaxed">
-                                                                        {part}
+                                                                    <div key={`txt-${pIdx}`}>
+                                                                        <FormattedMessageText text={part} />
                                                                     </div>
                                                                 );
                                                             });

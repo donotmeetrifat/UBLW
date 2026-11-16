@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
+import FormattedMessageText from '@/components/AiFormattedText'
 import { LiquidMultimodalInput } from '@/components/ui/liquid-multimodal-input'
 import { TrashIcon } from '@/components/icons'
 import {
@@ -45,9 +46,9 @@ export default function BeautyAdvisorPage() {
 
     const chatContainerRef = useRef(null);
 
-    // Compute dynamic contextual suggestions from the last user message
+    // Compute dynamic contextual suggestions from the last user message and message count
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    const dynamicSuggestions = getContextualSuggestions(lastUserMessage?.content || '');
+    const dynamicSuggestions = getContextualSuggestions(lastUserMessage?.content || '', messages.length);
 
     // Initialize session ID
     useEffect(() => {
@@ -445,7 +446,7 @@ export default function BeautyAdvisorPage() {
                                                 </div>
                                             )}
                                             <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-3 text-sm leading-relaxed shadow-xs font-medium select-text">
-                                                {m.content}
+                                                <FormattedMessageText text={m.content} isUser={true} />
                                             </div>
                                         </div>
                                     </div>
@@ -464,9 +465,7 @@ export default function BeautyAdvisorPage() {
 
                                                     if (!hasTags) {
                                                         return (
-                                                            <div className="whitespace-pre-wrap leading-relaxed">
-                                                                {m.content}
-                                                            </div>
+                                                            <FormattedMessageText text={m.content} />
                                                         );
                                                     }
 
@@ -493,8 +492,8 @@ export default function BeautyAdvisorPage() {
                                                         if (!trimmed) return null;
 
                                                         return (
-                                                            <div key={`txt-${pIdx}`} className="whitespace-pre-wrap leading-relaxed">
-                                                                {part}
+                                                            <div key={`txt-${pIdx}`}>
+                                                                <FormattedMessageText text={part} />
                                                             </div>
                                                         );
                                                     });
