@@ -58,15 +58,9 @@ const Newsletter = () => {
                     </span>
 
                     {/* Emotional & Connecting Headline */}
-                    <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] mb-3 tracking-tight'>
+                    <h2 className='text-2xl sm:text-3xl font-extrabold text-[#241224] mb-6 tracking-tight'>
                         You&apos;re Not Just Shopping. You&apos;re Joining a Family.
                     </h2>
-
-                    {/* Description */}
-                    <p className='text-slate-600 text-xs sm:text-sm leading-relaxed mb-7 max-w-lg font-normal'>
-                        Restock alerts, honest reviews, and real beauty advice —<br className='hidden sm:inline' />
-                        from people who actually use it.
-                    </p>
 
                     {/* 3 Highlights (Wrapped & Fully Visible Across All Device Screen Sizes) */}
                     <div className='w-full mx-auto mb-7 px-1'>
