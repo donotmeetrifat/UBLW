@@ -54,19 +54,27 @@ const navSections = [
     {
         section: 'AI & Sales Automation',
         items: [
-            { name: 'AI Saleswoman Bot', href: '/admin/ai-bot', icon: SparklesIcon },
+            { name: 'AI Saleswoman Bot', href: '/admin/ai-bot', icon: SparklesIcon, adminOnly: true },
         ]
     },
     {
-        section: 'Store Settings',
+        section: 'Administration',
         items: [
-            { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon },
+            { name: 'Team & Staff', href: '/admin/team', icon: UserIcon, adminOnly: true },
+            { name: 'Delivery & Payments', href: '/admin/settings', icon: TruckIcon, adminOnly: true },
         ]
     }
 ]
 
-export default function AdminSidebar({ mobileOpen = false, onClose = () => {} }) {
+export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, userRole = 'ADMIN', currentUser = null }) {
     const pathname = usePathname()
+
+    const visibleSections = navSections
+        .map(sec => ({
+            ...sec,
+            items: sec.items.filter(item => !item.adminOnly || userRole === 'ADMIN')
+        }))
+        .filter(sec => sec.items.length > 0)
 
     return (
         <aside
@@ -102,7 +110,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {} })
 
             {/* Navigation Groups */}
             <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 no-scrollbar">
-                {navSections.map((sec, secIdx) => (
+                {visibleSections.map((sec, secIdx) => (
                     <div key={secIdx}>
                         <div className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
                             {sec.section}
@@ -147,18 +155,21 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {} })
                 ))}
             </div>
 
-            {/* Sidebar Footer with Admin Profile */}
+            {/* Sidebar Footer with Admin / Staff Profile */}
             <div className="p-3 border-t border-[#EFE0EF] bg-[#FAF6FA]/40 shrink-0">
                 <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white border border-[#EFE0EF]">
                     <div className="size-8 rounded-full bg-[#6C306E] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-[#D8B56D]/40">
-                        A
+                        {(currentUser?.name || (userRole === 'EMPLOYEE' ? 'E' : 'A')).charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-[#241224] truncate">
-                            Admin Flagship
+                        <div className="text-xs font-bold text-[#241224] truncate flex items-center gap-1.5">
+                            <span className="truncate">{currentUser?.name || (userRole === 'EMPLOYEE' ? 'Store Staff' : 'Admin Flagship')}</span>
+                            <span className="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider shrink-0 bg-[#FAF6FA] border border-[#EFE0EF] text-slate-700">
+                                {userRole === 'EMPLOYEE' ? 'Employee' : 'Admin'}
+                            </span>
                         </div>
                         <div className="text-[10px] text-slate-400 truncate">
-                            admin@ukbrandlover.com
+                            {currentUser?.email || (userRole === 'EMPLOYEE' ? 'staff@ukbrandlover.com' : 'admin@ukbrandlover.com')}
                         </div>
                     </div>
                 </div>

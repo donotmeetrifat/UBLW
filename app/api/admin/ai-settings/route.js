@@ -88,6 +88,14 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const currentUser = getUserFromRequest(request);
+        if (currentUser && currentUser.role === 'EMPLOYEE') {
+            return NextResponse.json(
+                { success: false, message: 'Forbidden: Only Administrators can configure AI keys and directives.' },
+                { status: 403 }
+            );
+        }
+
         const body = await request.json();
         const {
             geminiKey,
