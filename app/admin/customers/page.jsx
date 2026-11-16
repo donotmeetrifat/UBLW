@@ -12,7 +12,9 @@ import {
     CloseIcon,
     EyeIcon,
     ArrowRightIcon,
-    CheckIcon
+    CheckIcon,
+    DownloadIcon,
+    RefreshIcon
 } from "@/components/icons"
 
 export default function AdminCustomersPage() {
@@ -20,6 +22,7 @@ export default function AdminCustomersPage() {
 
     const [customers, setCustomers] = useState([])
     const [loading, setLoading] = useState(true)
+    const [exporting, setExporting] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCustomer, setSelectedCustomer] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -67,6 +70,93 @@ export default function AdminCustomersPage() {
         return { total, totalRevenue, totalOrders, buyers }
     }, [customers])
 
+    // CSV Export for Google Sheets & Excel
+    const handleExportCSV = () => {
+        // If a search filter is applied, export the filtered list; otherwise export all customers
+        const listToExport = searchQuery.trim() ? filteredCustomers : customers
+
+        if (!listToExport || listToExport.length === 0) {
+            toast.error('No customer records available to download')
+            return
+        }
+
+        try {
+            setExporting(true)
+
+            // Optimized column structure for Google Sheets & Excel
+            const headers = [
+                'Customer Name',
+                'Email Address',
+                'Contact Number',
+                'WhatsApp Number',
+                'City / District',
+                'Full Delivery Address',
+                'Total Orders Placed',
+                'Total Units Bought',
+                'Total Spent (BDT)',
+                'Account Registration Date'
+            ]
+
+            // Standard RFC 4180 CSV escaping
+            const escapeCSV = (val) => {
+                if (val === null || val === undefined) return '""'
+                const str = String(val).replace(/"/g, '""')
+                return `"${str}"`
+            }
+
+            // Ensure Google Sheets & Excel preserve leading zeros on Bangladeshi phone numbers (e.g. 017XXXXXXXX)
+            const formatPhoneForSheet = (phone) => {
+                if (!phone) return '""'
+                const raw = String(phone).trim()
+                if (/^0\d+$/.test(raw)) {
+                    return `"=""${raw}"""`
+                }
+                return escapeCSV(raw)
+            }
+
+            const rows = listToExport.map(cust => {
+                const phone = cust.phone || cust.whatsapp || ''
+                const whatsapp = cust.whatsapp || cust.phone || ''
+                const formattedWhatsapp = whatsapp
+                    ? (whatsapp.startsWith('+') ? whatsapp : (whatsapp.startsWith('880') ? `+${whatsapp}` : `+880${whatsapp.startsWith('0') ? whatsapp.slice(1) : whatsapp}`))
+                    : ''
+
+                return [
+                    escapeCSV(cust.name || 'Valued Customer'),
+                    escapeCSV(cust.email || ''),
+                    formatPhoneForSheet(phone),
+                    escapeCSV(formattedWhatsapp),
+                    escapeCSV(cust.city || 'Dhaka'),
+                    escapeCSV(cust.address || ''),
+                    escapeCSV(cust.totalOrders || 0),
+                    escapeCSV(cust.totalUnitsBought || 0),
+                    escapeCSV(cust.totalSpent || 0),
+                    escapeCSV(cust.createdAt ? new Date(cust.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '')
+                ].join(',')
+            })
+
+            // \uFEFF is UTF-8 Byte Order Mark (BOM) ensuring Google Sheets correctly reads international text
+            const csvContent = '\uFEFF' + [headers.map(h => escapeCSV(h)).join(','), ...rows].join('\r\n')
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            const dateStr = new Date().toISOString().split('T')[0]
+            link.setAttribute('href', url)
+            link.setAttribute('download', `UK_Brand_Lover_Customers_${dateStr}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(url)
+
+            toast.success(`Exported ${listToExport.length} customer records for Google Sheets!`)
+        } catch (err) {
+            console.error('Error generating customer CSV:', err)
+            toast.error('Failed to generate customer CSV')
+        } finally {
+            setExporting(false)
+        }
+    }
+
     if (loading) return <Loading />
 
     return (
@@ -83,12 +173,29 @@ export default function AdminCustomersPage() {
                     </p>
                 </div>
 
-                <button
-                    onClick={fetchCustomers}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] text-xs font-bold text-slate-700 shadow-2xs transition self-start sm:self-auto"
-                >
-                    <span>Refresh Customers</span>
-                </button>
+                <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+                    {/* Download Customers CSV Button for Google Sheets */}
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={exporting || customers.length === 0}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold shadow-2xs transition disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                        title="Download customer contact database as Google Sheets compatible CSV"
+                        type="button"
+                    >
+                        <DownloadIcon size={15} />
+                        <span>Download Customers (CSV)</span>
+                    </button>
+
+                    <button
+                        onClick={fetchCustomers}
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-[#EFE0EF] hover:bg-[#FAF6FA] text-xs font-bold text-slate-700 shadow-2xs transition cursor-pointer whitespace-nowrap"
+                        title="Refresh customers list"
+                        type="button"
+                    >
+                        <RefreshIcon size={14} />
+                        <span className="hidden sm:inline">Refresh</span>
+                    </button>
+                </div>
             </div>
 
             {/* Metric KPI Cards */}

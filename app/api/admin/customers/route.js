@@ -90,13 +90,17 @@ export async function GET(request) {
                 );
 
                 const primaryAddress = user.addresses[0] || (user.orders[0]?.address) || null;
+                const addressPhone = user.addresses?.find(a => a.phoneNumber)?.phoneNumber;
+                const orderPhone = user.orders?.find(o => o.address?.phoneNumber)?.address?.phoneNumber;
+                const resolvedPhone = user.phone || user.whatsapp || primaryAddress?.phoneNumber || addressPhone || orderPhone || '';
+                const resolvedWhatsapp = user.whatsapp || user.phone || primaryAddress?.phoneNumber || addressPhone || orderPhone || '';
 
                 return {
                     id: user.id,
                     name: user.name || 'Valued Customer',
                     email: user.email,
-                    phone: user.phone || user.whatsapp || '',
-                    whatsapp: user.whatsapp || user.phone || '',
+                    phone: resolvedPhone,
+                    whatsapp: resolvedWhatsapp,
                     role: user.role,
                     createdAt: user.createdAt,
                     lastActiveAt: user.lastActiveAt,
