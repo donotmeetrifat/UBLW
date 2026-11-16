@@ -413,37 +413,33 @@ export default function AdminHomepageSectionsPage() {
                 {/* Card 1: New UK Arrivals */}
                 <div
                     onClick={() => setActiveTab('newArrivals')}
-                    className={`relative rounded-2xl p-5 cursor-pointer transition-all ${
+                    className={`relative rounded-2xl p-4 sm:p-5 cursor-pointer transition-all ${
                         activeTab === 'newArrivals'
                             ? 'bg-white border-2 border-plum shadow-card'
                             : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3.5">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors ${
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors ${
                                 activeTab === 'newArrivals'
                                     ? 'bg-plum text-white'
                                     : 'bg-slate-50 text-slate-600 border border-slate-100'
                             }`}>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                                 </svg>
                             </div>
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <h3 className={`font-display font-bold text-base ${activeTab === 'newArrivals' ? 'text-slate-900' : 'text-slate-800'}`}>
-                                        1. New UK Arrivals
-                                    </h3>
-                                </div>
-                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
-                                    <span>{sections.newArrivals.title || 'New UK Arrivals'}</span>
-                                    <span className="text-slate-300">•</span>
-                                    <span>Placed directly beneath the Hero banner</span>
+                            <div className="min-w-0 flex-1">
+                                <h3 className={`font-display font-bold text-sm sm:text-base truncate ${activeTab === 'newArrivals' ? 'text-slate-900' : 'text-slate-800'}`}>
+                                    1. New UK Arrivals
+                                </h3>
+                                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                                    {sections.newArrivals.title || 'New UK Arrivals'} • Placed under Hero
                                 </p>
                             </div>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border shrink-0 whitespace-nowrap ${
                             sections.newArrivals.productIds.length > 0
                                 ? 'bg-purple-50 text-plum border-purple-200'
                                 : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -458,35 +454,33 @@ export default function AdminHomepageSectionsPage() {
                 {/* Card 2: Best Selling Beauty */}
                 <div
                     onClick={() => setActiveTab('bestSelling')}
-                    className={`relative rounded-2xl p-5 cursor-pointer transition-all ${
+                    className={`relative rounded-2xl p-4 sm:p-5 cursor-pointer transition-all ${
                         activeTab === 'bestSelling'
                             ? 'bg-white border-2 border-plum shadow-card'
                             : 'bg-white border border-slate-200/90 hover:border-slate-300 shadow-subtle hover:shadow-card'
                     }`}
                 >
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3.5">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                                 activeTab === 'bestSelling'
                                     ? 'bg-plum text-white shadow-sm'
                                     : 'bg-slate-50 text-slate-600 border border-slate-100'
                             }`}>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
                                     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
                                 </svg>
                             </div>
-                            <div>
-                                <h3 className={`font-display font-bold text-base ${activeTab === 'bestSelling' ? 'text-slate-900' : 'text-slate-800'}`}>
+                            <div className="min-w-0 flex-1">
+                                <h3 className={`font-display font-bold text-sm sm:text-base truncate ${activeTab === 'bestSelling' ? 'text-slate-900' : 'text-slate-800'}`}>
                                     2. Best Selling Beauty
                                 </h3>
-                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
-                                    <span>{sections.bestSelling.title || 'Best Selling Beauty'}</span>
-                                    <span className="text-slate-300">•</span>
-                                    <span>Signature high-converting storefront grid</span>
+                                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                                    {sections.bestSelling.title || 'Best Selling Beauty'} • Storefront Grid
                                 </p>
                             </div>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border shrink-0 whitespace-nowrap ${
                             sections.bestSelling.productIds.length > 0
                                 ? 'bg-purple-50 text-plum border-purple-200'
                                 : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -501,12 +495,12 @@ export default function AdminHomepageSectionsPage() {
             {/* END: SectionSwitcherCards */}
 
             {/* BEGIN: ConfigurationPanel */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 lg:p-7 shadow-subtle space-y-5 sm:space-y-6">
                 {/* Panel Header & Storefront Status Toggle */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
                     <div>
-                        <div className="flex items-center gap-2.5">
-                            <h2 className="font-display font-bold text-lg text-slate-900 tracking-tight">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            <h2 className="font-display font-bold text-base sm:text-lg text-slate-900 tracking-tight">
                                 Configure {activeTab === 'newArrivals' ? 'New UK Arrivals' : 'Best Selling Beauty'}
                             </h2>
                             {currentSectionConfig.enabled && (
@@ -521,7 +515,7 @@ export default function AdminHomepageSectionsPage() {
                     </div>
 
                     {/* Custom Checkbox / Toggle */}
-                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none shrink-0">
                         <input
                             type="checkbox"
                             checked={currentSectionConfig.enabled}
@@ -533,7 +527,7 @@ export default function AdminHomepageSectionsPage() {
                 </div>
 
                 {/* Section Configuration Inputs */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
                     {/* Section Heading Title Input */}
                     <div className="lg:col-span-5 space-y-1.5">
                         <label className="block text-xs font-semibold text-slate-700" htmlFor="sectionHeading">
@@ -570,16 +564,16 @@ export default function AdminHomepageSectionsPage() {
                 </div>
 
                 {/* Display Limit Pills & Preview Link */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 gap-3 sm:gap-4">
                     {/* Max Storefront Display Limit Selector */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-700 mr-1.5">Max Storefront Display Limit:</span>
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="text-xs font-semibold text-slate-700 mr-1 shrink-0">Max Storefront Display Limit:</span>
                         {[4, 6, 8, 12, 16].map(num => (
                             <button
                                 key={num}
                                 type="button"
                                 onClick={() => handleUpdateSectionMeta('displayLimit', num)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
                                     currentSectionConfig.displayLimit === num
                                         ? 'bg-plum text-white shadow-2xs'
                                         : 'font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200'
@@ -594,7 +588,7 @@ export default function AdminHomepageSectionsPage() {
                     <button
                         type="button"
                         onClick={() => setShowLivePreview(prev => !prev)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-plum transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-plum transition cursor-pointer self-start sm:self-auto shrink-0"
                     >
                         <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-plum" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -664,12 +658,12 @@ export default function AdminHomepageSectionsPage() {
             )}
 
             {/* BEGIN: CuratedProductsSection */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-7 shadow-subtle space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 lg:p-7 shadow-subtle space-y-5 sm:space-y-6">
                 {/* Products Area Header Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
                     <div>
-                        <div className="flex items-center gap-2.5">
-                            <h2 className="font-display font-bold text-lg text-slate-900 tracking-tight">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            <h2 className="font-display font-bold text-base sm:text-lg text-slate-900 tracking-tight">
                                 Curated Products & Serial Priorities
                             </h2>
                             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
@@ -687,7 +681,7 @@ export default function AdminHomepageSectionsPage() {
                             setCatalogSearch('')
                             setIsAddModalOpen(true)
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition shrink-0 active:scale-[0.98] cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-plum hover:bg-plum-hover text-white text-xs font-semibold shadow-sm transition w-full sm:w-auto shrink-0 active:scale-[0.98] cursor-pointer"
                         type="button"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -700,7 +694,7 @@ export default function AdminHomepageSectionsPage() {
 
                 {/* Empty State Container */}
                 {curatedProducts.length === 0 ? (
-                    <div className="py-16 px-6 border-2 border-dashed border-slate-200/80 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/40">
+                    <div className="py-12 sm:py-16 px-4 sm:px-6 border-2 border-dashed border-slate-200/80 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/40">
                         {/* Sparkling Icon Badge */}
                         <div className="w-14 h-14 rounded-2xl bg-plum/10 text-plum flex items-center justify-center mb-4 shadow-2xs">
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -737,131 +731,261 @@ export default function AdminHomepageSectionsPage() {
                                 onDragStart={(e) => handleDragStart(e, index)}
                                 onDragOver={(e) => handleDragOver(e, index)}
                                 onDrop={(e) => handleDrop(e, index)}
-                                className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition-all ${
+                                className={`p-3.5 sm:p-4.5 transition-all ${
                                     draggedIndex === index
                                         ? 'bg-plum/5 border-2 border-dashed border-plum'
-                                        : 'hover:bg-slate-50/60 bg-white'
+                                        : 'hover:bg-slate-50/70 bg-white'
                                 }`}
                             >
-                                {/* Left: Drag handle & Priority Rank */}
-                                <div className="flex items-center gap-3 shrink-0">
-                                    <div
-                                        className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-plum p-1.5 rounded-lg transition"
-                                        title="Drag to reorder priority"
-                                    >
-                                        <GripVerticalIcon size={18} />
+                                {/* DESKTOP VIEW (Visible on lg and larger: >= 1024px) */}
+                                <div className="hidden lg:flex items-center justify-between gap-4">
+                                    {/* Left: Drag handle & Priority Rank */}
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                        <div
+                                            className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-plum p-1.5 rounded-lg transition"
+                                            title="Drag to reorder priority"
+                                        >
+                                            <GripVerticalIcon size={18} />
+                                        </div>
+
+                                        {/* Priority Rank Badge */}
+                                        <div className="w-11 h-11 rounded-xl bg-plum text-white flex flex-col items-center justify-center font-bold shadow-2xs shrink-0 font-display">
+                                            <span className="text-[9px] uppercase tracking-tighter opacity-80">RANK</span>
+                                            <span className="text-sm leading-none font-bold">#{index + 1}</span>
+                                        </div>
                                     </div>
 
-                                    {/* Priority Rank Badge */}
-                                    <div className="w-10 h-10 rounded-xl bg-plum text-white flex flex-col items-center justify-center font-bold shadow-2xs shrink-0 font-display">
-                                        <span className="text-[9px] uppercase tracking-tighter opacity-80">RANK</span>
-                                        <span className="text-sm leading-none font-bold">#{index + 1}</span>
-                                    </div>
-                                </div>
-
-                                {/* Center: Product Thumbnail & Meta */}
-                                <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                                    <div className="w-14 h-14 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1">
-                                        {prod.images && prod.images[0] ? (
-                                            <Image
-                                                src={prod.images[0]}
-                                                alt={prod.name}
-                                                fill
-                                                className="object-contain p-1"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <BagIcon size={20} color="#94A3B8" />
-                                        )}
-                                    </div>
-
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[10px] font-semibold text-plum bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 uppercase tracking-wide">
-                                                {prod.category || 'Beauty'}
-                                            </span>
-                                            <span className="text-[10px] font-medium text-slate-400">
-                                                {prod.brand || 'UK Import'}
-                                            </span>
-                                            {index < currentSectionConfig.displayLimit ? (
-                                                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    Visible on Storefront
-                                                </span>
+                                    {/* Center: Product Thumbnail & Meta */}
+                                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                                        <div className="w-14 h-14 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1">
+                                            {prod.images && prod.images[0] ? (
+                                                <Image
+                                                    src={prod.images[0]}
+                                                    alt={prod.name}
+                                                    fill
+                                                    className="object-contain p-1"
+                                                    unoptimized
+                                                />
                                             ) : (
-                                                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                                                    Queue #{index + 1}
-                                                </span>
+                                                <BagIcon size={20} color="#94A3B8" />
                                             )}
                                         </div>
 
-                                        <h4 className="font-bold text-sm text-slate-900 truncate mt-1">
-                                            {prod.name}
-                                        </h4>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-semibold text-plum bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 uppercase tracking-wide shrink-0">
+                                                    {prod.category || 'Beauty'}
+                                                </span>
+                                                <span className="text-[10px] font-medium text-slate-500 shrink-0">
+                                                    {prod.brand || 'UK Import'}
+                                                </span>
+                                                {index < currentSectionConfig.displayLimit ? (
+                                                    <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 whitespace-nowrap">
+                                                        Visible on Storefront
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0 whitespace-nowrap">
+                                                        Queue #{index + 1}
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                        <div className="flex items-center gap-3 mt-1 text-xs">
-                                            <span className="font-bold text-plum">
-                                                {currency}{Number(prod.price || 0).toLocaleString()}
-                                            </span>
-                                            <span className="text-slate-300">•</span>
-                                            <span className={`font-medium text-[11px] ${prod.inStock !== false ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                                {prod.inStock !== false ? 'In Stock' : 'Out of Stock'}
-                                            </span>
+                                            <h4 className="font-bold text-sm text-slate-900 truncate mt-1" title={prod.name}>
+                                                {prod.name}
+                                            </h4>
+
+                                            <div className="flex items-center gap-3 mt-1 text-xs">
+                                                <span className="font-bold text-plum">
+                                                    {currency}{Number(prod.price || 0).toLocaleString()}
+                                                </span>
+                                                <span className="text-slate-300">•</span>
+                                                <span className={`font-medium text-[11px] ${prod.inStock !== false ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                    {prod.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                                                </span>
+                                            </div>
                                         </div>
+                                    </div>
+
+                                    {/* Right: Priority Adjusters & Remove Action */}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {/* Direct Serial Input */}
+                                        <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+                                            <span className="text-[10px] font-semibold text-slate-500">Serial:</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={curatedProducts.length}
+                                                defaultValue={index + 1}
+                                                key={`rank-desktop-${prod.id}-${index}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleDirectOrderChange(index, e.target.value)
+                                                    }
+                                                }}
+                                                onBlur={(e) => handleDirectOrderChange(index, e.target.value)}
+                                                className="w-10 text-center text-xs font-bold text-slate-900 bg-white rounded-lg border border-slate-200 py-0.5 focus:ring-1 focus:ring-plum focus:border-plum focus:outline-hidden"
+                                            />
+                                        </div>
+
+                                        {/* Move Up */}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMoveProduct(index, index - 1)}
+                                            disabled={index === 0}
+                                            className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
+                                            title="Move Priority Up"
+                                        >
+                                            ▲
+                                        </button>
+
+                                        {/* Move Down */}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMoveProduct(index, index + 1)}
+                                            disabled={index === curatedProducts.length - 1}
+                                            className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
+                                            title="Move Priority Down"
+                                        >
+                                            ▼
+                                        </button>
+
+                                        {/* Remove from Section */}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveProduct(prod.id)}
+                                            className="w-8 h-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs cursor-pointer"
+                                            title="Remove from this showcase section"
+                                        >
+                                            <TrashIcon size={14} />
+                                        </button>
                                     </div>
                                 </div>
 
-                                {/* Right: Priority Adjusters & Remove Action */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    {/* Direct Serial Input */}
-                                    <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
-                                        <span className="text-[10px] font-semibold text-slate-500">Serial:</span>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max={curatedProducts.length}
-                                            defaultValue={index + 1}
-                                            key={`rank-${prod.id}-${index}`}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleDirectOrderChange(index, e.target.value)
-                                                }
-                                            }}
-                                            onBlur={(e) => handleDirectOrderChange(index, e.target.value)}
-                                            className="w-10 text-center text-xs font-bold text-slate-900 bg-white rounded-lg border border-slate-200 py-0.5 focus:ring-1 focus:ring-plum focus:border-plum focus:outline-hidden"
-                                        />
+                                {/* MOBILE & TABLET VIEW (Screens < 1024px) */}
+                                <div className="flex lg:hidden flex-col gap-3">
+                                    {/* Top Line: Grip, Rank, Category, Brand, Status & Remove */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                            <div
+                                                className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-plum p-1 -ml-1 rounded transition shrink-0"
+                                                title="Drag to reorder priority"
+                                            >
+                                                <GripVerticalIcon size={16} />
+                                            </div>
+
+                                            <div className="px-2 py-0.5 rounded-lg bg-plum text-white font-extrabold text-[11px] shadow-2xs shrink-0 font-display">
+                                                #{index + 1}
+                                            </div>
+
+                                            <span className="text-[10px] font-semibold text-plum bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 uppercase tracking-wide truncate max-w-[100px]">
+                                                {prod.category || 'Beauty'}
+                                            </span>
+
+                                            <span className="text-[10px] font-medium text-slate-500 truncate max-w-[90px]">
+                                                {prod.brand || 'UK Import'}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {index < currentSectionConfig.displayLimit ? (
+                                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                    Visible
+                                                </span>
+                                            ) : (
+                                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                                                    Queue #{index + 1}
+                                                </span>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveProduct(prod.id)}
+                                                className="w-7 h-7 rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition cursor-pointer shrink-0"
+                                                title="Remove product"
+                                            >
+                                                <TrashIcon size={13} />
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    {/* Move Up */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMoveProduct(index, index - 1)}
-                                        disabled={index === 0}
-                                        className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
-                                        title="Move Priority Up"
-                                    >
-                                        ▲
-                                    </button>
+                                    {/* Middle Line: Product Thumbnail + Title + Price & Stock */}
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-14 h-14 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1 shadow-2xs">
+                                            {prod.images && prod.images[0] ? (
+                                                <Image
+                                                    src={prod.images[0]}
+                                                    alt={prod.name}
+                                                    fill
+                                                    className="object-contain p-1"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <BagIcon size={20} color="#94A3B8" />
+                                            )}
+                                        </div>
 
-                                    {/* Move Down */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMoveProduct(index, index + 1)}
-                                        disabled={index === curatedProducts.length - 1}
-                                        className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer"
-                                        title="Move Priority Down"
-                                    >
-                                        ▼
-                                    </button>
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="font-bold text-xs text-slate-900 line-clamp-2 leading-snug">
+                                                {prod.name}
+                                            </h4>
 
-                                    {/* Remove from Section */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveProduct(prod.id)}
-                                        className="w-8 h-8 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition shadow-2xs cursor-pointer"
-                                        title="Remove from this showcase section"
-                                    >
-                                        <TrashIcon size={14} />
-                                    </button>
+                                            <div className="flex items-center gap-2 mt-1.5 text-xs">
+                                                <span className="font-extrabold text-plum">
+                                                    {currency}{Number(prod.price || 0).toLocaleString()}
+                                                </span>
+                                                <span className="text-slate-300">•</span>
+                                                <span className={`font-semibold text-[11px] ${prod.inStock !== false ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                    {prod.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom Line: Priority Serial input & Reorder Buttons */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-100/90 gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[11px] font-bold text-slate-600">Priority Serial:</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={curatedProducts.length}
+                                                defaultValue={index + 1}
+                                                key={`rank-mobile-${prod.id}-${index}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleDirectOrderChange(index, e.target.value)
+                                                    }
+                                                }}
+                                                onBlur={(e) => handleDirectOrderChange(index, e.target.value)}
+                                                className="w-12 text-center text-xs font-bold text-slate-900 bg-slate-50 rounded-lg border border-slate-200 py-1 focus:ring-1 focus:ring-plum focus:border-plum focus:outline-hidden"
+                                            />
+                                            <span className="text-[10px] text-slate-400 font-medium">of {curatedProducts.length}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleMoveProduct(index, index - 1)}
+                                                disabled={index === 0}
+                                                className="h-7 px-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:hover:bg-slate-50 flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer gap-1"
+                                                title="Move Priority Up"
+                                            >
+                                                <span>▲</span>
+                                                <span className="text-[10px] font-semibold">Up</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleMoveProduct(index, index + 1)}
+                                                disabled={index === curatedProducts.length - 1}
+                                                className="h-7 px-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:hover:bg-slate-50 flex items-center justify-center font-bold text-xs transition shadow-2xs cursor-pointer gap-1"
+                                                title="Move Priority Down"
+                                            >
+                                                <span>▼</span>
+                                                <span className="text-[10px] font-semibold">Down</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -938,14 +1062,14 @@ export default function AdminHomepageSectionsPage() {
                                 filteredCatalog.map(prod => (
                                     <div
                                         key={prod.id}
-                                        className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-4 ${
+                                        className={`p-3 sm:p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${
                                             prod.isAlreadyAdded
                                                 ? 'bg-emerald-50/40 border-emerald-200'
                                                 : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/40'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            <div className="w-12 h-12 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1">
+                                            <div className="w-12 h-12 rounded-xl border border-slate-200 bg-white relative shrink-0 overflow-hidden flex items-center justify-center p-1 shadow-2xs">
                                                 {prod.images && prod.images[0] ? (
                                                     <Image
                                                         src={prod.images[0]}
@@ -977,10 +1101,10 @@ export default function AdminHomepageSectionsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="shrink-0">
+                                        <div className="shrink-0 flex items-center justify-end sm:justify-start">
                                             {prod.isAlreadyAdded ? (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-300 shadow-2xs">
+                                                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-300 shadow-2xs whitespace-nowrap">
                                                         <CheckIcon size={13} />
                                                         <span>Added (Rank #{prod.currentOrder})</span>
                                                     </span>
@@ -996,7 +1120,7 @@ export default function AdminHomepageSectionsPage() {
                                             ) : (
                                                 <button
                                                     onClick={() => handleAddProduct(prod.id)}
-                                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs cursor-pointer"
+                                                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-plum hover:bg-plum-hover transition shadow-2xs cursor-pointer w-full sm:w-auto"
                                                     type="button"
                                                 >
                                                     <PlusIcon size={14} />
