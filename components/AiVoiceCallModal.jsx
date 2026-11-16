@@ -1,175 +1,80 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import { CloseIcon, SparklesIcon, SendIcon } from '@/components/icons';
-import FormattedMessageText from '@/components/AiFormattedText';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { VoiceSession } from '@/components/ui/voice-session';
+import { CloseIcon } from '@/components/icons';
+
+// Clean text for speech synthesis (strip markdown, product tags, and strictly eliminate any pet names)
+function cleanTextForSpeech(rawText) {
+    if (!rawText) return '';
+    return rawText
+        .replace(/\[\[PRODUCT:[^\]]+\]\]/gi, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/#+\s*/g, '')
+        .replace(/\b(darling|honey|sweetheart|babe|sweetie)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Clean text for display in transcript
+function cleanTextForDisplay(rawText) {
+    if (!rawText) return '';
+    return rawText
+        .replace(/\[\[PRODUCT:[^\]]+\]\]/gi, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/\b(darling|honey|sweetheart|babe|sweetie)\b/gi, '')
+        .trim();
+}
+
+const PROFESSIONAL_GREETING = "Hello! Welcome to UK Brand Lover. I am Emma, your senior AI beauty advisor. How may I assist you with your authentic British skincare, haircare, or cosmetic choices today?";
 
 export default function AiVoiceCallModal({ isOpen, onClose }) {
-    const [callStatus, setCallStatus] = useState('ringing'); // 'ringing' | 'connected' | 'ended'
-    const [callSeconds, setCallSeconds] = useState(0);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isEmmaSpeaking, setIsEmmaSpeaking] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const [interimTranscript, setInterimTranscript] = useState('');
-    const [activeSubtitles, setActiveSubtitles] = useState('Connecting to Emma...');
-    const [subtitlesSpeaker, setSubtitlesSpeaker] = useState('system'); // 'emma' | 'user' | 'system'
-    const [textInput, setTextInput] = useState('');
-    const [conversationLog, setConversationLog] = useState([]);
-    const [audioError, setAudioError] = useState(null);
+    const [state, setState] = useState('connecting');
+    const [mode, setMode] = useState('voice');
+    const [segments, setSegments] = useState([]);
+    const [muted, setMuted] = useState(false);
+    const [captions, setCaptions] = useState(true);
+    const [startedAt, setStartedAt] = useState(undefined);
+    const [endedAt, setEndedAt] = useState(undefined);
+    const [errorMessage, setErrorMessage] = useState(undefined);
 
     const recognitionRef = useRef(null);
     const currentAudioRef = useRef(null);
     const isSpeakingRef = useRef(false);
     const isMutedRef = useRef(false);
+    const activeStateRef = useRef('connecting');
 
-    isSpeakingRef.current = isEmmaSpeaking;
-    isMutedRef.current = isMuted;
+    isMutedRef.current = muted;
+    activeStateRef.current = state;
+    isSpeakingRef.current = state === 'speaking';
 
-    // Reset when modal opens
-    useEffect(() => {
-        if (!isOpen) {
-            handleEndCall();
-            return;
+    // Stop all audio & recognition
+    const stopAudioAndRecognition = useCallback(() => {
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current.src = '';
+            currentAudioRef.current = null;
         }
-
-        setCallStatus('ringing');
-        setCallSeconds(0);
-        setIsMuted(false);
-        setIsEmmaSpeaking(false);
-        setInterimTranscript('');
-        setConversationLog([]);
-        setAudioError(null);
-        setActiveSubtitles('Connecting call to Emma (AI Senior Beauty Advisor)...');
-        setSubtitlesSpeaker('system');
-
-        // Play connecting / ringing chime
-        const ringTimer = setTimeout(() => {
-            setCallStatus('connected');
-            playEmmaGreeting();
-        }, 1800);
-
-        return () => {
-            clearTimeout(ringTimer);
-        };
-    }, [isOpen]);
-
-    // Timer counter when connected
-    useEffect(() => {
-        if (callStatus !== 'connected') return;
-
-        const timer = setInterval(() => {
-            setCallSeconds(prev => prev + 1);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [callStatus]);
-
-    const formatTimer = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Synthesize and play Emma voice via ElevenLabs
-    const speakEmmaResponse = async (text) => {
-        if (!text || !text.trim()) return;
-
-        setIsEmmaSpeaking(true);
-        setActiveSubtitles(text);
-        setSubtitlesSpeaker('emma');
-        setConversationLog(prev => [...prev, { role: 'assistant', content: text }]);
-
-        try {
-            // Stop existing audio if playing
-            if (currentAudioRef.current) {
-                currentAudioRef.current.pause();
-                currentAudioRef.current = null;
-            }
-
-            const res = await fetch('/api/ai/voice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
-            });
-
-            if (res.ok) {
-                const blob = await res.blob();
-                const audioUrl = URL.createObjectURL(blob);
-                const audio = new Audio(audioUrl);
-                currentAudioRef.current = audio;
-
-                audio.onended = () => {
-                    setIsEmmaSpeaking(false);
-                    URL.revokeObjectURL(audioUrl);
-                    // Resume listening after speaking finishes
-                    startSpeechRecognition();
-                };
-
-                audio.onerror = () => {
-                    setIsEmmaSpeaking(false);
-                    startSpeechRecognition();
-                };
-
-                await audio.play();
-            } else {
-                // If ElevenLabs key not set or quota reached, use fallback browser speech synthesis
-                const errData = await res.json().catch(() => ({}));
-                console.warn('Voice API fallback:', errData.message);
-                fallbackBrowserSpeak(text);
-            }
-        } catch (err) {
-            console.warn('Voice playback error, using fallback:', err.message);
-            fallbackBrowserSpeak(text);
-        }
-    };
-
-    // Fallback browser speech synthesis
-    const fallbackBrowserSpeak = (text) => {
-        if (typeof window === 'undefined' || !window.speechSynthesis) {
-            setIsEmmaSpeaking(false);
-            startSpeechRecognition();
-            return;
-        }
-
-        try {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
-            const cleanText = text.replace(/\[\[PRODUCT:[^\]]+\]\]/gi, '').replace(/\*\*/g, '');
-            const utterance = new SpeechSynthesisUtterance(cleanText.slice(0, 300));
-            utterance.rate = 1.0;
-            utterance.pitch = 1.05;
-
-            // Pick female natural voice if available
-            const voices = window.speechSynthesis.getVoices();
-            const naturalVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Sonia') || v.name.includes('Samantha')) && v.lang.startsWith('en'));
-            if (naturalVoice) utterance.voice = naturalVoice;
-
-            utterance.onend = () => {
-                setIsEmmaSpeaking(false);
-                startSpeechRecognition();
-            };
-            utterance.onerror = () => {
-                setIsEmmaSpeaking(false);
-                startSpeechRecognition();
-            };
-
-            window.speechSynthesis.speak(utterance);
-        } catch (e) {
-            setIsEmmaSpeaking(false);
-            startSpeechRecognition();
         }
-    };
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.abort();
+            } catch (e) {
+                // Ignore abort errors
+            }
+            recognitionRef.current = null;
+        }
+    }, []);
 
-    // Initial call greeting
-    const playEmmaGreeting = () => {
-        const greeting = "Hello darling, welcome to UK Brand Lover! I'm Emma, your personal beauty advisor. How may I assist you with your authentic British skincare or haircare routine today?";
-        speakEmmaResponse(greeting);
-    };
-
-    // Browser Speech Recognition for customer speech
-    const startSpeechRecognition = () => {
+    // Speech recognition loop
+    const startSpeechRecognition = useCallback(() => {
         if (typeof window === 'undefined') return;
-        if (isSpeakingRef.current || isMutedRef.current) return;
+        if (isSpeakingRef.current || isMutedRef.current || activeStateRef.current === 'ended') return;
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRec) {
@@ -179,325 +84,391 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
         try {
             if (recognitionRef.current) {
-                recognitionRef.current.abort();
+                try {
+                    recognitionRef.current.abort();
+                } catch (e) {}
             }
 
             const recognition = new SpeechRec();
             recognition.continuous = false;
             recognition.interimResults = true;
-            recognition.lang = 'en-US'; // Also handles English & Banglish phonetics
+            recognition.lang = 'en-US';
 
             recognition.onstart = () => {
-                setIsListening(true);
+                if (activeStateRef.current !== 'speaking') {
+                    setState('listening');
+                }
             };
 
             recognition.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map(r => r[0].transcript)
-                    .join('');
-                setInterimTranscript(transcript);
+                const results = event.results;
+                if (!results || results.length === 0) return;
 
-                if (event.results[0].isFinal) {
-                    handleUserSpeechQuery(transcript);
+                let interim = '';
+                let finalized = '';
+
+                for (let i = 0; i < results.length; i++) {
+                    const result = results[i];
+                    if (result.isFinal) {
+                        finalized += result[0].transcript;
+                    } else {
+                        interim += result[0].transcript;
+                    }
+                }
+
+                if (finalized) {
+                    // Final user transcript
+                    handleUserQuery(finalized.trim());
+                } else if (interim) {
+                    // Update live segment for interim speech
+                    setSegments(prev => {
+                        const last = prev[prev.length - 1];
+                        if (last && last.role === 'user' && last.live) {
+                            return [
+                                ...prev.slice(0, -1),
+                                { ...last, interim }
+                            ];
+                        }
+                        return [
+                            ...prev,
+                            {
+                                id: 'live-user-' + Date.now(),
+                                role: 'user',
+                                speaker: 'You',
+                                text: '',
+                                interim,
+                                live: true,
+                                at: Date.now(),
+                                channel: 'voice'
+                            }
+                        ];
+                    });
                 }
             };
 
             recognition.onerror = (event) => {
-                setIsListening(false);
-                if (event.error !== 'no-speech') {
-                    console.warn('Speech recognition error:', event.error);
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    console.warn('Speech recognition warning:', event.error);
                 }
             };
 
             recognition.onend = () => {
-                setIsListening(false);
+                // If not speaking and still connected and not muted, keep ready
+                if (activeStateRef.current === 'listening' && !isMutedRef.current) {
+                    // Auto-restart listening loop if still active
+                    try {
+                        recognition.start();
+                    } catch (e) {}
+                }
             };
 
             recognitionRef.current = recognition;
             recognition.start();
         } catch (err) {
-            console.warn('Could not start recognition:', err);
-            setIsListening(false);
+            console.warn('Could not initialize speech recognition:', err);
         }
-    };
+    }, []);
 
-    // Handle user spoken query
-    const handleUserSpeechQuery = async (queryText) => {
-        if (!queryText || !queryText.trim()) return;
+    // Speak Emma's response via ElevenLabs (with graceful speech synthesis fallback)
+    const speakEmmaResponse = useCallback(async (rawText) => {
+        if (!rawText || !rawText.trim()) return;
 
-        setInterimTranscript('');
-        setActiveSubtitles(queryText);
-        setSubtitlesSpeaker('user');
-        setConversationLog(prev => [...prev, { role: 'user', content: queryText }]);
+        const speechText = cleanTextForSpeech(rawText);
+        const displayText = cleanTextForDisplay(rawText);
 
-        if (recognitionRef.current) {
-            recognitionRef.current.abort();
+        stopAudioAndRecognition();
+        setState('speaking');
+
+        // Add assistant segment to transcript
+        const segmentId = 'emma-' + Date.now();
+        setSegments(prev => {
+            // Remove any pending live user segments
+            const cleaned = prev.filter(s => !s.live);
+            return [
+                ...cleaned,
+                {
+                    id: segmentId,
+                    role: 'assistant',
+                    speaker: 'Emma',
+                    text: displayText,
+                    at: Date.now(),
+                    channel: 'voice'
+                }
+            ];
+        });
+
+        const onPlaybackFinished = () => {
+            if (activeStateRef.current === 'speaking') {
+                if (isMutedRef.current) {
+                    setState('muted');
+                } else {
+                    setState('listening');
+                    startSpeechRecognition();
+                }
+            }
+        };
+
+        try {
+            const res = await fetch('/api/ai/voice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: speechText }),
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                const audio = new Audio(audioUrl);
+                currentAudioRef.current = audio;
+
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudioRef.current = null;
+                    onPlaybackFinished();
+                };
+
+                audio.onerror = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudioRef.current = null;
+                    fallbackBrowserSpeak(speechText, onPlaybackFinished);
+                };
+
+                await audio.play();
+            } else {
+                fallbackBrowserSpeak(speechText, onPlaybackFinished);
+            }
+        } catch (err) {
+            console.warn('ElevenLabs API fetch issue, falling back to browser speech:', err);
+            fallbackBrowserSpeak(speechText, onPlaybackFinished);
+        }
+    }, [startSpeechRecognition, stopAudioAndRecognition]);
+
+    // Fallback browser speech synthesis
+    const fallbackBrowserSpeak = (text, onEndCallback) => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) {
+            onEndCallback();
+            return;
         }
 
         try {
-            // Call our central AI backend with live product catalog grounding & strict rules
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text.slice(0, 350));
+            utterance.rate = 1.0;
+            utterance.pitch = 1.05;
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v =>
+                (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Sonia') || v.name.includes('Victoria')) &&
+                v.lang.startsWith('en')
+            );
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            utterance.onend = onEndCallback;
+            utterance.onerror = onEndCallback;
+
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            onEndCallback();
+        }
+    };
+
+    // Handle user query (voice transcript or typed input)
+    const handleUserQuery = useCallback(async (queryText, channel = 'voice') => {
+        if (!queryText || !queryText.trim()) return;
+
+        stopAudioAndRecognition();
+        setState('thinking');
+
+        // Add confirmed user segment to transcript
+        setSegments(prev => {
+            const cleaned = prev.filter(s => !s.live);
+            return [
+                ...cleaned,
+                {
+                    id: 'user-' + Date.now(),
+                    role: 'user',
+                    speaker: 'You',
+                    text: queryText,
+                    at: Date.now(),
+                    channel
+                }
+            ];
+        });
+
+        try {
+            // Build conversation history for API grounding
+            const history = segments
+                .filter(s => !s.live && s.text)
+                .slice(-6)
+                .map(s => ({
+                    role: s.role === 'assistant' ? 'assistant' : 'user',
+                    content: s.text
+                }));
+
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: queryText,
-                    history: conversationLog.slice(-6),
-                }),
+                    history
+                })
             });
 
             const data = await res.json();
             if (data.success && data.message) {
                 speakEmmaResponse(data.message);
             } else {
-                speakEmmaResponse("I'm sorry darling, I couldn't hear that clearly. Could you please repeat that?");
+                speakEmmaResponse("I'm sorry, I couldn't hear that clearly. Could you please repeat your question?");
             }
         } catch (err) {
             console.error('AI chat query error:', err);
-            speakEmmaResponse("We have full authentic UK skincare and haircare in stock with original receipt proof. Tell me about your skin type!");
+            speakEmmaResponse("We have 100% authentic UK skincare and haircare in stock with verified British batch codes. What product or skin concern can I assist you with?");
         }
-    };
+    }, [segments, speakEmmaResponse, stopAudioAndRecognition]);
 
-    // Manual text submission during call
-    const handleManualSubmit = (e) => {
-        e.preventDefault();
-        if (!textInput.trim() || isEmmaSpeaking) return;
-        const msg = textInput.trim();
-        setTextInput('');
-        handleUserSpeechQuery(msg);
-    };
+    // Handle user interrupting Emma (tapping orb while she is speaking)
+    const handleInterrupt = useCallback(() => {
+        if (state === 'speaking') {
+            stopAudioAndRecognition();
+            setSegments(prev => {
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'assistant') {
+                    return [
+                        ...prev.slice(0, -1),
+                        { ...last, interrupted: true }
+                    ];
+                }
+                return prev;
+            });
 
-    // End call
-    const handleEndCall = () => {
-        setCallStatus('ended');
-        setIsEmmaSpeaking(false);
-        setIsListening(false);
-
-        if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current = null;
+            if (muted) {
+                setState('muted');
+            } else {
+                setState('listening');
+                startSpeechRecognition();
+            }
         }
+    }, [state, muted, stopAudioAndRecognition, startSpeechRecognition]);
 
-        if (typeof window !== 'undefined' && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
+    // Handle mute change
+    const handleMutedChange = useCallback((isNowMuted) => {
+        setMuted(isNowMuted);
+        if (isNowMuted) {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.abort();
+                } catch (e) {}
+            }
+            if (state === 'listening') {
+                setState('muted');
+            }
+        } else {
+            if (state === 'muted') {
+                setState('listening');
+                startSpeechRecognition();
+            }
         }
+    }, [state, startSpeechRecognition]);
 
-        if (recognitionRef.current) {
-            recognitionRef.current.abort();
-            recognitionRef.current = null;
-        }
+    // End call handler
+    const handleEndCall = useCallback(() => {
+        stopAudioAndRecognition();
+        setState('ended');
+        setEndedAt(new Date());
 
+        // Auto close dialog smoothly after 600ms
         setTimeout(() => {
             onClose();
-        }, 500);
-    };
+        }, 600);
+    }, [stopAudioAndRecognition, onClose]);
+
+    // Start / Restart call handler
+    const handleStartCall = useCallback(() => {
+        stopAudioAndRecognition();
+        setState('connecting');
+        setStartedAt(undefined);
+        setEndedAt(undefined);
+        setSegments([]);
+        setErrorMessage(undefined);
+
+        const timer = setTimeout(() => {
+            setStartedAt(new Date());
+            speakEmmaResponse(PROFESSIONAL_GREETING);
+        }, 1200);
+
+        return () => clearTimeout(timer);
+    }, [speakEmmaResponse, stopAudioAndRecognition]);
+
+    // Reset and initialize call when modal opens
+    useEffect(() => {
+        if (!isOpen) {
+            stopAudioAndRecognition();
+            return;
+        }
+
+        const cleanup = handleStartCall();
+        return () => {
+            cleanup?.();
+            stopAudioAndRecognition();
+        };
+    }, [isOpen]);
+
+    // Handle Escape key to close modal
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                handleEndCall();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, handleEndCall]);
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
-            <div className="relative w-full max-w-md bg-gradient-to-b from-[#2B142C] via-[#1E0D1F] to-[#120513] text-white rounded-3xl shadow-2xl border border-white/10 overflow-hidden flex flex-col min-h-[540px] max-h-[92vh]">
-                
-                {/* 1. Header Strip */}
-                <div className="p-4 px-5 flex items-center justify-between border-b border-white/10 bg-white/5">
-                    <div className="flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-xs font-bold tracking-wider uppercase text-purple-200">
-                            {callStatus === 'ringing' ? 'Calling...' : `Live Call • ${formatTimer(callSeconds)}`}
-                        </span>
-                    </div>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-fadeIn"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    handleEndCall();
+                }
+            }}
+        >
+            <div className="relative w-full max-w-[480px] h-[640px] max-h-[92vh] rounded-3xl shadow-2xl overflow-hidden border border-white/10 bg-[#120513] text-white flex flex-col">
+                {/* Floating Dismiss Button */}
+                <button
+                    type="button"
+                    onClick={handleEndCall}
+                    aria-label="Close voice call"
+                    className="absolute top-3.5 right-3.5 z-20 size-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white flex items-center justify-center transition cursor-pointer"
+                >
+                    <CloseIcon size={16} color="currentColor" />
+                </button>
 
-                    <button
-                        onClick={handleEndCall}
-                        className="p-1.5 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition cursor-pointer"
-                        title="Close Call"
-                    >
-                        <CloseIcon size={16} color="currentColor" />
-                    </button>
-                </div>
-
-                {/* 2. Main Call Stage: Avatar & Audio Equalizer Pulse */}
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                    {/* Emma Avatar with Glowing Pulse Rings */}
-                    <div className="relative">
-                        {/* Animated Sound Wave Rings */}
-                        {isEmmaSpeaking && (
-                            <>
-                                <span className="absolute -inset-3 rounded-full bg-[#E08CE4]/20 animate-ping" />
-                                <span className="absolute -inset-6 rounded-full bg-[#6C306E]/30 animate-pulse" />
-                            </>
-                        )}
-                        {isListening && !isEmmaSpeaking && (
-                            <span className="absolute -inset-4 rounded-full bg-emerald-400/20 animate-pulse" />
-                        )}
-
-                        <div className="relative size-28 sm:size-32 rounded-full p-1 bg-gradient-to-tr from-[#E08CE4] to-[#6C306E] shadow-xl">
-                            <div className="relative size-full rounded-full overflow-hidden bg-white/10">
-                                <Image
-                                    src="/brand-logo.png"
-                                    alt="Emma - AI Beauty Consultant"
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Floating Status Pill */}
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-full bg-[#3B153D] border border-[#E08CE4]/40 text-[10px] font-bold tracking-wide text-purple-200 shadow-md">
-                            {callStatus === 'ringing' 
-                                ? 'Ringing...' 
-                                : isEmmaSpeaking 
-                                ? '🎙️ Emma is Speaking' 
-                                : isListening 
-                                ? '👂 Listening to you...' 
-                                : 'Emma Ready'}
-                        </div>
-                    </div>
-
-                    {/* Consultant Info */}
-                    <div>
-                        <h3 className="text-lg font-black tracking-tight text-white flex items-center justify-center gap-1.5">
-                            <span>Emma</span>
-                            <SparklesIcon size={14} color="#E08CE4" />
-                        </h3>
-                        <p className="text-xs text-purple-200/70 font-medium">
-                            Senior AI Beauty Advisor • UK Brand Lover
-                        </p>
-                    </div>
-
-                    {/* Animated Waveform Equalizer */}
-                    <div className="flex items-center justify-center gap-1.5 h-8">
-                        {[40, 70, 30, 90, 60, 100, 50, 80, 45, 65].map((h, i) => (
-                            <span
-                                key={i}
-                                className={`w-1 rounded-full transition-all duration-150 ${
-                                    isEmmaSpeaking
-                                        ? 'bg-[#E08CE4]'
-                                        : isListening
-                                        ? 'bg-emerald-400'
-                                        : 'bg-white/20'
-                                }`}
-                                style={{
-                                    height: isEmmaSpeaking 
-                                        ? `${Math.max(12, (h * Math.sin((callSeconds * 4 + i))))}%` 
-                                        : isListening 
-                                        ? '35%' 
-                                        : '15%',
-                                }}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Live Captions / Subtitles Box */}
-                    <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 min-h-[75px] max-h-[110px] overflow-y-auto text-left flex flex-col justify-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300/60 mb-0.5">
-                            {subtitlesSpeaker === 'emma' ? 'Emma' : subtitlesSpeaker === 'user' ? 'You' : 'Call Status'}
-                        </span>
-                        <div className="text-xs text-white/90 font-medium leading-relaxed">
-                            {interimTranscript ? (
-                                <span className="text-emerald-300 italic">"{interimTranscript}..."</span>
-                            ) : (
-                                <FormattedMessageText content={activeSubtitles} />
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. Text Message Input (Fallback during call) */}
-                <form onSubmit={handleManualSubmit} className="px-5 pb-3">
-                    <div className="flex items-center gap-2 bg-white/10 border border-white/15 rounded-xl px-3 py-1.5 focus-within:border-[#E08CE4]">
-                        <input
-                            type="text"
-                            value={textInput}
-                            onChange={(e) => setTextInput(e.target.value)}
-                            placeholder={isEmmaSpeaking ? 'Emma is speaking...' : 'Or type your question here...'}
-                            disabled={isEmmaSpeaking}
-                            className="flex-1 bg-transparent text-xs text-white placeholder:text-white/40 focus:outline-none"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!textInput.trim() || isEmmaSpeaking}
-                            className="size-7 rounded-lg bg-[#6C306E] hover:bg-[#833885] disabled:opacity-30 text-white flex items-center justify-center transition cursor-pointer"
-                        >
-                            <SendIcon size={12} color="white" />
-                        </button>
-                    </div>
-                </form>
-
-                {/* 4. Call Control Bar (Mic, Mute, End Call) */}
-                <div className="p-4 px-6 bg-white/5 border-t border-white/10 flex items-center justify-around">
-                    {/* Mute Button */}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsMuted(!isMuted);
-                            if (!isMuted && recognitionRef.current) {
-                                recognitionRef.current.abort();
-                            }
-                        }}
-                        className={`size-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer ${
-                            isMuted 
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
-                                : 'bg-white/10 hover:bg-white/15 text-white'
-                        }`}
-                        title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
-                    >
-                        <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            {isMuted ? (
-                                <>
-                                    <line x1="1" y1="1" x2="23" y2="23" />
-                                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-                                    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
-                                    <line x1="12" y1="19" x2="12" y2="23" />
-                                    <line x1="8" y1="23" x2="16" y2="23" />
-                                </>
-                            ) : (
-                                <>
-                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                    <line x1="12" y1="19" x2="12" y2="23" />
-                                    <line x1="8" y1="23" x2="16" y2="23" />
-                                </>
-                            )}
-                        </svg>
-                        <span className="text-[9px] mt-0.5">{isMuted ? 'Muted' : 'Mic'}</span>
-                    </button>
-
-                    {/* RED END CALL BUTTON */}
-                    <button
-                        type="button"
-                        onClick={handleEndCall}
-                        className="size-16 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white flex flex-col items-center justify-center shadow-lg shadow-rose-600/40 transition cursor-pointer"
-                        title="End Call"
-                    >
-                        <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
-                            <line x1="22" y1="2" x2="2" y2="22" />
-                        </svg>
-                    </button>
-
-                    {/* Push-to-Talk / Speak Button */}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (!isEmmaSpeaking) {
-                                startSpeechRecognition();
-                            }
-                        }}
-                        disabled={isEmmaSpeaking || isMuted}
-                        className={`size-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer ${
-                            isListening
-                                ? 'bg-emerald-500 text-white animate-pulse'
-                                : 'bg-white/10 hover:bg-white/15 text-white disabled:opacity-30'
-                        }`}
-                        title="Tap to Speak"
-                    >
-                        <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <circle cx="12" cy="12" r="3" fill="currentColor" />
-                        </svg>
-                        <span className="text-[9px] mt-0.5">{isListening ? 'Talking' : 'Speak'}</span>
-                    </button>
-                </div>
+                {/* Turnkey VoiceSession Component from shadcn / chatcn */}
+                <VoiceSession
+                    state={state}
+                    mode={mode}
+                    onModeChange={setMode}
+                    segments={segments}
+                    onSendText={(text) => handleUserQuery(text, 'text')}
+                    muted={muted}
+                    onMutedChange={handleMutedChange}
+                    captions={captions}
+                    onCaptionsChange={setCaptions}
+                    onStart={handleStartCall}
+                    onEnd={handleEndCall}
+                    onInterrupt={handleInterrupt}
+                    startedAt={startedAt}
+                    endedAt={endedAt}
+                    title="Emma • AI Beauty Advisor"
+                    userLabel="You"
+                    errorMessage={errorMessage}
+                    placeholder="Ask Emma about authentic UK skincare, batch codes..."
+                    className="h-full rounded-3xl"
+                />
             </div>
         </div>
     );
