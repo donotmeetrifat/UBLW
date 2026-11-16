@@ -64,7 +64,7 @@ export async function POST(request) {
 
         const voiceId = customVoiceId || settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
 
-        const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+        const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
         const ttsRes = await fetch(ttsUrl, {
             method: 'POST',
             headers: {

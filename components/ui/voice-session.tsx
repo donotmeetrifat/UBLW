@@ -29,6 +29,30 @@ const EXTRA_CHATCN_CSS = `
 .text-\\(color\\:--chatcn-red\\) { color: var(--chatcn-red) !important; }
 .border-\\(color\\:--chatcn-border\\) { border-color: var(--chatcn-border) !important; }
 .border-\\(color\\:--chatcn-border-strong\\) { border-color: var(--chatcn-border-strong) !important; }
+[data-slot="voice-controls-end"] {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding-left: 16px !important;
+    padding-right: 18px !important;
+    height: 40px !important;
+}
+[data-slot="voice-controls-end"]:hover {
+    background-color: #dc2626 !important;
+}
+[data-slot="voice-controls-end"] svg,
+[data-slot="voice-controls-end"] svg * {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
+}
 `;
 
 if (typeof document !== "undefined" && !document.getElementById("chatcn-voice-session")) {
@@ -77,6 +101,7 @@ interface VoiceControlsProps extends Omit<React.ComponentProps<"div">, "children
     onRetryMicrophone?: () => void;
     status?: "connecting" | "active" | "ended";
     onEnd?: () => void;
+    onClose?: () => void;
     endLabel?: string;
     disabled?: boolean;
     size?: VoiceControlsSize;
@@ -100,6 +125,7 @@ export interface VoiceSessionProps extends Omit<React.ComponentProps<"div">, "ti
     onCaptionsChange?: (captions: boolean) => void;
     onStart?: () => void;
     onEnd?: () => void;
+    onClose?: () => void;
     onReconnect?: () => void;
     onInterrupt?: () => void;
     startedAt?: number;
@@ -1987,7 +2013,7 @@ function ScrollToBottom({ when = "far", showUnread = true, visible, className, o
       </span>
     </button>);
 }
-function Transcript({ segments, userLabel = "You", assistantLabel = "Assistant", follow = true, onSeek, activeId, showTimestamps = true, layout = "stacked", empty, label = "Transcript", announce = true, className, ...props }: TranscriptProps) {
+function Transcript({ segments, userLabel = "You", assistantLabel = "Assistant", follow = true, onSeek, activeId, showTimestamps = false, layout = "stacked", empty, label = "Transcript", announce = true, className, ...props }: TranscriptProps) {
     const groups = React.useMemo(() => groupSegments(segments, { user: userLabel, assistant: assistantLabel }), [segments, userLabel, assistantLabel]);
     const contentClass = cn("max-w-none px-4 sm:px-5", layout === "inline" ? "gap-0 py-3" : "gap-5 py-4", segments.length === 0 && "min-h-full");
     const staticRef = React.useRef<HTMLDivElement>(null);
@@ -3082,7 +3108,7 @@ function VoiceControls({ muted = false, onMutedChange, captions = false, onCapti
       </div>
     </SizeContext.Provider>);
 }
-export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, ...props }: VoiceSessionProps) {
+export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, onClose, ...props }: VoiceSessionProps) {
     const [mode, setMode] = useControllable(modeProp, defaultMode, onModeChange);
     const [captions, setCaptions] = useControllable(captionsProp, defaultCaptions, onCaptionsChange);
     const [draft, setDraft] = React.useState("");
@@ -3124,7 +3150,23 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
             {statusLine}
           </span>
         </div>
-        <ModeSwitch mode={mode} onChange={switchMode}/>
+        <div className="flex items-center gap-2">
+          <ModeSwitch mode={mode} onChange={switchMode}/>
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close voice call"
+              className="size-8 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+              title="Close"
+            >
+              <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
       </header>
 
       <div data-slot="voice-session-stage" className={cn("ease-(--chatcn-ease-out) grid shrink-0 transition-[grid-template-rows,opacity] duration-280 motion-reduce:transition-none", textMode ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100", !textMode && !showTranscript && "flex-1")} inert={textMode || undefined}>
@@ -3155,7 +3197,7 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
         </div>
       </div>
 
-      {showTranscript ? (<Transcript segments={segments} userLabel={userLabel} assistantLabel={title} className={cn("border-(color:--chatcn-border) min-h-0 flex-1", !textMode && "border-t", "ease-(--chatcn-ease-out-soft) transition-opacity duration-150 starting:opacity-0")}/>) : null}
+      {showTranscript ? (<Transcript showTimestamps={false} segments={segments} userLabel={userLabel} assistantLabel={title} className={cn("border-(color:--chatcn-border) min-h-0 flex-1", !textMode && "border-t", "ease-(--chatcn-ease-out-soft) transition-opacity duration-150 starting:opacity-0")}/>) : null}
 
       <footer className="border-(color:--chatcn-border) shrink-0 border-t px-3 py-3">
         {textMode ? (<div ref={textareaWrap}>

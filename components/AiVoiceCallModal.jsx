@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { VoiceSession } from '@/components/ui/voice-session';
-import { CloseIcon } from '@/components/icons';
 
 // Clean text for speech synthesis (strip markdown, product tags, and strictly eliminate any pet names)
 function cleanTextForSpeech(rawText) {
@@ -50,9 +49,8 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const currentAudioRef = useRef(null);
     const voiceAbortControllerRef = useRef(null);
     const chatAbortControllerRef = useRef(null);
-    const silenceTimerRef = useRef(null);
     const greetingTimerRef = useRef(null);
-    const spokenBufferRef = useRef('');
+    const conversationHistoryRef = useRef([]);
 
     isMutedRef.current = muted;
 
@@ -106,9 +104,9 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             }
 
             const recognition = new SpeechRec();
-            recognition.continuous = true;
+            recognition.continuous = false; // Native browser sentence completion via VAD
             recognition.interimResults = true;
-            recognition.lang = 'en-US';
+            recognition.lang = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
 
             recognition.onstart = () => {
                 if (isCallActiveRef.current && !isSpeakingRef.current) {
@@ -120,31 +118,27 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 if (!isCallActiveRef.current || isSpeakingRef.current) return;
 
                 let interim = '';
-                let finalizedThisChunk = '';
+                let finalized = '';
 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalizedThisChunk += transcript;
+                for (let i = 0; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        finalized += result[0].transcript;
                     } else {
-                        interim += transcript;
+                        interim += result[0].transcript;
                     }
                 }
 
-                if (finalizedThisChunk) {
-                    spokenBufferRef.current = (spokenBufferRef.current + ' ' + finalizedThisChunk).trim();
-                }
-
-                const currentCombined = (spokenBufferRef.current + ' ' + interim).trim();
+                const currentText = (finalized || interim).trim();
 
                 // Live caption update
-                if (currentCombined) {
+                if (currentText) {
                     setSegments(prev => {
                         const last = prev[prev.length - 1];
                         if (last && last.role === 'user' && last.live) {
                             return [
                                 ...prev.slice(0, -1),
-                                { ...last, interim: currentCombined }
+                                { ...last, interim: currentText }
                             ];
                         }
                         return [
@@ -154,24 +148,18 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                                 role: 'user',
                                 speaker: 'You',
                                 text: '',
-                                interim: currentCombined,
+                                interim: currentText,
                                 live: true,
-                                at: Date.now(),
                                 channel: 'voice'
                             }
                         ];
                     });
                 }
 
-                // Reset silence debouncer: 1.2s of silence after talking -> submit to AI
-                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-                silenceTimerRef.current = setTimeout(() => {
-                    const toSubmit = (spokenBufferRef.current + ' ' + interim).trim();
-                    if (toSubmit.length > 0 && isCallActiveRef.current && !isSpeakingRef.current) {
-                        spokenBufferRef.current = '';
-                        handleUserQuery(toSubmit, 'voice');
-                    }
-                }, 1200);
+                // If sentence is finalized, submit immediately
+                if (finalized.trim()) {
+                    handleUserQuery(finalized.trim(), 'voice');
+                }
             };
 
             recognition.onerror = (event) => {
@@ -206,8 +194,8 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
         try {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text.slice(0, 350));
-            utterance.rate = 1.0;
+            const utterance = new SpeechSynthesisUtterance(text.slice(0, 250));
+            utterance.rate = 1.05;
             utterance.pitch = 1.05;
 
             const voices = window.speechSynthesis.getVoices();
@@ -242,7 +230,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         if (recognitionRef.current) {
             try { recognitionRef.current.abort(); } catch (e) {}
         }
-        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
         isSpeakingRef.current = true;
         setState('speaking');
@@ -258,7 +245,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     role: 'assistant',
                     speaker: 'Emma',
                     text: displayText,
-                    at: Date.now(),
                     channel: 'voice'
                 }
             ];
@@ -342,8 +328,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         if (recognitionRef.current) {
             try { recognitionRef.current.abort(); } catch (e) {}
         }
-        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        spokenBufferRef.current = '';
 
         // 2. Set state to thinking
         isSpeakingRef.current = false;
@@ -360,13 +344,18 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     role: 'user',
                     speaker: 'You',
                     text: userMsg,
-                    at: Date.now(),
                     channel
                 }
             ];
         });
 
-        // 4. Abort previous chat request
+        // 4. Update mutable conversation history to maintain context
+        conversationHistoryRef.current.push({
+            role: 'user',
+            content: userMsg
+        });
+
+        // 5. Abort previous chat request if pending
         if (chatAbortControllerRef.current) {
             chatAbortControllerRef.current.abort();
         }
@@ -374,21 +363,13 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         chatAbortControllerRef.current = chatController;
 
         try {
-            // Build conversation history
-            const history = segments
-                .filter(s => !s.live && s.text)
-                .slice(-6)
-                .map(s => ({
-                    role: s.role === 'assistant' ? 'assistant' : 'user',
-                    content: s.text
-                }));
-
             const res = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: userMsg,
-                    history
+                    history: conversationHistoryRef.current.slice(-10),
+                    isVoice: true, // Triggers ultra-fast, short, crisp voice consultation
                 }),
                 signal: chatController.signal
             });
@@ -399,6 +380,11 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             if (!isCallActiveRef.current) return;
 
             if (data.success && data.message) {
+                // Record assistant message in history
+                conversationHistoryRef.current.push({
+                    role: 'assistant',
+                    content: data.message
+                });
                 speakEmmaResponse(data.message);
             } else {
                 speakEmmaResponse("I'm sorry, I couldn't hear that clearly. Could you please repeat your question?");
@@ -407,9 +393,9 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             if (err.name === 'AbortError') return;
             if (!isCallActiveRef.current) return;
             console.error('AI chat query error:', err);
-            speakEmmaResponse("We have 100% authentic UK skincare and haircare in stock with verified British batch codes. What product or skin concern can I assist you with?");
+            speakEmmaResponse("We have 100% authentic UK skincare and haircare in stock with verified British batch codes. What product can I assist you with?");
         }
-    }, [segments, speakEmmaResponse, stopActiveAudio]);
+    }, [speakEmmaResponse, stopActiveAudio]);
 
     // Handle user interrupting Emma (tapping orb while she is speaking)
     const handleInterrupt = useCallback(() => {
@@ -461,17 +447,13 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         // Mark call permanently inactive synchronously
         isCallActiveRef.current = false;
 
-        // Clear all timers
+        // Clear greeting timer
         if (greetingTimerRef.current) {
             clearTimeout(greetingTimerRef.current);
             greetingTimerRef.current = null;
         }
-        if (silenceTimerRef.current) {
-            clearTimeout(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-        }
 
-        // Abort AI chat fetch
+        // Abort in-flight requests
         if (chatAbortControllerRef.current) {
             try { chatAbortControllerRef.current.abort(); } catch (e) {}
             chatAbortControllerRef.current = null;
@@ -492,7 +474,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         // Close modal smoothly
         setTimeout(() => {
             onClose();
-        }, 400);
+        }, 350);
     }, [stopActiveAudio, onClose]);
 
     // Start / Restart call handler
@@ -500,7 +482,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         // Mark call active
         isCallActiveRef.current = true;
         isSpeakingRef.current = false;
-        spokenBufferRef.current = '';
 
         stopActiveAudio();
         setState('connecting');
@@ -508,6 +489,11 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         setEndedAt(undefined);
         setSegments([]);
         setErrorMessage(undefined);
+
+        // Initialize persistent conversation history with greeting
+        conversationHistoryRef.current = [
+            { role: 'assistant', content: PROFESSIONAL_GREETING }
+        ];
 
         // Warm up microphone permission proactively
         if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
@@ -519,7 +505,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             if (!isCallActiveRef.current) return;
             setStartedAt(new Date());
             speakEmmaResponse(PROFESSIONAL_GREETING);
-        }, 1100);
+        }, 1000);
 
         return () => {
             if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
@@ -567,17 +553,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         >
             {/* Generous, high-end, spacious card container */}
             <div className="relative w-full max-w-2xl lg:max-w-3xl h-[820px] max-h-[92vh] rounded-3xl shadow-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-white dark:bg-[#18181b] text-foreground flex flex-col">
-                {/* Subtle Dismiss Button */}
-                <button
-                    type="button"
-                    onClick={handleEndCall}
-                    aria-label="Close voice call"
-                    className="absolute top-3.5 right-3.5 z-20 size-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 text-black/60 dark:text-white/70 hover:text-black dark:hover:text-white flex items-center justify-center transition cursor-pointer"
-                >
-                    <CloseIcon size={16} color="currentColor" />
-                </button>
-
-                {/* Turnkey VoiceSession Component from shadcn / chatcn */}
+                {/* Turnkey VoiceSession Component from shadcn / chatcn with integrated Close button */}
                 <VoiceSession
                     state={state}
                     mode={mode}
@@ -590,6 +566,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     onCaptionsChange={setCaptions}
                     onStart={handleStartCall}
                     onEnd={handleEndCall}
+                    onClose={handleEndCall}
                     onInterrupt={handleInterrupt}
                     startedAt={startedAt}
                     endedAt={endedAt}

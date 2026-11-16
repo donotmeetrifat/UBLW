@@ -21,7 +21,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { message, image, sessionId, model, history = [] } = body;
+        const { message, image, sessionId, model, history = [], isVoice = false } = body;
         messageText = message || '';
         imagePayload = image || null;
 
@@ -54,7 +54,8 @@ export async function POST(request) {
             messages: conversationHistory,
             image: image || null,
             user,
-            modelPreference: model || 'pro',
+            modelPreference: isVoice ? 'fast' : (model || 'pro'),
+            isVoice,
         });
 
         let savedUserMsg = null;
