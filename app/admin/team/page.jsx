@@ -215,16 +215,6 @@ export default function AdminTeamPage() {
                 confirmButtonText: 'Unblock Account',
                 confirmButtonColor: 'bg-emerald-600 hover:bg-emerald-700',
             })
-        } else if (actionType === 'set_pending') {
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Mark as Pending Approval?',
-                message: `Set verification status of ${user.name} (${user.email}) to Pending?`,
-                confirmButtonText: 'Set Pending',
-                confirmButtonColor: 'bg-amber-600 hover:bg-amber-700',
-            })
         } else if (actionType === 'approve') {
             setConfirmModal({
                 isOpen: true,
@@ -274,8 +264,6 @@ export default function AdminTeamPage() {
                 bodyPayload.isActive = false
             } else if (actionType === 'unblock') {
                 bodyPayload.isActive = true
-            } else if (actionType === 'set_pending') {
-                bodyPayload.isVerified = false
             } else if (actionType === 'approve') {
                 bodyPayload.isVerified = true
                 bodyPayload.isActive = true
@@ -699,7 +687,7 @@ export default function AdminTeamPage() {
                                                                         </button>
                                                                     )}
 
-                                                                    {isPending ? (
+                                                                    {isPending && (
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => openActionModal(user, 'approve')}
@@ -707,15 +695,6 @@ export default function AdminTeamPage() {
                                                                         >
                                                                             <CheckIcon size={13} color="#059669" />
                                                                             <span>Approve</span>
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => openActionModal(user, 'set_pending')}
-                                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                        >
-                                                                            <ClockIcon size={13} color="#D97706" />
-                                                                            <span>Set Pending</span>
                                                                         </button>
                                                                     )}
 
@@ -773,7 +752,7 @@ export default function AdminTeamPage() {
                                                                 </button>
                                                             )}
 
-                                                            {isPending ? (
+                                                            {isPending && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => openActionModal(user, 'approve')}
@@ -781,15 +760,6 @@ export default function AdminTeamPage() {
                                                                 >
                                                                     <CheckIcon size={13} color="#059669" />
                                                                     <span>Approve</span>
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'set_pending')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <ClockIcon size={13} color="#D97706" />
-                                                                    <span>Set Pending</span>
                                                                 </button>
                                                             )}
 
