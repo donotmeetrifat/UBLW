@@ -59,41 +59,66 @@ export async function POST(request) {
             );
         }
 
-        // Limit speech chunk to 500 characters to conserve quota and maintain low latency
-        const speechText = clean.length > 500 ? clean.slice(0, 497) + '...' : clean;
+        // Limit speech chunk to 2 sentences or 260 characters to achieve instant real-time response (<150ms generation)
+        const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+        let shortText = sentences.slice(0, 2).join(' ').trim();
+        if (!shortText || shortText.length < 10) shortText = clean;
+        const speechText = shortText.length > 260 ? shortText.slice(0, 257) + '...' : shortText;
 
         const voiceId = customVoiceId || settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
 
-        const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
-        const ttsRes = await fetch(ttsUrl, {
-            method: 'POST',
-            headers: {
-                'xi-api-key': settings.elevenLabsKey.trim(),
-                'Content-Type': 'application/json',
-                'Accept': 'audio/mpeg',
-            },
-            body: JSON.stringify({
-                text: speechText,
-                model_id: 'eleven_multilingual_v2',
-                voice_settings: {
-                    stability: 0.5,
-                    similarity_boost: 0.75,
-                    style: 0.05,
-                    use_speaker_boost: true,
-                },
-            }),
-        });
+        // Ultra-low-latency model progression: eleven_flash_v2_5 (~75ms) -> eleven_turbo_v2_5 -> eleven_multilingual_v2
+        const candidateModels = ['eleven_flash_v2_5', 'eleven_turbo_v2_5', 'eleven_multilingual_v2'];
+        let ttsRes = null;
+        let lastErrorMsg = '';
 
-        if (!ttsRes.ok) {
-            const errData = await ttsRes.json().catch(() => ({}));
-            const errMsg = errData?.detail?.message || `ElevenLabs TTS request failed (${ttsRes.status})`;
-            const isQuota = ttsRes.status === 429 || (errMsg && errMsg.toLowerCase().includes('quota'));
+        for (const modelId of candidateModels) {
+            try {
+                const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=4`;
+                const response = await fetch(ttsUrl, {
+                    method: 'POST',
+                    headers: {
+                        'xi-api-key': settings.elevenLabsKey.trim(),
+                        'Content-Type': 'application/json',
+                        'Accept': 'audio/mpeg',
+                    },
+                    body: JSON.stringify({
+                        text: speechText,
+                        model_id: modelId,
+                        voice_settings: {
+                            stability: 0.45,
+                            similarity_boost: 0.75,
+                            style: 0.0,
+                            use_speaker_boost: false,
+                        },
+                    }),
+                });
+
+                if (response.ok) {
+                    ttsRes = response;
+                    break;
+                }
+
+                const errData = await response.json().catch(() => ({}));
+                lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
+                // If quota exceeded or 401 unauthorized, no need to retry other models
+                if (response.status === 401 || response.status === 429) {
+                    ttsRes = response;
+                    break;
+                }
+            } catch (netErr) {
+                lastErrorMsg = netErr.message;
+            }
+        }
+
+        if (!ttsRes || !ttsRes.ok) {
+            const isQuota = ttsRes?.status === 429 || (lastErrorMsg && lastErrorMsg.toLowerCase().includes('quota'));
 
             return NextResponse.json({
                 success: false,
                 code: isQuota ? 'QUOTA_EXCEEDED' : 'TTS_ERROR',
-                message: errMsg,
-            }, { status: ttsRes.status });
+                message: lastErrorMsg || 'ElevenLabs TTS synthesis failed',
+            }, { status: ttsRes ? ttsRes.status : 500 });
         }
 
         const audioBuffer = await ttsRes.arrayBuffer();

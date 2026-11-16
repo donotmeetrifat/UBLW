@@ -50,13 +50,20 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const isCallActiveRef = useRef(false);
     const isSpeakingRef = useRef(false);
     const isMutedRef = useRef(false);
+    const isExplicitAbortRef = useRef(false);
     const recognitionRef = useRef(null);
+    const silenceTimerRef = useRef(null);
+    const recognitionRestartTimerRef = useRef(null);
+    const pendingSpeechRef = useRef(null);
     const currentAudioRef = useRef(null);
     const voiceAbortControllerRef = useRef(null);
     const chatAbortControllerRef = useRef(null);
     const greetingTimerRef = useRef(null);
     const conversationHistoryRef = useRef([]);
     const lastRecommendedProductsRef = useRef([]);
+
+    const handleUserQueryRef = useRef(null);
+    const startSpeechRecognitionRef = useRef(null);
 
     // Instant shopping bag add handler
     const handleQuickAdd = useCallback((product) => {
@@ -104,7 +111,23 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         isSpeakingRef.current = false;
     }, []);
 
-    // Speech recognition loop
+    // Safe non-blocking speech recognition restart
+    const scheduleRecognitionRestart = useCallback((delay = 120) => {
+        if (!isCallActiveRef.current || isSpeakingRef.current || isMutedRef.current) return;
+        if (recognitionRestartTimerRef.current) {
+            clearTimeout(recognitionRestartTimerRef.current);
+            recognitionRestartTimerRef.current = null;
+        }
+        recognitionRestartTimerRef.current = setTimeout(() => {
+            if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
+                if (startSpeechRecognitionRef.current) {
+                    startSpeechRecognitionRef.current();
+                }
+            }
+        }, delay);
+    }, []);
+
+    // Speech recognition loop with continuous listening & silence detection (VAD)
     const startSpeechRecognition = useCallback(() => {
         if (typeof window === 'undefined') return;
         if (!isCallActiveRef.current || isMutedRef.current || isSpeakingRef.current) return;
@@ -115,27 +138,31 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             return;
         }
 
-        try {
-            if (recognitionRef.current) {
-                try {
-                    recognitionRef.current.abort();
-                } catch (e) {}
-                recognitionRef.current = null;
-            }
+        // Clean up previous instance cleanly
+        if (recognitionRef.current) {
+            isExplicitAbortRef.current = true;
+            try {
+                recognitionRef.current.abort();
+            } catch (e) {}
+            recognitionRef.current = null;
+        }
 
+        try {
+            isExplicitAbortRef.current = false;
             const recognition = new SpeechRec();
-            recognition.continuous = false; // Native browser sentence completion via VAD
-            recognition.interimResults = true;
+            recognition.continuous = true; // Continuous listening prevents premature closing
+            recognition.interimResults = true; // Instant real-time transcript updates
+            recognition.maxAlternatives = 1;
             recognition.lang = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
 
             recognition.onstart = () => {
-                if (isCallActiveRef.current && !isSpeakingRef.current) {
+                if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
                     setState('listening');
                 }
             };
 
             recognition.onresult = (event) => {
-                if (!isCallActiveRef.current || isSpeakingRef.current) return;
+                if (!isCallActiveRef.current || isSpeakingRef.current || isMutedRef.current) return;
 
                 let interim = '';
                 let finalized = '';
@@ -150,50 +177,89 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 }
 
                 const currentText = (finalized || interim).trim();
+                if (!currentText) return;
 
-                // Live caption update
-                if (currentText) {
-                    setSegments(prev => {
-                        const last = prev[prev.length - 1];
-                        if (last && last.role === 'user' && last.live) {
-                            return [
-                                ...prev.slice(0, -1),
-                                { ...last, interim: currentText }
-                            ];
-                        }
+                // Live caption update so the customer immediately sees their voice transcribed
+                setSegments(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === 'user' && last.live) {
                         return [
-                            ...prev,
-                            {
-                                id: 'live-user-' + Date.now(),
-                                role: 'user',
-                                speaker: 'You',
-                                text: '',
-                                interim: currentText,
-                                live: true,
-                                channel: 'voice'
-                            }
+                            ...prev.slice(0, -1),
+                            { ...last, interim: currentText }
                         ];
-                    });
+                    }
+                    return [
+                        ...prev,
+                        {
+                            id: 'live-user-' + Date.now(),
+                            role: 'user',
+                            speaker: 'You',
+                            text: '',
+                            interim: currentText,
+                            live: true,
+                            channel: 'voice'
+                        }
+                    ];
+                });
+
+                // Clear previous silence detection timer
+                if (silenceTimerRef.current) {
+                    clearTimeout(silenceTimerRef.current);
+                    silenceTimerRef.current = null;
                 }
 
-                // If sentence is finalized, submit immediately
-                if (finalized.trim()) {
-                    handleUserQuery(finalized.trim(), 'voice');
-                }
+                // Keep track of the freshest speech detected
+                pendingSpeechRef.current = {
+                    text: currentText,
+                    isFinal: Boolean(finalized.trim()),
+                    timestamp: Date.now()
+                };
+
+                // Fast silence-detection debounce:
+                // If finalized by browser, 280ms pause confirms end of thought.
+                // If interim only (Chrome VAD has not finalized), submit after 750ms of silence.
+                const debounceMs = finalized.trim() ? 280 : 750;
+
+                silenceTimerRef.current = setTimeout(() => {
+                    if (!isCallActiveRef.current || isSpeakingRef.current || isMutedRef.current) return;
+
+                    const textToSubmit = pendingSpeechRef.current?.text?.trim();
+                    if (textToSubmit) {
+                        pendingSpeechRef.current = null;
+                        if (handleUserQueryRef.current) {
+                            handleUserQueryRef.current(textToSubmit, 'voice');
+                        }
+                    }
+                }, debounceMs);
             };
 
             recognition.onerror = (event) => {
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
                     console.warn('Speech recognition status:', event.error);
                 }
+                if (event.error !== 'not-allowed' && event.error !== 'aborted') {
+                    scheduleRecognitionRestart(300);
+                }
             };
 
             recognition.onend = () => {
-                // If call is still active, not speaking and not muted, keep listening
-                if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
-                    try {
-                        recognition.start();
-                    } catch (e) {}
+                // If speech was pending when browser ended the turn, submit immediately so nothing is lost
+                if (pendingSpeechRef.current?.text?.trim() && isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
+                    const textToSubmit = pendingSpeechRef.current.text.trim();
+                    pendingSpeechRef.current = null;
+                    if (silenceTimerRef.current) {
+                        clearTimeout(silenceTimerRef.current);
+                        silenceTimerRef.current = null;
+                    }
+                    if (handleUserQueryRef.current) {
+                        handleUserQueryRef.current(textToSubmit, 'voice');
+                    }
+                    return;
+                }
+
+                // If not speaking, not muted, and not an intentional abort, safely restart listening
+                if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current && !isExplicitAbortRef.current) {
+                    scheduleRecognitionRestart(120);
                 }
             };
 
@@ -201,8 +267,11 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             recognition.start();
         } catch (err) {
             console.warn('Could not initialize speech recognition:', err);
+            scheduleRecognitionRestart(500);
         }
-    }, []);
+    }, [scheduleRecognitionRestart]);
+
+    startSpeechRecognitionRef.current = startSpeechRecognition;
 
     // Fallback browser speech synthesis
     const fallbackBrowserSpeak = useCallback((text, onEndCallback) => {
@@ -247,6 +316,12 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
         // Stop active audio and pause speech recognition while Emma speaks
         stopActiveAudio();
+        isExplicitAbortRef.current = true;
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+        pendingSpeechRef.current = null;
         if (recognitionRef.current) {
             try { recognitionRef.current.abort(); } catch (e) {}
         }
@@ -280,13 +355,14 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
         const onPlaybackFinished = () => {
             isSpeakingRef.current = false;
+            isExplicitAbortRef.current = false;
             if (!isCallActiveRef.current) return;
 
             if (isMutedRef.current) {
                 setState('muted');
             } else {
                 setState('listening');
-                startSpeechRecognition();
+                scheduleRecognitionRestart(120);
             }
         };
 
@@ -339,23 +415,31 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 fallbackBrowserSpeak(speechText, onPlaybackFinished);
             }
         }
-    }, [startSpeechRecognition, stopActiveAudio, fallbackBrowserSpeak]);
+    }, [stopActiveAudio, fallbackBrowserSpeak, scheduleRecognitionRestart]);
 
     // Handle user query (voice transcript or typed input)
     const handleUserQuery = useCallback(async (queryText, channel = 'voice') => {
         if (!queryText || !queryText.trim() || !isCallActiveRef.current) return;
 
-        // 1. Immediately silence audio & stop recognition
-        stopActiveAudio();
+        // 1. Immediately cancel any pending silence timers & speech
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+        pendingSpeechRef.current = null;
+
+        // 2. Mark explicit abort so onend doesn't restart recognition while waiting for AI
+        isExplicitAbortRef.current = true;
         if (recognitionRef.current) {
             try { recognitionRef.current.abort(); } catch (e) {}
         }
 
-        // 2. Set state to thinking
+        // 3. Immediately silence audio & set state to thinking
+        stopActiveAudio();
         isSpeakingRef.current = false;
         setState('thinking');
 
-        // 3. Add user segment to transcript
+        // 4. Add user segment to transcript
         const userMsg = queryText.trim();
         setSegments(prev => {
             const cleaned = prev.filter(s => !s.live);
@@ -371,13 +455,13 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             ];
         });
 
-        // 4. Update mutable conversation history to maintain context
+        // 5. Update mutable conversation history to maintain context
         conversationHistoryRef.current.push({
             role: 'user',
             content: userMsg
         });
 
-        // 5. Abort previous chat request if pending
+        // 6. Abort previous chat request if pending
         if (chatAbortControllerRef.current) {
             chatAbortControllerRef.current.abort();
         }
@@ -391,7 +475,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 body: JSON.stringify({
                     message: userMsg,
                     history: conversationHistoryRef.current.slice(-10),
-                    isVoice: true, // Triggers ultra-fast, short, crisp voice consultation
+                    isVoice: true, // Triggers ultra-fast, short, crisp voice consultation (<350ms)
                 }),
                 signal: chatController.signal
             });
@@ -434,7 +518,9 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             console.error('AI chat query error:', err);
             speakEmmaResponse("We have 100% authentic UK skincare and haircare in stock with verified British batch codes. What product can I assist you with?");
         }
-    }, [speakEmmaResponse, stopActiveAudio]);
+    }, [speakEmmaResponse, stopActiveAudio, handleQuickAdd]);
+
+    handleUserQueryRef.current = handleUserQuery;
 
     // Handle user interrupting Emma (tapping orb while she is speaking)
     const handleInterrupt = useCallback(() => {
@@ -452,14 +538,15 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             });
 
             isSpeakingRef.current = false;
+            isExplicitAbortRef.current = false;
             if (muted) {
                 setState('muted');
             } else {
                 setState('listening');
-                startSpeechRecognition();
+                scheduleRecognitionRestart(100);
             }
         }
-    }, [state, muted, stopActiveAudio, startSpeechRecognition]);
+    }, [state, muted, stopActiveAudio, scheduleRecognitionRestart]);
 
     // Handle mute change
     const handleMutedChange = useCallback((isNowMuted) => {
@@ -467,6 +554,12 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         isMutedRef.current = isNowMuted;
 
         if (isNowMuted) {
+            isExplicitAbortRef.current = true;
+            if (silenceTimerRef.current) {
+                clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = null;
+            }
+            pendingSpeechRef.current = null;
             if (recognitionRef.current) {
                 try { recognitionRef.current.abort(); } catch (e) {}
             }
@@ -474,23 +567,34 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 setState('muted');
             }
         } else {
+            isExplicitAbortRef.current = false;
             if (state === 'muted') {
                 setState('listening');
-                startSpeechRecognition();
+                scheduleRecognitionRestart(100);
             }
         }
-    }, [state, startSpeechRecognition]);
+    }, [state, scheduleRecognitionRestart]);
 
     // End call handler (INSTANT KILL OF ALL AUDIO & PROCESSES)
     const handleEndCall = useCallback(() => {
         // Mark call permanently inactive synchronously
         isCallActiveRef.current = false;
+        isExplicitAbortRef.current = true;
 
-        // Clear greeting timer
+        // Clear all timers
         if (greetingTimerRef.current) {
             clearTimeout(greetingTimerRef.current);
             greetingTimerRef.current = null;
         }
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+        if (recognitionRestartTimerRef.current) {
+            clearTimeout(recognitionRestartTimerRef.current);
+            recognitionRestartTimerRef.current = null;
+        }
+        pendingSpeechRef.current = null;
 
         // Abort in-flight requests
         if (chatAbortControllerRef.current) {
@@ -521,6 +625,17 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         // Mark call active
         isCallActiveRef.current = true;
         isSpeakingRef.current = false;
+        isExplicitAbortRef.current = false;
+
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+        if (recognitionRestartTimerRef.current) {
+            clearTimeout(recognitionRestartTimerRef.current);
+            recognitionRestartTimerRef.current = null;
+        }
+        pendingSpeechRef.current = null;
 
         stopActiveAudio();
         setState('connecting');
@@ -544,7 +659,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             if (!isCallActiveRef.current) return;
             setStartedAt(new Date());
             speakEmmaResponse(PROFESSIONAL_GREETING);
-        }, 1000);
+        }, 800);
 
         return () => {
             if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
