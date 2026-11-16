@@ -364,9 +364,7 @@ export default function AiSuggestionBar({
                             type="button"
                             disabled={disabled}
                             onClick={() => onSelect?.(item)}
-                            className={`whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${
-                                hasBengali ? 'font-bengali' : ''
-                            }`}
+                            className="whitespace-nowrap shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium text-slate-700 bg-white border border-[#EFE0EF] hover:border-[#6C306E] hover:text-[#6C306E] hover:shadow-xs transition-all duration-150 shadow-2xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer font-ai-editorial"
                         >
                             {item}
                         </button>

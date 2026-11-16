@@ -535,7 +535,7 @@ export default function AiChatWidget() {
                                                             />
                                                         </div>
                                                     )}
-                                                    <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs font-medium select-text">
+                                                    <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs font-medium select-text font-ai-editorial">
                                                         <FormattedMessageText text={m.content} isUser={true} />
                                                     </div>
                                                 </div>
@@ -545,7 +545,7 @@ export default function AiChatWidget() {
                                             <div className="flex items-start gap-2.5">
                                                 <EmmaAvatar size={30} className="mt-0.5 shadow-2xs" />
                                                 <div className="max-w-[85%] space-y-2">
-                                                    <div className="bg-white/95 border border-[#EFE0EF]/90 shadow-[0_2px_10px_rgba(58,12,56,0.04)] rounded-2xl rounded-tl-xs px-4 py-3 text-xs sm:text-[13px] text-[#241224] leading-relaxed select-text font-normal">
+                                                    <div className="bg-white/95 border border-[#EFE0EF]/90 shadow-[0_2px_10px_rgba(58,12,56,0.04)] rounded-2xl rounded-tl-xs px-4 py-3 text-xs sm:text-[13px] text-[#241224] leading-relaxed select-text font-normal font-ai-editorial">
                                                         {(() => {
                                                             const products = Array.isArray(m.products) ? m.products : [];
                                                             const productMap = new Map();

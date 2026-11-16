@@ -5,17 +5,16 @@ import React from 'react'
 /**
  * FormattedMessageText: Renders AI messages with clean bold formatting,
  * handles **bold** and *italic*, cleans stray asterisks,
- * and automatically applies 'font-bengali' (Noto Serif Bengali) to all Bengali text.
+ * and applies 'font-ai-editorial' (Noto Serif for English, Noto Serif Bengali for Bengali).
  */
 export default function FormattedMessageText({ text, content, isUser = false, className = '' }) {
     const raw = text !== undefined ? text : (content !== undefined ? content : '')
     if (!raw) return null
 
-    const hasBengali = /[\u0980-\u09FF]/.test(raw)
     const paragraphs = String(raw).split(/\n/)
 
     return (
-        <div className={`space-y-1.5 ${hasBengali ? 'font-bengali' : ''} ${className}`}>
+        <div className={`space-y-1.5 font-ai-editorial ${className}`}>
             {paragraphs.map((line, pIdx) => {
                 if (!line.trim()) {
                     return <div key={pIdx} className="h-1.5" />

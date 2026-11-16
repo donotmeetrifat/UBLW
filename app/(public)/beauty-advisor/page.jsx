@@ -463,7 +463,7 @@ export default function BeautyAdvisorPage() {
                                                     />
                                                 </div>
                                             )}
-                                            <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-3 text-sm leading-relaxed shadow-xs font-medium select-text">
+                                            <div className="bg-[#6C306E] text-white rounded-2xl rounded-tr-xs px-4 py-3 text-sm leading-relaxed shadow-xs font-medium select-text font-ai-editorial">
                                                 <FormattedMessageText text={m.content} isUser={true} />
                                             </div>
                                         </div>
@@ -473,7 +473,7 @@ export default function BeautyAdvisorPage() {
                                     <div className="flex items-start gap-3">
                                         <EmmaAvatar size={34} className="mt-1 shadow-2xs" />
                                         <div className="max-w-[85%] sm:max-w-[80%] space-y-2.5">
-                                            <div className="bg-white border border-[#EFE0EF]/90 shadow-[0_2px_12px_rgba(58,12,56,0.04)] rounded-2xl rounded-tl-xs p-4 sm:p-5 text-sm text-[#241224] leading-relaxed select-text font-normal">
+                                            <div className="bg-white border border-[#EFE0EF]/90 shadow-[0_2px_12px_rgba(58,12,56,0.04)] rounded-2xl rounded-tl-xs p-4 sm:p-5 text-sm text-[#241224] leading-relaxed select-text font-normal font-ai-editorial">
                                                 {(() => {
                                                     const products = Array.isArray(m.products) ? m.products : [];
                                                     const productMap = new Map();

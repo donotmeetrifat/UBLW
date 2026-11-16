@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Noto+Serif+Bengali:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -31,6 +31,13 @@ body {
 .bn-text,
 :lang(bn) {
     font-family: 'Noto Serif Bengali', serif !important;
+}
+
+/* AI Assistant Luxury Editorial Serif: English uses Noto Serif, Bengali uses Noto Serif Bengali */
+.font-ai-editorial,
+.font-ai-serif,
+.font-ai-text {
+    font-family: 'Noto Serif', 'Noto Serif Bengali', Georgia, Cambria, 'Times New Roman', serif !important;
 }
 
 @layer components {

@@ -126,7 +126,16 @@ const EXTRA_CHATCN_CSS = `
     }
 }
 
-/* Transcript Animations */
+/* Transcript Animations & Luxury Editorial Typography */
+[data-slot="voice-session-root"],
+[data-slot="transcript"],
+[data-slot="transcript-segment"],
+[data-slot="transcript-interim"],
+[data-slot="transcript-group"] p,
+[data-slot="prompt-input-textarea"] {
+    font-family: 'Noto Serif', 'Noto Serif Bengali', Georgia, Cambria, 'Times New Roman', serif !important;
+}
+
 [data-slot="transcript-group"] {
     animation: transcriptGroupFade 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
