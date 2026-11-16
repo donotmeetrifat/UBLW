@@ -25,7 +25,7 @@ export default function Orders() {
         setIsSignedIn(true);
 
         try {
-            const res = await fetch('/api/orders');
+            const res = await fetch('/api/orders?my=true');
             const data = await res.json();
 
             let fetchedOrders = data.success && Array.isArray(data.orders) ? data.orders : [];

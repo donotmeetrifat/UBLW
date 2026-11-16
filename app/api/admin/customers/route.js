@@ -7,17 +7,22 @@ export async function GET(request) {
         const search = searchParams.get('search') || '';
 
         if (isDatabaseConfigured()) {
+            const searchFilter = search ? {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } },
+                    { phone: { contains: search } },
+                    { whatsapp: { contains: search } },
+                ]
+            } : null;
+
             const users = await prisma.user.findMany({
                 where: {
-                    role: 'CUSTOMER',
-                    ...(search ? {
-                        OR: [
-                            { name: { contains: search, mode: 'insensitive' } },
-                            { email: { contains: search, mode: 'insensitive' } },
-                            { phone: { contains: search } },
-                            { whatsapp: { contains: search } },
-                        ]
-                    } : {})
+                    OR: [
+                        { role: 'CUSTOMER' },
+                        { orders: { some: {} } },
+                    ],
+                    ...(searchFilter ? { AND: [searchFilter] } : {})
                 },
                 include: {
                     orders: {

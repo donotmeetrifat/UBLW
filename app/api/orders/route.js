@@ -16,10 +16,19 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
+        const viewAll = searchParams.get('all') === 'true' || searchParams.get('admin') === 'true';
+        const isStaff = payload.role === 'ADMIN' || payload.role === 'EMPLOYEE';
+
+        // Staff portal: allows ADMIN & EMPLOYEE to manage all customer orders in the admin portal.
+        // Storefront: whether CUSTOMER, EMPLOYEE, or ADMIN, users see strictly their own customer orders.
+        let where = {};
+        if (viewAll && isStaff) {
+            where = userId ? { userId } : {};
+        } else {
+            where = { userId: payload.id };
+        }
 
         if (isDatabaseConfigured()) {
-            const where = payload.role === 'ADMIN' ? (userId ? { userId } : {}) : { userId: payload.id };
-
             const orders = await prisma.order.findMany({
                 where,
                 include: {
@@ -36,7 +45,11 @@ export async function GET(request) {
         }
 
         let orders = memoryStore.getOrders();
-        orders = orders.filter(o => o.userId === payload.id);
+        if (viewAll && isStaff) {
+            if (userId) orders = orders.filter(o => o.userId === userId);
+        } else {
+            orders = orders.filter(o => o.userId === payload.id);
+        }
 
         return NextResponse.json({ success: true, orders });
     } catch (error) {

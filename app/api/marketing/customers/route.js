@@ -98,7 +98,12 @@ export async function GET() {
     try {
         if (isDatabaseConfigured()) {
             const users = await prisma.user.findMany({
-                where: { role: 'CUSTOMER' },
+                where: {
+                    OR: [
+                        { role: 'CUSTOMER' },
+                        { orders: { some: {} } },
+                    ]
+                },
                 include: {
                     orders: { select: { total: true, status: true } },
                     addresses: { take: 1, select: { city: true, region: true } }

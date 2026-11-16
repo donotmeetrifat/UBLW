@@ -19,7 +19,7 @@ export default function StoreOrders() {
 
     const fetchOrders = async () => {
         try {
-            const res = await fetch('/api/orders')
+            const res = await fetch('/api/orders?admin=true')
             const data = await res.json()
             if (data.success && Array.isArray(data.orders)) {
                 setOrders(data.orders)

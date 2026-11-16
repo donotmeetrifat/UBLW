@@ -85,7 +85,7 @@ export default function AdminOrdersPage() {
     const fetchOrders = async () => {
         try {
             if (orders.length === 0) setLoading(true)
-            const res = await fetch('/api/orders')
+            const res = await fetch('/api/orders?admin=true')
             const data = await res.json()
             if (data.success && Array.isArray(data.orders)) {
                 setOrders(data.orders)

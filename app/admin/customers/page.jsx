@@ -282,8 +282,18 @@ export default function AdminCustomersPage() {
                                         <tr key={cust.id} className="hover:bg-[#FAF6FA]/30 transition">
                                             {/* Customer Name & Email */}
                                             <td className="py-3.5 px-4">
-                                                <div className="font-bold text-[#241224]">
-                                                    {cust.name || 'Valued Customer'}
+                                                <div className="font-bold text-[#241224] flex items-center gap-1.5">
+                                                    <span>{cust.name || 'Valued Customer'}</span>
+                                                    {cust.role === 'ADMIN' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-[#6C306E] border border-purple-200">
+                                                            Admin
+                                                        </span>
+                                                    )}
+                                                    {cust.role === 'EMPLOYEE' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                                                            Staff
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="text-[11px] text-slate-400 font-mono mt-0.5">
                                                     {cust.email}

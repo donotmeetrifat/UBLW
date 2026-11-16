@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { getUserFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request, context) {
     try {
+        const currentUser = getUserFromRequest(request);
+        if (!currentUser || currentUser.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, message: 'Forbidden. Admin privileges required.' }, { status: 403 });
+        }
         let id = null;
         if (context?.params) {
             const resolvedParams = await Promise.resolve(context.params);
@@ -66,6 +71,10 @@ export async function GET(request, context) {
 
 export async function PATCH(request, context) {
     try {
+        const currentUser = getUserFromRequest(request);
+        if (!currentUser || currentUser.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, message: 'Forbidden. Admin privileges required.' }, { status: 403 });
+        }
         const updates = await request.json().catch(() => ({}));
         let id = updates.id;
 
@@ -269,6 +278,10 @@ export async function PATCH(request, context) {
 
 export async function DELETE(request, context) {
     try {
+        const currentUser = getUserFromRequest(request);
+        if (!currentUser || currentUser.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, message: 'Forbidden. Admin privileges required.' }, { status: 403 });
+        }
         let id = null;
         if (context?.params) {
             const resolvedParams = await Promise.resolve(context.params);

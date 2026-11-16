@@ -9,7 +9,7 @@ import AdminNavbar from "./AdminNavbar"
 import AdminSidebar from "./AdminSidebar"
 
 // Sections strictly reserved for ADMIN (blocked for EMPLOYEE)
-const ADMIN_ONLY_ROUTES = ['/admin/ai-bot', '/admin/settings', '/admin/team']
+const ADMIN_ONLY_ROUTES = ['/admin/ai-bot', '/admin/settings', '/admin/team', '/admin/coupons']
 
 export default function AdminLayout({ children }) {
     const pathname = usePathname()

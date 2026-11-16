@@ -41,7 +41,7 @@ const navSections = [
         section: 'Orders & Sales',
         items: [
             { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon },
-            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon },
+            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon, adminOnly: true },
         ]
     },
     {
