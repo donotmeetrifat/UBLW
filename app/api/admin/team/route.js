@@ -32,19 +32,21 @@ export async function GET(request) {
 
         // Aggregate team statistics (always up-to-date)
         const [
+            totalUsers,
             totalStaff,
             totalAdmins,
             totalEmployees,
             totalCustomers,
             totalBlocked,
-            activeStaff,
+            activeUsers,
         ] = await Promise.all([
+            prisma.user.count(), // All registered accounts who signed up
             prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] } } }),
             prisma.user.count({ where: { role: 'ADMIN' } }),
             prisma.user.count({ where: { role: 'EMPLOYEE' } }),
             prisma.user.count({ where: { role: 'CUSTOMER' } }),
             prisma.user.count({ where: { isActive: false } }),
-            prisma.user.count({ where: { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true } }),
+            prisma.user.count({ where: { isActive: true } }),
         ]);
 
         let whereClause = {};
@@ -65,13 +67,15 @@ export async function GET(request) {
             whereClause = { role: 'ADMIN' };
         } else if (filter === 'employees') {
             whereClause = { role: 'EMPLOYEE' };
+        } else if (filter === 'staff') {
+            whereClause = { role: { in: ['ADMIN', 'EMPLOYEE'] } };
         } else if (filter === 'blocked') {
             whereClause = { isActive: false };
         } else if (filter === 'active') {
-            whereClause = { role: { in: ['ADMIN', 'EMPLOYEE'] }, isActive: true };
+            whereClause = { isActive: true };
         } else {
-            // Default view: STRICTLY only ADMIN and EMPLOYEE staff members
-            whereClause = { role: { in: ['ADMIN', 'EMPLOYEE'] } };
+            // Default view ('all'): show ALL users who signed up in the website
+            whereClause = {};
         }
 
         const users = await prisma.user.findMany({
@@ -93,20 +97,22 @@ export async function GET(request) {
                 { role: 'asc' }, // ADMIN first, then EMPLOYEE, then CUSTOMER
                 { createdAt: 'desc' },
             ],
-            take: filter === 'customers' || search ? 50 : undefined,
+            take: 200,
         });
 
         return NextResponse.json({
             success: true,
             users,
             stats: {
-                totalRegistrations: totalStaff,
+                totalUsers,
+                totalRegistrations: totalUsers,
                 totalStaff,
                 totalAdmins,
                 totalEmployees,
                 totalCustomers,
                 totalBlocked,
-                activeStaff,
+                activeUsers,
+                activeStaff: activeUsers,
             },
             isSearching: Boolean(search),
         }, {

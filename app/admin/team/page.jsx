@@ -29,17 +29,20 @@ const ROLE_OPTIONS = [
 export default function AdminTeamPage() {
     const [teamMembers, setTeamMembers] = useState([])
     const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalRegistrations: 0,
         totalStaff: 0,
         totalAdmins: 0,
         totalEmployees: 0,
         totalCustomers: 0,
         totalBlocked: 0,
+        activeUsers: 0,
         activeStaff: 0,
     })
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearching, setIsSearching] = useState(false)
-    const [filterTab, setFilterTab] = useState('all') // 'all' | 'admins' | 'employees' | 'customers' | 'active' | 'blocked'
+    const [filterTab, setFilterTab] = useState('all') // 'all' | 'staff' | 'admins' | 'employees' | 'customers' | 'active' | 'blocked'
     const [actionLoadingId, setActionLoadingId] = useState(null)
 
     // Current logged-in user from localStorage to prevent self-lockout
@@ -309,10 +312,10 @@ export default function AdminTeamPage() {
                         </div>
                         <div>
                             <div className="text-2xl font-black text-[#241224] leading-none">
-                                {stats.totalStaff || 0}
+                                {stats.totalUsers ?? stats.totalRegistrations ?? 0}
                             </div>
                             <div className="text-[11px] font-bold text-slate-500 mt-1">
-                                Total Staff
+                                Total Registrations
                             </div>
                         </div>
                     </div>
@@ -410,14 +413,15 @@ export default function AdminTeamPage() {
                 </div>
             </div>
 
-            {/* 4. Filter Tabs Row (Updated to match current roles & options) */}
+            {/* 4. Filter Tabs Row */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {[
-                    { id: 'all', label: 'All Staff', count: stats.totalStaff || 0 },
+                    { id: 'all', label: 'All Users', count: stats.totalUsers ?? stats.totalRegistrations ?? 0 },
+                    { id: 'staff', label: 'All Staff', count: stats.totalStaff || 0 },
                     { id: 'admins', label: 'Administrators', count: stats.totalAdmins || 0 },
                     { id: 'employees', label: 'Employees', count: stats.totalEmployees || 0 },
                     { id: 'customers', label: 'Customers', count: stats.totalCustomers || 0 },
-                    { id: 'active', label: 'Active', count: stats.activeStaff || 0 },
+                    { id: 'active', label: 'Active', count: stats.activeUsers ?? stats.activeStaff ?? 0 },
                     { id: 'blocked', label: 'Blocked', count: stats.totalBlocked || 0 },
                 ].map(tab => {
                     const isActive = filterTab === tab.id
