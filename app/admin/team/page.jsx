@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react"
 import Link from "next/link"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
+import AdminDropdown from "@/components/admin/AdminDropdown"
 import {
     SearchIcon,
     CloseIcon,
@@ -14,13 +15,17 @@ import {
     UserIcon,
     UsersIcon,
     UserCheckIcon,
-    UserMinusIcon,
-    UserPlusIcon,
     BanIcon,
     ClockIcon,
     TrashIcon,
     AlertCircleIcon
 } from "@/components/icons"
+
+const ROLE_OPTIONS = [
+    { value: 'ADMIN', label: 'Admin (Full Access)', dot: 'bg-[#6C306E]' },
+    { value: 'EMPLOYEE', label: 'Employee (Staff)', dot: 'bg-blue-600' },
+    { value: 'CUSTOMER', label: 'Customer', dot: 'bg-slate-400' },
+]
 
 export default function AdminTeamPage() {
     const [teamMembers, setTeamMembers] = useState([])
@@ -37,20 +42,16 @@ export default function AdminTeamPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearching, setIsSearching] = useState(false)
     const [filterTab, setFilterTab] = useState('all') // 'all' | 'pending' | 'active' | 'employees' | 'admins' | 'blocked'
-    const [actionLoading, setActionLoading] = useState(false)
+    const [actionLoadingId, setActionLoadingId] = useState(null)
 
-    // Current logged-in user from localStorage to prevent self-demotion in UI
+    // Current logged-in user from localStorage to prevent self-lockout
     const [currentUser, setCurrentUser] = useState(null)
 
-    // Action Confirmation Modal State
-    const [confirmModal, setConfirmModal] = useState({
+    // Delete Confirmation Modal State
+    const [deleteModal, setDeleteModal] = useState({
         isOpen: false,
         user: null,
-        actionType: null, // 'promote_admin' | 'demote_employee' | 'demote_customer' | 'block' | 'unblock' | 'set_pending' | 'approve' | 'delete'
-        title: '',
-        message: '',
-        confirmButtonText: 'Confirm',
-        confirmButtonColor: 'bg-[#6C306E]',
+        loading: false,
     })
 
     useEffect(() => {
@@ -137,163 +138,160 @@ export default function AdminTeamPage() {
         }
     }, [teamMembers, stats])
 
-    // Trigger action confirmation modal
-    const openActionModal = (user, actionType) => {
-        if (!user) return
+    // Instant Role Change with Optimistic UI Update
+    const handleRoleChange = async (user, newRole) => {
+        if (!user || user.role === newRole) return
 
-        const isSelf = currentUser && currentUser.id === user.id
+        const isSelf = currentUser && (
+            currentUser.id === user.id ||
+            currentUser.email?.toLowerCase() === user.email?.toLowerCase()
+        )
 
-        if (actionType === 'demote_employee') {
-            if (isSelf) {
-                toast.error('You cannot demote your own Administrator account.')
-                return
-            }
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Demote to Employee?',
-                message: `Are you sure you want to demote ${user.name} (${user.email}) from Administrator to Employee? They will lose access to Store Directives, AI Bot Settings, and Staff Permissions.`,
-                confirmButtonText: 'Demote to Employee',
-                confirmButtonColor: 'bg-amber-600 hover:bg-amber-700',
-            })
-        } else if (actionType === 'promote_admin') {
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Promote to Full Administrator?',
-                message: `Are you sure you want to promote ${user.name} (${user.email}) to Full Administrator? They will have full access to all areas of the store administration panel.`,
-                confirmButtonText: 'Promote to Admin',
-                confirmButtonColor: 'bg-[#6C306E] hover:bg-[#531e55]',
-            })
-        } else if (actionType === 'make_employee') {
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Appoint as Staff Employee?',
-                message: `Are you sure you want to grant employee permissions to ${user.name} (${user.email})? They will be able to process customer orders, update stock, and handle inquiries.`,
-                confirmButtonText: 'Make Employee',
-                confirmButtonColor: 'bg-blue-600 hover:bg-blue-700',
-            })
-        } else if (actionType === 'demote_customer') {
-            if (isSelf) {
-                toast.error('You cannot revoke your own staff privileges.')
-                return
-            }
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Revoke Staff Privileges?',
-                message: `Are you sure you want to remove staff privileges for ${user.name} (${user.email}) and set them back to regular Customer? They will no longer have access to the Admin Panel.`,
-                confirmButtonText: 'Revoke Privileges',
-                confirmButtonColor: 'bg-rose-600 hover:bg-rose-700',
-            })
-        } else if (actionType === 'block') {
-            if (isSelf) {
-                toast.error('You cannot block your own account.')
-                return
-            }
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Block User Access?',
-                message: `Are you sure you want to block ${user.name} (${user.email})? They will not be able to sign in or perform any actions on the store.`,
-                confirmButtonText: 'Block User',
-                confirmButtonColor: 'bg-rose-600 hover:bg-rose-700',
-            })
-        } else if (actionType === 'unblock') {
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Unblock User Account?',
-                message: `Restore login access and active status for ${user.name} (${user.email})?`,
-                confirmButtonText: 'Unblock Account',
-                confirmButtonColor: 'bg-emerald-600 hover:bg-emerald-700',
-            })
-        } else if (actionType === 'approve') {
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Approve User Account?',
-                message: `Mark ${user.name} (${user.email}) as Active & Approved?`,
-                confirmButtonText: 'Approve Account',
-                confirmButtonColor: 'bg-emerald-600 hover:bg-emerald-700',
-            })
-        } else if (actionType === 'delete') {
-            if (isSelf) {
-                toast.error('You cannot delete your own account.')
-                return
-            }
-            setConfirmModal({
-                isOpen: true,
-                user,
-                actionType,
-                title: 'Delete User Account?',
-                message: `Are you sure you want to remove ${user.name} (${user.email})? If they have existing customer orders, their staff role will be revoked and account deactivated to preserve order integrity.`,
-                confirmButtonText: 'Delete Account',
-                confirmButtonColor: 'bg-rose-600 hover:bg-rose-700',
-            })
+        if (isSelf && newRole !== 'ADMIN') {
+            toast.error('You cannot change your own Administrator account role.')
+            return
         }
-    }
 
-    // Execute the confirmed action
-    const handleExecuteAction = async () => {
-        const { user, actionType } = confirmModal
-        if (!user || !actionType) return
+        const previousRole = user.role
+
+        // 1. Optimistic Update (instant UI reaction)
+        setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: newRole } : m))
 
         try {
-            setActionLoading(true)
-
-            let bodyPayload = { targetUserId: user.id }
-
-            if (actionType === 'demote_employee') {
-                bodyPayload.newRole = 'EMPLOYEE'
-            } else if (actionType === 'promote_admin') {
-                bodyPayload.newRole = 'ADMIN'
-            } else if (actionType === 'make_employee') {
-                bodyPayload.newRole = 'EMPLOYEE'
-            } else if (actionType === 'demote_customer') {
-                bodyPayload.newRole = 'CUSTOMER'
-            } else if (actionType === 'block') {
-                bodyPayload.isActive = false
-            } else if (actionType === 'unblock') {
-                bodyPayload.isActive = true
-            } else if (actionType === 'approve') {
-                bodyPayload.isVerified = true
-                bodyPayload.isActive = true
-            } else if (actionType === 'delete') {
-                bodyPayload.action = 'delete'
-            }
-
+            setActionLoadingId(user.id)
             const res = await fetch('/api/admin/team', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bodyPayload),
+                body: JSON.stringify({
+                    targetUserId: user.id,
+                    newRole: newRole,
+                }),
             })
 
             const data = await res.json()
 
             if (!res.ok || !data.success) {
-                toast.error(data.message || 'Action failed')
+                // Revert on failure
+                setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m))
+                toast.error(data.message || 'Failed to update role')
                 return
             }
 
-            toast.success(data.message || 'Updated successfully')
-            setConfirmModal({ isOpen: false, user: null, actionType: null, title: '', message: '' })
+            toast.success(`Role updated to ${newRole === 'ADMIN' ? 'Admin' : newRole === 'EMPLOYEE' ? 'Employee' : 'Customer'}`)
 
-            // Instantly refresh list and stats
-            await fetchTeam(searchQuery)
+            // Silently sync server stats & state
+            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
+            const syncData = await syncRes.json()
+            if (syncData.success && syncData.stats) {
+                setStats(syncData.stats)
+            }
         } catch (error) {
-            console.error('Error executing team action:', error)
+            console.error('Error changing role:', error)
+            setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, role: previousRole } : m))
             toast.error('An error occurred while updating permissions')
         } finally {
-            setActionLoading(false)
+            setActionLoadingId(null)
+        }
+    }
+
+    // Instant Block / Unblock Toggle with Optimistic UI Update
+    const handleToggleBlock = async (user) => {
+        if (!user) return
+
+        const isSelf = currentUser && (
+            currentUser.id === user.id ||
+            currentUser.email?.toLowerCase() === user.email?.toLowerCase()
+        )
+
+        if (isSelf) {
+            toast.error('You cannot block your own account.')
+            return
+        }
+
+        const newStatus = !user.isActive
+        const previousStatus = user.isActive
+
+        // 1. Optimistic Update (instant UI reaction)
+        setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: newStatus } : m))
+
+        try {
+            setActionLoadingId(user.id)
+            const res = await fetch('/api/admin/team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUserId: user.id,
+                    isActive: newStatus,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                // Revert on failure
+                setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m))
+                toast.error(data.message || 'Failed to update account status')
+                return
+            }
+
+            toast.success(newStatus ? `Unblocked ${user.name}` : `Blocked ${user.name}`)
+
+            // Silently sync server stats
+            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
+            const syncData = await syncRes.json()
+            if (syncData.success && syncData.stats) {
+                setStats(syncData.stats)
+            }
+        } catch (error) {
+            console.error('Error toggling status:', error)
+            setTeamMembers(prev => prev.map(m => m.id === user.id ? { ...m, isActive: previousStatus } : m))
+            toast.error('An error occurred')
+        } finally {
+            setActionLoadingId(null)
+        }
+    }
+
+    // Execute Delete Action
+    const handleConfirmDelete = async () => {
+        const user = deleteModal.user
+        if (!user) return
+
+        try {
+            setDeleteModal(prev => ({ ...prev, loading: true }))
+            const res = await fetch('/api/admin/team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUserId: user.id,
+                    action: 'delete',
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                toast.error(data.message || 'Failed to delete user')
+                return
+            }
+
+            toast.success(data.message || 'User deleted successfully')
+            setDeleteModal({ isOpen: false, user: null, loading: false })
+
+            // Optimistically remove from list
+            setTeamMembers(prev => prev.filter(m => m.id !== user.id))
+
+            // Refresh stats
+            const syncRes = await fetch(searchQuery.trim() ? `/api/admin/team?search=${encodeURIComponent(searchQuery.trim())}` : '/api/admin/team')
+            const syncData = await syncRes.json()
+            if (syncData.success) {
+                setTeamMembers(syncData.users)
+                if (syncData.stats) setStats(syncData.stats)
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error)
+            toast.error('Failed to delete user')
+        } finally {
+            setDeleteModal(prev => ({ ...prev, loading: false }))
         }
     }
 
@@ -534,7 +532,7 @@ export default function AdminTeamPage() {
             )}
 
             {/* 6. Main Team & Access Management Table */}
-            <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden">
+            <div className="bg-white rounded-3xl border border-[#EFE0EF] shadow-2xs overflow-hidden min-h-[340px]">
                 {loading ? (
                     <div className="py-20 flex flex-col items-center justify-center">
                         <Loading />
@@ -555,7 +553,7 @@ export default function AdminTeamPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto min-h-[320px]">
                         <table className="w-full text-left border-collapse">
                             {/* Table Header */}
                             <thead>
@@ -571,12 +569,15 @@ export default function AdminTeamPage() {
                             {/* Table Body */}
                             <tbody className="divide-y divide-[#EFE0EF]/70">
                                 {filteredUsers.map((user) => {
-                                    const isSelf = currentUser && currentUser.id === user.id
+                                    const isSelf = currentUser && (
+                                        currentUser.id === user.id ||
+                                        currentUser.email?.toLowerCase() === user.email?.toLowerCase()
+                                    )
                                     const isAdmin = user.role === 'ADMIN'
                                     const isEmployee = user.role === 'EMPLOYEE'
-                                    const isCustomer = user.role === 'CUSTOMER'
                                     const isBlocked = user.isActive === false
                                     const isPending = user.isVerified === false
+                                    const isUpdating = actionLoadingId === user.id
 
                                     return (
                                         <tr
@@ -645,176 +646,71 @@ export default function AdminTeamPage() {
                                                 {formatDate(user.createdAt)}
                                             </td>
 
-                                            {/* Column 5: Management Actions */}
+                                            {/* Column 5: Management Actions (Dropdown Role + Block Button + Delete Button) */}
                                             <td className="py-4 px-5 sm:px-6 align-middle">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    {/* Admin Actions */}
-                                                    {isAdmin && (
-                                                        <>
+                                                <div className="flex items-center gap-2.5">
+                                                    {/* 1. Sleek Role Dropdown */}
+                                                    <div className="w-48 shrink-0">
+                                                        {isSelf ? (
+                                                            <div className="h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 text-xs font-semibold flex items-center justify-between cursor-not-allowed select-none shadow-2xs">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="size-2 rounded-full bg-[#6C306E]" />
+                                                                    <span>Admin (Owner)</span>
+                                                                </div>
+                                                                <LockIcon size={12} color="#94A3B8" />
+                                                            </div>
+                                                        ) : (
+                                                            <AdminDropdown
+                                                                value={user.role}
+                                                                onChange={(newRole) => handleRoleChange(user, newRole)}
+                                                                options={ROLE_OPTIONS}
+                                                                placeholder="Select Role"
+                                                                buttonClassName="h-9 bg-white hover:bg-[#FAF6FA] border-[#EFE0EF] hover:border-[#6C306E]/40 text-xs font-bold text-[#241224] rounded-xl shadow-2xs"
+                                                                menuClassName="w-52 shadow-xl border-[#EFE0EF] rounded-xl"
+                                                            />
+                                                        )}
+                                                    </div>
+
+                                                    {/* 2. Block / Unblock Button */}
+                                                    {!isSelf ? (
+                                                        isBlocked ? (
                                                             <button
                                                                 type="button"
-                                                                disabled={isSelf}
-                                                                onClick={() => openActionModal(user, 'demote_employee')}
-                                                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition shadow-2xs ${
-                                                                    isSelf
-                                                                        ? 'opacity-40 border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed'
-                                                                        : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700 cursor-pointer'
-                                                                }`}
+                                                                disabled={isUpdating}
+                                                                onClick={() => handleToggleBlock(user)}
+                                                                className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer shrink-0 disabled:opacity-50"
                                                             >
-                                                                <UserMinusIcon size={14} color="currentColor" />
-                                                                <span>Demote to Employee</span>
+                                                                <CheckIcon size={13} color="#059669" />
+                                                                <span>Unblock</span>
                                                             </button>
-
-                                                            {!isSelf && (
-                                                                <>
-                                                                    {isBlocked ? (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => openActionModal(user, 'unblock')}
-                                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                        >
-                                                                            <CheckIcon size={13} color="#059669" />
-                                                                            <span>Unblock</span>
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => openActionModal(user, 'block')}
-                                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                        >
-                                                                            <BanIcon size={13} color="#E11D48" />
-                                                                            <span>Block</span>
-                                                                        </button>
-                                                                    )}
-
-                                                                    {isPending && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => openActionModal(user, 'approve')}
-                                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                        >
-                                                                            <CheckIcon size={13} color="#059669" />
-                                                                            <span>Approve</span>
-                                                                        </button>
-                                                                    )}
-
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => openActionModal(user, 'delete')}
-                                                                        title="Delete User"
-                                                                        className="p-2 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 transition shadow-2xs cursor-pointer"
-                                                                    >
-                                                                        <TrashIcon size={14} color="#E11D48" />
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                        </>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                disabled={isUpdating}
+                                                                onClick={() => handleToggleBlock(user)}
+                                                                className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition shadow-2xs cursor-pointer shrink-0 disabled:opacity-50"
+                                                            >
+                                                                <BanIcon size={13} color="#E11D48" />
+                                                                <span>Block</span>
+                                                            </button>
+                                                        )
+                                                    ) : (
+                                                        <span className="h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 text-xs font-semibold flex items-center justify-center select-none shrink-0 shadow-2xs">
+                                                            Protected
+                                                        </span>
                                                     )}
 
-                                                    {/* Employee Actions */}
-                                                    {isEmployee && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openActionModal(user, 'promote_admin')}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#6C306E] hover:bg-[#531e55] text-white text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                            >
-                                                                <ShieldCheckIcon size={14} color="#FFFFFF" />
-                                                                <span>Promote to Admin</span>
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openActionModal(user, 'demote_customer')}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition shadow-2xs cursor-pointer"
-                                                            >
-                                                                <UserMinusIcon size={14} color="currentColor" />
-                                                                <span>Revoke Staff</span>
-                                                            </button>
-
-                                                            {isBlocked ? (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'unblock')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <CheckIcon size={13} color="#059669" />
-                                                                    <span>Unblock</span>
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'block')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <BanIcon size={13} color="#E11D48" />
-                                                                    <span>Block</span>
-                                                                </button>
-                                                            )}
-
-                                                            {isPending && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'approve')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <CheckIcon size={13} color="#059669" />
-                                                                    <span>Approve</span>
-                                                                </button>
-                                                            )}
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openActionModal(user, 'delete')}
-                                                                title="Delete User"
-                                                                className="p-2 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 transition shadow-2xs cursor-pointer"
-                                                            >
-                                                                <TrashIcon size={14} color="#E11D48" />
-                                                            </button>
-                                                        </>
-                                                    )}
-
-                                                    {/* Customer Actions (When found through Search) */}
-                                                    {isCustomer && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openActionModal(user, 'make_employee')}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                            >
-                                                                <UserPlusIcon size={14} color="#FFFFFF" />
-                                                                <span>Make Employee</span>
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openActionModal(user, 'promote_admin')}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#6C306E] hover:bg-[#531e55] text-white text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                            >
-                                                                <ShieldCheckIcon size={14} color="#FFFFFF" />
-                                                                <span>Make Admin</span>
-                                                            </button>
-
-                                                            {isBlocked ? (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'unblock')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <CheckIcon size={13} color="#059669" />
-                                                                    <span>Unblock</span>
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openActionModal(user, 'block')}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition shadow-2xs cursor-pointer"
-                                                                >
-                                                                    <BanIcon size={13} color="#E11D48" />
-                                                                    <span>Block</span>
-                                                                </button>
-                                                            )}
-                                                        </>
+                                                    {/* 3. Delete User Button */}
+                                                    {!isSelf && (
+                                                        <button
+                                                            type="button"
+                                                            disabled={isUpdating}
+                                                            onClick={() => setDeleteModal({ isOpen: true, user, loading: false })}
+                                                            title="Delete User"
+                                                            className="size-9 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-rose-600 transition shadow-2xs cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-50"
+                                                        >
+                                                            <TrashIcon size={14} color="#E11D48" />
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>
@@ -827,71 +723,69 @@ export default function AdminTeamPage() {
                 )}
             </div>
 
-            {/* 7. Action Confirmation Modal */}
-            {confirmModal.isOpen && (
+            {/* 7. Delete Confirmation Modal */}
+            {deleteModal.isOpen && deleteModal.user && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-[fadeIn_0.15s_ease-out]"
                     onClick={(e) => {
-                        if (e.target === e.currentTarget && !actionLoading) {
-                            setConfirmModal({ isOpen: false, user: null, actionType: null, title: '', message: '' })
+                        if (e.target === e.currentTarget && !deleteModal.loading) {
+                            setDeleteModal({ isOpen: false, user: null, loading: false })
                         }
                     }}
                 >
                     <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE0EF] shadow-2xl space-y-4 animate-[modalLuxuryPop_0.22s_cubic-bezier(0.16,1,0.3,1)]">
                         <div className="flex items-start gap-3.5">
-                            <div className="size-11 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center text-[#6C306E] shrink-0 shadow-2xs">
-                                <AlertCircleIcon size={22} color="#6C306E" />
+                            <div className="size-11 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-2xs">
+                                <TrashIcon size={22} color="#E11D48" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-base font-extrabold text-[#241224] tracking-tight">
-                                    {confirmModal.title}
+                                    Delete User Account?
                                 </h3>
                                 <p className="text-xs text-slate-500 leading-relaxed mt-1">
-                                    {confirmModal.message}
+                                    Are you sure you want to remove <strong className="text-slate-800">{deleteModal.user.name}</strong> ({deleteModal.user.email})? If this user has existing customer orders, their staff privileges will be revoked and account deactivated to safely preserve order integrity.
                                 </p>
                             </div>
                         </div>
 
                         {/* User Details Callout */}
-                        {confirmModal.user && (
-                            <div className="p-3.5 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-xs space-y-1">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 font-semibold">Account:</span>
-                                    <span className="font-extrabold text-[#241224]">{confirmModal.user.name}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 font-semibold">Email:</span>
-                                    <span className="font-mono text-slate-700">{confirmModal.user.email}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 font-semibold">Current Role:</span>
-                                    <span className="font-bold text-[#6C306E]">{confirmModal.user.role}</span>
-                                </div>
+                        <div className="p-3.5 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-500 font-semibold">Account:</span>
+                                <span className="font-extrabold text-[#241224]">{deleteModal.user.name}</span>
                             </div>
-                        )}
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-500 font-semibold">Email:</span>
+                                <span className="font-mono text-slate-700">{deleteModal.user.email}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-500 font-semibold">Role:</span>
+                                <span className="font-bold text-[#6C306E]">{deleteModal.user.role}</span>
+                            </div>
+                        </div>
 
                         <div className="flex items-center justify-end gap-2.5 pt-2">
                             <button
                                 type="button"
-                                disabled={actionLoading}
-                                onClick={() => setConfirmModal({ isOpen: false, user: null, actionType: null, title: '', message: '' })}
+                                disabled={deleteModal.loading}
+                                onClick={() => setDeleteModal({ isOpen: false, user: null, loading: false })}
                                 className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition cursor-pointer text-xs"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
-                                disabled={actionLoading}
-                                onClick={handleExecuteAction}
-                                className={`px-5 py-2 rounded-xl text-white font-bold transition shadow-xs cursor-pointer text-xs flex items-center gap-1.5 disabled:opacity-50 ${confirmModal.confirmButtonColor}`}
+                                disabled={deleteModal.loading}
+                                onClick={handleConfirmDelete}
+                                className="px-5 py-2 rounded-xl text-white font-bold transition shadow-xs cursor-pointer text-xs flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50"
                             >
-                                {actionLoading ? (
+                                {deleteModal.loading ? (
                                     <>
                                         <span className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        <span>Updating...</span>
+                                        <span>Deleting...</span>
                                     </>
                                 ) : (
-                                    <span>{confirmModal.confirmButtonText}</span>
+                                    <span>Delete Account</span>
                                 )}
                             </button>
                         </div>
