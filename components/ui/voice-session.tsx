@@ -1538,18 +1538,12 @@ const iconNode: IconNode = [
 ];
 const AudioLinesIcon: Icon = createIcon("audio-lines", iconNode);
 const iconNode2: IconNode = [
-    ["path", { "d": "M5.5 5h13a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-13a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3" }],
-    ["path", { "d": "M6.5 9.25h.01" }],
-    ["path", { "d": "M6.5 12.25h.01" }],
-    ["path", { "d": "M10.17 9.25h.01" }],
-    ["path", { "d": "M10.17 12.25h.01" }],
-    ["path", { "d": "M13.83 9.25h.01" }],
-    ["path", { "d": "M13.83 12.25h.01" }],
-    ["path", { "d": "M17.5 9.25h.01" }],
-    ["path", { "d": "M17.5 12.25h.01" }],
-    ["path", { "d": "M8 15.5h8" }],
+    ["path", { "d": "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }],
+    ["line", { "x1": "8", "y1": "9", "x2": "16", "y2": "9" }],
+    ["line", { "x1": "8", "y1": "13", "x2": "13", "y2": "13" }],
 ];
-const KeyboardIcon: Icon = createIcon("keyboard", iconNode2);
+const MessageTextIcon: Icon = createIcon("message-text", iconNode2);
+const KeyboardIcon: Icon = MessageTextIcon;
 function ModeSwitch({ mode, onChange, disabled, }: {
     mode: VoiceSessionMode;
     onChange: (mode: VoiceSessionMode) => void;
@@ -1558,9 +1552,9 @@ function ModeSwitch({ mode, onChange, disabled, }: {
     const refs = React.useRef<(HTMLButtonElement | null)[]>([]);
     const options = [
         { value: "voice" as const, label: "Voice", Icon: AudioLinesIcon },
-        { value: "text" as const, label: "Text", Icon: KeyboardIcon },
+        { value: "text" as const, label: "Text", Icon: MessageTextIcon },
     ];
-    return (<div role="radiogroup" aria-label="Conversation mode" data-slot="voice-session-mode" className="bg-(color:--chatcn-inset) rounded-(--chatcn-radius-md) inline-grid h-8 shrink-0 grid-cols-2 p-0.5 shadow-[inset_0_0_0_1px_var(--chatcn-alpha-200)]">
+    return (<div role="radiogroup" aria-label="Conversation mode" data-slot="voice-session-mode" className="bg-gray-100 dark:bg-zinc-800 rounded-lg inline-grid h-8 shrink-0 grid-cols-2 p-0.5 border border-gray-200/80 dark:border-zinc-700 shadow-xs">
       {options.map(({ value, label, Icon }, i) => {
             const checked = mode === value;
             return (<button key={value} ref={(node) => {
@@ -1574,10 +1568,10 @@ function ModeSwitch({ mode, onChange, disabled, }: {
                         return;
                     onChange(next.value);
                     refs.current[(i + 1) % 2]?.focus();
-                }} className={cn("chatcn-focus rounded-(--chatcn-radius-sm) flex items-center justify-center gap-1.5 ps-2 pe-2.5 font-medium whitespace-nowrap select-none", "text-[0.8125rem]/[1.25rem] ease-(--chatcn-ease-standard) transition-colors duration-150 [&_svg]:size-3.5", "disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11", checked
-                    ? "bg-(color:--chatcn-surface) text-(color:--chatcn-fg) shadow-(--chatcn-shadow-xs)"
-                    : "text-(color:--chatcn-fg-subtle) hover:text-(color:--chatcn-fg-muted)")}>
-            <Icon aria-hidden="true"/>
+                }} className={cn("rounded-md flex items-center justify-center gap-1.5 px-3 font-semibold text-xs transition-all duration-150 select-none cursor-pointer", checked
+                    ? "bg-white text-gray-900 shadow-xs dark:bg-zinc-900 dark:text-zinc-100 font-bold"
+                    : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-200")}>
+            <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", checked ? "text-[#6C306E] dark:text-purple-400" : "text-gray-500 dark:text-zinc-400")}/>
             {label}
           </button>);
         })}
@@ -3318,8 +3312,8 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
     const errored = micError !== undefined;
     const lg = size === "lg";
     return (<SizeContext.Provider value={size}>
-      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-(color:--chatcn-card) shadow-(--chatcn-shadow-sm) inline-flex max-w-full items-center gap-2 p-1.5 rounded-full", className)} {...props}>
-        {/* 1. Clean 2D Microphone Button (No wave bars!) */}
+      <div role="group" aria-label="Call controls" aria-disabled={off || undefined} data-slot="voice-controls" data-voice-status={status} data-size={size} className={cn("bg-white dark:bg-[#27272a] border border-gray-200 dark:border-zinc-700 shadow-md inline-flex max-w-full items-center gap-2.5 p-1.5 rounded-full", className)} {...props}>
+        {/* 1. Clean 2D Microphone Button */}
         <Tooltip content={errored ? ERROR_TITLES[micError] : muted ? "Unmute Microphone" : "Mute Microphone"}>
           <button
             ref={micRef}
@@ -3337,14 +3331,14 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
               onMutedChange?.(!muted);
             }}
             className={cn(
-              "size-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs",
+              "size-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs border",
               muted || errored
-                ? "bg-slate-700 text-white hover:bg-slate-800"
-                : "bg-black/5 dark:bg-white/10 text-gray-800 dark:text-gray-100 hover:bg-black/10 dark:hover:bg-white/20"
+                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-400 dark:border-red-900"
+                : "bg-gray-100 text-gray-900 border-gray-300/80 hover:bg-gray-200 hover:text-black dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-700"
             )}
           >
             {muted || errored ? (
-              <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="size-5 shrink-0 text-red-600 dark:text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="2" y1="2" x2="22" y2="22" />
                 <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
                 <path d="M5 10v2a7 7 0 0 0 12 5" />
@@ -3353,7 +3347,7 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
                 <line x1="12" y1="19" x2="12" y2="22" />
               </svg>
             ) : (
-              <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="size-5 shrink-0 text-gray-900 dark:text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <line x1="12" y1="19" x2="12" y2="22" />
@@ -3370,18 +3364,19 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
             disabled={off}
             onClick={() => onModeChange?.("text")}
             data-slot="voice-controls-keyboard"
-            className="size-10 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 text-gray-800 dark:text-gray-100 hover:bg-black/10 dark:hover:bg-white/20 transition-all duration-200 cursor-pointer shadow-xs"
+            className="size-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-900 border border-gray-300/80 hover:bg-gray-200 hover:text-black dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-700 transition-all duration-200 cursor-pointer shadow-xs"
           >
-            <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="M6 8h.001" />
-              <path d="M10 8h.001" />
-              <path d="M14 8h.001" />
-              <path d="M18 8h.001" />
-              <path d="M8 12h.001" />
-              <path d="M12 12h.001" />
-              <path d="M16 12h.001" />
-              <path d="M7 16h10" />
+            <svg className="size-5 shrink-0 text-gray-900 dark:text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="3" />
+              <line x1="6" y1="9" x2="6.01" y2="9" strokeWidth="2.5" />
+              <line x1="10" y1="9" x2="10.01" y2="9" strokeWidth="2.5" />
+              <line x1="14" y1="9" x2="14.01" y2="9" strokeWidth="2.5" />
+              <line x1="18" y1="9" x2="18.01" y2="9" strokeWidth="2.5" />
+              <line x1="6" y1="13" x2="6.01" y2="13" strokeWidth="2.5" />
+              <line x1="10" y1="13" x2="10.01" y2="13" strokeWidth="2.5" />
+              <line x1="14" y1="13" x2="14.01" y2="13" strokeWidth="2.5" />
+              <line x1="18" y1="13" x2="18.01" y2="13" strokeWidth="2.5" />
+              <line x1="8" y1="16" x2="16" y2="16" />
             </svg>
           </button>
         </Tooltip>
@@ -3389,10 +3384,21 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
         {children}
 
         {/* 3. Red End Call Button */}
-        {!ended && onEnd ? (<button type="button" disabled={disabled} onClick={onEnd} data-slot="voice-controls-end" className={cn(control, box[size], "bg-(color:--chatcn-red) text-white hover:opacity-90 font-medium", "active:scale-(--chatcn-press-scale)", lg ? "text-[0.9375rem]/[1.5rem] tracking-[-0.006em] ms-1 ps-4 pe-5" : "text-[0.875rem]/[1.25rem] tracking-[-0.003em] ms-0.5 ps-3 pe-3.5")}>
-            <PhoneOffIcon aria-hidden="true"/>
-            {endLabel ?? (status === "connecting" ? "Cancel" : "End")}
-          </button>) : null}
+        {!ended && onEnd ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onEnd}
+            data-slot="voice-controls-end"
+            className="h-10 px-4 rounded-full flex items-center justify-center gap-2 bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold text-sm shadow-sm transition-all duration-150 active:scale-95 cursor-pointer"
+          >
+            <svg className="size-4 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.12-8.69 2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.29 9.35" />
+              <line x1="22" y1="2" x2="2" y2="22" />
+            </svg>
+            <span>{endLabel ?? (status === "connecting" ? "Cancel" : "End")}</span>
+          </button>
+        ) : null}
 
         <Popover open={hintOpen && errored} onOpenChange={setHintOpen}>
           <PopoverContent anchor={micRef} side="top" align="start" sideOffset={10} initialFocus={false} finalFocus={false} role="alert" data-slot="voice-controls-mic-error" className="flex w-72 flex-col gap-1 p-3">
