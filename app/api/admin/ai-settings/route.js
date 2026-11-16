@@ -170,6 +170,24 @@ export async function POST(request) {
             }
         }
 
+        // Action: Save Selected ElevenLabs Voice
+        if (action === 'save_voice') {
+            const { elevenLabsVoiceId, elevenLabsVoiceName } = body;
+            if (!elevenLabsVoiceId) {
+                return NextResponse.json({ success: false, message: 'Voice ID is required' }, { status: 400 });
+            }
+            await saveAiSettings({
+                elevenLabsVoiceId: elevenLabsVoiceId.trim(),
+                elevenLabsVoiceName: elevenLabsVoiceName ? elevenLabsVoiceName.trim() : undefined,
+            });
+            return NextResponse.json({
+                success: true,
+                message: 'Voice updated successfully and live immediately across the website!',
+                voiceId: elevenLabsVoiceId,
+                voiceName: elevenLabsVoiceName,
+            });
+        }
+
         // Action: Connect & Verify Provider API Key
         if (action === 'test' || action === 'connect') {
             const rawProvider = (testProvider || 'gemini').toLowerCase();

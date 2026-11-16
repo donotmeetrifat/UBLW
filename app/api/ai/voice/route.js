@@ -103,7 +103,9 @@ export async function POST(request) {
             headers: {
                 'Content-Type': 'audio/mpeg',
                 'Content-Length': audioBuffer.byteLength.toString(),
-                'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
             },
         });
     } catch (err) {

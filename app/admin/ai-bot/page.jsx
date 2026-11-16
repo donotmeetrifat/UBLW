@@ -310,6 +310,35 @@ export default function AdminAiBotPage() {
         }
     }
 
+    // Select & auto-save active ElevenLabs voice immediately
+    const handleSelectVoice = async (voice, accent, gender) => {
+        const vId = voice.voice_id
+        const vName = `${voice.name} (${accent} ${gender})`
+        setSelectedVoiceId(vId)
+        setSelectedVoiceName(vName)
+
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save_voice',
+                    elevenLabsVoiceId: vId,
+                    elevenLabsVoiceName: vName,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(`Active voice changed to ${voice.name}! Live immediately.`)
+            } else {
+                toast.error(data.message || 'Failed to save selected voice')
+            }
+        } catch (err) {
+            console.error('Error auto-saving voice:', err)
+            toast.error('Network error saving voice')
+        }
+    }
+
     // Save All AI Settings
     const handleSaveSettings = async (e) => {
         if (e) e.preventDefault()
@@ -976,11 +1005,7 @@ export default function AdminAiBotPage() {
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        setSelectedVoiceId(voice.voice_id)
-                                                        setSelectedVoiceName(`${voice.name} (${accent} ${gender})`)
-                                                        toast.success(`Voice set to ${voice.name}! Remember to click Save Settings.`)
-                                                    }}
+                                                    onClick={() => handleSelectVoice(voice, accent, gender)}
                                                     className={`flex-1 h-7 rounded-lg text-[11px] font-bold transition flex items-center justify-center cursor-pointer ${
                                                         isSelected
                                                             ? 'bg-[#6C306E] text-white shadow-2xs'

@@ -273,6 +273,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             const res = await fetch('/api/ai/voice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
                 body: JSON.stringify({ text: speechText }),
                 signal: voiceController.signal,
             });
