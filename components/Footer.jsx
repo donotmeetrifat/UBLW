@@ -6,8 +6,7 @@ import { assets } from "@/assets/assets";
 import {
     FacebookIcon,
     InstagramIcon,
-    WhatsAppIcon,
-    RoyalCrownIcon
+    WhatsAppIcon
 } from "@/components/icons";
 import { SOCIAL_LINKS } from "@/lib/constants/social";
 import { motion } from "framer-motion";
