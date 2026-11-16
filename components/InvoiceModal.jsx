@@ -122,7 +122,7 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     height: 297mm;
                     max-height: 297mm;
                     overflow: hidden;
-                    font-family: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: 'Poppins', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     -webkit-font-smoothing: antialiased;
                     -moz-osx-font-smoothing: grayscale;
                     text-rendering: optimizeLegibility;
@@ -139,7 +139,7 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                     overflow: hidden;
                     page-break-after: avoid;
                     break-after: avoid;
-                    font-family: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: 'Poppins', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
                 table {
                     border-collapse: collapse;
@@ -499,7 +499,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
         >
             <style>{`
                 .clean-invoice-font {
-                    font-family: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
 
                 @page {
