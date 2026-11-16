@@ -373,6 +373,8 @@ export interface VoiceSessionProps extends Omit<React.ComponentProps<"div">, "ti
     errorMessage?: React.ReactNode;
     controls?: VoiceSessionControls;
     placeholder?: string;
+    language?: 'en' | 'bn';
+    onLanguageChange?: (lang: 'en' | 'bn') => void;
 }
 function useControllable<T>(value: T | undefined, initial: T, onChange?: (next: T) => void) {
     const [inner, setInner] = React.useState(initial);
@@ -3423,7 +3425,7 @@ function VoiceControls({ muted = false, onMutedChange, onModeChange, captions = 
       </div>
     </SizeContext.Provider>);
 }
-export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, onQuickAdd, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, onClose, ...props }: VoiceSessionProps) {
+export function VoiceSession({ state, segments, inputLevel, outputLevel, visual = "orb", mode: modeProp, defaultMode = "voice", onModeChange, onSendText, onQuickAdd, muted = false, onMutedChange, captions: captionsProp, defaultCaptions = true, onCaptionsChange, onStart, onEnd, onReconnect, onInterrupt, startedAt, endedAt, title = "Emma (AI Beauty Advisor)", userLabel = "You", errorMessage, controls, placeholder = "Type a message...", className, onClose, language = "en", onLanguageChange, ...props }: VoiceSessionProps) {
     const [mode, setMode] = useControllable(modeProp, defaultMode, onModeChange);
     const [captions, setCaptions] = useControllable(captionsProp, defaultCaptions, onCaptionsChange);
     const [draft, setDraft] = React.useState("");
@@ -3465,7 +3467,39 @@ export function VoiceSession({ state, segments, inputLevel, outputLevel, visual 
             {statusLine}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {onLanguageChange && (
+            <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg inline-flex h-8 p-0.5 border border-gray-200/80 dark:border-zinc-700 shadow-xs">
+              <button
+                type="button"
+                onClick={() => onLanguageChange("en")}
+                className={cn(
+                  "px-2 rounded-md font-bold text-xs transition-all flex items-center gap-1 cursor-pointer select-none",
+                  language === "en"
+                    ? "bg-white text-gray-900 shadow-xs dark:bg-zinc-900 dark:text-zinc-100"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
+                )}
+                title="Speak English / Banglish"
+              >
+                <span>🇬🇧</span>
+                <span className="hidden sm:inline">EN</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onLanguageChange("bn")}
+                className={cn(
+                  "px-2 rounded-md font-bold text-xs transition-all flex items-center gap-1 cursor-pointer select-none",
+                  language === "bn"
+                    ? "bg-white text-gray-900 shadow-xs dark:bg-zinc-900 dark:text-zinc-100"
+                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
+                )}
+                title="বাংলায় কথা বলুন"
+              >
+                <span>🇧🇩</span>
+                <span>বাংলা</span>
+              </button>
+            </div>
+          )}
           <ModeSwitch mode={mode} onChange={switchMode}/>
           {onClose ? (
             <button

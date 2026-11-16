@@ -69,8 +69,16 @@ export async function POST(request) {
 
         const voiceId = customVoiceId || settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
 
-        // Ultra-low-latency model progression: eleven_flash_v2_5 (~75ms) -> eleven_turbo_v2_5 -> eleven_multilingual_v2
-        const candidateModels = ['eleven_flash_v2_5', 'eleven_turbo_v2_5', 'eleven_multilingual_v2'];
+        // Detect if speech contains Bengali script or Banglish keywords
+        const hasBengaliScript = /[\u0980-\u09FF]/.test(speechText);
+        const hasBanglishWords = /\b(apnar|amader|kase|ache|koto|taka|dam|brono|daag|skin|chul|kori|bhalo|shukno|tel|khoshkhoshe|deben|pabo|parbo|ki|amake|karon|korbo|ekhon|aro|oita|eta|keno)\b/i.test(speechText);
+        const isBengaliOrBanglish = hasBengaliScript || hasBanglishWords;
+
+        // Model selection: For Bengali/Banglish, ALWAYS prioritize eleven_multilingual_v2
+        // for authentic, clear Bengali phonetic articulation and natural accent.
+        const candidateModels = isBengaliOrBanglish
+            ? ['eleven_multilingual_v2', 'eleven_turbo_v2_5', 'eleven_flash_v2_5']
+            : ['eleven_flash_v2_5', 'eleven_turbo_v2_5', 'eleven_multilingual_v2'];
         let ttsRes = null;
         let lastErrorMsg = '';
 

@@ -42,6 +42,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const [segments, setSegments] = useState([]);
     const [muted, setMuted] = useState(false);
     const [captions, setCaptions] = useState(true);
+    const [language, setLanguage] = useState('en'); // 'en' | 'bn'
     const [startedAt, setStartedAt] = useState(undefined);
     const [endedAt, setEndedAt] = useState(undefined);
     const [errorMessage, setErrorMessage] = useState(undefined);
@@ -51,6 +52,9 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const isSpeakingRef = useRef(false);
     const isMutedRef = useRef(false);
     const isExplicitAbortRef = useRef(false);
+    const languageRef = useRef('en');
+    languageRef.current = language;
+    const accumulatedTextRef = useRef('');
     const recognitionRef = useRef(null);
     const silenceTimerRef = useRef(null);
     const recognitionRestartTimerRef = useRef(null);
@@ -153,7 +157,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             recognition.continuous = true; // Continuous listening prevents premature closing
             recognition.interimResults = true; // Instant real-time transcript updates
             recognition.maxAlternatives = 1;
-            recognition.lang = typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
+            recognition.lang = languageRef.current === 'bn' ? 'bn-BD' : (typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US');
 
             recognition.onstart = () => {
                 if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
@@ -170,14 +174,15 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 for (let i = 0; i < event.results.length; i++) {
                     const result = event.results[i];
                     if (result.isFinal) {
-                        finalized += result[0].transcript;
+                        finalized += (result[0].transcript || '') + ' ';
                     } else {
-                        interim += result[0].transcript;
+                        interim += result[0].transcript || '';
                     }
                 }
 
-                const currentText = (finalized || interim).trim();
-                if (!currentText) return;
+                const currentChunk = (finalized + interim).trim();
+                const fullThought = (accumulatedTextRef.current ? accumulatedTextRef.current + ' ' + currentChunk : currentChunk).trim();
+                if (!fullThought) return;
 
                 // Live caption update so the customer immediately sees their voice transcribed
                 setSegments(prev => {
@@ -185,7 +190,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     if (last && last.role === 'user' && last.live) {
                         return [
                             ...prev.slice(0, -1),
-                            { ...last, interim: currentText }
+                            { ...last, interim: fullThought }
                         ];
                     }
                     return [
@@ -195,7 +200,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                             role: 'user',
                             speaker: 'You',
                             text: '',
-                            interim: currentText,
+                            interim: fullThought,
                             live: true,
                             channel: 'voice'
                         }
@@ -210,15 +215,18 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
                 // Keep track of the freshest speech detected
                 pendingSpeechRef.current = {
-                    text: currentText,
+                    text: fullThought,
                     isFinal: Boolean(finalized.trim()),
                     timestamp: Date.now()
                 };
 
-                // Fast silence-detection debounce:
-                // If finalized by browser, 280ms pause confirms end of thought.
-                // If interim only (Chrome VAD has not finalized), submit after 750ms of silence.
-                const debounceMs = finalized.trim() ? 280 : 750;
+                // Human-Paced Silence Detection:
+                // If the user's speech is short (< 4 words) or does not have ending punctuation,
+                // wait 1500ms to allow natural breathing and thinking without premature cut-off!
+                // If it has terminal punctuation (. ? ! ।) or >= 7 words, wait 1100ms.
+                const words = fullThought.split(/\s+/).filter(Boolean);
+                const hasTerminalPunctuation = /[.?!।]$/.test(fullThought);
+                const debounceMs = (hasTerminalPunctuation || words.length >= 7) ? 1100 : 1500;
 
                 silenceTimerRef.current = setTimeout(() => {
                     if (!isCallActiveRef.current || isSpeakingRef.current || isMutedRef.current) return;
@@ -226,6 +234,8 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     const textToSubmit = pendingSpeechRef.current?.text?.trim();
                     if (textToSubmit) {
                         pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
+                        accumulatedTextRef.current = '';
                         if (handleUserQueryRef.current) {
                             handleUserQueryRef.current(textToSubmit, 'voice');
                         }
@@ -243,10 +253,23 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             };
 
             recognition.onend = () => {
-                // If speech was pending when browser ended the turn, submit immediately so nothing is lost
+                // If Chrome recycled its stream while speech was recent (< 1200ms ago),
+                // preserve the accumulated text and immediately restart recognition!
+                // DO NOT prematurely submit mid-thought!
+                const timeSinceSpeech = Date.now() - (pendingSpeechRef.current?.timestamp || 0);
+
+                if (pendingSpeechRef.current?.text?.trim() && timeSinceSpeech < 1200) {
+                    accumulatedTextRef.current = pendingSpeechRef.current.text.trim();
+                    scheduleRecognitionRestart(60);
+                    return;
+                }
+
+                // Only if silence duration has legitimately passed, submit:
                 if (pendingSpeechRef.current?.text?.trim() && isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
                     const textToSubmit = pendingSpeechRef.current.text.trim();
                     pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
+                    accumulatedTextRef.current = '';
                     if (silenceTimerRef.current) {
                         clearTimeout(silenceTimerRef.current);
                         silenceTimerRef.current = null;
@@ -259,7 +282,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
                 // If not speaking, not muted, and not an intentional abort, safely restart listening
                 if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current && !isExplicitAbortRef.current) {
-                    scheduleRecognitionRestart(120);
+                    scheduleRecognitionRestart(100);
                 }
             };
 
@@ -322,6 +345,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             silenceTimerRef.current = null;
         }
         pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
         if (recognitionRef.current) {
             try { recognitionRef.current.abort(); } catch (e) {}
         }
@@ -427,6 +451,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             silenceTimerRef.current = null;
         }
         pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
 
         // 2. Mark explicit abort so onend doesn't restart recognition while waiting for AI
         isExplicitAbortRef.current = true;
@@ -568,6 +593,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 silenceTimerRef.current = null;
             }
             pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
             if (recognitionRef.current) {
                 try { recognitionRef.current.abort(); } catch (e) {}
             }
@@ -603,6 +629,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             recognitionRestartTimerRef.current = null;
         }
         pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
 
         // Abort in-flight requests
         if (chatAbortControllerRef.current) {
@@ -628,6 +655,19 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         }, 350);
     }, [stopActiveAudio, onClose]);
 
+    // Language toggle handler (English vs Bengali)
+    const handleLanguageChange = useCallback((newLang) => {
+        setLanguage(newLang);
+        languageRef.current = newLang;
+        if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
+            if (recognitionRef.current) {
+                isExplicitAbortRef.current = true;
+                try { recognitionRef.current.abort(); } catch (e) {}
+            }
+            scheduleRecognitionRestart(80);
+        }
+    }, [scheduleRecognitionRestart]);
+
     // Start / Restart call handler
     const handleStartCall = useCallback(() => {
         // Mark call active
@@ -644,6 +684,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             recognitionRestartTimerRef.current = null;
         }
         pendingSpeechRef.current = null;
+        accumulatedTextRef.current = '';
 
         stopActiveAudio();
         setState('connecting');
@@ -735,6 +776,8 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     endedAt={endedAt}
                     title="Emma • AI Beauty Advisor"
                     userLabel="You"
+                    language={language}
+                    onLanguageChange={handleLanguageChange}
                     errorMessage={errorMessage}
                     placeholder="Ask Emma about authentic UK skincare, batch codes..."
                     className="w-full h-full"
