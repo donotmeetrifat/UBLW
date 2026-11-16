@@ -1099,24 +1099,10 @@ export default function AdminProductsPage() {
                                             </td>
 
                                             {/* Category */}
-                                            <td className="px-4 py-3.5">
-                                                <div className="space-y-1">
-                                                    <span className="inline-block bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                                                        {prod.category}
-                                                    </span>
-                                                    <div className="flex flex-wrap items-center gap-1">
-                                                        {(homepageSections?.newArrivals?.productIds?.includes(prod.id) || prod.isFeatured) && (
-                                                            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-50 text-[#6C306E] border border-purple-200" title="Featured in Homepage New Arrivals">
-                                                                ★ New Arrival
-                                                            </span>
-                                                        )}
-                                                        {(homepageSections?.bestSelling?.productIds?.includes(prod.id) || prod.isBestSeller) && (
-                                                            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200" title="Featured in Homepage Best Selling">
-                                                                👑 Best Seller
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                            <td className="px-4 py-3.5 whitespace-nowrap">
+                                                <span className="inline-block bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                                                    {prod.category}
+                                                </span>
                                             </td>
 
                                             {/* Pricing */}
