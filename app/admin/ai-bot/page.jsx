@@ -792,13 +792,9 @@ export default function AdminAiBotPage() {
                     <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EFE0EF]">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <div className="size-8 rounded-xl bg-gradient-to-br from-[#241224] to-[#6C306E] p-1.5 flex items-center justify-center text-white shrink-0 shadow-2xs">
-                                        <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                            <line x1="12" x2="12" y1="19" y2="22" />
-                                        </svg>
+                                <div className="flex items-center gap-2.5">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/logos/elevenlabs.png" alt="ElevenLabs" className="size-6 object-contain" />
                                     </div>
                                     <div>
                                         <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
@@ -830,7 +826,10 @@ export default function AdminAiBotPage() {
                         <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF6FA]/60 border border-[#EFE0EF] space-y-4">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1 max-w-md">
-                                    <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <img src="/logos/elevenlabs.png" alt="ElevenLabs" className="size-3.5 object-contain" />
+                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
+                                    </div>
                                     <p className="text-[11px] text-slate-500">
                                         Get your free key at <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="text-[#6C306E] font-bold underline">elevenlabs.io</a> (10,000 free characters every month, no credit card required).
                                     </p>
