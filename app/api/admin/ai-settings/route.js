@@ -24,6 +24,7 @@ export async function GET(request) {
         const hasGemini = Boolean(settings.geminiKey && settings.geminiKey.trim());
         const hasGroq = Boolean(settings.groqKey && settings.groqKey.trim());
         const hasOpenRouter = Boolean(settings.openRouterKey && settings.openRouterKey.trim());
+        const hasElevenLabs = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
 
         return NextResponse.json({
             success: true,
@@ -36,6 +37,8 @@ export async function GET(request) {
                 maskedGrokKey: maskKey(settings.groqKey),
                 hasOpenRouterKey: hasOpenRouter,
                 maskedOpenRouterKey: maskKey(settings.openRouterKey),
+                hasElevenLabsKey: hasElevenLabs,
+                maskedElevenLabsKey: maskKey(settings.elevenLabsKey),
 
                 // Explicit connection status objects
                 gemini: {
@@ -49,6 +52,13 @@ export async function GET(request) {
                 openrouter: {
                     isConnected: hasOpenRouter,
                     maskedKey: maskKey(settings.openRouterKey),
+                },
+                elevenlabs: {
+                    isConnected: hasElevenLabs,
+                    maskedKey: maskKey(settings.elevenLabsKey),
+                    selectedVoiceId: settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL',
+                    selectedVoiceName: settings.elevenLabsVoiceName || 'Sarah (Soft & Warm)',
+                    voiceCallEnabled: settings.voiceCallEnabled !== false,
                 },
 
                 preferredProvider: settings.preferredProvider || 'gemini',
@@ -125,9 +135,39 @@ export async function POST(request) {
                     provider: 'openrouter',
                     message: 'OpenRouter API disconnected successfully.',
                 });
+            } else if (target === 'elevenlabs') {
+                await saveAiSettings({ elevenLabsKey: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'elevenlabs',
+                    message: 'ElevenLabs Voice API disconnected successfully.',
+                });
             }
 
             return NextResponse.json({ success: false, message: 'Invalid provider to disconnect' }, { status: 400 });
+        }
+
+        // Action: Get ElevenLabs Voices List
+        if (action === 'get_voices') {
+            const currentSettings = await getAiSettings();
+            const key = (testKey && testKey.trim()) ? testKey.trim() : currentSettings.elevenLabsKey;
+            if (!key) {
+                return NextResponse.json({ success: false, message: 'No ElevenLabs API key found' }, { status: 400 });
+            }
+            try {
+                const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+                    headers: { 'xi-api-key': key },
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    return NextResponse.json({ success: false, message: err?.detail?.message || 'Failed to fetch voices' }, { status: 400 });
+                }
+                const data = await res.json();
+                return NextResponse.json({ success: true, voices: data.voices || [] });
+            } catch (err) {
+                return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+            }
         }
 
         // Action: Connect & Verify Provider API Key
@@ -142,6 +182,8 @@ export async function POST(request) {
                     ? currentSettings.geminiKey
                     : provider === 'groq'
                     ? currentSettings.groqKey
+                    : provider === 'elevenlabs'
+                    ? currentSettings.elevenLabsKey
                     : currentSettings.openRouterKey;
             }
 
@@ -368,9 +410,67 @@ export async function POST(request) {
                     }, { status: 400 });
                 }
             }
+
+            // 4. ElevenLabs Voice Verification & Discovery
+            else if (provider === 'elevenlabs') {
+                try {
+                    // Test ElevenLabs Key via /v1/user
+                    const userRes = await fetch('https://api.elevenlabs.io/v1/user', {
+                        headers: { 'xi-api-key': keyToTest },
+                    });
+
+                    if (!userRes.ok) {
+                        const errData = await userRes.json().catch(() => ({}));
+                        const errMsg = errData?.detail?.message || `ElevenLabs key verification failed (${userRes.status}). Please check your key at elevenlabs.io.`;
+                        return NextResponse.json({
+                            success: false,
+                            message: errMsg,
+                            latencyMs: Date.now() - startTime,
+                        }, { status: 400 });
+                    }
+
+                    const userData = await userRes.json();
+
+                    // Fetch available voices
+                    const voicesRes = await fetch('https://api.elevenlabs.io/v1/voices', {
+                        headers: { 'xi-api-key': keyToTest },
+                    });
+                    const voicesData = voicesRes.ok ? await voicesRes.json() : { voices: [] };
+                    const voices = voicesData.voices || [];
+
+                    // Automatically persist verified key into database!
+                    await saveAiSettings({ elevenLabsKey: keyToTest });
+
+                    return NextResponse.json({
+                        success: true,
+                        isConnected: true,
+                        maskedKey: maskKey(keyToTest),
+                        provider: 'elevenlabs',
+                        message: `ElevenLabs connected successfully! Found ${voices.length} available voices.`,
+                        tier: userData?.subscription?.tier || 'free',
+                        characterCount: userData?.subscription?.character_count || 0,
+                        characterLimit: userData?.subscription?.character_limit || 10000,
+                        voices,
+                        latencyMs: Date.now() - startTime,
+                    });
+                } catch (netErr) {
+                    return NextResponse.json({
+                        success: false,
+                        message: `ElevenLabs network error: ${netErr.message}`,
+                        latencyMs: Date.now() - startTime,
+                    }, { status: 400 });
+                }
+            }
         }
 
         // Action: Save All Settings
+        const {
+            elevenLabsKey,
+            elevenLabsVoiceId,
+            elevenLabsVoiceName,
+            voiceCallEnabled,
+        } = body;
+
         const updatePayload = {
             preferredProvider: preferredProvider === 'grok' ? 'groq' : preferredProvider,
             customInstructions,
@@ -386,6 +486,18 @@ export async function POST(request) {
         }
         if (openRouterKey !== undefined && !openRouterKey.includes('••••')) {
             updatePayload.openRouterKey = openRouterKey;
+        }
+        if (elevenLabsKey !== undefined && !elevenLabsKey.includes('••••')) {
+            updatePayload.elevenLabsKey = elevenLabsKey;
+        }
+        if (elevenLabsVoiceId !== undefined) {
+            updatePayload.elevenLabsVoiceId = elevenLabsVoiceId;
+        }
+        if (elevenLabsVoiceName !== undefined) {
+            updatePayload.elevenLabsVoiceName = elevenLabsVoiceName;
+        }
+        if (voiceCallEnabled !== undefined) {
+            updatePayload.voiceCallEnabled = voiceCallEnabled;
         }
 
         await saveAiSettings(updatePayload);

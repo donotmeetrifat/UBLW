@@ -7,11 +7,12 @@ import React from 'react'
  * handles **bold** and *italic*, cleans stray asterisks,
  * and automatically applies 'font-bengali' (Noto Serif Bengali) to all Bengali text.
  */
-export default function FormattedMessageText({ text, isUser = false, className = '' }) {
-    if (!text) return null
+export default function FormattedMessageText({ text, content, isUser = false, className = '' }) {
+    const raw = text !== undefined ? text : (content !== undefined ? content : '')
+    if (!raw) return null
 
-    const hasBengali = /[\u0980-\u09FF]/.test(text)
-    const paragraphs = String(text).split(/\n/)
+    const hasBengali = /[\u0980-\u09FF]/.test(raw)
+    const paragraphs = String(raw).split(/\n/)
 
     return (
         <div className={`space-y-1.5 ${hasBengali ? 'font-bengali' : ''} ${className}`}>

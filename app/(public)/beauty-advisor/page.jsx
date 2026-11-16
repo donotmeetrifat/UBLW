@@ -12,6 +12,7 @@ import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
 import FormattedMessageText from '@/components/AiFormattedText'
+import AiVoiceCallModal from '@/components/AiVoiceCallModal'
 import { LiquidMultimodalInput } from '@/components/ui/liquid-multimodal-input'
 import { TrashIcon } from '@/components/icons'
 import {
@@ -40,6 +41,7 @@ export default function BeautyAdvisorPage() {
 
     // 0ms Instant Cache Load: Populates immediately from localStorage for both guests and authenticated customers
     const [messages, setMessages] = useState(() => getCachedAiMessages(currentUser));
+    const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [sessionId, setSessionId] = useState('');
     const [isClearConfirming, setIsClearConfirming] = useState(false);
@@ -371,8 +373,19 @@ export default function BeautyAdvisorPage() {
                     </div>
                 </div>
 
-                {/* Right: Clear Chat Control */}
-                <div>
+                {/* Right: Voice Call & Clear Chat Controls */}
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsVoiceCallOpen(true)}
+                        className="h-8.5 px-3.5 rounded-full bg-[#6C306E] hover:bg-[#531e55] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    >
+                        <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                        </svg>
+                        <span>Voice Call Emma</span>
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setIsClearConfirming(!isClearConfirming)}
@@ -572,6 +585,12 @@ export default function BeautyAdvisorPage() {
                     </div>
                 </div>
             </footer>
+
+            {/* In-Browser AI Voice Call with Emma */}
+            <AiVoiceCallModal
+                isOpen={isVoiceCallOpen}
+                onClose={() => setIsVoiceCallOpen(false)}
+            />
         </div>
     );
 }
