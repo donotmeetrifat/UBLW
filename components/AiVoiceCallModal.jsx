@@ -29,7 +29,8 @@ function cleanTextForDisplay(rawText) {
         .trim();
 }
 
-const PROFESSIONAL_GREETING = "Hello! Welcome to UK Brand Lover. I am Emma, your senior AI beauty advisor. How may I assist you with your authentic British skincare, haircare, or cosmetic choices today?";
+// Crisp, polite, professional greeting
+const PROFESSIONAL_GREETING = "Hello! I am Emma, your beauty consultant at UK Brand Lover. How may I assist you today?";
 
 export default function AiVoiceCallModal({ isOpen, onClose }) {
     const [state, setState] = useState('connecting');
@@ -41,40 +42,54 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const [endedAt, setEndedAt] = useState(undefined);
     const [errorMessage, setErrorMessage] = useState(undefined);
 
-    const recognitionRef = useRef(null);
-    const currentAudioRef = useRef(null);
+    // Synchronous state refs to prevent any React closure race conditions
+    const isCallActiveRef = useRef(false);
     const isSpeakingRef = useRef(false);
     const isMutedRef = useRef(false);
-    const activeStateRef = useRef('connecting');
+    const recognitionRef = useRef(null);
+    const currentAudioRef = useRef(null);
+    const voiceAbortControllerRef = useRef(null);
+    const chatAbortControllerRef = useRef(null);
+    const silenceTimerRef = useRef(null);
+    const greetingTimerRef = useRef(null);
+    const spokenBufferRef = useRef('');
 
     isMutedRef.current = muted;
-    activeStateRef.current = state;
-    isSpeakingRef.current = state === 'speaking';
 
-    // Stop all audio & recognition
-    const stopAudioAndRecognition = useCallback(() => {
+    // Completely stop and silence all audio, synthesis, and in-flight network requests
+    const stopActiveAudio = useCallback(() => {
+        // Abort in-flight ElevenLabs fetch
+        if (voiceAbortControllerRef.current) {
+            try {
+                voiceAbortControllerRef.current.abort();
+            } catch (e) {}
+            voiceAbortControllerRef.current = null;
+        }
+
+        // Pause and destroy any active HTML5 audio element
         if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current.src = '';
+            try {
+                currentAudioRef.current.pause();
+                currentAudioRef.current.currentTime = 0;
+                currentAudioRef.current.src = '';
+            } catch (e) {}
             currentAudioRef.current = null;
         }
+
+        // Cancel any browser SpeechSynthesis
         if (typeof window !== 'undefined' && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-        }
-        if (recognitionRef.current) {
             try {
-                recognitionRef.current.abort();
-            } catch (e) {
-                // Ignore abort errors
-            }
-            recognitionRef.current = null;
+                window.speechSynthesis.cancel();
+            } catch (e) {}
         }
+
+        isSpeakingRef.current = false;
     }, []);
 
     // Speech recognition loop
     const startSpeechRecognition = useCallback(() => {
         if (typeof window === 'undefined') return;
-        if (isSpeakingRef.current || isMutedRef.current || activeStateRef.current === 'ended') return;
+        if (!isCallActiveRef.current || isMutedRef.current || isSpeakingRef.current) return;
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRec) {
@@ -87,46 +102,49 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 try {
                     recognitionRef.current.abort();
                 } catch (e) {}
+                recognitionRef.current = null;
             }
 
             const recognition = new SpeechRec();
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
-                if (activeStateRef.current !== 'speaking') {
+                if (isCallActiveRef.current && !isSpeakingRef.current) {
                     setState('listening');
                 }
             };
 
             recognition.onresult = (event) => {
-                const results = event.results;
-                if (!results || results.length === 0) return;
+                if (!isCallActiveRef.current || isSpeakingRef.current) return;
 
                 let interim = '';
-                let finalized = '';
+                let finalizedThisChunk = '';
 
-                for (let i = 0; i < results.length; i++) {
-                    const result = results[i];
-                    if (result.isFinal) {
-                        finalized += result[0].transcript;
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalizedThisChunk += transcript;
                     } else {
-                        interim += result[0].transcript;
+                        interim += transcript;
                     }
                 }
 
-                if (finalized) {
-                    // Final user transcript
-                    handleUserQuery(finalized.trim());
-                } else if (interim) {
-                    // Update live segment for interim speech
+                if (finalizedThisChunk) {
+                    spokenBufferRef.current = (spokenBufferRef.current + ' ' + finalizedThisChunk).trim();
+                }
+
+                const currentCombined = (spokenBufferRef.current + ' ' + interim).trim();
+
+                // Live caption update
+                if (currentCombined) {
                     setSegments(prev => {
                         const last = prev[prev.length - 1];
                         if (last && last.role === 'user' && last.live) {
                             return [
                                 ...prev.slice(0, -1),
-                                { ...last, interim }
+                                { ...last, interim: currentCombined }
                             ];
                         }
                         return [
@@ -136,7 +154,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                                 role: 'user',
                                 speaker: 'You',
                                 text: '',
-                                interim,
+                                interim: currentCombined,
                                 live: true,
                                 at: Date.now(),
                                 channel: 'voice'
@@ -144,18 +162,27 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                         ];
                     });
                 }
+
+                // Reset silence debouncer: 1.2s of silence after talking -> submit to AI
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = setTimeout(() => {
+                    const toSubmit = (spokenBufferRef.current + ' ' + interim).trim();
+                    if (toSubmit.length > 0 && isCallActiveRef.current && !isSpeakingRef.current) {
+                        spokenBufferRef.current = '';
+                        handleUserQuery(toSubmit, 'voice');
+                    }
+                }, 1200);
             };
 
             recognition.onerror = (event) => {
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    console.warn('Speech recognition warning:', event.error);
+                    console.warn('Speech recognition status:', event.error);
                 }
             };
 
             recognition.onend = () => {
-                // If not speaking and still connected and not muted, keep ready
-                if (activeStateRef.current === 'listening' && !isMutedRef.current) {
-                    // Auto-restart listening loop if still active
+                // If call is still active, not speaking and not muted, keep listening
+                if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
                     try {
                         recognition.start();
                     } catch (e) {}
@@ -169,84 +196,11 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         }
     }, []);
 
-    // Speak Emma's response via ElevenLabs (with graceful speech synthesis fallback)
-    const speakEmmaResponse = useCallback(async (rawText) => {
-        if (!rawText || !rawText.trim()) return;
-
-        const speechText = cleanTextForSpeech(rawText);
-        const displayText = cleanTextForDisplay(rawText);
-
-        stopAudioAndRecognition();
-        setState('speaking');
-
-        // Add assistant segment to transcript
-        const segmentId = 'emma-' + Date.now();
-        setSegments(prev => {
-            // Remove any pending live user segments
-            const cleaned = prev.filter(s => !s.live);
-            return [
-                ...cleaned,
-                {
-                    id: segmentId,
-                    role: 'assistant',
-                    speaker: 'Emma',
-                    text: displayText,
-                    at: Date.now(),
-                    channel: 'voice'
-                }
-            ];
-        });
-
-        const onPlaybackFinished = () => {
-            if (activeStateRef.current === 'speaking') {
-                if (isMutedRef.current) {
-                    setState('muted');
-                } else {
-                    setState('listening');
-                    startSpeechRecognition();
-                }
-            }
-        };
-
-        try {
-            const res = await fetch('/api/ai/voice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: speechText }),
-            });
-
-            if (res.ok) {
-                const blob = await res.blob();
-                const audioUrl = URL.createObjectURL(blob);
-                const audio = new Audio(audioUrl);
-                currentAudioRef.current = audio;
-
-                audio.onended = () => {
-                    URL.revokeObjectURL(audioUrl);
-                    currentAudioRef.current = null;
-                    onPlaybackFinished();
-                };
-
-                audio.onerror = () => {
-                    URL.revokeObjectURL(audioUrl);
-                    currentAudioRef.current = null;
-                    fallbackBrowserSpeak(speechText, onPlaybackFinished);
-                };
-
-                await audio.play();
-            } else {
-                fallbackBrowserSpeak(speechText, onPlaybackFinished);
-            }
-        } catch (err) {
-            console.warn('ElevenLabs API fetch issue, falling back to browser speech:', err);
-            fallbackBrowserSpeak(speechText, onPlaybackFinished);
-        }
-    }, [startSpeechRecognition, stopAudioAndRecognition]);
-
     // Fallback browser speech synthesis
-    const fallbackBrowserSpeak = (text, onEndCallback) => {
+    const fallbackBrowserSpeak = useCallback((text, onEndCallback) => {
+        if (!isCallActiveRef.current) return;
         if (typeof window === 'undefined' || !window.speechSynthesis) {
-            onEndCallback();
+            onEndCallback?.();
             return;
         }
 
@@ -263,23 +217,140 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             );
             if (preferredVoice) utterance.voice = preferredVoice;
 
-            utterance.onend = onEndCallback;
-            utterance.onerror = onEndCallback;
+            utterance.onend = () => {
+                if (isCallActiveRef.current) onEndCallback?.();
+            };
+            utterance.onerror = () => {
+                if (isCallActiveRef.current) onEndCallback?.();
+            };
 
             window.speechSynthesis.speak(utterance);
         } catch (e) {
-            onEndCallback();
+            onEndCallback?.();
         }
-    };
+    }, []);
+
+    // Speak Emma's response via ElevenLabs
+    const speakEmmaResponse = useCallback(async (rawText) => {
+        if (!rawText || !rawText.trim() || !isCallActiveRef.current) return;
+
+        const speechText = cleanTextForSpeech(rawText);
+        const displayText = cleanTextForDisplay(rawText);
+
+        // Stop active audio and pause speech recognition while Emma speaks
+        stopActiveAudio();
+        if (recognitionRef.current) {
+            try { recognitionRef.current.abort(); } catch (e) {}
+        }
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+        isSpeakingRef.current = true;
+        setState('speaking');
+
+        // Add assistant response to transcript
+        const segmentId = 'emma-' + Date.now();
+        setSegments(prev => {
+            const cleaned = prev.filter(s => !s.live);
+            return [
+                ...cleaned,
+                {
+                    id: segmentId,
+                    role: 'assistant',
+                    speaker: 'Emma',
+                    text: displayText,
+                    at: Date.now(),
+                    channel: 'voice'
+                }
+            ];
+        });
+
+        // Abort previous voice fetch
+        if (voiceAbortControllerRef.current) {
+            voiceAbortControllerRef.current.abort();
+        }
+        const voiceController = new AbortController();
+        voiceAbortControllerRef.current = voiceController;
+
+        const onPlaybackFinished = () => {
+            isSpeakingRef.current = false;
+            if (!isCallActiveRef.current) return;
+
+            if (isMutedRef.current) {
+                setState('muted');
+            } else {
+                setState('listening');
+                startSpeechRecognition();
+            }
+        };
+
+        try {
+            const res = await fetch('/api/ai/voice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: speechText }),
+                signal: voiceController.signal,
+            });
+
+            if (!isCallActiveRef.current) return;
+
+            if (res.ok) {
+                const blob = await res.blob();
+                if (!isCallActiveRef.current) return;
+
+                const audioUrl = URL.createObjectURL(blob);
+                const audio = new Audio(audioUrl);
+                currentAudioRef.current = audio;
+
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudioRef.current = null;
+                    onPlaybackFinished();
+                };
+
+                audio.onerror = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudioRef.current = null;
+                    if (isCallActiveRef.current) {
+                        fallbackBrowserSpeak(speechText, onPlaybackFinished);
+                    }
+                };
+
+                if (!isCallActiveRef.current) {
+                    audio.src = '';
+                    return;
+                }
+
+                await audio.play();
+            } else {
+                fallbackBrowserSpeak(speechText, onPlaybackFinished);
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.warn('Voice API issue, falling back to browser speech:', err.message);
+            if (isCallActiveRef.current) {
+                fallbackBrowserSpeak(speechText, onPlaybackFinished);
+            }
+        }
+    }, [startSpeechRecognition, stopActiveAudio, fallbackBrowserSpeak]);
 
     // Handle user query (voice transcript or typed input)
     const handleUserQuery = useCallback(async (queryText, channel = 'voice') => {
-        if (!queryText || !queryText.trim()) return;
+        if (!queryText || !queryText.trim() || !isCallActiveRef.current) return;
 
-        stopAudioAndRecognition();
+        // 1. Immediately silence audio & stop recognition
+        stopActiveAudio();
+        if (recognitionRef.current) {
+            try { recognitionRef.current.abort(); } catch (e) {}
+        }
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        spokenBufferRef.current = '';
+
+        // 2. Set state to thinking
+        isSpeakingRef.current = false;
         setState('thinking');
 
-        // Add confirmed user segment to transcript
+        // 3. Add user segment to transcript
+        const userMsg = queryText.trim();
         setSegments(prev => {
             const cleaned = prev.filter(s => !s.live);
             return [
@@ -288,15 +359,22 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     id: 'user-' + Date.now(),
                     role: 'user',
                     speaker: 'You',
-                    text: queryText,
+                    text: userMsg,
                     at: Date.now(),
                     channel
                 }
             ];
         });
 
+        // 4. Abort previous chat request
+        if (chatAbortControllerRef.current) {
+            chatAbortControllerRef.current.abort();
+        }
+        const chatController = new AbortController();
+        chatAbortControllerRef.current = chatController;
+
         try {
-            // Build conversation history for API grounding
+            // Build conversation history
             const history = segments
                 .filter(s => !s.live && s.text)
                 .slice(-6)
@@ -309,27 +387,34 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: queryText,
+                    message: userMsg,
                     history
-                })
+                }),
+                signal: chatController.signal
             });
 
+            if (!isCallActiveRef.current) return;
+
             const data = await res.json();
+            if (!isCallActiveRef.current) return;
+
             if (data.success && data.message) {
                 speakEmmaResponse(data.message);
             } else {
                 speakEmmaResponse("I'm sorry, I couldn't hear that clearly. Could you please repeat your question?");
             }
         } catch (err) {
+            if (err.name === 'AbortError') return;
+            if (!isCallActiveRef.current) return;
             console.error('AI chat query error:', err);
             speakEmmaResponse("We have 100% authentic UK skincare and haircare in stock with verified British batch codes. What product or skin concern can I assist you with?");
         }
-    }, [segments, speakEmmaResponse, stopAudioAndRecognition]);
+    }, [segments, speakEmmaResponse, stopActiveAudio]);
 
     // Handle user interrupting Emma (tapping orb while she is speaking)
     const handleInterrupt = useCallback(() => {
         if (state === 'speaking') {
-            stopAudioAndRecognition();
+            stopActiveAudio();
             setSegments(prev => {
                 const last = prev[prev.length - 1];
                 if (last && last.role === 'assistant') {
@@ -341,6 +426,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 return prev;
             });
 
+            isSpeakingRef.current = false;
             if (muted) {
                 setState('muted');
             } else {
@@ -348,16 +434,16 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 startSpeechRecognition();
             }
         }
-    }, [state, muted, stopAudioAndRecognition, startSpeechRecognition]);
+    }, [state, muted, stopActiveAudio, startSpeechRecognition]);
 
     // Handle mute change
     const handleMutedChange = useCallback((isNowMuted) => {
         setMuted(isNowMuted);
+        isMutedRef.current = isNowMuted;
+
         if (isNowMuted) {
             if (recognitionRef.current) {
-                try {
-                    recognitionRef.current.abort();
-                } catch (e) {}
+                try { recognitionRef.current.abort(); } catch (e) {}
             }
             if (state === 'listening') {
                 setState('muted');
@@ -370,46 +456,89 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         }
     }, [state, startSpeechRecognition]);
 
-    // End call handler
+    // End call handler (INSTANT KILL OF ALL AUDIO & PROCESSES)
     const handleEndCall = useCallback(() => {
-        stopAudioAndRecognition();
+        // Mark call permanently inactive synchronously
+        isCallActiveRef.current = false;
+
+        // Clear all timers
+        if (greetingTimerRef.current) {
+            clearTimeout(greetingTimerRef.current);
+            greetingTimerRef.current = null;
+        }
+        if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+        }
+
+        // Abort AI chat fetch
+        if (chatAbortControllerRef.current) {
+            try { chatAbortControllerRef.current.abort(); } catch (e) {}
+            chatAbortControllerRef.current = null;
+        }
+
+        // Kill audio & speech synthesis
+        stopActiveAudio();
+
+        // Abort speech recognition
+        if (recognitionRef.current) {
+            try { recognitionRef.current.abort(); } catch (e) {}
+            recognitionRef.current = null;
+        }
+
         setState('ended');
         setEndedAt(new Date());
 
-        // Auto close dialog smoothly after 600ms
+        // Close modal smoothly
         setTimeout(() => {
             onClose();
-        }, 600);
-    }, [stopAudioAndRecognition, onClose]);
+        }, 400);
+    }, [stopActiveAudio, onClose]);
 
     // Start / Restart call handler
     const handleStartCall = useCallback(() => {
-        stopAudioAndRecognition();
+        // Mark call active
+        isCallActiveRef.current = true;
+        isSpeakingRef.current = false;
+        spokenBufferRef.current = '';
+
+        stopActiveAudio();
         setState('connecting');
         setStartedAt(undefined);
         setEndedAt(undefined);
         setSegments([]);
         setErrorMessage(undefined);
 
-        const timer = setTimeout(() => {
+        // Warm up microphone permission proactively
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+        }
+
+        if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
+        greetingTimerRef.current = setTimeout(() => {
+            if (!isCallActiveRef.current) return;
             setStartedAt(new Date());
             speakEmmaResponse(PROFESSIONAL_GREETING);
-        }, 1200);
+        }, 1100);
 
-        return () => clearTimeout(timer);
-    }, [speakEmmaResponse, stopAudioAndRecognition]);
+        return () => {
+            if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
+        };
+    }, [speakEmmaResponse, stopActiveAudio]);
 
     // Reset and initialize call when modal opens
     useEffect(() => {
         if (!isOpen) {
-            stopAudioAndRecognition();
+            isCallActiveRef.current = false;
+            stopActiveAudio();
             return;
         }
 
         const cleanup = handleStartCall();
         return () => {
             cleanup?.();
-            stopAudioAndRecognition();
+            isCallActiveRef.current = false;
+            stopActiveAudio();
         };
     }, [isOpen]);
 
@@ -429,20 +558,21 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/70 backdrop-blur-md animate-fadeIn"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     handleEndCall();
                 }
             }}
         >
-            <div className="relative w-full max-w-[480px] h-[640px] max-h-[92vh] rounded-3xl shadow-2xl overflow-hidden border border-white/10 bg-[#120513] text-white flex flex-col">
-                {/* Floating Dismiss Button */}
+            {/* Generous, high-end, spacious card container */}
+            <div className="relative w-full max-w-2xl lg:max-w-3xl h-[820px] max-h-[92vh] rounded-3xl shadow-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-white dark:bg-[#18181b] text-foreground flex flex-col">
+                {/* Subtle Dismiss Button */}
                 <button
                     type="button"
                     onClick={handleEndCall}
                     aria-label="Close voice call"
-                    className="absolute top-3.5 right-3.5 z-20 size-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white flex items-center justify-center transition cursor-pointer"
+                    className="absolute top-3.5 right-3.5 z-20 size-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 text-black/60 dark:text-white/70 hover:text-black dark:hover:text-white flex items-center justify-center transition cursor-pointer"
                 >
                     <CloseIcon size={16} color="currentColor" />
                 </button>
@@ -467,7 +597,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     userLabel="You"
                     errorMessage={errorMessage}
                     placeholder="Ask Emma about authentic UK skincare, batch codes..."
-                    className="h-full rounded-3xl"
+                    className="w-full h-full"
                 />
             </div>
         </div>
