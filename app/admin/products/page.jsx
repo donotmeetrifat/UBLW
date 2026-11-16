@@ -564,7 +564,7 @@ export default function AdminProductsPage() {
     const handleAiAutofill = async (field = 'all') => {
         const title = (formData.name || '').trim()
         if (!title) {
-            toast.error('Please enter the Product Title first so AI can generate accurate details.')
+            toast.error('Please enter the Product Title first to autofill details.')
             return
         }
 
@@ -1660,18 +1660,15 @@ export default function AdminProductsPage() {
                                             onClick={() => handleAiAutofill('all')}
                                             disabled={aiGeneratingField !== null}
                                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-[#6C306E] to-[#3A0C38] hover:opacity-95 active:scale-95 text-white text-[11px] font-bold shadow-xs transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-                                            title="Automatically fill all 3 sections with AI using the Product Title"
+                                            title="Autofill all three sections using the Product Title"
                                         >
                                             {aiGeneratingField === 'all' ? (
                                                 <>
                                                     <span className="size-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                    <span>Generating All 3...</span>
+                                                    <span>Generating...</span>
                                                 </>
                                             ) : (
-                                                <>
-                                                    <SparklesIcon size={12} color="#FFFFFF" />
-                                                    <span>Autofill All 3 with AI</span>
-                                                </>
+                                                <span>Autofill all three</span>
                                             )}
                                         </button>
                                     </div>
@@ -1686,7 +1683,7 @@ export default function AdminProductsPage() {
                                                 onClick={() => handleAiAutofill('formulaProfile')}
                                                 disabled={aiGeneratingField !== null}
                                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-                                                title="Automatically generate Formulation & Profile with AI based on Product Title"
+                                                title="Autofill Formulation & Profile based on Product Title"
                                             >
                                                 {aiGeneratingField === 'formulaProfile' ? (
                                                     <>
@@ -1694,10 +1691,7 @@ export default function AdminProductsPage() {
                                                         <span>Generating...</span>
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        <SparklesIcon size={11} color="#6C306E" />
-                                                        <span>AI Autofill</span>
-                                                    </>
+                                                    <span>Autofill</span>
                                                 )}
                                             </button>
                                         </div>
@@ -1722,18 +1716,15 @@ export default function AdminProductsPage() {
                                                     onClick={() => handleAiAutofill('benefits')}
                                                     disabled={aiGeneratingField !== null}
                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-                                                    title="Automatically generate 5-6 Key Proven Benefit cards with AI based on Product Title"
+                                                    title="Autofill Key Proven Benefit cards based on Product Title"
                                                 >
                                                     {aiGeneratingField === 'benefits' ? (
                                                         <>
                                                             <span className="size-3 border-2 border-[#6C306E] border-t-transparent rounded-full animate-spin" />
-                                                            <span>Generating Cards...</span>
+                                                            <span>Generating...</span>
                                                         </>
                                                     ) : (
-                                                        <>
-                                                            <SparklesIcon size={11} color="#6C306E" />
-                                                            <span>AI Autofill</span>
-                                                        </>
+                                                        <span>Autofill</span>
                                                     )}
                                                 </button>
                                                 <button
@@ -1781,7 +1772,7 @@ export default function AdminProductsPage() {
                                                 onClick={() => handleAiAutofill('whyYouWillLoveIt')}
                                                 disabled={aiGeneratingField !== null}
                                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100/80 active:scale-95 text-[#6C306E] text-[11px] font-bold border border-purple-200/80 transition shadow-2xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-                                                title="Automatically generate Why You'll Love It copy with AI based on Product Title"
+                                                title="Autofill Why You'll Love It based on Product Title"
                                             >
                                                 {aiGeneratingField === 'whyYouWillLoveIt' ? (
                                                     <>
@@ -1789,10 +1780,7 @@ export default function AdminProductsPage() {
                                                         <span>Generating...</span>
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        <SparklesIcon size={11} color="#6C306E" />
-                                                        <span>AI Autofill</span>
-                                                    </>
+                                                    <span>Autofill</span>
                                                 )}
                                             </button>
                                         </div>
