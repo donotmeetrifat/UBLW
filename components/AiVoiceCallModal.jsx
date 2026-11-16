@@ -42,7 +42,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const [segments, setSegments] = useState([]);
     const [muted, setMuted] = useState(false);
     const [captions, setCaptions] = useState(true);
-    const [language, setLanguage] = useState('en'); // 'en' | 'bn'
     const [startedAt, setStartedAt] = useState(undefined);
     const [endedAt, setEndedAt] = useState(undefined);
     const [errorMessage, setErrorMessage] = useState(undefined);
@@ -52,8 +51,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
     const isSpeakingRef = useRef(false);
     const isMutedRef = useRef(false);
     const isExplicitAbortRef = useRef(false);
-    const languageRef = useRef('en');
-    languageRef.current = language;
     const accumulatedTextRef = useRef('');
     const recognitionRef = useRef(null);
     const silenceTimerRef = useRef(null);
@@ -157,7 +154,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
             recognition.continuous = true; // Continuous listening prevents premature closing
             recognition.interimResults = true; // Instant real-time transcript updates
             recognition.maxAlternatives = 1;
-            recognition.lang = languageRef.current === 'bn' ? 'bn-BD' : (typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US');
+            recognition.lang = (typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US');
 
             recognition.onstart = () => {
                 if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
@@ -655,19 +652,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
         }, 350);
     }, [stopActiveAudio, onClose]);
 
-    // Language toggle handler (English vs Bengali)
-    const handleLanguageChange = useCallback((newLang) => {
-        setLanguage(newLang);
-        languageRef.current = newLang;
-        if (isCallActiveRef.current && !isSpeakingRef.current && !isMutedRef.current) {
-            if (recognitionRef.current) {
-                isExplicitAbortRef.current = true;
-                try { recognitionRef.current.abort(); } catch (e) {}
-            }
-            scheduleRecognitionRestart(80);
-        }
-    }, [scheduleRecognitionRestart]);
-
     // Start / Restart call handler
     const handleStartCall = useCallback(() => {
         // Mark call active
@@ -776,8 +760,6 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     endedAt={endedAt}
                     title="Emma • AI Beauty Advisor"
                     userLabel="You"
-                    language={language}
-                    onLanguageChange={handleLanguageChange}
                     errorMessage={errorMessage}
                     placeholder="Ask Emma about authentic UK skincare, batch codes..."
                     className="w-full h-full"
