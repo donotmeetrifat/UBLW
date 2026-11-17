@@ -157,13 +157,8 @@ export async function POST(request) {
                     const errData = await response.json().catch(() => ({}));
                     lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
                     console.warn(`[ElevenLabs TTS] Key ending ...${apiKey.slice(-4)}, Model ${modelId} with voice ${voiceId} returned ${response.status}:`, lastErrorMsg);
-                    // If quota exceeded (429), skip to backup key; if 401 unauthorized, stop immediately
-                    if (response.status === 401) {
-                        ttsRes = response;
-                        break outerLoop;
-                    }
-                    if (response.status === 429) {
-                        // quota exhausted on this key → try backup key
+                    // If key is unauthorized (401), payment/quota exhausted (402), or rate-limited (429), immediately fail over to the backup key
+                    if (response.status === 401 || response.status === 402 || response.status === 429) {
                         break;
                     }
                 } catch (netErr) {

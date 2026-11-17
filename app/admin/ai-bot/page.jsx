@@ -217,16 +217,16 @@ export default function AdminAiBotPage() {
 
         if (!key || !key.trim()) {
             const provName = provider === 'gemini' 
-                ? 'Google Gemini (#1 Primary)' 
+                ? 'Google Gemini' 
                 : provider === 'gemini2'
-                ? 'Google Gemini (#2 Backup)'
+                ? 'Gemini Backup'
                 : provider === 'groq' 
-                ? 'Groq Cloud (#3 Backup)' 
+                ? 'Groq Cloud' 
                 : provider === 'elevenlabs'
-                ? 'ElevenLabs Primary'
+                ? 'ElevenLabs'
                 : provider === 'elevenlabs2'
                 ? 'ElevenLabs Backup'
-                : 'OpenRouter (#4 Backup)'
+                : 'OpenRouter'
             toast.error(`Please paste your ${provName} API key first.`)
             return
         }
@@ -246,13 +246,13 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success && data.isConnected) {
                 const provName = provider === 'gemini' 
-                    ? 'Google Gemini (#1 Primary)' 
+                    ? 'Google Gemini' 
                     : provider === 'gemini2'
-                    ? 'Google Gemini (#2 Backup)'
+                    ? 'Gemini Backup'
                     : provider === 'groq' 
                     ? 'Groq Cloud' 
                     : provider === 'elevenlabs'
-                    ? 'ElevenLabs Primary'
+                    ? 'ElevenLabs'
                     : provider === 'elevenlabs2'
                     ? 'ElevenLabs Backup'
                     : 'OpenRouter'
@@ -299,13 +299,13 @@ export default function AdminAiBotPage() {
     // Disconnect API Key
     const handleDisconnect = async (provider) => {
         const providerName = provider === 'gemini' 
-            ? 'Google Gemini (#1 Primary)' 
+            ? 'Google Gemini' 
             : provider === 'gemini2'
-            ? 'Google Gemini (#2 Backup)'
+            ? 'Gemini Backup'
             : provider === 'groq' 
             ? 'Groq Cloud' 
             : provider === 'elevenlabs'
-            ? 'ElevenLabs Primary'
+            ? 'ElevenLabs'
             : provider === 'elevenlabs2'
             ? 'ElevenLabs Backup'
             : 'OpenRouter'
@@ -580,36 +580,33 @@ export default function AdminAiBotPage() {
                         AI Provider API Keys
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                        Connect primary and backup AI providers. Emma automatically fails over in sequence: Google Gemini (#1) → Gemini Backup (#2) → Groq (#3) → OpenRouter (#4).
+                        Connect one or multiple providers. Emma will automatically failover to secondary providers if quota is reached.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                    {/* 1. Google Gemini (Primary) */}
-                    <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-4.5">
+                    {/* 1. Google Gemini */}
+                    <div className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isGeminiConnected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
                             : 'bg-white border-[#EFE0EF]'
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center justify-between gap-1.5 mb-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/gemini.png" alt="Google Gemini" className="size-6 object-contain" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Google Gemini</h4>
-                                        <span className="text-[10px] text-purple-700 font-bold block">#1 Primary AI</span>
-                                    </div>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Google Gemini</h4>
                                 </div>
                                 {isGeminiConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -623,7 +620,7 @@ export default function AdminAiBotPage() {
                                         type={showGeminiKey ? 'text' : 'password'}
                                         value={geminiKey}
                                         onChange={(e) => setGeminiKey(e.target.value)}
-                                        placeholder="Gemini API Key #1 (AIza...)"
+                                        placeholder="Gemini API Key (AIza...)"
                                         className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
                                             isGeminiConnected
                                                 ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
@@ -678,31 +675,28 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    {/* 2. Google Gemini (Backup #2) */}
-                    <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                    {/* 2. Gemini Backup */}
+                    <div className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isGemini2Connected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
                             : 'bg-white border-[#EFE0EF]'
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center justify-between gap-1.5 mb-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <img src="/logos/gemini.png" alt="Google Gemini Backup" className="size-6 object-contain" />
+                                        <img src="/logos/gemini.png" alt="Gemini Backup" className="size-6 object-contain" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Gemini Backup</h4>
-                                        <span className="text-[10px] text-purple-700 font-bold block">#2 Backup AI</span>
-                                    </div>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Gemini Backup</h4>
                                 </div>
                                 {isGemini2Connected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -716,7 +710,7 @@ export default function AdminAiBotPage() {
                                         type={showGemini2Key ? 'text' : 'password'}
                                         value={gemini2Key}
                                         onChange={(e) => setGemini2Key(e.target.value)}
-                                        placeholder="Gemini API Key #2 (AIza...)"
+                                        placeholder="Gemini Backup Key (AIza...)"
                                         className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
                                             isGemini2Connected
                                                 ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
@@ -772,30 +766,27 @@ export default function AdminAiBotPage() {
                     </div>
 
                     {/* 3. Groq Cloud */}
-                    <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                    <div className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isGroqConnected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
                             : 'bg-white border-[#EFE0EF]'
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center justify-between gap-1.5 mb-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/groq.png" alt="Groq" className="size-6 object-contain" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Groq Cloud</h4>
-                                        <span className="text-[10px] text-purple-700 font-bold block">#3 Backup AI</span>
-                                    </div>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Groq Cloud</h4>
                                 </div>
                                 {isGroqConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -864,31 +855,28 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    {/* 3. OpenRouter */}
-                    <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                    {/* 4. OpenRouter */}
+                    <div className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isOpenRouterConnected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
                             : 'bg-white border-[#EFE0EF]'
                     }`}>
                         <div>
                             {/* Card Header with Real Logo & Connection Badge */}
-                            <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center justify-between gap-1.5 mb-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/openrouter-icon.png" alt="OpenRouter" className="size-6 object-contain" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">OpenRouter</h4>
-                                        <span className="text-[10px] text-purple-700 font-bold block">#4 Backup AI</span>
-                                    </div>
+                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">OpenRouter</h4>
                                 </div>
                                 {isOpenRouterConnected ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Connected
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                         <span className="size-1.5 rounded-full bg-slate-400" />
                                         Not Connected
                                     </span>
@@ -919,7 +907,7 @@ export default function AdminAiBotPage() {
                                 </div>
                                 {isOpenRouterConnected && (
                                     <p className="text-[10px] text-emerald-700 font-semibold px-1 truncate">
-                                        Free Tier Models Active
+                                        Free Tier Active
                                     </p>
                                 )}
                             </div>
@@ -1019,7 +1007,7 @@ export default function AdminAiBotPage() {
                                 {isElevenLabsConnected || isElevenLabs2Connected ? (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wide shadow-2xs">
                                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        {isElevenLabsConnected && isElevenLabs2Connected ? 'Connected (2 Keys Ready)' : 'Connected'}
+                                        Connected
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold shadow-2xs">
@@ -1034,11 +1022,10 @@ export default function AdminAiBotPage() {
                         <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF6FA]/60 border border-[#EFE0EF] space-y-4">
                             {/* Primary Key Row */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="space-y-1 max-w-md">
+                                <div className="space-y-0.5 max-w-md">
                                     <div className="flex items-center gap-1.5">
                                         <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
-                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs Primary API Key:</span>
-                                        <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">#1 Primary</span>
+                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
                                     </div>
                                     <p className="text-[11px] text-slate-500">Primary voice synthesis key used for natural human speech in calls.</p>
                                 </div>
@@ -1093,13 +1080,12 @@ export default function AdminAiBotPage() {
 
                             {/* Backup Key Row */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-[#EFE0EF]">
-                                <div className="space-y-1 max-w-md">
+                                <div className="space-y-0.5 max-w-md">
                                     <div className="flex items-center gap-1.5">
                                         <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
                                         <span className="text-xs font-bold text-[#241224]">ElevenLabs Backup API Key:</span>
-                                        <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">#2 Backup</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500">Automatic instant fallback if primary ElevenLabs account runs out of characters or hits quota.</p>
+                                    <p className="text-[11px] text-slate-500">Automatic fallback if primary key characters or quota run out.</p>
                                 </div>
 
                                 <div className="flex items-center gap-2.5 flex-1 max-w-lg">
