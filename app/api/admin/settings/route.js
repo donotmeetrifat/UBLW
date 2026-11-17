@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getStoreSettings, saveStoreSettings } from '@/lib/settings';
-import { getUserFromRequest } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request);
+        if (!auth.authorized) return auth.response;
+
         const settings = await getStoreSettings();
         return NextResponse.json({
             success: true,
@@ -27,8 +30,9 @@ export async function GET() {
 
 export async function POST(request) {
     try {
-        const currentUser = getUserFromRequest(request);
-        if (currentUser && currentUser.role === 'EMPLOYEE') {
+        const auth = await requireStaff(request);
+        if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
             return NextResponse.json(
                 { success: false, message: 'Forbidden: Only Administrators can modify store payment & delivery settings.' },
                 { status: 403 }

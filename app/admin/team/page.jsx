@@ -26,6 +26,19 @@ const ROLE_OPTIONS = [
     { value: 'CUSTOMER', label: 'Customer', dot: 'bg-slate-400' },
 ]
 
+const MODULE_PERMISSIONS = [
+    { id: 'orders', name: 'Customer Orders', description: 'View, fulfill, update status and assign couriers' },
+    { id: 'products', name: 'Products & Stock', description: 'Add, update products, modify prices and stock counts' },
+    { id: 'categories', name: 'Category Catalog', description: 'Manage shop categories and collections' },
+    { id: 'banners', name: 'Hero Banner Slider', description: 'Upload, reorder, and activate homepage hero banners' },
+    { id: 'homepage', name: 'Homepage Showcase', description: 'Curate best selling and new arrival product placements' },
+    { id: 'promotions', name: 'Hero Promo Cards', description: 'Configure top promotional offer cards' },
+    { id: 'customers', name: 'Customer Intelligence', description: 'View registered customers and purchase histories' },
+    { id: 'inquiries', name: 'Customer Inquiries', description: 'Respond to and resolve customer contact inquiries' },
+    { id: 'analytics', name: 'Views & Analytics', description: 'View visitor analytics and revenue sales charts' },
+    { id: 'coupons', name: 'Coupons & Discounts', description: 'Create and manage promotional discount codes' },
+]
+
 export default function AdminTeamPage() {
     // 1. Instant Cache-First State: Load from sessionStorage in 0ms if available
     const [teamMembers, setTeamMembers] = useState(() => {
@@ -81,6 +94,14 @@ export default function AdminTeamPage() {
     const [deleteModal, setDeleteModal] = useState({
         isOpen: false,
         user: null,
+        loading: false,
+    })
+
+    // Granular Permissions Modal State
+    const [permModal, setPermModal] = useState({
+        isOpen: false,
+        user: null,
+        permissions: [],
         loading: false,
     })
 
@@ -364,6 +385,80 @@ export default function AdminTeamPage() {
         } catch (error) {
             console.error('Error deleting user:', error)
             toast.error('Failed to delete user')
+            fetchTeam()
+        }
+    }
+
+    // Open Permissions Modal for an Employee
+    const handleOpenPermModal = (user) => {
+        setPermModal({
+            isOpen: true,
+            user,
+            permissions: Array.isArray(user.permissions) ? [...user.permissions] : [],
+            loading: false,
+        })
+    }
+
+    // Toggle specific module permission checkbox
+    const handleTogglePerm = (permId) => {
+        setPermModal(prev => {
+            const current = prev.permissions || []
+            const exists = current.includes(permId)
+            const updated = exists ? current.filter(id => id !== permId) : [...current, permId]
+            return { ...prev, permissions: updated }
+        })
+    }
+
+    // Select or Deselect All Permissions
+    const handleToggleAllPerms = () => {
+        setPermModal(prev => {
+            const allIds = MODULE_PERMISSIONS.map(m => m.id)
+            const isAllSelected = allIds.every(id => (prev.permissions || []).includes(id))
+            return {
+                ...prev,
+                permissions: isAllSelected ? [] : allIds
+            }
+        })
+    }
+
+    // Save Granular Permissions to Database
+    const handleSavePermissions = async () => {
+        const user = permModal.user
+        if (!user) return
+
+        const updatedPermissions = permModal.permissions || []
+
+        // Optimistic UI update
+        setTeamMembers(prev => {
+            const updated = prev.map(m => m.id === user.id ? { ...m, permissions: updatedPermissions } : m)
+            try { sessionStorage.setItem('ukbl_team_cache_users', JSON.stringify(updated)) } catch {}
+            return updated
+        })
+
+        setPermModal(prev => ({ ...prev, loading: true }))
+
+        try {
+            const res = await fetch('/api/admin/team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUserId: user.id,
+                    permissions: updatedPermissions,
+                }),
+            })
+
+            const data = await res.json()
+            if (!res.ok || !data.success) {
+                toast.error(data.message || 'Failed to update permissions')
+                fetchTeam()
+                return
+            }
+
+            toast.success(`Updated permissions for ${user.name}`)
+            setPermModal({ isOpen: false, user: null, permissions: [], loading: false })
+        } catch (error) {
+            console.error('Error saving permissions:', error)
+            toast.error('Failed to save permissions')
             fetchTeam()
         }
     }
@@ -682,10 +777,19 @@ export default function AdminTeamPage() {
                                                         <span>Admin (Full Access)</span>
                                                     </span>
                                                 ) : isEmployee ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold shadow-2xs">
-                                                        <UserCheckIcon size={14} color="#1D4ED8" />
-                                                        <span>Employee (Staff)</span>
-                                                    </span>
+                                                    <div className="flex flex-col items-start gap-1">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold shadow-2xs">
+                                                            <UserCheckIcon size={14} color="#1D4ED8" />
+                                                            <span>Employee (Staff)</span>
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleOpenPermModal(user)}
+                                                            className="text-[11px] font-bold text-[#6C306E] hover:underline flex items-center gap-1 cursor-pointer pl-1"
+                                                        >
+                                                            <span>{(user.permissions || []).length} Modules Permitted</span>
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold shadow-2xs">
                                                         <UserIcon size={14} color="#475569" />
@@ -738,6 +842,19 @@ export default function AdminTeamPage() {
                                                             />
                                                         )}
                                                     </div>
+
+                                                    {/* Permissions Configure Button (For Employee) */}
+                                                    {isEmployee && (
+                                                        <button
+                                                            type="button"
+                                                            disabled={isUpdating}
+                                                            onClick={() => handleOpenPermModal(user)}
+                                                            title="Configure Module Permissions"
+                                                            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl border border-[#EFE0EF] hover:border-[#6C306E] bg-white hover:bg-[#FAF6FA] text-[#6C306E] text-xs font-bold transition shadow-2xs cursor-pointer shrink-0 disabled:opacity-50"
+                                                        >
+                                                            <span>Permissions</span>
+                                                        </button>
+                                                    )}
 
                                                     {/* 2. Block / Unblock Button */}
                                                     {!isSelf ? (
@@ -854,6 +971,120 @@ export default function AdminTeamPage() {
                                     </>
                                 ) : (
                                     <span>Delete Account</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 8. Granular Permissions Configuration Modal */}
+            {permModal.isOpen && permModal.user && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-[fadeIn_0.15s_ease-out]"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget && !permModal.loading) {
+                            setPermModal({ isOpen: false, user: null, permissions: [], loading: false })
+                        }
+                    }}
+                >
+                    <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE0EF] shadow-2xl space-y-5 animate-[modalLuxuryPop_0.22s_cubic-bezier(0.16,1,0.3,1)] max-h-[90vh] flex flex-col">
+                        <div className="flex items-start justify-between gap-3 border-b border-[#EFE0EF] pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="size-11 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shrink-0 shadow-2xs">
+                                    <UserCheckIcon size={22} color="#1D4ED8" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-extrabold text-[#241224] tracking-tight">
+                                        Staff Permissions: {permModal.user.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        {permModal.user.email} &bull; Toggle the pages this employee is allowed to view and manage
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setPermModal({ isOpen: false, user: null, permissions: [], loading: false })}
+                                className="size-8 rounded-full border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition shrink-0"
+                            >
+                                <CloseIcon size={14} />
+                            </button>
+                        </div>
+
+                        {/* Select All Toggle Bar */}
+                        <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-bold text-slate-600">
+                                {permModal.permissions.length} of {MODULE_PERMISSIONS.length} modules granted
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleToggleAllPerms}
+                                className="text-xs font-bold text-[#6C306E] hover:underline cursor-pointer"
+                            >
+                                {permModal.permissions.length === MODULE_PERMISSIONS.length ? 'Deselect All' : 'Select All'}
+                            </button>
+                        </div>
+
+                        {/* Checkboxes List */}
+                        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[48vh]">
+                            {MODULE_PERMISSIONS.map((perm) => {
+                                const isChecked = permModal.permissions.includes(perm.id);
+                                return (
+                                    <div
+                                        key={perm.id}
+                                        onClick={() => handleTogglePerm(perm.id)}
+                                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                            isChecked
+                                                ? 'bg-[#FAF6FA] border-[#6C306E] ring-1 ring-[#6C306E]/20'
+                                                : 'bg-white border-[#EFE0EF] hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-bold text-[#241224] flex items-center gap-2">
+                                                <span>{perm.name}</span>
+                                                <span className="font-mono text-[10px] text-slate-400 font-normal">({perm.id})</span>
+                                            </div>
+                                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                                {perm.description}
+                                            </p>
+                                        </div>
+
+                                        <div className={`size-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                                            isChecked
+                                                ? 'bg-[#6C306E] border-[#6C306E] text-white shadow-2xs'
+                                                : 'border-slate-300 bg-white'
+                                        }`}>
+                                            {isChecked && <CheckIcon size={12} color="#FFFFFF" strokeWidth={3} />}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Footer Buttons */}
+                        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#EFE0EF]">
+                            <button
+                                type="button"
+                                disabled={permModal.loading}
+                                onClick={() => setPermModal({ isOpen: false, user: null, permissions: [], loading: false })}
+                                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition cursor-pointer text-xs"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={permModal.loading}
+                                onClick={handleSavePermissions}
+                                className="px-6 py-2 rounded-xl text-white font-bold transition shadow-xs cursor-pointer text-xs flex items-center gap-1.5 bg-[#6C306E] hover:bg-[#531e55] disabled:opacity-50"
+                            >
+                                {permModal.loading ? (
+                                    <>
+                                        <span className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        <span>Saving Changes...</span>
+                                    </>
+                                ) : (
+                                    <span>Save Permissions</span>
                                 )}
                             </button>
                         </div>

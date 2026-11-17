@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { verifyPassword, hashPassword, createSessionToken, sanitizeUser } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request) {
     try {
+        const ip = getClientIp(request);
+        const rateCheck = checkRateLimit(`signin_${ip}`, 5, 15 * 60 * 1000);
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'RATE_LIMITED',
+                    message: `Too many sign-in attempts. Please wait ${rateCheck.retryAfter} seconds before trying again.`
+                },
+                { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+            );
+        }
+
         const body = await request.json();
         const { identifier, email, phone, password } = body;
 
@@ -50,6 +64,13 @@ export async function POST(request) {
                 return NextResponse.json(
                     { success: false, message: 'No account found with this email or phone number. Please check your credentials or create a new account.' },
                     { status: 401 }
+                );
+            }
+
+            if (user.isActive === false) {
+                return NextResponse.json(
+                    { success: false, error: 'DEACTIVATED', message: 'This account has been deactivated or blocked. Please contact customer support.' },
+                    { status: 403 }
                 );
             }
 
@@ -122,39 +143,10 @@ export async function POST(request) {
             return response;
         }
 
-        // Fallback for offline/local environment
-        const cleanPhone = rawInput.replace(/[^0-9]/g, '');
-        const fallbackUser = {
-            id: `user_${Date.now()}`,
-            name: rawInput.includes('@') ? rawInput.split('@')[0] : 'Valued Customer',
-            email: rawInput.includes('@') ? rawInput : `${cleanPhone || 'customer'}@ukbrandlover.com`,
-            phone: cleanPhone || '01959524393',
-            whatsapp: cleanPhone || '01959524393',
-            role: rawInput.includes('admin') ? 'ADMIN' : 'CUSTOMER',
-        };
-
-        const safeUser = sanitizeUser(fallbackUser);
-        const token = createSessionToken(safeUser);
-
-        const response = NextResponse.json(
-            {
-                success: true,
-                message: 'Welcome back to UK Brand Lover!',
-                user: safeUser,
-                token,
-            },
-            { status: 200 }
+        return NextResponse.json(
+            { success: false, message: 'Authentication service is temporarily unavailable. Please try again in a few moments.' },
+            { status: 503 }
         );
-
-        response.cookies.set('ukbl_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60,
-            path: '/',
-        });
-
-        return response;
     } catch (error) {
         console.error('Sign-in API Error:', error);
         return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { uploadMedia } from '@/lib/storage';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -7,6 +8,11 @@ export const maxDuration = 60;
 
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request);
+        if (!auth.authorized) {
+            return auth.response;
+        }
+
         const formData = await request.formData();
         const filesList = formData.getAll('files');
         const fileListAlt = formData.getAll('file');

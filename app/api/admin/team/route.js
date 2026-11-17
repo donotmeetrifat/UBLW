@@ -65,6 +65,7 @@ export async function GET(request) {
                 phone: true,
                 whatsapp: true,
                 role: true,
+                permissions: true,
                 isActive: true,
                 isVerified: true,
                 createdAt: true,
@@ -143,7 +144,7 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { targetUserId, newRole, isActive, isVerified, action } = body;
+        const { targetUserId, newRole, permissions, isActive, isVerified, action } = body;
 
         if (!targetUserId) {
             return NextResponse.json({ success: false, message: 'Target user ID is required.' }, { status: 400 });
@@ -247,6 +248,7 @@ export async function POST(request) {
             where: { id: targetUserId },
             data: {
                 ...(newRole ? { role: newRole } : {}),
+                ...(Array.isArray(permissions) ? { permissions } : {}),
                 ...(typeof isActive === 'boolean' ? { isActive } : {}),
                 ...(typeof isVerified === 'boolean' ? { isVerified } : {}),
             },
@@ -256,6 +258,7 @@ export async function POST(request) {
                 email: true,
                 phone: true,
                 role: true,
+                permissions: true,
                 isActive: true,
                 isVerified: true,
                 updatedAt: true,

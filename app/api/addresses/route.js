@@ -82,13 +82,20 @@ export async function POST(request) {
 export async function PUT(request) {
     try {
         const payload = getUserFromRequest(request);
+        if (!payload?.id) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to update addresses.' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
 
         if (!body.id) {
             return NextResponse.json({ success: false, message: 'Address ID required' }, { status: 400 });
         }
 
-        if (!payload?.id || !isDatabaseConfigured()) {
+        if (!isDatabaseConfigured()) {
             return NextResponse.json({ success: true, address: body });
         }
 
@@ -99,8 +106,9 @@ export async function PUT(request) {
             });
         }
 
-        const updated = await prisma.address.update({
-            where: { id: body.id },
+        // Fortified with userId filter to prevent IDOR attacks
+        const updated = await prisma.address.updateMany({
+            where: { id: body.id, userId: payload.id },
             data: {
                 fullName: body.fullName || body.name,
                 phoneNumber: body.phoneNumber || body.phone,
@@ -112,7 +120,7 @@ export async function PUT(request) {
             }
         });
 
-        return NextResponse.json({ success: true, address: updated });
+        return NextResponse.json({ success: true, address: body });
     } catch (error) {
         console.error('Error updating address:', error);
         return NextResponse.json({ success: false, message: 'Failed to update address' }, { status: 500 });
@@ -122,6 +130,13 @@ export async function PUT(request) {
 export async function DELETE(request) {
     try {
         const payload = getUserFromRequest(request);
+        if (!payload?.id) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to delete addresses.' },
+                { status: 401 }
+            );
+        }
+
         const { searchParams } = new URL(request.url);
         let id = searchParams.get('id');
 
@@ -134,7 +149,7 @@ export async function DELETE(request) {
             return NextResponse.json({ success: false, message: 'Address ID required' }, { status: 400 });
         }
 
-        if (payload?.id && isDatabaseConfigured()) {
+        if (isDatabaseConfigured()) {
             await prisma.address.deleteMany({
                 where: { id, userId: payload.id }
             });

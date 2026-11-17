@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getHeroBanners, saveHeroBanners, getHeroBannerSettings, saveHeroBannerSettings } from '@/lib/banners';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,8 +14,11 @@ const NO_CACHE_HEADERS = {
     'Vercel-CDN-Cache-Control': 'no-store'
 };
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'banners');
+        if (!auth.authorized) return auth.response;
+
         const [banners, settings] = await Promise.all([
             getHeroBanners(false), // return all (active + inactive) for admin
             getHeroBannerSettings()
@@ -37,6 +41,9 @@ export async function GET() {
 
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request, 'banners');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const { title, subtitle, image, imageAlt, link, isActive, displayOrder } = body;
 
@@ -89,6 +96,9 @@ export async function POST(request) {
 
 export async function PUT(request) {
     try {
+        const auth = await requireStaff(request, 'banners');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
 
         // 1. Bulk reorder/save array of banners
@@ -156,6 +166,9 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
     try {
+        const auth = await requireStaff(request, 'banners');
+        if (!auth.authorized) return auth.response;
+
         const { searchParams } = new URL(request.url);
         let id = searchParams.get('id');
 
@@ -198,6 +211,9 @@ export async function DELETE(request) {
 
 export async function PATCH(request) {
     try {
+        const auth = await requireStaff(request, 'banners');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         let newAutoplay = body.autoplay;
 

@@ -2,12 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { hashPassword, sanitizeUser } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request) {
     try {
+        const ip = getClientIp(request);
+        const rateCheck = checkRateLimit(`signup_${ip}`, 4, 60 * 60 * 1000);
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'RATE_LIMITED',
+                    message: `Too many registration attempts. Please wait ${rateCheck.retryAfter} seconds before trying again.`
+                },
+                { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+            );
+        }
+
         const body = await request.json();
         const { name, email, phone, password, confirmPassword } = body;
 

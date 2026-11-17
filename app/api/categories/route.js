@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
-import { getUserFromRequest } from '@/lib/auth';
+import { getUserFromRequest, requireStaff } from '@/lib/auth';
 import { insertCategoryWithOrder } from '@/lib/db/categoryOrdering';
 
 export const dynamic = 'force-dynamic';
@@ -128,13 +128,10 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        // Enforce Admin Authentication
-        const payload = getUserFromRequest(request);
-        if (!payload || payload.role !== 'ADMIN') {
-            return NextResponse.json(
-                { success: false, error: 'FORBIDDEN', message: 'Admin access required to create categories.' },
-                { status: 403 }
-            );
+        // Enforce Staff Authentication with 'categories' permission
+        const auth = await requireStaff(request, 'categories');
+        if (!auth.authorized) {
+            return auth.response;
         }
 
         const body = await request.json();

@@ -2,17 +2,15 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { randomUUID } from 'crypto';
-import { getUserFromRequest } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request) {
     try {
-        const currentUser = getUserFromRequest(request);
-        if (!currentUser || currentUser.role !== 'ADMIN') {
-            return NextResponse.json({ success: false, message: 'Forbidden. Admin privileges required.' }, { status: 403 });
-        }
+        const auth = await requireStaff(request, 'coupons');
+        if (!auth.authorized) return auth.response;
         if (isDatabaseConfigured()) {
             let coupons = [];
             try {
@@ -112,10 +110,9 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        const currentUser = getUserFromRequest(request);
-        if (!currentUser || currentUser.role !== 'ADMIN') {
-            return NextResponse.json({ success: false, message: 'Forbidden. Admin privileges required.' }, { status: 403 });
-        }
+        const auth = await requireStaff(request, 'coupons');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const {
             code,

@@ -24,31 +24,31 @@ const navSections = [
         section: 'Overview',
         items: [
             { name: 'Dashboard', href: '/admin', icon: DashboardIcon },
-            { name: 'Views & Analytics', href: '/admin/analytics', icon: TrendIcon },
+            { name: 'Views & Analytics', href: '/admin/analytics', icon: TrendIcon, permission: 'analytics' },
         ]
     },
     {
         section: 'Catalog',
         items: [
-            { name: 'Products & Stock', href: '/admin/products', icon: BagIcon },
-            { name: 'Category Catalog', href: '/admin/categories', icon: TagIcon },
-            { name: 'Homepage Showcase', href: '/admin/homepage', icon: SparklesIcon },
-            { name: 'Hero Banner Slider', href: '/admin/banners', icon: CameraIcon },
-            { name: 'Hero Promo Cards', href: '/admin/promotions', icon: RoyalCrownIcon },
+            { name: 'Products & Stock', href: '/admin/products', icon: BagIcon, permission: 'products' },
+            { name: 'Category Catalog', href: '/admin/categories', icon: TagIcon, permission: 'categories' },
+            { name: 'Homepage Showcase', href: '/admin/homepage', icon: SparklesIcon, permission: 'homepage' },
+            { name: 'Hero Banner Slider', href: '/admin/banners', icon: CameraIcon, permission: 'banners' },
+            { name: 'Hero Promo Cards', href: '/admin/promotions', icon: RoyalCrownIcon, permission: 'promotions' },
         ]
     },
     {
         section: 'Orders & Sales',
         items: [
-            { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon },
-            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon, adminOnly: true },
+            { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon, permission: 'orders' },
+            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon, permission: 'coupons' },
         ]
     },
     {
         section: 'Customer Intelligence',
         items: [
-            { name: 'Customers & Purchases', href: '/admin/customers', icon: UserIcon },
-            { name: 'Customer Inquiries', href: '/admin/inquiries', icon: MailIcon },
+            { name: 'Customers & Purchases', href: '/admin/customers', icon: UserIcon, permission: 'customers' },
+            { name: 'Customer Inquiries', href: '/admin/inquiries', icon: MailIcon, permission: 'inquiries' },
         ]
     },
     {
@@ -69,10 +69,19 @@ const navSections = [
 export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, userRole = 'ADMIN', currentUser = null }) {
     const pathname = usePathname()
 
+    const userPermissions = Array.isArray(currentUser?.permissions) ? currentUser.permissions : [];
+
+    const isItemAllowed = (item) => {
+        if (userRole === 'ADMIN') return true;
+        if (item.adminOnly) return false;
+        if (!item.permission) return true; // General dashboard item
+        return userPermissions.includes(item.permission) || userPermissions.includes('*');
+    };
+
     const visibleSections = navSections
         .map(sec => ({
             ...sec,
-            items: sec.items.filter(item => !item.adminOnly || userRole === 'ADMIN')
+            items: sec.items.filter(isItemAllowed)
         }))
         .filter(sec => sec.items.length > 0)
 

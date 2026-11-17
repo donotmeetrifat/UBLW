@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAiSettings, callGemini, callGroq, callOpenRouter } from '@/lib/aiBot';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -176,6 +177,9 @@ function normalizeBenefits(rawBenefits, fallbackBenefits = []) {
 
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request, 'products');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const { title, category = '', brand = '', field = 'all' } = body;
 

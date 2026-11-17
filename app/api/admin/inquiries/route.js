@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/auth';
+import { requireStaff } from '@/lib/auth';
 import { memoryStore } from '@/lib/db/initialData';
 
 export const dynamic = 'force-dynamic';
@@ -8,13 +8,8 @@ export const revalidate = 0;
 
 export async function GET(request) {
     try {
-        const payload = getUserFromRequest(request);
-        if (!payload || payload.role !== 'ADMIN') {
-            return NextResponse.json(
-                { success: false, error: 'FORBIDDEN', message: 'Admin access required.' },
-                { status: 403 }
-            );
-        }
+        const auth = await requireStaff(request, 'inquiries');
+        if (!auth.authorized) return auth.response;
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status') || 'ALL';

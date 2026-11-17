@@ -54,6 +54,7 @@ model User {
     passwordHash    String?
     image           String?
     role            Role      @default(CUSTOMER)
+    permissions     String[]  @default([])
     isVerified      Boolean   @default(false)
     isActive        Boolean   @default(true)
     emailVerified   DateTime?

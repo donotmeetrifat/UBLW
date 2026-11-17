@@ -2,12 +2,16 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getHomepageSections, saveHomepageSections } from '@/lib/homepageSections';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'homepage');
+        if (!auth.authorized) return auth.response;
+
         const sections = await getHomepageSections();
 
         let products = [];
@@ -52,6 +56,9 @@ export async function GET() {
 
 export async function PUT(request) {
     try {
+        const auth = await requireStaff(request, 'homepage');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const updatedSections = await saveHomepageSections(body);
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
+import { requireStaff } from '@/lib/auth';
 
 // Seeded / mock customer database for instant offline functionality
 let memoryCustomers = [
@@ -94,8 +95,13 @@ let memoryCustomers = [
     }
 ];
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'customers');
+        if (!auth.authorized) {
+            return auth.response;
+        }
+
         if (isDatabaseConfigured()) {
             const users = await prisma.user.findMany({
                 where: {
@@ -139,6 +145,11 @@ export async function GET() {
 
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request, 'customers');
+        if (!auth.authorized) {
+            return auth.response;
+        }
+
         const body = await request.json();
         const { name, whatsapp, phone, email } = body;
 

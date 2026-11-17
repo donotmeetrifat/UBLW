@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request) {
     try {
+        const auth = await requireStaff(request);
+        if (!auth.authorized) return auth.response;
+
         const url = request ? new URL(request.url) : null;
         const period = url?.searchParams.get('period') || 'all_time';
         const customStartDate = url?.searchParams.get('startDate');

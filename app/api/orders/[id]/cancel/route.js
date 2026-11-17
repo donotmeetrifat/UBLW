@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(request, { params }) {
     try {
+        const currentUser = await getCurrentUser(request);
+        if (!currentUser) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to cancel an order.' },
+                { status: 401 }
+            );
+        }
+
         const { id } = await params;
         const body = await request.json().catch(() => ({}));
         const { reason = 'Cancelled by customer', customReason = '', cancelledBy = 'CUSTOMER' } = body;
@@ -26,6 +35,19 @@ export async function POST(request, { params }) {
 
             if (!existingOrder) {
                 return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+            }
+
+            // Authorization: Staff with orders permission OR the customer who owns the order
+            const isStaff = currentUser.role === 'ADMIN' || 
+                (currentUser.role === 'EMPLOYEE' && (currentUser.permissions?.includes('orders') || currentUser.permissions?.includes('*')));
+            const isOwner = (existingOrder.userId && existingOrder.userId === currentUser.id) ||
+                (existingOrder.userEmail && currentUser.email && existingOrder.userEmail.toLowerCase() === currentUser.email.toLowerCase());
+
+            if (!isStaff && !isOwner) {
+                return NextResponse.json(
+                    { success: false, error: 'FORBIDDEN', message: 'You do not have permission to cancel this order.' },
+                    { status: 403 }
+                );
             }
 
             if (existingOrder.status === 'CANCELLED') {

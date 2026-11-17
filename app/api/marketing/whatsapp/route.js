@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireStaff } from '@/lib/auth';
 
 // Official WhatsApp Cloud API & Webhook Dispatch Handler
 // Official Hotline: +880 1959-524393
@@ -27,6 +28,11 @@ export async function GET(request) {
 // 2. Outgoing Automated WhatsApp Message Dispatcher
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request);
+        if (!auth.authorized) {
+            return auth.response;
+        }
+
         const body = await request.json();
         const { to, message, templateName, type = 'text' } = body;
 

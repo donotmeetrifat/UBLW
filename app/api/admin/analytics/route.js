@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'analytics');
+        if (!auth.authorized) return auth.response;
+
         if (isDatabaseConfigured()) {
             const [products, ordersAgg, orderItems, usersWithCart] = await Promise.all([
                 prisma.product.findMany({

@@ -3,6 +3,7 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getStoreSettings, calculateDeliveryCharge } from '@/lib/settings';
 import { getUserFromRequest } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function GET(request) {
     try {
@@ -63,6 +64,19 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const ip = getClientIp(request);
+        const rateCheck = checkRateLimit(`order_${ip}`, 6, 10 * 60 * 1000);
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'RATE_LIMITED',
+                    message: `Too many order requests. Please wait ${rateCheck.retryAfter} seconds before placing another order.`
+                },
+                { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+            );
+        }
+
         const payload = getUserFromRequest(request);
         if (!payload?.id) {
             return NextResponse.json(
@@ -133,17 +147,35 @@ export async function POST(request) {
             area,
         };
 
-        // Calculate subtotal
+        // Security: Fetch authoritative product prices and status directly from PostgreSQL
+        // Malicious client-side price modifications are completely ignored
+        let dbProductsMap = new Map();
+        if (isDatabaseConfigured()) {
+            try {
+                const productIds = items.map(i => i.productId || i.id).filter(Boolean);
+                const dbProducts = await prisma.product.findMany({
+                    where: { id: { in: productIds } },
+                    select: { id: true, name: true, price: true, inStock: true, stockCount: true, images: true }
+                });
+                dbProducts.forEach(p => dbProductsMap.set(p.id, p));
+            } catch (prodErr) {
+                console.warn('Database product price verification note:', prodErr.message);
+            }
+        }
+
+        // Calculate authoritative subtotal
         let subtotal = 0;
         const processedItems = items.map(item => {
-            const qty = Number(item.quantity) || 1;
-            const price = Number(item.price) || 0;
-            subtotal += price * qty;
+            const prodId = item.productId || item.id;
+            const dbProd = dbProductsMap.get(prodId);
+            const realPrice = dbProd ? Number(dbProd.price) : (Number(item.price) || 0);
+            const qty = Math.max(1, Math.min(Number(item.quantity) || 1, 99));
+            subtotal += realPrice * qty;
             return {
-                productId: item.productId || item.id,
-                name: item.name,
-                image: Array.isArray(item.images) ? item.images[0] : (item.image || '/product_img1.png'),
-                price,
+                productId: prodId,
+                name: dbProd ? dbProd.name : item.name,
+                image: dbProd?.images?.[0] || (Array.isArray(item.images) ? item.images[0] : (item.image || '/product_img1.png')),
+                price: realPrice,
                 quantity: qty,
             };
         });

@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { requireStaff } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'customers');
+        if (!auth.authorized) {
+            return auth.response;
+        }
         // High-converting psychological abandoned cart leads
         const abandonedCarts = [
             {

@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
+import { getCurrentUser, requireStaff } from '@/lib/auth';
 
 export async function GET(request, { params }) {
     try {
+        const currentUser = await getCurrentUser(request);
+        if (!currentUser) {
+            return NextResponse.json(
+                { success: false, error: 'UNAUTHORIZED', message: 'You must be signed in to view this order.' },
+                { status: 401 }
+            );
+        }
+
         const { id } = await params;
 
+        let order = null;
         if (isDatabaseConfigured()) {
-            const order = await prisma.order.findFirst({
+            order = await prisma.order.findFirst({
                 where: {
                     OR: [{ id }, { orderNumber: id }]
                 },
@@ -17,17 +27,27 @@ export async function GET(request, { params }) {
                     user: true,
                 }
             });
-
-            if (!order) {
-                return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
-            }
-            return NextResponse.json({ success: true, order });
+        } else {
+            order = memoryStore.getOrderById(id);
         }
 
-        const order = memoryStore.getOrderById(id);
         if (!order) {
             return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
         }
+
+        // Authorization check: Staff with orders permission OR the customer who owns the order
+        const isStaff = currentUser.role === 'ADMIN' || 
+            (currentUser.role === 'EMPLOYEE' && (currentUser.permissions?.includes('orders') || currentUser.permissions?.includes('*')));
+        const isOwner = (order.userId && order.userId === currentUser.id) ||
+            (order.userEmail && currentUser.email && order.userEmail.toLowerCase() === currentUser.email.toLowerCase());
+
+        if (!isStaff && !isOwner) {
+            return NextResponse.json(
+                { success: false, error: 'FORBIDDEN', message: 'You do not have permission to view this order.' },
+                { status: 403 }
+            );
+        }
+
         return NextResponse.json({ success: true, order });
     } catch (error) {
         console.error('Error fetching order:', error);
@@ -40,6 +60,12 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
     try {
+        // Enforce Staff Authentication with 'orders' permission
+        const auth = await requireStaff(request, 'orders');
+        if (!auth.authorized) {
+            return auth.response;
+        }
+
         const { id } = await params;
         const updates = await request.json();
 

@@ -2,12 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { getUserFromRequest, generatePasswordOtp, maskContact, verifyPassword } from '@/lib/auth';
 import { sendPasswordOtpEmail } from '@/lib/email';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request) {
     try {
+        const ip = getClientIp(request);
+        const rateCheck = checkRateLimit(`otp_send_${ip}`, 4, 10 * 60 * 1000);
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'RATE_LIMITED',
+                    message: `Too many verification requests. Please wait ${rateCheck.retryAfter} seconds before requesting another code.`
+                },
+                { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+            );
+        }
+
         const payload = getUserFromRequest(request);
         if (!payload || !payload.id) {
             return NextResponse.json({ success: false, message: 'Please sign in to request a password verification code.' }, { status: 401 });

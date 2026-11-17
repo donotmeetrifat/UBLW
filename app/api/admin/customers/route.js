@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
+import { requireStaff } from '@/lib/auth';
 
 export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'customers');
+        if (!auth.authorized) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
 

@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { invalidateProductsCache } from '@/lib/productsCache';
 import { updateProductHomepagePlacement } from '@/lib/homepageSections';
 import { pingSearchEngines } from '@/lib/seoPing';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,6 +14,9 @@ let cachedStoreId = null;
 
 export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'products');
+        if (!auth.authorized) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const search = (searchParams.get('search') || '').trim();
         const category = (searchParams.get('category') || '').trim();
@@ -190,6 +194,9 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const auth = await requireStaff(request, 'products');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const {
             name,

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
-import { getUserFromRequest } from '@/lib/auth';
+import { getUserFromRequest, requireStaff } from '@/lib/auth';
 import { updateCategoryWithOrder, deleteCategoryWithOrder } from '@/lib/db/categoryOrdering';
 import { invalidateCategoriesCache } from '../route';
 
@@ -11,12 +11,9 @@ export const revalidate = 0;
 
 export async function PUT(request, { params }) {
     try {
-        const payload = getUserFromRequest(request);
-        if (!payload || payload.role !== 'ADMIN') {
-            return NextResponse.json(
-                { success: false, error: 'FORBIDDEN', message: 'Admin access required.' },
-                { status: 403 }
-            );
+        const auth = await requireStaff(request, 'categories');
+        if (!auth.authorized) {
+            return auth.response;
         }
 
         const resolvedParams = await params;
@@ -111,12 +108,9 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const payload = getUserFromRequest(request);
-        if (!payload || payload.role !== 'ADMIN') {
-            return NextResponse.json(
-                { success: false, error: 'FORBIDDEN', message: 'Admin access required.' },
-                { status: 403 }
-            );
+        const auth = await requireStaff(request, 'categories');
+        if (!auth.authorized) {
+            return auth.response;
         }
 
         const resolvedParams = await params;

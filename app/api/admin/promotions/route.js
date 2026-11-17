@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getPromotions, savePromotions } from '@/lib/promotions';
+import { requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
     try {
+        const auth = await requireStaff(request, 'promotions');
+        if (!auth.authorized) return auth.response;
+
         const promotions = await getPromotions();
         return NextResponse.json({
             success: true,
@@ -25,6 +29,9 @@ export async function GET() {
 
 export async function PUT(request) {
     try {
+        const auth = await requireStaff(request, 'promotions');
+        if (!auth.authorized) return auth.response;
+
         const body = await request.json();
         const saved = await savePromotions(body);
 
