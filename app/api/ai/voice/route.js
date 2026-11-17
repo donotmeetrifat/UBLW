@@ -34,7 +34,10 @@ function cleanTextForSpeech(raw) {
 export async function GET() {
     try {
         const settings = await getAiSettings();
-        const hasKey = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
+        const hasKey = Boolean(
+            (settings.elevenLabsKey && settings.elevenLabsKey.trim()) ||
+            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim())
+        );
         const isEnabled = settings.voiceCallEnabled !== false && hasKey;
 
         return NextResponse.json({
@@ -74,7 +77,12 @@ export async function POST(request) {
             }, { status: 403 });
         }
 
-        if (!settings.elevenLabsKey || !settings.elevenLabsKey.trim()) {
+        const hasAnyKey = Boolean(
+            (settings.elevenLabsKey && settings.elevenLabsKey.trim()) ||
+            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim())
+        );
+
+        if (!hasAnyKey) {
             return NextResponse.json({
                 success: false,
                 code: 'ELEVENLABS_NOT_CONNECTED',
@@ -108,46 +116,59 @@ export async function POST(request) {
         const candidateModels = isBengaliOrBanglish
             ? ['eleven_multilingual_v2', 'eleven_turbo_v2_5', 'eleven_flash_v2_5']
             : ['eleven_flash_v2_5', 'eleven_turbo_v2_5', 'eleven_multilingual_v2'];
+
+        // ElevenLabs key fallback chain: Primary key -> Backup key (key2)
+        const elevenLabsKeys = [
+            settings.elevenLabsKey?.trim(),
+            settings.elevenLabsKey2?.trim(),
+        ].filter(Boolean);
+
         let ttsRes = null;
         let lastErrorMsg = '';
 
-        for (const modelId of candidateModels) {
-            try {
-                const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
-                const response = await fetch(ttsUrl, {
-                    method: 'POST',
-                    headers: {
-                        'xi-api-key': settings.elevenLabsKey.trim(),
-                        'Content-Type': 'application/json',
-                        'Accept': 'audio/mpeg',
-                    },
-                    body: JSON.stringify({
-                        text: speechText,
-                        model_id: modelId,
-                        voice_settings: {
-                            stability: 0.5,
-                            similarity_boost: 0.75,
-                            style: 0.0,
-                            use_speaker_boost: true,
+        outerLoop: for (const apiKey of elevenLabsKeys) {
+            for (const modelId of candidateModels) {
+                try {
+                    const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
+                    const response = await fetch(ttsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'xi-api-key': apiKey,
+                            'Content-Type': 'application/json',
+                            'Accept': 'audio/mpeg',
                         },
-                    }),
-                });
+                        body: JSON.stringify({
+                            text: speechText,
+                            model_id: modelId,
+                            voice_settings: {
+                                stability: 0.5,
+                                similarity_boost: 0.75,
+                                style: 0.0,
+                                use_speaker_boost: true,
+                            },
+                        }),
+                    });
 
-                if (response.ok) {
-                    ttsRes = response;
-                    break;
-                }
+                    if (response.ok) {
+                        ttsRes = response;
+                        break outerLoop;
+                    }
 
-                const errData = await response.json().catch(() => ({}));
-                lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
-                console.warn(`[ElevenLabs TTS] Model ${modelId} with voice ${voiceId} returned ${response.status}:`, lastErrorMsg);
-                // If quota exceeded or 401 unauthorized, no need to retry other models
-                if (response.status === 401 || response.status === 429) {
-                    ttsRes = response;
-                    break;
+                    const errData = await response.json().catch(() => ({}));
+                    lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
+                    console.warn(`[ElevenLabs TTS] Key ending ...${apiKey.slice(-4)}, Model ${modelId} with voice ${voiceId} returned ${response.status}:`, lastErrorMsg);
+                    // If quota exceeded (429), skip to backup key; if 401 unauthorized, stop immediately
+                    if (response.status === 401) {
+                        ttsRes = response;
+                        break outerLoop;
+                    }
+                    if (response.status === 429) {
+                        // quota exhausted on this key → try backup key
+                        break;
+                    }
+                } catch (netErr) {
+                    lastErrorMsg = netErr.message;
                 }
-            } catch (netErr) {
-                lastErrorMsg = netErr.message;
             }
         }
 

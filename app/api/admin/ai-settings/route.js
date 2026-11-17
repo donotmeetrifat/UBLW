@@ -22,15 +22,19 @@ export async function GET(request) {
         const inStockCount = catalog.filter(p => p.inStock).length;
 
         const hasGemini = Boolean(settings.geminiKey && settings.geminiKey.trim());
+        const hasGemini2 = Boolean(settings.geminiKey2 && settings.geminiKey2.trim());
         const hasGroq = Boolean(settings.groqKey && settings.groqKey.trim());
         const hasOpenRouter = Boolean(settings.openRouterKey && settings.openRouterKey.trim());
         const hasElevenLabs = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
+        const hasElevenLabs2 = Boolean(settings.elevenLabsKey2 && settings.elevenLabsKey2.trim());
 
         return NextResponse.json({
             success: true,
             settings: {
                 hasGeminiKey: hasGemini,
                 maskedGeminiKey: maskKey(settings.geminiKey),
+                hasGeminiKey2: hasGemini2,
+                maskedGeminiKey2: maskKey(settings.geminiKey2),
                 hasGroqKey: hasGroq,
                 maskedGroqKey: maskKey(settings.groqKey),
                 hasGrokKey: hasGroq,
@@ -39,11 +43,17 @@ export async function GET(request) {
                 maskedOpenRouterKey: maskKey(settings.openRouterKey),
                 hasElevenLabsKey: hasElevenLabs,
                 maskedElevenLabsKey: maskKey(settings.elevenLabsKey),
+                hasElevenLabsKey2: hasElevenLabs2,
+                maskedElevenLabsKey2: maskKey(settings.elevenLabsKey2),
 
                 // Explicit connection status objects
                 gemini: {
                     isConnected: hasGemini,
                     maskedKey: maskKey(settings.geminiKey),
+                },
+                gemini2: {
+                    isConnected: hasGemini2,
+                    maskedKey: maskKey(settings.geminiKey2),
                 },
                 groq: {
                     isConnected: hasGroq,
@@ -59,6 +69,10 @@ export async function GET(request) {
                     selectedVoiceId: settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL',
                     selectedVoiceName: settings.elevenLabsVoiceName || 'Sarah (Soft & Warm)',
                     voiceCallEnabled: settings.voiceCallEnabled !== false,
+                },
+                elevenlabs2: {
+                    isConnected: hasElevenLabs2,
+                    maskedKey: maskKey(settings.elevenLabsKey2),
                 },
 
                 preferredProvider: settings.preferredProvider || 'gemini',
@@ -99,6 +113,7 @@ export async function POST(request) {
         const body = await request.json();
         const {
             geminiKey,
+            geminiKey2,
             groqKey,
             grokKey,
             openRouterKey,
@@ -127,6 +142,14 @@ export async function POST(request) {
                     provider: 'gemini',
                     message: 'Google Gemini API disconnected successfully.',
                 });
+            } else if (target === 'gemini2') {
+                await saveAiSettings({ geminiKey2: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'gemini2',
+                    message: 'Google Gemini (Backup) API disconnected successfully.',
+                });
             } else if (target === 'groq') {
                 await saveAiSettings({ groqKey: '' });
                 return NextResponse.json({
@@ -151,6 +174,14 @@ export async function POST(request) {
                     provider: 'elevenlabs',
                     message: 'ElevenLabs Voice API disconnected successfully.',
                 });
+            } else if (target === 'elevenlabs2') {
+                await saveAiSettings({ elevenLabsKey2: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'elevenlabs2',
+                    message: 'ElevenLabs Backup Voice API disconnected successfully.',
+                });
             }
 
             return NextResponse.json({ success: false, message: 'Invalid provider to disconnect' }, { status: 400 });
@@ -159,7 +190,9 @@ export async function POST(request) {
         // Action: Get ElevenLabs Voices List
         if (action === 'get_voices') {
             const currentSettings = await getAiSettings();
-            const key = (testKey && testKey.trim()) ? testKey.trim() : currentSettings.elevenLabsKey;
+            const key = (testKey && testKey.trim())
+                ? testKey.trim()
+                : (currentSettings.elevenLabsKey || currentSettings.elevenLabsKey2);
             if (!key) {
                 return NextResponse.json({ success: false, message: 'No ElevenLabs API key found' }, { status: 400 });
             }
@@ -218,10 +251,14 @@ export async function POST(request) {
             if (!keyToTest) {
                 keyToTest = provider === 'gemini'
                     ? currentSettings.geminiKey
+                    : provider === 'gemini2'
+                    ? currentSettings.geminiKey2
                     : provider === 'groq'
                     ? currentSettings.groqKey
                     : provider === 'elevenlabs'
                     ? currentSettings.elevenLabsKey
+                    : provider === 'elevenlabs2'
+                    ? currentSettings.elevenLabsKey2
                     : currentSettings.openRouterKey;
             }
 
@@ -235,7 +272,7 @@ export async function POST(request) {
             const startTime = Date.now();
 
             // 1. Google Gemini Dynamic Discovery & Verification
-            if (provider === 'gemini') {
+            if (provider === 'gemini' || provider === 'gemini2') {
                 try {
                     const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${keyToTest}`;
                     const listRes = await fetch(listUrl);
@@ -299,14 +336,18 @@ export async function POST(request) {
 
                     if (workingModel) {
                         // Automatically persist verified key into database!
-                        await saveAiSettings({ geminiKey: keyToTest });
+                        if (provider === 'gemini2') {
+                            await saveAiSettings({ geminiKey2: keyToTest });
+                        } else {
+                            await saveAiSettings({ geminiKey: keyToTest });
+                        }
 
                         return NextResponse.json({
                             success: true,
                             isConnected: true,
                             maskedKey: maskKey(keyToTest),
-                            provider: 'gemini',
-                            message: `Google Gemini connected successfully!`,
+                            provider,
+                            message: `Google Gemini${provider === 'gemini2' ? ' (Backup)' : ''} connected successfully!`,
                             model: workingModel,
                             latencyMs: totalLatency,
                         });
@@ -485,7 +526,7 @@ export async function POST(request) {
             }
 
             // 4. ElevenLabs Voice Verification & Discovery
-            else if (provider === 'elevenlabs') {
+            else if (provider === 'elevenlabs' || provider === 'elevenlabs2') {
                 try {
                     // Test ElevenLabs Key via /v1/user
                     const userRes = await fetch('https://api.elevenlabs.io/v1/user', {
@@ -512,14 +553,18 @@ export async function POST(request) {
                     const voices = voicesData.voices || [];
 
                     // Automatically persist verified key into database!
-                    await saveAiSettings({ elevenLabsKey: keyToTest });
+                    if (provider === 'elevenlabs2') {
+                        await saveAiSettings({ elevenLabsKey2: keyToTest });
+                    } else {
+                        await saveAiSettings({ elevenLabsKey: keyToTest });
+                    }
 
                     return NextResponse.json({
                         success: true,
                         isConnected: true,
                         maskedKey: maskKey(keyToTest),
-                        provider: 'elevenlabs',
-                        message: `ElevenLabs connected successfully! Found ${voices.length} available voices.`,
+                        provider,
+                        message: `ElevenLabs${provider === 'elevenlabs2' ? ' (Backup)' : ''} connected successfully! Found ${voices.length} available voices.`,
                         tier: userData?.subscription?.tier || 'free',
                         characterCount: userData?.subscription?.character_count || 0,
                         characterLimit: userData?.subscription?.character_limit || 10000,
@@ -539,6 +584,7 @@ export async function POST(request) {
         // Action: Save All Settings
         const {
             elevenLabsKey,
+            elevenLabsKey2,
             elevenLabsVoiceId,
             elevenLabsVoiceName,
             voiceCallEnabled,
@@ -554,6 +600,9 @@ export async function POST(request) {
         if (geminiKey !== undefined && !geminiKey.includes('••••')) {
             updatePayload.geminiKey = geminiKey;
         }
+        if (geminiKey2 !== undefined && !geminiKey2.includes('••••')) {
+            updatePayload.geminiKey2 = geminiKey2;
+        }
         if (effectiveGroqKey !== undefined && !effectiveGroqKey.includes('••••')) {
             updatePayload.groqKey = effectiveGroqKey;
         }
@@ -562,6 +611,9 @@ export async function POST(request) {
         }
         if (elevenLabsKey !== undefined && !elevenLabsKey.includes('••••')) {
             updatePayload.elevenLabsKey = elevenLabsKey;
+        }
+        if (elevenLabsKey2 !== undefined && !elevenLabsKey2.includes('••••')) {
+            updatePayload.elevenLabsKey2 = elevenLabsKey2;
         }
         if (elevenLabsVoiceId !== undefined) {
             updatePayload.elevenLabsVoiceId = elevenLabsVoiceId;

@@ -33,6 +33,11 @@ export default function AdminAiBotPage() {
     const [showGeminiKey, setShowGeminiKey] = useState(false)
     const [geminiModel, setGeminiModel] = useState('')
 
+    const [isGemini2Connected, setIsGemini2Connected] = useState(false)
+    const [gemini2Key, setGemini2Key] = useState('')
+    const [showGemini2Key, setShowGemini2Key] = useState(false)
+    const [gemini2Model, setGemini2Model] = useState('')
+
     const [isGroqConnected, setIsGroqConnected] = useState(false)
     const [groqKey, setGroqKey] = useState('')
     const [showGroqKey, setShowGroqKey] = useState(false)
@@ -46,6 +51,9 @@ export default function AdminAiBotPage() {
     const [isElevenLabsConnected, setIsElevenLabsConnected] = useState(false)
     const [elevenLabsKey, setElevenLabsKey] = useState('')
     const [showElevenLabsKey, setShowElevenLabsKey] = useState(false)
+    const [isElevenLabs2Connected, setIsElevenLabs2Connected] = useState(false)
+    const [elevenLabs2Key, setElevenLabs2Key] = useState('')
+    const [showElevenLabs2Key, setShowElevenLabs2Key] = useState(false)
     const [availableVoices, setAvailableVoices] = useState([])
     const [selectedVoiceId, setSelectedVoiceId] = useState('EXAVITQu4vr4xnSDxMaL')
     const [selectedVoiceName, setSelectedVoiceName] = useState('Sarah (Soft & Warm)')
@@ -81,6 +89,11 @@ export default function AdminAiBotPage() {
                 setIsGeminiConnected(geminiConn)
                 setGeminiKey(s.gemini?.maskedKey || s.maskedGeminiKey || '')
 
+                // Gemini Backup Status
+                const gemini2Conn = Boolean(s.gemini2?.isConnected || s.hasGeminiKey2)
+                setIsGemini2Connected(gemini2Conn)
+                setGemini2Key(s.gemini2?.maskedKey || s.maskedGeminiKey2 || '')
+
                 // Groq Status
                 const groqConn = Boolean(s.groq?.isConnected || s.hasGroqKey || s.hasGrokKey)
                 setIsGroqConnected(groqConn)
@@ -91,7 +104,7 @@ export default function AdminAiBotPage() {
                 setIsOpenRouterConnected(openRouterConn)
                 setOpenRouterKey(s.openrouter?.maskedKey || s.maskedOpenRouterKey || '')
 
-                // ElevenLabs Voice Engine Status
+                // ElevenLabs Voice Engine Status (Primary)
                 const elevenConn = Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
                 setIsElevenLabsConnected(elevenConn)
                 setElevenLabsKey(s.elevenlabs?.maskedKey || s.maskedElevenLabsKey || '')
@@ -99,7 +112,12 @@ export default function AdminAiBotPage() {
                 if (s.elevenlabs?.selectedVoiceName) setSelectedVoiceName(s.elevenlabs.selectedVoiceName)
                 if (s.elevenlabs?.voiceCallEnabled !== undefined) setVoiceCallEnabled(s.elevenlabs.voiceCallEnabled)
 
-                if (elevenConn) {
+                // ElevenLabs Voice Engine Status (Backup #2)
+                const eleven2Conn = Boolean(s.elevenlabs2?.isConnected || s.hasElevenLabsKey2)
+                setIsElevenLabs2Connected(eleven2Conn)
+                setElevenLabs2Key(s.elevenlabs2?.maskedKey || s.maskedElevenLabsKey2 || '')
+
+                if (elevenConn || eleven2Conn) {
                     fetchVoices()
                 }
 
@@ -187,20 +205,28 @@ export default function AdminAiBotPage() {
     const handleConnect = async (provider) => {
         const key = provider === 'gemini' 
             ? geminiKey 
+            : provider === 'gemini2'
+            ? gemini2Key
             : provider === 'groq' 
             ? groqKey 
             : provider === 'elevenlabs'
             ? elevenLabsKey
+            : provider === 'elevenlabs2'
+            ? elevenLabs2Key
             : openRouterKey
 
         if (!key || !key.trim()) {
             const provName = provider === 'gemini' 
-                ? 'Google Gemini' 
+                ? 'Google Gemini (#1 Primary)' 
+                : provider === 'gemini2'
+                ? 'Google Gemini (#2 Backup)'
                 : provider === 'groq' 
-                ? 'Groq' 
+                ? 'Groq Cloud (#3 Backup)' 
                 : provider === 'elevenlabs'
-                ? 'ElevenLabs'
-                : 'OpenRouter'
+                ? 'ElevenLabs Primary'
+                : provider === 'elevenlabs2'
+                ? 'ElevenLabs Backup'
+                : 'OpenRouter (#4 Backup)'
             toast.error(`Please paste your ${provName} API key first.`)
             return
         }
@@ -220,11 +246,15 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success && data.isConnected) {
                 const provName = provider === 'gemini' 
-                    ? 'Google Gemini' 
+                    ? 'Google Gemini (#1 Primary)' 
+                    : provider === 'gemini2'
+                    ? 'Google Gemini (#2 Backup)'
                     : provider === 'groq' 
-                    ? 'Groq' 
+                    ? 'Groq Cloud' 
                     : provider === 'elevenlabs'
-                    ? 'ElevenLabs'
+                    ? 'ElevenLabs Primary'
+                    : provider === 'elevenlabs2'
+                    ? 'ElevenLabs Backup'
                     : 'OpenRouter'
                 toast.success(`${provName} connected successfully!`)
 
@@ -232,6 +262,10 @@ export default function AdminAiBotPage() {
                     setIsGeminiConnected(true)
                     setGeminiKey(data.maskedKey || key)
                     if (data.model) setGeminiModel(data.model)
+                } else if (provider === 'gemini2') {
+                    setIsGemini2Connected(true)
+                    setGemini2Key(data.maskedKey || key)
+                    if (data.model) setGemini2Model(data.model)
                 } else if (provider === 'groq') {
                     setIsGroqConnected(true)
                     setGroqKey(data.maskedKey || key)
@@ -242,7 +276,13 @@ export default function AdminAiBotPage() {
                 } else if (provider === 'elevenlabs') {
                     setIsElevenLabsConnected(true)
                     setElevenLabsKey(data.maskedKey || key)
-                    if (Array.isArray(data.voices)) {
+                    if (Array.isArray(data.voices) && data.voices.length > 0) {
+                        setAvailableVoices(data.voices)
+                    }
+                } else if (provider === 'elevenlabs2') {
+                    setIsElevenLabs2Connected(true)
+                    setElevenLabs2Key(data.maskedKey || key)
+                    if (Array.isArray(data.voices) && data.voices.length > 0) {
                         setAvailableVoices(data.voices)
                     }
                 }
@@ -259,11 +299,15 @@ export default function AdminAiBotPage() {
     // Disconnect API Key
     const handleDisconnect = async (provider) => {
         const providerName = provider === 'gemini' 
-            ? 'Google Gemini' 
+            ? 'Google Gemini (#1 Primary)' 
+            : provider === 'gemini2'
+            ? 'Google Gemini (#2 Backup)'
             : provider === 'groq' 
-            ? 'Groq' 
+            ? 'Groq Cloud' 
             : provider === 'elevenlabs'
-            ? 'ElevenLabs'
+            ? 'ElevenLabs Primary'
+            : provider === 'elevenlabs2'
+            ? 'ElevenLabs Backup'
             : 'OpenRouter'
         const confirm = window.confirm(`Are you sure you want to disconnect ${providerName}? The API key will be deleted.`)
         if (!confirm) return
@@ -287,6 +331,10 @@ export default function AdminAiBotPage() {
                     setIsGeminiConnected(false)
                     setGeminiKey('')
                     setGeminiModel('')
+                } else if (provider === 'gemini2') {
+                    setIsGemini2Connected(false)
+                    setGemini2Key('')
+                    setGemini2Model('')
                 } else if (provider === 'groq') {
                     setIsGroqConnected(false)
                     setGroqKey('')
@@ -297,9 +345,19 @@ export default function AdminAiBotPage() {
                 } else if (provider === 'elevenlabs') {
                     setIsElevenLabsConnected(false)
                     setElevenLabsKey('')
-                    setAvailableVoices([])
-                    if (audioPlayer) audioPlayer.pause()
-                    setPlayingVoiceId(null)
+                    if (!isElevenLabs2Connected) {
+                        setAvailableVoices([])
+                        if (audioPlayer) audioPlayer.pause()
+                        setPlayingVoiceId(null)
+                    }
+                } else if (provider === 'elevenlabs2') {
+                    setIsElevenLabs2Connected(false)
+                    setElevenLabs2Key('')
+                    if (!isElevenLabsConnected) {
+                        setAvailableVoices([])
+                        if (audioPlayer) audioPlayer.pause()
+                        setPlayingVoiceId(null)
+                    }
                 }
             } else {
                 toast.error(data.message || 'Failed to disconnect')
@@ -399,6 +457,9 @@ export default function AdminAiBotPage() {
             if (geminiKey && !geminiKey.includes('••••')) {
                 payload.geminiKey = geminiKey
             }
+            if (gemini2Key && !gemini2Key.includes('••••')) {
+                payload.geminiKey2 = gemini2Key
+            }
             if (groqKey && !groqKey.includes('••••')) {
                 payload.groqKey = groqKey
             }
@@ -407,6 +468,9 @@ export default function AdminAiBotPage() {
             }
             if (elevenLabsKey && !elevenLabsKey.includes('••••')) {
                 payload.elevenLabsKey = elevenLabsKey
+            }
+            if (elevenLabs2Key && !elevenLabs2Key.includes('••••')) {
+                payload.elevenLabsKey2 = elevenLabs2Key
             }
 
             const res = await fetch('/api/admin/ai-settings', {
@@ -509,19 +573,19 @@ export default function AdminAiBotPage() {
                 </div>
             </div>
 
-            {/* 3. AI Providers & API Keys (Triple Fallback Architecture) */}
+            {/* 3. AI Providers & API Keys (Quadruple Fallback Architecture) */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-5">
                 <div>
                     <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
                         AI Provider API Keys
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                        Connect one or multiple providers. Emma will automatically failover to secondary providers if quota is reached.
+                        Connect primary and backup AI providers. Emma automatically fails over in sequence: Google Gemini (#1) → Gemini Backup (#2) → Groq (#3) → OpenRouter (#4).
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-                    {/* 1. Google Gemini */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                    {/* 1. Google Gemini (Primary) */}
                     <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
                         isGeminiConnected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
@@ -534,7 +598,10 @@ export default function AdminAiBotPage() {
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/gemini.png" alt="Google Gemini" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Google Gemini</h4>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Google Gemini</h4>
+                                        <span className="text-[10px] text-purple-700 font-bold block">#1 Primary AI</span>
+                                    </div>
                                 </div>
                                 {isGeminiConnected ? (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
@@ -556,7 +623,7 @@ export default function AdminAiBotPage() {
                                         type={showGeminiKey ? 'text' : 'password'}
                                         value={geminiKey}
                                         onChange={(e) => setGeminiKey(e.target.value)}
-                                        placeholder="Gemini API Key (AIza...)"
+                                        placeholder="Gemini API Key #1 (AIza...)"
                                         className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
                                             isGeminiConnected
                                                 ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
@@ -611,7 +678,100 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    {/* 2. Groq Cloud */}
+                    {/* 2. Google Gemini (Backup #2) */}
+                    <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                        isGemini2Connected
+                            ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
+                            : 'bg-white border-[#EFE0EF]'
+                    }`}>
+                        <div>
+                            {/* Card Header with Real Logo & Connection Badge */}
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img src="/logos/gemini.png" alt="Google Gemini Backup" className="size-6 object-contain" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Gemini Backup</h4>
+                                        <span className="text-[10px] text-purple-700 font-bold block">#2 Backup AI</span>
+                                    </div>
+                                </div>
+                                {isGemini2Connected ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
+                                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        Connected
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] sm:text-[11px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
+                                        <span className="size-1.5 rounded-full bg-slate-400" />
+                                        Not Connected
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Input Field */}
+                            <div className="space-y-1.5 mb-3">
+                                <div className="relative">
+                                    <input
+                                        type={showGemini2Key ? 'text' : 'password'}
+                                        value={gemini2Key}
+                                        onChange={(e) => setGemini2Key(e.target.value)}
+                                        placeholder="Gemini API Key #2 (AIza...)"
+                                        className={`w-full h-9 pl-3 pr-8 text-xs rounded-xl focus:outline-none transition ${
+                                            isGemini2Connected
+                                                ? 'bg-emerald-50/30 border border-emerald-200 text-[#241224] font-medium'
+                                                : 'bg-[#FAF6FA] border border-[#EFE0EF] focus:bg-white focus:border-[#6C306E] text-[#241224]'
+                                        }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGemini2Key(!showGemini2Key)}
+                                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <EyeIcon size={14} />
+                                    </button>
+                                </div>
+                                {isGemini2Connected && gemini2Model && (
+                                    <p className="text-[10px] text-emerald-700 font-semibold px-1 truncate">
+                                        Model: {gemini2Model}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Card Actions */}
+                        <div className="pt-2 border-t border-[#EFE0EF]/80">
+                            {isGemini2Connected ? (
+                                <button
+                                    type="button"
+                                    onClick={() => handleDisconnect('gemini2')}
+                                    disabled={disconnectingProvider === 'gemini2'}
+                                    className="w-full h-8 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                >
+                                    <DisconnectIcon size={13} color="currentColor" />
+                                    <span>{disconnectingProvider === 'gemini2' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => handleConnect('gemini2')}
+                                    disabled={testingProvider === 'gemini2'}
+                                    className="w-full h-8 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
+                                >
+                                    {testingProvider === 'gemini2' ? (
+                                        <>
+                                            <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Connecting...</span>
+                                        </>
+                                    ) : (
+                                        <span>Connect</span>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 3. Groq Cloud */}
                     <div className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between ${
                         isGroqConnected
                             ? 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
@@ -624,7 +784,10 @@ export default function AdminAiBotPage() {
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/groq.png" alt="Groq" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Groq Cloud</h4>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">Groq Cloud</h4>
+                                        <span className="text-[10px] text-purple-700 font-bold block">#3 Backup AI</span>
+                                    </div>
                                 </div>
                                 {isGroqConnected ? (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
@@ -714,7 +877,10 @@ export default function AdminAiBotPage() {
                                     <div className="size-8 rounded-lg bg-white border border-[#EFE0EF] p-1 flex items-center justify-center shrink-0 shadow-2xs">
                                         <img src="/logos/openrouter-icon.png" alt="OpenRouter" className="size-6 object-contain" />
                                     </div>
-                                    <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">OpenRouter</h4>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-xs sm:text-[13px] text-[#241224] truncate">OpenRouter</h4>
+                                        <span className="text-[10px] text-purple-700 font-bold block">#4 Backup AI</span>
+                                    </div>
                                 </div>
                                 {isOpenRouterConnected ? (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-black tracking-wide uppercase shrink-0 whitespace-nowrap shadow-2xs">
@@ -850,10 +1016,10 @@ export default function AdminAiBotPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                {isElevenLabsConnected ? (
+                                {isElevenLabsConnected || isElevenLabs2Connected ? (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wide shadow-2xs">
                                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        Connected
+                                        {isElevenLabsConnected && isElevenLabs2Connected ? 'Connected (2 Keys Ready)' : 'Connected'}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold shadow-2xs">
@@ -866,12 +1032,15 @@ export default function AdminAiBotPage() {
 
                         {/* API Key Connection Card */}
                         <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF6FA]/60 border border-[#EFE0EF] space-y-4">
+                            {/* Primary Key Row */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1 max-w-md">
                                     <div className="flex items-center gap-1.5">
                                         <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
-                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
+                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs Primary API Key:</span>
+                                        <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">#1 Primary</span>
                                     </div>
+                                    <p className="text-[11px] text-slate-500">Primary voice synthesis key used for natural human speech in calls.</p>
                                 </div>
 
                                 <div className="flex items-center gap-2.5 flex-1 max-w-lg">
@@ -880,7 +1049,7 @@ export default function AdminAiBotPage() {
                                             type={showElevenLabsKey ? 'text' : 'password'}
                                             value={elevenLabsKey}
                                             onChange={(e) => setElevenLabsKey(e.target.value)}
-                                            placeholder="Paste ElevenLabs key (xi-api-key)..."
+                                            placeholder="Paste primary ElevenLabs key (xi-api-key)..."
                                             className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
                                         />
                                         <button
@@ -910,6 +1079,65 @@ export default function AdminAiBotPage() {
                                             className="h-10 px-5 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-2xs"
                                         >
                                             {testingProvider === 'elevenlabs' ? (
+                                                <>
+                                                    <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    <span>Verifying...</span>
+                                                </>
+                                            ) : (
+                                                <span>Connect & Test</span>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Backup Key Row */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-[#EFE0EF]">
+                                <div className="space-y-1 max-w-md">
+                                    <div className="flex items-center gap-1.5">
+                                        <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
+                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs Backup API Key:</span>
+                                        <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">#2 Backup</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500">Automatic instant fallback if primary ElevenLabs account runs out of characters or hits quota.</p>
+                                </div>
+
+                                <div className="flex items-center gap-2.5 flex-1 max-w-lg">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type={showElevenLabs2Key ? 'text' : 'password'}
+                                            value={elevenLabs2Key}
+                                            onChange={(e) => setElevenLabs2Key(e.target.value)}
+                                            placeholder="Paste backup ElevenLabs key (xi-api-key)..."
+                                            className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowElevenLabs2Key(!showElevenLabs2Key)}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                                        >
+                                            <EyeIcon size={14} />
+                                        </button>
+                                    </div>
+
+                                    {isElevenLabs2Connected ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDisconnect('elevenlabs2')}
+                                            disabled={disconnectingProvider === 'elevenlabs2'}
+                                            className="h-10 px-4 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                                        >
+                                            <DisconnectIcon size={13} color="currentColor" />
+                                            <span>{disconnectingProvider === 'elevenlabs2' ? 'Disconnecting...' : 'Disconnect'}</span>
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleConnect('elevenlabs2')}
+                                            disabled={testingProvider === 'elevenlabs2'}
+                                            className="h-10 px-5 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-2xs"
+                                        >
+                                            {testingProvider === 'elevenlabs2' ? (
                                                 <>
                                                     <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                     <span>Verifying...</span>
