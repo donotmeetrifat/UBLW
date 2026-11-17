@@ -77,7 +77,7 @@ export const metadata = {
         type: "website",
         images: [
             {
-                url: `${siteUrl}/images/web-logo-optimized.png`,
+                url: `${siteUrl}/images/web-logo.png`,
                 width: 1200,
                 height: 630,
                 alt: "UK Brand LOVER — Authentic UK Imported Beauty Bangladesh",
@@ -88,7 +88,7 @@ export const metadata = {
         card: "summary_large_image",
         title: "UK Brand LOVER | Real UK Beauty. Delivered in Bangladesh.",
         description: SITE_METADATA.shortDescription,
-        images: [`${siteUrl}/images/web-logo-optimized.png`],
+        images: [`${siteUrl}/images/web-logo.png`],
     },
     icons: {
         icon: [
@@ -111,7 +111,7 @@ export default function RootLayout({ children }) {
         "name": SITE_METADATA.name,
         "legalName": SITE_METADATA.legalName,
         "url": currentSiteUrl,
-        "logo": `${currentSiteUrl}/images/web-logo-optimized.png`,
+        "logo": `${currentSiteUrl}/images/web-logo.png`,
         "description": SITE_METADATA.fullDescription,
         "email": SITE_METADATA.email,
         "telephone": SITE_METADATA.phone,

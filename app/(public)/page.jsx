@@ -68,7 +68,7 @@ export default function Home() {
         "@type": "Store",
         "name": SITE_METADATA.name,
         "url": siteUrl,
-        "image": `${siteUrl}/images/web-logo-optimized.png`,
+        "image": `${siteUrl}/images/web-logo.png`,
         "description": SITE_METADATA.shortDescription,
         "priceRange": "৳৳",
         "currenciesAccepted": "BDT",

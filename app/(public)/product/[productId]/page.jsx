@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
     const title = `${product.name} — 100% Authentic UK Import | UK Brand LOVER Bangladesh`;
     const cleanDesc = (product.whyYouWillLoveIt || product.description || '').replace(/\s+/g, ' ').trim().slice(0, 150);
     const description = `Buy authentic ${product.name} imported from London with original UK store purchase receipts. Price: ৳${product.price}. ${cleanDesc}`;
-    const mainImage = Array.isArray(product.images) && product.images[0] ? product.images[0] : `${siteUrl}/images/web-logo-optimized.png`;
+    const mainImage = Array.isArray(product.images) && product.images[0] ? product.images[0] : `${siteUrl}/images/web-logo.png`;
     const canonicalUrl = `${siteUrl}/product/${product.id}`;
 
     return {
@@ -93,7 +93,7 @@ export default async function ProductPage({ params }) {
         const canonicalUrl = `${siteUrl}/product/${product.id}`;
         const images = Array.isArray(product.images) && product.images.length > 0
             ? product.images
-            : [`${siteUrl}/images/web-logo-optimized.png`];
+            : [`${siteUrl}/images/web-logo.png`];
         
         const ratingCount = product.ratings?.length || 0;
         const avgRating = ratingCount > 0
