@@ -5,7 +5,9 @@ import Loading from "@/components/Loading"
 import { orderDummyData } from "@/assets/assets"
 import toast from "react-hot-toast"
 import { CheckIcon, TruckIcon, WhatsAppIcon, MobileBankingIcon, CloseIcon, SparklesIcon } from "@/components/icons"
-import InvoiceModal from "@/components/InvoiceModal"
+import dynamic from "next/dynamic"
+
+const InvoiceModal = dynamic(() => import("@/components/InvoiceModal"), { ssr: false })
 
 export default function StoreOrders() {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
@@ -497,8 +499,8 @@ export default function StoreOrders() {
                 </div>
             )}
 
-            {/* Invoice Modal Component */}
-            {selectedOrder && (
+            {/* Invoice Modal Component (Lazy Loaded on Demand) */}
+            {selectedOrder && showInvoiceModal && (
                 <InvoiceModal
                     order={selectedOrder}
                     isOpen={showInvoiceModal}

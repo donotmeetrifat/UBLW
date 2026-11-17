@@ -20,11 +20,13 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
+import dynamic from "next/dynamic";
 import { FlowButton } from "@/components/ui/flow-button";
-import AccountModal from "@/components/AccountModal";
-import VisualSearchModal from "@/components/VisualSearchModal";
 import { requireSignIn } from "@/lib/clientAuth";
 import { sanitizeCartWithProducts } from "@/lib/features/cart/cartSlice";
+
+const AccountModal = dynamic(() => import("@/components/AccountModal"), { ssr: false });
+const VisualSearchModal = dynamic(() => import("@/components/VisualSearchModal"), { ssr: false });
 
 const Navbar = () => {
     const router = useRouter();
@@ -449,19 +451,23 @@ const Navbar = () => {
                 </div>
             </header>
 
-            {/* Manage My Account Modal */}
-            <AccountModal
-                isOpen={isAccountModalOpen}
-                onClose={() => setIsAccountModalOpen(false)}
-                user={currentUser}
-                onUserUpdated={(updated) => setCurrentUser(updated)}
-            />
+            {/* Manage My Account Modal (Lazy Loaded) */}
+            {isAccountModalOpen && (
+                <AccountModal
+                    isOpen={isAccountModalOpen}
+                    onClose={() => setIsAccountModalOpen(false)}
+                    user={currentUser}
+                    onUserUpdated={(updated) => setCurrentUser(updated)}
+                />
+            )}
 
-            {/* Visual Product Search & Match Modal */}
-            <VisualSearchModal
-                isOpen={isVisualSearchOpen}
-                onClose={() => setIsVisualSearchOpen(false)}
-            />
+            {/* Visual Product Search & Match Modal (Lazy Loaded) */}
+            {isVisualSearchOpen && (
+                <VisualSearchModal
+                    isOpen={isVisualSearchOpen}
+                    onClose={() => setIsVisualSearchOpen(false)}
+                />
+            )}
         </>
     );
 };

@@ -15,9 +15,11 @@ import {
     SparklesIcon,
     AlertCircleIcon
 } from "@/components/icons"
-import InvoiceModal from "@/components/InvoiceModal"
+import dynamic from "next/dynamic"
 import AdminDropdown from "@/components/admin/AdminDropdown"
 import { broadcastStoreChange } from "@/lib/realtimeSync"
+
+const InvoiceModal = dynamic(() => import("@/components/InvoiceModal"), { ssr: false })
 
 const STATUSES = [
     { key: 'ALL', label: 'All Orders' },
@@ -69,6 +71,8 @@ export default function AdminOrdersPage() {
     })
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('ALL')
+    const [currentPage, setCurrentPage] = useState(1)
+    const ORDERS_PER_PAGE = 25
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
@@ -255,6 +259,17 @@ export default function AdminOrdersPage() {
         })
     }, [orders, statusFilter, searchQuery])
 
+    // Reset pagination to page 1 on filter or search changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [statusFilter, searchQuery])
+
+    const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE) || 1
+    const paginatedOrders = useMemo(() => {
+        const start = (currentPage - 1) * ORDERS_PER_PAGE
+        return filteredOrders.slice(start, start + ORDERS_PER_PAGE)
+    }, [filteredOrders, currentPage])
+
     const statusCounts = useMemo(() => {
         const counts = { ALL: orders.length }
         orders.forEach(o => {
@@ -349,8 +364,8 @@ export default function AdminOrdersPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#EFE0EF]">
-                            {filteredOrders.length > 0 ? (
-                                filteredOrders.map((order) => {
+                            {paginatedOrders.length > 0 ? (
+                                paginatedOrders.map((order) => {
                                     const custName = order.user?.name || order.address?.fullName || 'Valued Customer'
                                     const custPhone = order.address?.phoneNumber || order.user?.phone || ''
                                     const rawPhone = custPhone.replace(/[^0-9]/g, '')
@@ -521,6 +536,36 @@ export default function AdminOrdersPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-[#EFE0EF] rounded-2xl shadow-2xs">
+                        <p className="text-xs text-slate-500 font-medium">
+                            Showing <span className="font-bold text-[#6C306E]">{(currentPage - 1) * ORDERS_PER_PAGE + 1}</span> to <span className="font-bold text-[#6C306E]">{Math.min(currentPage * ORDERS_PER_PAGE, filteredOrders.length)}</span> of <span className="font-bold text-[#241224]">{filteredOrders.length}</span> orders
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                disabled={currentPage <= 1}
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                className="px-3.5 py-1.5 rounded-xl border border-[#EFE0EF] text-xs font-bold text-slate-600 hover:bg-[#FAF6FA] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                            >
+                                Previous
+                            </button>
+                            <span className="px-3 py-1 text-xs font-bold text-[#6C306E] bg-[#FAF6FA] rounded-xl border border-[#EFE0EF]">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                type="button"
+                                disabled={currentPage >= totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                className="px-3.5 py-1.5 rounded-xl border border-[#EFE0EF] text-xs font-bold text-slate-600 hover:bg-[#FAF6FA] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* ORDER DETAILS MODAL */}

@@ -24,9 +24,11 @@ import {
     TagIcon
 } from '@/components/icons'
 import toast from 'react-hot-toast'
+import dynamic from 'next/dynamic'
 import { clearCart, removePurchasedItems } from '@/lib/features/cart/cartSlice'
-import AddressModal from '@/components/AddressModal'
-import InvoiceModal from '@/components/InvoiceModal'
+
+const AddressModal = dynamic(() => import('@/components/AddressModal'), { ssr: false })
+const InvoiceModal = dynamic(() => import('@/components/InvoiceModal'), { ssr: false })
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from '@/lib/settings'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 import { isClientSignedIn, requireSignIn, getClientUser } from '@/lib/clientAuth'
@@ -1092,8 +1094,8 @@ export default function CheckoutPage() {
                 )}
             </AnimatePresence>
 
-            {/* Clean Minimal Modern Business Invoice Modal */}
-            {confirmedOrder && (
+            {/* Clean Minimal Modern Business Invoice Modal (Lazy Loaded on Demand) */}
+            {confirmedOrder && showInvoiceModal && (
                 <InvoiceModal
                     order={confirmedOrder}
                     isOpen={showInvoiceModal}

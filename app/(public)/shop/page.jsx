@@ -53,6 +53,7 @@ function ShopContent() {
     }))
     const [sortBy, setSortBy] = useState('default')
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+    const [visibleCount, setVisibleCount] = useState(24)
     const reduxCategories = useSelector(state => state.product?.categories)
 
     // Fast 0ms hydration from cache or Redux:
@@ -110,7 +111,9 @@ function ShopContent() {
     }, [dispatch]);
 
     useEffect(() => {
-        loadLiveCategories();
+        if (!shopCategories || shopCategories.length === 0) {
+            loadLiveCategories();
+        }
         if (!products || products.length === 0) {
             loadProducts();
         }
@@ -248,6 +251,15 @@ function ShopContent() {
         })
     }, [products, search, filters, sortBy])
 
+    // Reset pagination to first batch when filters change
+    useEffect(() => {
+        setVisibleCount(24)
+    }, [search, filters, sortBy])
+
+    const visibleProducts = useMemo(() => {
+        return filteredProducts.slice(0, visibleCount)
+    }, [filteredProducts, visibleCount])
+
     return (
         <div className="min-h-[70vh] px-3 sm:px-8 max-w-7xl mx-auto">
             <div className="pt-5 sm:pt-10 pb-24">
@@ -345,16 +357,33 @@ function ShopContent() {
                         </div>
 
                         {filteredProducts.length ? (
-                            <motion.div 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4 }}
-                                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-5 lg:gap-6"
-                            >
-                                {filteredProducts.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </motion.div>
+                            <>
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.4 }}
+                                    className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-5 lg:gap-6"
+                                >
+                                    {visibleProducts.map((product) => (
+                                        <ProductCard key={product.id} product={product} />
+                                    ))}
+                                </motion.div>
+
+                                {filteredProducts.length > visibleCount && (
+                                    <div className="mt-12 flex flex-col items-center justify-center gap-2">
+                                        <p className="text-xs text-slate-500 font-medium">
+                                            Showing <span className="font-bold text-[#6C306E]">{visibleProducts.length}</span> of <span className="font-bold text-[#241224]">{filteredProducts.length}</span> products
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setVisibleCount((prev) => prev + 24)}
+                                            className="px-8 py-3 rounded-full bg-white border border-[#EFE0EF] hover:border-[#6C306E] text-[#6C306E] hover:bg-[#FAF6FA] text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
+                                        >
+                                            Load More Authentic UK Products
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="py-24 text-center rounded-3xl bg-[#FAF6FA] border border-[#EFE0EF] max-w-lg mx-auto">
                                 <SparklesIcon size={24} color="#D8B56D" className="mx-auto mb-3" />

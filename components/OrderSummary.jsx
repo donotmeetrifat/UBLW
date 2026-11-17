@@ -12,7 +12,7 @@ import {
     MapPinIcon
 } from '@/components/icons';
 import React, { useState, useEffect } from 'react'
-import AddressModal from './AddressModal';
+import dynamic from 'next/dynamic'
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { isInsideDhaka, calculateDeliveryCharge, DEFAULT_DELIVERY_SETTINGS } from '@/lib/settings';
 import { FlowButton } from '@/components/ui/flow-button';
 import { isClientSignedIn, requireSignIn, getClientUser } from '@/lib/clientAuth';
+
+const AddressModal = dynamic(() => import('./AddressModal'), { ssr: false });
 
 const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedCount, selectedQuantity }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳';

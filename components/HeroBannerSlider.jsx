@@ -352,8 +352,8 @@ const HeroBannerSlider = () => {
                                         draggable={false}
                                         className="w-full h-full object-contain pointer-events-none select-none"
                                         priority={index === 0}
-                                        quality={95}
-                                        unoptimized
+                                        quality={90}
+                                        sizes="(max-width: 1280px) 100vw, 1280px"
                                         onLoad={(e) => {
                                             if (e?.target?.naturalWidth && e?.target?.naturalHeight) {
                                                 const ratio = `${e.target.naturalWidth} / ${e.target.naturalHeight}`

@@ -8,13 +8,15 @@ import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import { isClientSignedIn, requireSignIn, getAuthHeaders, getClientUser } from '@/lib/clientAuth'
 import toast from 'react-hot-toast'
+import dynamic from 'next/dynamic'
 import AiProductCard from '@/components/AiProductCard'
 import EmmaAvatar from '@/components/EmmaAvatar'
 import AiSuggestionBar, { getContextualSuggestions } from '@/components/AiSuggestionBar'
 import FormattedMessageText from '@/components/AiFormattedText'
-import AiVoiceCallModal from '@/components/AiVoiceCallModal'
 import { LiquidMultimodalInput } from '@/components/ui/liquid-multimodal-input'
 import { TrashIcon } from '@/components/icons'
+
+const AiVoiceCallModal = dynamic(() => import('@/components/AiVoiceCallModal'), { ssr: false });
 import {
     DEFAULT_WELCOME_MESSAGE,
     getCachedAiMessages,
@@ -676,8 +678,8 @@ export default function BeautyAdvisorPage() {
                 </div>
             </footer>
 
-            {/* In-Browser AI Voice Call with Emma */}
-            {voiceCallEnabled && (
+            {/* In-Browser AI Voice Call with Emma (Lazy Loaded on Demand) */}
+            {voiceCallEnabled && isVoiceCallOpen && (
                 <AiVoiceCallModal
                     isOpen={isVoiceCallOpen}
                     onClose={() => setIsVoiceCallOpen(false)}

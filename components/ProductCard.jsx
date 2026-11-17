@@ -161,9 +161,10 @@ const ProductCard = ({ product }) => {
                 <Link href={`/product/${product.id}`} className='w-full h-full block relative'>
                     <Image
                         ref={imageRef}
-                        width={800}
-                        height={800}
-                        unoptimized={true}
+                        width={400}
+                        height={400}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 260px"
+                        loading="lazy"
                         className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
                         src={product.images[0]?.src || product.images[0]}
                         alt={product.name}

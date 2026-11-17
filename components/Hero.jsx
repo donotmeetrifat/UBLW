@@ -107,8 +107,8 @@ const Hero = () => {
                                         fill={false}
                                         width={500}
                                         height={500}
+                                        sizes="(max-width: 640px) 180px, 320px"
                                         priority
-                                        unoptimized
                                     />
                                 </div>
                             </div>
@@ -161,7 +161,7 @@ const Hero = () => {
                                                 alt={sideCardTop.imageAlt || sideCardTop.title || "Category Showcase"} 
                                                 width={200}
                                                 height={180}
-                                                unoptimized
+                                                sizes="180px"
                                             />
                                         </div>
                                     </div>
@@ -213,7 +213,7 @@ const Hero = () => {
                                                 alt={sideCardBottom.imageAlt || sideCardBottom.title || "Promo Showcase"} 
                                                 width={200}
                                                 height={180}
-                                                unoptimized
+                                                sizes="180px"
                                             />
                                         </div>
                                     </div>

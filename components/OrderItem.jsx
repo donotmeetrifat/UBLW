@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useSelector } from "react-redux";
+import dynamic from "next/dynamic";
 import Rating from "./Rating";
-import RatingModal from "./RatingModal";
-import InvoiceModal from "./InvoiceModal";
-import CancelOrderModal from "./CancelOrderModal";
 import toast from "react-hot-toast";
+
+const RatingModal = dynamic(() => import("./RatingModal"), { ssr: false });
+const InvoiceModal = dynamic(() => import("./InvoiceModal"), { ssr: false });
+const CancelOrderModal = dynamic(() => import("./CancelOrderModal"), { ssr: false });
 import {
     ReviewBadgeIcon,
     CheckIcon,
@@ -445,22 +447,26 @@ const OrderItem = ({ order }) => {
                 <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />
             )}
 
-            {/* Invoice Modal */}
-            <InvoiceModal
-                order={orderObj}
-                isOpen={showInvoice}
-                onClose={() => setShowInvoice(false)}
-            />
+            {/* Invoice Modal (Lazy Loaded on Demand) */}
+            {showInvoice && (
+                <InvoiceModal
+                    order={orderObj}
+                    isOpen={showInvoice}
+                    onClose={() => setShowInvoice(false)}
+                />
+            )}
 
-            {/* Cancel Order Modal */}
-            <CancelOrderModal
-                order={orderObj}
-                isOpen={showCancelModal}
-                onClose={() => setShowCancelModal(false)}
-                onCancelled={(updated) => {
-                    setOrderObj(updated);
-                }}
-            />
+            {/* Cancel Order Modal (Lazy Loaded on Demand) */}
+            {showCancelModal && (
+                <CancelOrderModal
+                    order={orderObj}
+                    isOpen={showCancelModal}
+                    onClose={() => setShowCancelModal(false)}
+                    onCancelled={(updated) => {
+                        setOrderObj(updated);
+                    }}
+                />
+            )}
         </div>
     );
 };

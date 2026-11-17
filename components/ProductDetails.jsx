@@ -15,12 +15,14 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Counter from "./Counter";
-import ProductShareModal from "./ProductShareModal";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ProductShareModal = dynamic(() => import("./ProductShareModal"), { ssr: false });
 
 const ProductDetails = ({ product }) => {
     const productId = product.id;
@@ -89,7 +91,7 @@ const ProductDetails = ({ product }) => {
                                         : 'border-[#EFE0EF] hover:border-[#6C306E]/40'
                                 }`}
                             >
-                                <Image src={image} className="w-full h-full object-cover" alt="" width={176} height={176} unoptimized={true} />
+                                <Image src={image} className="w-full h-full object-cover" alt="" width={120} height={120} sizes="80px" loading="lazy" />
                             </motion.button>
                         );
                     })}
@@ -126,9 +128,10 @@ const ProductDetails = ({ product }) => {
                             <Image 
                                 src={mainImage} 
                                 alt={product.name} 
-                                width={1200} 
-                                height={1200} 
-                                unoptimized={true}
+                                width={800} 
+                                height={800} 
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 500px, 520px"
+                                quality={90}
                                 className="w-full h-full object-cover" 
                                 priority
                             />
@@ -299,12 +302,14 @@ const ProductDetails = ({ product }) => {
                 </div>
             </div>
 
-            {/* Product Share Modal Dialog */}
-            <ProductShareModal
-                product={product}
-                isOpen={isShareOpen}
-                onClose={() => setIsShareOpen(false)}
-            />
+            {/* Product Share Modal Dialog (Lazy Loaded on Demand) */}
+            {isShareOpen && (
+                <ProductShareModal
+                    product={product}
+                    isOpen={isShareOpen}
+                    onClose={() => setIsShareOpen(false)}
+                />
+            )}
         </div>
     );
 };

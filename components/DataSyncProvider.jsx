@@ -89,7 +89,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v9';
+                    const currentSwVer = 'ukbl-v12';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -97,7 +97,7 @@ export default function DataSyncProvider({ children }) {
                         if ('caches' in window) {
                             caches.keys().then((keys) => {
                                 keys.forEach(key => {
-                                    if (!key.includes('v9')) {
+                                    if (!key.includes('v12')) {
                                         caches.delete(key);
                                     }
                                 });
@@ -256,23 +256,6 @@ export default function DataSyncProvider({ children }) {
                     dispatch(sanitizeCartWithProducts(data.products))
                     if (typeof window !== 'undefined') {
                         localStorage.setItem('ukbl_cached_products', JSON.stringify(data.products))
-
-                        // Pre-warm product images & routes into cache for offline viewing
-                        try {
-                            data.products.forEach(p => {
-                                const imgs = Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []);
-                                imgs.forEach(imgSrc => {
-                                    if (imgSrc && typeof imgSrc === 'string' && !imgSrc.startsWith('data:')) {
-                                        const pre = new Image();
-                                        pre.src = imgSrc;
-                                    }
-                                });
-                                // Prefetch product route
-                                if (p.id) {
-                                    router.prefetch(`/product/${p.id}`);
-                                }
-                            });
-                        } catch (e) {}
                     }
                 }
             } catch (e) {
@@ -538,8 +521,8 @@ export default function DataSyncProvider({ children }) {
             // Initial version seeding
             checkVersionSync()
 
-            // Run heartbeat check every 6 seconds for rapid real-time updates across all networks
-            versionCheckInterval = setInterval(checkVersionSync, 6000)
+            // Run fallback heartbeat check every 45 seconds (WebSocket push handles instant sync)
+            versionCheckInterval = setInterval(checkVersionSync, 45000)
 
             handleVisibilityOrFocus = () => {
                 if (document.visibilityState === 'visible') {

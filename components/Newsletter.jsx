@@ -48,7 +48,7 @@ const Newsletter = () => {
                             src={assets.webLogo} 
                             alt="UK Brand Lover Logo" 
                             className="h-12 sm:h-14 w-auto object-contain" 
-                            priority 
+                            loading="lazy"
                         />
                     </div>
 

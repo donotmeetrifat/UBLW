@@ -47,6 +47,7 @@ export default function AiProductCard({ product, onQuickAdd, onCloseChat }) {
                             <img
                                 src={product.image}
                                 alt={product.name}
+                                loading="lazy"
                                 className="w-full h-full object-contain group-hover/link:scale-105 transition-transform duration-200"
                             />
                         ) : (
