@@ -27,16 +27,15 @@ const ROLE_OPTIONS = [
 ]
 
 const MODULE_PERMISSIONS = [
-    { id: 'orders', name: 'Customer Orders', description: 'View, fulfill, update status and assign couriers' },
+    { id: 'analytics', name: 'Views & Analytics', description: 'View visitor analytics and revenue sales charts' },
     { id: 'products', name: 'Products & Stock', description: 'Add, update products, modify prices and stock counts' },
     { id: 'categories', name: 'Category Catalog', description: 'Manage shop categories and collections' },
-    { id: 'banners', name: 'Hero Banner Slider', description: 'Upload, reorder, and activate homepage hero banners' },
     { id: 'homepage', name: 'Homepage Showcase', description: 'Curate best selling and new arrival product placements' },
+    { id: 'banners', name: 'Hero Banner Slider', description: 'Upload, reorder, and activate homepage hero banners' },
     { id: 'promotions', name: 'Hero Promo Cards', description: 'Configure top promotional offer cards' },
+    { id: 'orders', name: 'Customer Orders', description: 'View, fulfill, update status and assign couriers' },
     { id: 'customers', name: 'Customer Intelligence', description: 'View registered customers and purchase histories' },
     { id: 'inquiries', name: 'Customer Inquiries', description: 'Respond to and resolve customer contact inquiries' },
-    { id: 'analytics', name: 'Views & Analytics', description: 'View visitor analytics and revenue sales charts' },
-    { id: 'coupons', name: 'Coupons & Discounts', description: 'Create and manage promotional discount codes' },
 ]
 
 export default function AdminTeamPage() {

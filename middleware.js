@@ -68,6 +68,17 @@ export async function middleware(request) {
             loginUrl.searchParams.set('error', 'STAFF_REQUIRED');
             return NextResponse.redirect(loginUrl);
         }
+
+        // Strict Edge Boundary for Employees: Instantly block access to Admin-Only pages
+        if (user.role === 'EMPLOYEE') {
+            const forbiddenPrefixes = ['/admin/coupons', '/admin/ai-bot', '/admin/team', '/admin/settings'];
+            const isBlocked = forbiddenPrefixes.some(prefix => pathname === prefix || pathname.startsWith(prefix + '/'));
+            if (isBlocked) {
+                const adminUrl = new URL('/admin', request.url);
+                adminUrl.searchParams.set('error', 'ADMIN_ONLY');
+                return NextResponse.redirect(adminUrl);
+            }
+        }
     }
 
     // 2. Boundary Protection: /checkout

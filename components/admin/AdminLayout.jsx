@@ -9,21 +9,32 @@ import AdminNavbar from "./AdminNavbar"
 import AdminSidebar from "./AdminSidebar"
 
 // Sections strictly reserved for Store Administrator (blocked for all Employees)
-const ADMIN_ONLY_ROUTES = ['/admin/ai-bot', '/admin/settings', '/admin/team']
+const ADMIN_ONLY_ROUTES = ['/admin/coupons', '/admin/ai-bot', '/admin/settings', '/admin/team']
 
-// Granular route permissions mapping
+// Granular route permissions mapping for operational employee modules
 const ROUTE_PERMISSIONS = {
+    '/admin/analytics': 'analytics',
     '/admin/products': 'products',
     '/admin/categories': 'categories',
-    '/admin/banners': 'banners',
     '/admin/homepage': 'homepage',
+    '/admin/banners': 'banners',
     '/admin/promotions': 'promotions',
     '/admin/orders': 'orders',
     '/admin/customers': 'customers',
     '/admin/inquiries': 'inquiries',
-    '/admin/analytics': 'analytics',
-    '/admin/coupons': 'coupons',
 }
+
+const DEFAULT_EMPLOYEE_PERMISSIONS = [
+    'analytics',
+    'products',
+    'categories',
+    'homepage',
+    'banners',
+    'promotions',
+    'orders',
+    'customers',
+    'inquiries',
+]
 
 export default function AdminLayout({ children }) {
     const pathname = usePathname()
@@ -106,7 +117,10 @@ export default function AdminLayout({ children }) {
         if (matchingRoute) {
             const requiredPerm = ROUTE_PERMISSIONS[matchingRoute]
             requiredPermName = requiredPerm
-            const userPerms = Array.isArray(currentUser?.permissions) ? currentUser.permissions : []
+            const rawPerms = Array.isArray(currentUser?.permissions) && currentUser.permissions.length > 0
+                ? currentUser.permissions
+                : DEFAULT_EMPLOYEE_PERMISSIONS
+            const userPerms = rawPerms.filter(p => DEFAULT_EMPLOYEE_PERMISSIONS.includes(p))
             if (!userPerms.includes(requiredPerm) && !userPerms.includes('*')) {
                 isMissingPermission = true
             }

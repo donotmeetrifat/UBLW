@@ -9,6 +9,12 @@ export async function GET(request) {
     try {
         const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json(
+                { success: false, error: 'FORBIDDEN', message: 'Forbidden: Admin privileges required to view store delivery & payment settings.' },
+                { status: 403 }
+            );
+        }
 
         const settings = await getStoreSettings();
         return NextResponse.json({

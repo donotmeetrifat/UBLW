@@ -9,8 +9,11 @@ export const revalidate = 0;
 
 export async function GET(request) {
     try {
-        const auth = await requireStaff(request, 'coupons');
+        const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to view coupons.' }, { status: 403 });
+        }
         if (isDatabaseConfigured()) {
             let coupons = [];
             try {
@@ -110,8 +113,11 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        const auth = await requireStaff(request, 'coupons');
+        const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to manage coupons.' }, { status: 403 });
+        }
 
         const body = await request.json();
         const {

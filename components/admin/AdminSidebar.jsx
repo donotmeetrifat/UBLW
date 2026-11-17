@@ -41,7 +41,7 @@ const navSections = [
         section: 'Orders & Sales',
         items: [
             { name: 'Customer Orders', href: '/admin/orders', icon: TagIcon, permission: 'orders' },
-            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon, permission: 'coupons' },
+            { name: 'Coupons & Promos', href: '/admin/coupons', icon: CouponTicketIcon, adminOnly: true },
         ]
     },
     {
@@ -69,7 +69,23 @@ const navSections = [
 export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, userRole = 'ADMIN', currentUser = null }) {
     const pathname = usePathname()
 
-    const userPermissions = Array.isArray(currentUser?.permissions) ? currentUser.permissions : [];
+    const DEFAULT_EMPLOYEE_PERMISSIONS = [
+        'analytics',
+        'products',
+        'categories',
+        'homepage',
+        'banners',
+        'promotions',
+        'orders',
+        'customers',
+        'inquiries',
+    ];
+
+    const rawPermissions = Array.isArray(currentUser?.permissions) && currentUser.permissions.length > 0
+        ? currentUser.permissions
+        : DEFAULT_EMPLOYEE_PERMISSIONS;
+
+    const userPermissions = rawPermissions.filter(p => DEFAULT_EMPLOYEE_PERMISSIONS.includes(p));
 
     const isItemAllowed = (item) => {
         if (userRole === 'ADMIN') return true;

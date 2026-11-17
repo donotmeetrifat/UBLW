@@ -8,8 +8,11 @@ export const revalidate = 0;
 
 export async function GET(request, context) {
     try {
-        const auth = await requireStaff(request, 'coupons');
+        const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to view coupons.' }, { status: 403 });
+        }
         let id = null;
         if (context?.params) {
             const resolvedParams = await Promise.resolve(context.params);
@@ -69,8 +72,11 @@ export async function GET(request, context) {
 
 export async function PATCH(request, context) {
     try {
-        const auth = await requireStaff(request, 'coupons');
+        const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to update coupons.' }, { status: 403 });
+        }
         const updates = await request.json().catch(() => ({}));
         let id = updates.id;
 
@@ -274,8 +280,11 @@ export async function PATCH(request, context) {
 
 export async function DELETE(request, context) {
     try {
-        const auth = await requireStaff(request, 'coupons');
+        const auth = await requireStaff(request);
         if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to delete coupons.' }, { status: 403 });
+        }
         let id = null;
         if (context?.params) {
             const resolvedParams = await Promise.resolve(context.params);

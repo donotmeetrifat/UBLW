@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import prisma, { isDatabaseConfigured } from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/auth';
+import { getUserFromRequest, requireStaff } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 /**
  * GET /api/admin/team
- * By default: returns only staff members (ADMIN and EMPLOYEE).
- * When ?search=... is provided: searches across all users so admin can find any customer to promote.
+ * Strictly restricted to users with role === 'ADMIN'.
+ * Returns team members and staff counts.
  */
 export async function GET(request) {
     try {
-        const currentUser = getUserFromRequest(request);
-        if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.role !== 'EMPLOYEE')) {
-            return NextResponse.json({ success: false, message: 'Unauthorized. Staff access required.' }, { status: 401 });
+        const auth = await requireStaff(request);
+        if (!auth.authorized) return auth.response;
+        if (auth.user.role !== 'ADMIN') {
+            return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Forbidden. Admin privileges required to access team roster.' }, { status: 403 });
         }
 
         const { searchParams } = new URL(request.url);
