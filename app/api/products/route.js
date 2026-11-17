@@ -3,6 +3,7 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { getProductsCache, setProductsCache, invalidateProductsCache } from '@/lib/productsCache';
 import { updateProductHomepagePlacement } from '@/lib/homepageSections';
+import { pingSearchEngines } from '@/lib/seoPing';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -277,6 +278,7 @@ export async function POST(request) {
             });
 
             invalidateProductsCache();
+            pingSearchEngines();
 
             const normalizedProduct = {
                 ...product,

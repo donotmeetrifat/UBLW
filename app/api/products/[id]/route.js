@@ -3,6 +3,7 @@ import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { memoryStore } from '@/lib/db/initialData';
 import { invalidateProductsCache } from '@/lib/productsCache';
 import { updateProductHomepagePlacement, removeProductFromHomepageSections } from '@/lib/homepageSections';
+import { pingSearchEngines } from '@/lib/seoPing';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -351,6 +352,7 @@ export async function PATCH(request, context) {
             }
 
             invalidateProductsCache();
+            pingSearchEngines();
             return NextResponse.json({ success: true, product: normalizedProduct, sections: updatedSections }, {
                 headers: {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -396,6 +398,7 @@ export async function DELETE(request, context) {
 
         if (isDatabaseConfigured()) {
             invalidateProductsCache();
+            pingSearchEngines();
             try {
                 await removeProductFromHomepageSections(id);
             } catch (secErr) {
