@@ -13,6 +13,8 @@ import {
 } from '@/components/icons'
 
 const defaultCuratedVoices = [
+    { voice_id: 'nUarI71Lei0IFt1ybDm1', name: 'Swati S', labels: { accent: 'South Asian / English', gender: 'Female', description: 'Social Media & Warm' }, preview_url: '' },
+    { voice_id: '8e81Dm4CldjBZSlArGoT', name: 'Rimjhim', labels: { accent: 'Bengali / Conversational', gender: 'Female', description: 'Natural & Friendly' }, preview_url: '' },
     { voice_id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', labels: { accent: 'British', gender: 'Female', description: 'Soft & Warm' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/dfed914d-17c3-4554-9f79-6638c4b9687e.mp3' },
     { voice_id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', labels: { accent: 'British', gender: 'Female', description: 'Warm & Refined' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68bde-5345-4217-a9a7-3a68332a35d0.mp3' },
     { voice_id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', labels: { accent: 'American', gender: 'Female', description: 'Calm & Polite' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/21m00Tcm4TlvDq8ikWAM/b7880775-52b0-449e-b53d-5192c7d9bc37.mp3' },
@@ -57,6 +59,7 @@ export default function AdminAiBotPage() {
     const [availableVoices, setAvailableVoices] = useState([])
     const [selectedVoiceId, setSelectedVoiceId] = useState('EXAVITQu4vr4xnSDxMaL')
     const [selectedVoiceName, setSelectedVoiceName] = useState('Sarah (Soft & Warm)')
+    const [customVoiceInput, setCustomVoiceInput] = useState('')
     const [playingVoiceId, setPlayingVoiceId] = useState(null)
     const [audioPlayer, setAudioPlayer] = useState(null)
     const [voiceCallEnabled, setVoiceCallEnabled] = useState(true)
@@ -395,6 +398,50 @@ export default function AdminAiBotPage() {
         } catch (err) {
             console.error('Error auto-saving voice:', err)
             toast.error('Network error saving voice')
+        }
+    }
+
+    // Apply custom voice ID or ElevenLabs voice link directly
+    const handleApplyCustomVoice = async () => {
+        const raw = customVoiceInput.trim()
+        if (!raw) {
+            toast.error('Please enter an ElevenLabs Voice ID or URL')
+            return
+        }
+
+        // Support full URLs like https://elevenlabs.io/voices/nUarI71Lei0IFt1ybDm1
+        let extractedId = raw
+        if (raw.includes('elevenlabs.io/voices/')) {
+            extractedId = raw.split('elevenlabs.io/voices/')[1]?.split(/[?#/]/)[0]?.trim() || raw
+        }
+
+        let voiceName = `Custom Voice (${extractedId.slice(0, 8)}...)`
+        if (extractedId === 'nUarI71Lei0IFt1ybDm1') voiceName = 'Swati S (South Asian / English)'
+        if (extractedId === '8e81Dm4CldjBZSlArGoT') voiceName = 'Rimjhim (Bengali / Conversational)'
+
+        setSelectedVoiceId(extractedId)
+        setSelectedVoiceName(voiceName)
+
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save_voice',
+                    elevenLabsVoiceId: extractedId,
+                    elevenLabsVoiceName: voiceName,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(`Active voice changed to ${voiceName}! Live immediately.`)
+                setCustomVoiceInput('')
+            } else {
+                toast.error(data.message || 'Failed to save voice')
+            }
+        } catch (err) {
+            console.error('Error auto-saving custom voice:', err)
+            toast.error('Network error saving custom voice')
         }
     }
 
@@ -1191,6 +1238,30 @@ export default function AdminAiBotPage() {
                                 <span className="text-[11px] font-bold text-purple-700 bg-white px-2.5 py-1 rounded-full border border-purple-200">
                                     Multilingual v2 Active (Bengali & English)
                                 </span>
+                            </div>
+
+                            {/* Direct Voice ID / Custom Voice URL Input */}
+                            <div className="p-3 bg-[#FAF6FA]/80 rounded-xl border border-[#EFE0EF] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                                        Paste Custom ElevenLabs Voice ID or URL
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customVoiceInput}
+                                        onChange={(e) => setCustomVoiceInput(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyCustomVoice() }}
+                                        placeholder="e.g. nUarI71Lei0IFt1ybDm1 or 8e81Dm4CldjBZSlArGoT"
+                                        className="w-full px-3 py-2 bg-white border border-[#EFE0EF] rounded-lg focus:outline-none focus:border-[#6C306E] font-mono text-xs text-[#241224]"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleApplyCustomVoice}
+                                    className="self-end sm:self-auto sm:mt-5 px-4 py-2 bg-[#6C306E] hover:bg-[#521c54] text-white text-xs font-bold rounded-lg transition shrink-0 cursor-pointer shadow-2xs"
+                                >
+                                    Apply Voice
+                                </button>
                             </div>
 
                             {/* Voices Grid */}
