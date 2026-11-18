@@ -49,13 +49,20 @@ export default function AdminAiBotPage() {
     const [openRouterKey, setOpenRouterKey] = useState('')
     const [showOpenRouterKey, setShowOpenRouterKey] = useState(false)
 
-    // ElevenLabs Voice Engine States
-    const [isElevenLabsConnected, setIsElevenLabsConnected] = useState(false)
-    const [elevenLabsKey, setElevenLabsKey] = useState('')
-    const [showElevenLabsKey, setShowElevenLabsKey] = useState(false)
-    const [isElevenLabs2Connected, setIsElevenLabs2Connected] = useState(false)
-    const [elevenLabs2Key, setElevenLabs2Key] = useState('')
-    const [showElevenLabs2Key, setShowElevenLabs2Key] = useState(false)
+    // ElevenLabs Voice Engine Multi-Account Pool (Slots 1 to 5)
+    const [elevenLabsAccounts, setElevenLabsAccounts] = useState([
+        { slot: 1, label: 'Account 1 (Primary)', provider: 'elevenlabs', key: '', isConnected: false, showKey: false, subscription: null },
+        { slot: 2, label: 'Account 2', provider: 'elevenlabs2', key: '', isConnected: false, showKey: false, subscription: null },
+        { slot: 3, label: 'Account 3', provider: 'elevenlabs3', key: '', isConnected: false, showKey: false, subscription: null },
+        { slot: 4, label: 'Account 4', provider: 'elevenlabs4', key: '', isConnected: false, showKey: false, subscription: null },
+        { slot: 5, label: 'Account 5', provider: 'elevenlabs5', key: '', isConnected: false, showKey: false, subscription: null },
+    ])
+    const [elevenLabsPooled, setElevenLabsPooled] = useState({
+        totalConnected: 0,
+        totalCharactersUsed: 0,
+        totalCharacterLimit: 0,
+        totalCharactersRemaining: 0,
+    })
     const [availableVoices, setAvailableVoices] = useState([])
     const [selectedVoiceId, setSelectedVoiceId] = useState('EXAVITQu4vr4xnSDxMaL')
     const [selectedVoiceName, setSelectedVoiceName] = useState('Sarah (Soft & Warm)')
@@ -64,7 +71,6 @@ export default function AdminAiBotPage() {
     const [audioPlayer, setAudioPlayer] = useState(null)
     const [voiceCallEnabled, setVoiceCallEnabled] = useState(true)
     const [loadingVoices, setLoadingVoices] = useState(false)
-    const [elevenLabsSubscription, setElevenLabsSubscription] = useState(null)
 
     const [preferredProvider, setPreferredProvider] = useState('gemini')
     const [customInstructions, setCustomInstructions] = useState('')
@@ -108,21 +114,39 @@ export default function AdminAiBotPage() {
                 setIsOpenRouterConnected(openRouterConn)
                 setOpenRouterKey(s.openrouter?.maskedKey || s.maskedOpenRouterKey || '')
 
-                // ElevenLabs Voice Engine Status (Primary)
-                const elevenConn = Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
-                setIsElevenLabsConnected(elevenConn)
-                setElevenLabsKey(s.elevenlabs?.maskedKey || s.maskedElevenLabsKey || '')
+                // ElevenLabs Multi-Account Engine (Slots 1 to 5)
+                if (Array.isArray(s.elevenlabsAccounts) && s.elevenlabsAccounts.length > 0) {
+                    setElevenLabsAccounts(prev => prev.map((item, idx) => {
+                        const sAcc = s.elevenlabsAccounts[idx] || {}
+                        return {
+                            ...item,
+                            isConnected: Boolean(sAcc.isConnected),
+                            key: sAcc.maskedKey || (item.key && !item.key.includes('••••') ? item.key : ''),
+                            subscription: sAcc.subscription || null,
+                        }
+                    }))
+                } else {
+                    // Fallback from legacy format
+                    const has1 = Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
+                    const has2 = Boolean(s.elevenlabs2?.isConnected || s.hasElevenLabsKey2)
+                    setElevenLabsAccounts(prev => [
+                        { ...prev[0], isConnected: has1, key: s.elevenlabs?.maskedKey || s.maskedElevenLabsKey || prev[0].key, subscription: s.elevenlabs?.subscription || null },
+                        { ...prev[1], isConnected: has2, key: s.elevenlabs2?.maskedKey || s.maskedElevenLabsKey2 || prev[1].key, subscription: s.elevenlabs2?.subscription || null },
+                        prev[2],
+                        prev[3],
+                        prev[4],
+                    ])
+                }
+
+                if (s.elevenlabsPooled) {
+                    setElevenLabsPooled(s.elevenlabsPooled)
+                }
                 if (s.elevenlabs?.selectedVoiceId) setSelectedVoiceId(s.elevenlabs.selectedVoiceId)
                 if (s.elevenlabs?.selectedVoiceName) setSelectedVoiceName(s.elevenlabs.selectedVoiceName)
                 if (s.elevenlabs?.voiceCallEnabled !== undefined) setVoiceCallEnabled(s.elevenlabs.voiceCallEnabled)
-                if (s.elevenlabs?.subscription) setElevenLabsSubscription(s.elevenlabs.subscription)
 
-                // ElevenLabs Voice Engine Status (Backup #2)
-                const eleven2Conn = Boolean(s.elevenlabs2?.isConnected || s.hasElevenLabsKey2)
-                setIsElevenLabs2Connected(eleven2Conn)
-                setElevenLabs2Key(s.elevenlabs2?.maskedKey || s.maskedElevenLabsKey2 || '')
-
-                if (elevenConn || eleven2Conn) {
+                const hasAnyConnected = (s.elevenlabsAccounts || []).some(a => a.isConnected) || Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
+                if (hasAnyConnected) {
                     fetchVoices()
                 }
 
@@ -156,7 +180,6 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.voices)) {
                 setAvailableVoices(data.voices)
-                if (data.subscription) setElevenLabsSubscription(data.subscription)
             }
         } catch (err) {
             console.warn('Could not load ElevenLabs voices:', err)
@@ -209,17 +232,15 @@ export default function AdminAiBotPage() {
 
     // Connect API Key
     const handleConnect = async (provider) => {
-        const key = provider === 'gemini' 
-            ? geminiKey 
-            : provider === 'gemini2'
-            ? gemini2Key
-            : provider === 'groq' 
-            ? groqKey 
-            : provider === 'elevenlabs'
-            ? elevenLabsKey
-            : provider === 'elevenlabs2'
-            ? elevenLabs2Key
-            : openRouterKey
+        let key = ''
+        if (provider === 'gemini') key = geminiKey
+        else if (provider === 'gemini2') key = gemini2Key
+        else if (provider === 'groq') key = groqKey
+        else if (provider === 'openrouter') key = openRouterKey
+        else if (provider.startsWith('elevenlabs')) {
+            const slotIdx = provider === 'elevenlabs' ? 0 : (parseInt(provider.replace('elevenlabs', ''), 10) - 1 || 0)
+            key = elevenLabsAccounts[slotIdx]?.key || ''
+        }
 
         if (!key || !key.trim()) {
             const provName = provider === 'gemini' 
@@ -228,10 +249,8 @@ export default function AdminAiBotPage() {
                 ? 'Gemini Backup'
                 : provider === 'groq' 
                 ? 'Groq Cloud' 
-                : provider === 'elevenlabs'
-                ? 'ElevenLabs'
-                : provider === 'elevenlabs2'
-                ? 'ElevenLabs Backup'
+                : provider.startsWith('elevenlabs')
+                ? `ElevenLabs Account ${provider === 'elevenlabs' ? '1' : provider.replace('elevenlabs', '')}`
                 : 'OpenRouter'
             toast.error(`Please paste your ${provName} API key first.`)
             return
@@ -257,10 +276,8 @@ export default function AdminAiBotPage() {
                     ? 'Gemini Backup'
                     : provider === 'groq' 
                     ? 'Groq Cloud' 
-                    : provider === 'elevenlabs'
-                    ? 'ElevenLabs'
-                    : provider === 'elevenlabs2'
-                    ? 'ElevenLabs Backup'
+                    : provider.startsWith('elevenlabs')
+                    ? `ElevenLabs Account ${provider === 'elevenlabs' ? '1' : provider.replace('elevenlabs', '')}`
                     : 'OpenRouter'
                 toast.success(`${provName} connected successfully!`)
 
@@ -279,15 +296,8 @@ export default function AdminAiBotPage() {
                 } else if (provider === 'openrouter') {
                     setIsOpenRouterConnected(true)
                     setOpenRouterKey(data.maskedKey || key)
-                } else if (provider === 'elevenlabs') {
-                    setIsElevenLabsConnected(true)
-                    setElevenLabsKey(data.maskedKey || key)
-                    if (Array.isArray(data.voices) && data.voices.length > 0) {
-                        setAvailableVoices(data.voices)
-                    }
-                } else if (provider === 'elevenlabs2') {
-                    setIsElevenLabs2Connected(true)
-                    setElevenLabs2Key(data.maskedKey || key)
+                } else if (provider.startsWith('elevenlabs')) {
+                    await fetchSettings()
                     if (Array.isArray(data.voices) && data.voices.length > 0) {
                         setAvailableVoices(data.voices)
                     }
@@ -310,10 +320,8 @@ export default function AdminAiBotPage() {
             ? 'Gemini Backup'
             : provider === 'groq' 
             ? 'Groq Cloud' 
-            : provider === 'elevenlabs'
-            ? 'ElevenLabs'
-            : provider === 'elevenlabs2'
-            ? 'ElevenLabs Backup'
+            : provider.startsWith('elevenlabs')
+            ? `ElevenLabs Account ${provider === 'elevenlabs' ? '1' : provider.replace('elevenlabs', '')}`
             : 'OpenRouter'
         const confirm = window.confirm(`Are you sure you want to disconnect ${providerName}? The API key will be deleted.`)
         if (!confirm) return
@@ -348,22 +356,8 @@ export default function AdminAiBotPage() {
                 } else if (provider === 'openrouter') {
                     setIsOpenRouterConnected(false)
                     setOpenRouterKey('')
-                } else if (provider === 'elevenlabs') {
-                    setIsElevenLabsConnected(false)
-                    setElevenLabsKey('')
-                    if (!isElevenLabs2Connected) {
-                        setAvailableVoices([])
-                        if (audioPlayer) audioPlayer.pause()
-                        setPlayingVoiceId(null)
-                    }
-                } else if (provider === 'elevenlabs2') {
-                    setIsElevenLabs2Connected(false)
-                    setElevenLabs2Key('')
-                    if (!isElevenLabsConnected) {
-                        setAvailableVoices([])
-                        if (audioPlayer) audioPlayer.pause()
-                        setPlayingVoiceId(null)
-                    }
+                } else if (provider.startsWith('elevenlabs')) {
+                    await fetchSettings()
                 }
             } else {
                 toast.error(data.message || 'Failed to disconnect')
@@ -373,6 +367,14 @@ export default function AdminAiBotPage() {
         } finally {
             setDisconnectingProvider(null)
         }
+    }
+
+    const handleAccountKeyChange = (slotIdx, val) => {
+        setElevenLabsAccounts(prev => prev.map((item, idx) => idx === slotIdx ? { ...item, key: val } : item))
+    }
+
+    const handleToggleShowKey = (slotIdx) => {
+        setElevenLabsAccounts(prev => prev.map((item, idx) => idx === slotIdx ? { ...item, showKey: !item.showKey } : item))
     }
 
     // Select & auto-save active ElevenLabs voice immediately
@@ -516,12 +518,12 @@ export default function AdminAiBotPage() {
             if (openRouterKey && !openRouterKey.includes('••••')) {
                 payload.openRouterKey = openRouterKey
             }
-            if (elevenLabsKey && !elevenLabsKey.includes('••••')) {
-                payload.elevenLabsKey = elevenLabsKey
-            }
-            if (elevenLabs2Key && !elevenLabs2Key.includes('••••')) {
-                payload.elevenLabsKey2 = elevenLabs2Key
-            }
+            elevenLabsAccounts.forEach((acc, idx) => {
+                const prop = idx === 0 ? 'elevenLabsKey' : `elevenLabsKey${idx + 1}`
+                if (acc.key && !acc.key.includes('••••')) {
+                    payload[prop] = acc.key
+                }
+            })
 
             const res = await fetch('/api/admin/ai-settings', {
                 method: 'POST',
@@ -1054,136 +1056,210 @@ export default function AdminAiBotPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                {isElevenLabsConnected || isElevenLabs2Connected ? (
+                                {elevenLabsAccounts.some(a => a.isConnected) ? (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wide shadow-2xs">
                                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        Connected
+                                        Connected ({elevenLabsAccounts.filter(a => a.isConnected).length}/5 Active)
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold shadow-2xs">
                                         <span className="size-2 rounded-full bg-slate-400" />
-                                        Not Connected
+                                        Not Connected (0/5)
                                     </span>
                                 )}
                             </div>
                         </div>
 
-                        {/* API Key Connection Card */}
+                        {/* Pooled Overview & Multi-Account Pool Card */}
                         <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF6FA]/60 border border-[#EFE0EF] space-y-4">
-                            {/* Primary Key Row */}
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="space-y-0.5 max-w-md">
-                                    <div className="flex items-center gap-1.5">
-                                        <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
-                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs API Key:</span>
+                            {/* Pooled Total Balance Card (when at least 1 account is connected) */}
+                            {elevenLabsAccounts.some(a => a.isConnected) && (
+                                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50/70 via-[#FAF6FA] to-white border border-[#EFE0EF] shadow-2xs space-y-2.5">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+                                            <span className="text-xs font-extrabold text-[#241224]">Total Pooled Voice Credits</span>
+                                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                                                {elevenLabsAccounts.filter(a => a.isConnected).length} Connected Accounts
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                                            <span className="text-slate-600 font-semibold">
+                                                <strong className="text-[#241224] font-extrabold">{elevenLabsPooled.totalCharactersUsed.toLocaleString()}</strong> / {elevenLabsPooled.totalCharacterLimit.toLocaleString()} total chars used
+                                            </span>
+                                            <span className="text-[11px] font-extrabold text-[#6C306E] bg-white border border-[#EFE0EF] px-2.5 py-0.5 rounded-lg shadow-2xs">
+                                                {elevenLabsPooled.totalCharactersRemaining.toLocaleString()} Pooled Balance
+                                            </span>
+                                        </div>
                                     </div>
-                                    <p className="text-[11px] text-slate-500">Primary voice synthesis key used for natural human speech in calls.</p>
-                                </div>
 
-                                <div className="flex items-center gap-2.5 flex-1 max-w-lg">
-                                    <div className="relative flex-1">
-                                        <input
-                                            type={showElevenLabsKey ? 'text' : 'password'}
-                                            value={elevenLabsKey}
-                                            onChange={(e) => setElevenLabsKey(e.target.value)}
-                                            placeholder="Paste primary ElevenLabs key (xi-api-key)..."
-                                            className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
+                                    {/* Pooled Progress Bar */}
+                                    <div className="w-full bg-[#FAF6FA] border border-[#EFE0EF] h-2 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[#6C306E] via-purple-600 to-emerald-500 transition-all duration-500 rounded-full"
+                                            style={{
+                                                width: `${Math.min(100, Math.round((elevenLabsPooled.totalCharactersUsed / Math.max(1, elevenLabsPooled.totalCharacterLimit)) * 100))}%`
+                                            }}
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowElevenLabsKey(!showElevenLabsKey)}
-                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                                        >
-                                            <EyeIcon size={14} />
-                                        </button>
                                     </div>
 
-                                    {isElevenLabsConnected ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDisconnect('elevenlabs')}
-                                            disabled={disconnectingProvider === 'elevenlabs'}
-                                            className="h-10 px-4 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                                    <p className="text-[10.5px] text-slate-500 flex items-center gap-1.5">
+                                        <span className="text-emerald-600 font-bold">✓</span>
+                                        <span>Auto-Switch Active: If any account finishes its free credits or encounters an issue, Emma instantly switches to the next API key.</span>
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* 5 ElevenLabs Account Slots */}
+                            <div className="space-y-3">
+                                {elevenLabsAccounts.map((acc, idx) => {
+                                    const sub = acc.subscription
+                                    const charCount = sub?.characterCount ?? 0
+                                    const charLimit = sub?.characterLimit ?? 10000
+                                    const remaining = Math.max(0, charLimit - charCount)
+                                    const percentUsed = Math.min(100, Math.round((charCount / Math.max(1, charLimit)) * 100))
+                                    const isDepleted = acc.isConnected && (sub?.status === 'blocked' || charCount >= charLimit || percentUsed >= 100)
+
+                                    return (
+                                        <div
+                                            key={acc.slot}
+                                            className={`p-3.5 sm:p-4 rounded-2xl border transition-all ${
+                                                acc.isConnected
+                                                    ? isDepleted
+                                                        ? 'bg-amber-50/50 border-amber-200/80 shadow-2xs'
+                                                        : 'bg-white border-[#EFE0EF] shadow-2xs'
+                                                    : 'bg-[#FAF6FA]/50 border-[#EFE0EF]'
+                                            }`}
                                         >
-                                            <DisconnectIcon size={13} color="currentColor" />
-                                            <span>{disconnectingProvider === 'elevenlabs' ? 'Disconnecting...' : 'Disconnect'}</span>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleConnect('elevenlabs')}
-                                            disabled={testingProvider === 'elevenlabs'}
-                                            className="h-10 px-5 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-2xs"
-                                        >
-                                            {testingProvider === 'elevenlabs' ? (
-                                                <>
-                                                    <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    <span>Verifying...</span>
-                                                </>
-                                            ) : (
-                                                <span>Connect & Test</span>
+                                            {/* Slot Header */}
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="size-5 rounded-md bg-[#6C306E]/10 text-[#6C306E] font-black text-[10px] flex items-center justify-center shrink-0">
+                                                        #{acc.slot}
+                                                    </span>
+                                                    <span className="text-xs font-bold text-[#241224]">{acc.label}</span>
+                                                    <span className="text-[10.5px] text-slate-400 font-medium hidden sm:inline">
+                                                        {acc.slot === 1 ? '• Primary Voice Key' : `• Auto-Failover Priority #${acc.slot}`}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    {acc.isConnected ? (
+                                                        isDepleted ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                                                                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                                Credits Depleted (Auto-switched)
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                                                Connected & Ready
+                                                            </span>
+                                                        )
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                                                            <span className="size-1.5 rounded-full bg-slate-400" />
+                                                            Not Connected
+                                                        </span>
+                                                    )}
+
+                                                    {acc.isConnected && sub?.tier && (
+                                                        <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60">
+                                                            {sub.tier}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Key Input & Action Row */}
+                                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type={acc.showKey ? 'text' : 'password'}
+                                                        value={acc.key}
+                                                        onChange={(e) => handleAccountKeyChange(idx, e.target.value)}
+                                                        placeholder={`Paste ElevenLabs key for Account ${acc.slot} (xi-api-key)...`}
+                                                        className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleShowKey(idx)}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                                                    >
+                                                        <EyeIcon size={14} />
+                                                    </button>
+                                                </div>
+
+                                                {acc.isConnected ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDisconnect(acc.provider)}
+                                                        disabled={disconnectingProvider === acc.provider}
+                                                        className="h-10 px-4 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                                                    >
+                                                        <DisconnectIcon size={13} color="currentColor" />
+                                                        <span>{disconnectingProvider === acc.provider ? 'Disconnecting...' : 'Disconnect'}</span>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleConnect(acc.provider)}
+                                                        disabled={testingProvider === acc.provider}
+                                                        className="h-10 px-5 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-2xs"
+                                                    >
+                                                        {testingProvider === acc.provider ? (
+                                                            <>
+                                                                <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                <span>Verifying...</span>
+                                                            </>
+                                                        ) : (
+                                                            <span>Connect & Test</span>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Individual Account Credit Status */}
+                                            {acc.isConnected && sub && (
+                                                <div className="mt-3 pt-2.5 border-t border-[#EFE0EF]/80 space-y-1.5">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[11px] font-semibold text-slate-500">Account #{acc.slot} Credits:</span>
+                                                            <span className="font-bold text-[#241224]">
+                                                                {charCount.toLocaleString()} <span className="font-normal text-slate-500">/ {charLimit.toLocaleString()} chars used</span>
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded ${
+                                                                isDepleted
+                                                                    ? 'bg-rose-100 text-rose-700'
+                                                                    : percentUsed > 75
+                                                                    ? 'bg-amber-100 text-amber-800'
+                                                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                                                            }`}>
+                                                                {remaining.toLocaleString()} remaining ({100 - percentUsed}%)
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Slim Progress Bar */}
+                                                    <div className="w-full bg-[#FAF6FA] border border-[#EFE0EF] h-1.5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 rounded-full ${
+                                                                percentUsed >= 100
+                                                                    ? 'bg-rose-500'
+                                                                    : percentUsed > 75
+                                                                    ? 'bg-amber-500'
+                                                                    : 'bg-gradient-to-r from-[#6C306E] to-[#8E448F]'
+                                                            }`}
+                                                            style={{ width: `${percentUsed}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
                                             )}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Backup Key Row */}
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-[#EFE0EF]">
-                                <div className="space-y-0.5 max-w-md">
-                                    <div className="flex items-center gap-1.5">
-                                        <img src="/logos/elevenlabs.png?v=2" alt="ElevenLabs" className="size-3.5 object-contain" />
-                                        <span className="text-xs font-bold text-[#241224]">ElevenLabs Backup API Key:</span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-500">Automatic fallback if primary key characters or quota run out.</p>
-                                </div>
-
-                                <div className="flex items-center gap-2.5 flex-1 max-w-lg">
-                                    <div className="relative flex-1">
-                                        <input
-                                            type={showElevenLabs2Key ? 'text' : 'password'}
-                                            value={elevenLabs2Key}
-                                            onChange={(e) => setElevenLabs2Key(e.target.value)}
-                                            placeholder="Paste backup ElevenLabs key (xi-api-key)..."
-                                            className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowElevenLabs2Key(!showElevenLabs2Key)}
-                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                                        >
-                                            <EyeIcon size={14} />
-                                        </button>
-                                    </div>
-
-                                    {isElevenLabs2Connected ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDisconnect('elevenlabs2')}
-                                            disabled={disconnectingProvider === 'elevenlabs2'}
-                                            className="h-10 px-4 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
-                                        >
-                                            <DisconnectIcon size={13} color="currentColor" />
-                                            <span>{disconnectingProvider === 'elevenlabs2' ? 'Disconnecting...' : 'Disconnect'}</span>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleConnect('elevenlabs2')}
-                                            disabled={testingProvider === 'elevenlabs2'}
-                                            className="h-10 px-5 rounded-xl bg-[#6C306E] hover:bg-[#562258] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-2xs"
-                                        >
-                                            {testingProvider === 'elevenlabs2' ? (
-                                                <>
-                                                    <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    <span>Verifying...</span>
-                                                </>
-                                            ) : (
-                                                <span>Connect & Test</span>
-                                            )}
-                                        </button>
-                                    )}
-                                </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
 
                             {/* Storefront Call Toggle */}
@@ -1215,7 +1291,7 @@ export default function AdminAiBotPage() {
                                         Click "Preview" to listen to each voice's real sample audio, then click "Select Voice" to assign it to Emma.
                                     </p>
                                 </div>
-                                {isElevenLabsConnected && (
+                                {elevenLabsAccounts.some(a => a.isConnected) && (
                                     <button
                                         type="button"
                                         onClick={fetchVoices}
@@ -1239,45 +1315,6 @@ export default function AdminAiBotPage() {
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Clean ElevenLabs Voice Credits Display */}
-                            {elevenLabsSubscription && (
-                                <div className="p-3.5 px-4 rounded-xl bg-white border border-[#EFE0EF] shadow-2xs">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50" />
-                                            <span className="text-xs font-bold text-[#241224]">ElevenLabs Voice Credits</span>
-                                            <span className="text-[10px] font-semibold text-slate-500 bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full capitalize">
-                                                {elevenLabsSubscription.tier || 'Free'} Tier
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-2.5 text-xs">
-                                            <span className="font-semibold text-slate-600">
-                                                <strong className="text-[#241224] font-bold">{(elevenLabsSubscription.characterCount || 0).toLocaleString()}</strong> / {(elevenLabsSubscription.characterLimit || 10000).toLocaleString()} characters used
-                                            </span>
-                                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md">
-                                                {Math.max(0, (elevenLabsSubscription.characterLimit || 10000) - (elevenLabsSubscription.characterCount || 0)).toLocaleString()} remaining
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Minimalist Progress Bar */}
-                                    <div className="w-full bg-[#FAF6FA] border border-[#EFE0EF] h-1.5 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-500 rounded-full ${
-                                                Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100) > 90
-                                                    ? 'bg-rose-500'
-                                                    : Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100) > 75
-                                                    ? 'bg-amber-500'
-                                                    : 'bg-gradient-to-r from-[#6C306E] to-[#8E448F]'
-                                            }`}
-                                            style={{
-                                                width: `${Math.min(100, Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100))}%`
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Direct Voice ID / Custom Voice URL Input */}
                             <div className="p-3 bg-[#FAF6FA]/80 rounded-xl border border-[#EFE0EF] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">

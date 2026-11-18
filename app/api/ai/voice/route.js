@@ -36,7 +36,10 @@ export async function GET() {
         const settings = await getAiSettings();
         const hasKey = Boolean(
             (settings.elevenLabsKey && settings.elevenLabsKey.trim()) ||
-            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim())
+            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim()) ||
+            (settings.elevenLabsKey3 && settings.elevenLabsKey3.trim()) ||
+            (settings.elevenLabsKey4 && settings.elevenLabsKey4.trim()) ||
+            (settings.elevenLabsKey5 && settings.elevenLabsKey5.trim())
         );
         const isEnabled = settings.voiceCallEnabled !== false && hasKey;
 
@@ -79,14 +82,17 @@ export async function POST(request) {
 
         const hasAnyKey = Boolean(
             (settings.elevenLabsKey && settings.elevenLabsKey.trim()) ||
-            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim())
+            (settings.elevenLabsKey2 && settings.elevenLabsKey2.trim()) ||
+            (settings.elevenLabsKey3 && settings.elevenLabsKey3.trim()) ||
+            (settings.elevenLabsKey4 && settings.elevenLabsKey4.trim()) ||
+            (settings.elevenLabsKey5 && settings.elevenLabsKey5.trim())
         );
 
         if (!hasAnyKey) {
             return NextResponse.json({
                 success: false,
                 code: 'ELEVENLABS_NOT_CONNECTED',
-                message: 'ElevenLabs API key is not connected in the Admin Panel.',
+                message: 'No ElevenLabs API keys are connected in the Admin Panel.',
             }, { status: 400 });
         }
 
@@ -104,7 +110,7 @@ export async function POST(request) {
         if (!shortText || shortText.length < 10) shortText = clean;
         const speechText = shortText.length > 260 ? shortText.slice(0, 257) + '...' : shortText;
 
-        const requestedVoiceId = customVoiceId || settings.elevenLabsVoiceId || '8e81Dm4CldjBZSlArGoT'; // Default: Rimjhim
+        const requestedVoiceId = customVoiceId || settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
 
         // Detect if speech contains Bengali script or Banglish keywords
         const hasBengaliScript = /[\u0980-\u09FF]/.test(speechText);
@@ -117,26 +123,31 @@ export async function POST(request) {
             : ['eleven_multilingual_v2', 'eleven_flash_v2_5', 'eleven_turbo_v2_5'];
 
         // Candidate voices in strict priority order:
-        // 1. User's active selected voice from Admin Panel (e.g. Rimjhim `8e81Dm4CldjBZSlArGoT` or Swati S `nUarI71Lei0IFt1ybDm1`)
-        // 2. High-fidelity premade ElevenLabs female voices (Sarah `EXAVITQu4vr4xnSDxMaL` -> Jessica `cgSgspJ2msm6clMCkdW9`)
-        //    which are guaranteed to stream on both Free and Paid ElevenLabs accounts.
-        //    This ensures Emma ALWAYS speaks with a real ElevenLabs AI voice and NEVER falls back to the robotic Google browser synthesizer!
+        // 1. User's active selected voice from Admin Panel
+        // 2. High-fidelity premade ElevenLabs female voices (Sarah -> Jessica)
         const candidateVoices = [requestedVoiceId];
         if (!candidateVoices.includes('EXAVITQu4vr4xnSDxMaL')) candidateVoices.push('EXAVITQu4vr4xnSDxMaL');
         if (!candidateVoices.includes('cgSgspJ2msm6clMCkdW9')) candidateVoices.push('cgSgspJ2msm6clMCkdW9');
 
-        // ElevenLabs key fallback chain: Primary key -> Backup key (key2)
+        // ElevenLabs key fallback chain: Account 1 -> Account 2 -> Account 3 -> Account 4 -> Account 5
         const elevenLabsKeys = [
             settings.elevenLabsKey?.trim(),
             settings.elevenLabsKey2?.trim(),
+            settings.elevenLabsKey3?.trim(),
+            settings.elevenLabsKey4?.trim(),
+            settings.elevenLabsKey5?.trim(),
         ].filter(Boolean);
 
         let ttsRes = null;
         let lastErrorMsg = '';
         let resolvedVoiceId = requestedVoiceId;
+        let successfulSlot = 1;
 
         voiceLoop: for (const curVoice of candidateVoices) {
-            for (const apiKey of elevenLabsKeys) {
+            for (let kIdx = 0; kIdx < elevenLabsKeys.length; kIdx++) {
+                const apiKey = elevenLabsKeys[kIdx];
+                const slotNum = kIdx + 1;
+
                 for (const modelId of candidateModels) {
                     try {
                         const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${curVoice}?optimize_streaming_latency=3`;
@@ -162,15 +173,31 @@ export async function POST(request) {
                         if (response.ok) {
                             ttsRes = response;
                             resolvedVoiceId = curVoice;
+                            successfulSlot = slotNum;
                             break voiceLoop;
                         }
 
                         const errData = await response.json().catch(() => ({}));
-                        lastErrorMsg = errData?.detail?.message || `Voice ${curVoice} / Model ${modelId} failed (${response.status})`;
-                        console.warn(`[ElevenLabs TTS] Voice ${curVoice}, Model ${modelId} returned ${response.status}:`, lastErrorMsg);
+                        const errMsg = errData?.detail?.message || `Voice ${curVoice} / Model ${modelId} failed (${response.status})`;
+                        lastErrorMsg = errMsg;
+                        const errMsgLower = (typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)).toLowerCase();
 
-                        // If 402: Free users cannot use library voices via the API (paid_plan_required).
-                        // Immediately break out to try the next voice in candidateVoices!
+                        // Detect quota exhaustion or dead key:
+                        const isAccountDepleted = response.status === 429 
+                            || response.status === 401 
+                            || errMsgLower.includes('quota')
+                            || errMsgLower.includes('character limit')
+                            || errMsgLower.includes('credits')
+                            || errMsgLower.includes('unusual activity');
+
+                        if (isAccountDepleted) {
+                            console.warn(`[ElevenLabs Key Auto-Switch] Account slot ${slotNum} depleted or not working (${response.status}: ${errMsg}). Auto-switching to next API key...`);
+                            // Break out of candidateModels loop to advance immediately to next apiKey!
+                            break;
+                        }
+
+                        // If 402: Free users cannot use library voices via API.
+                        // Break out to try next candidate voice (Sarah/Jessica).
                         if (response.status === 402 || response.status === 400 || response.status === 404) {
                             break;
                         }
@@ -203,6 +230,7 @@ export async function POST(request) {
                 'Expires': '0',
                 'X-ElevenLabs-Voice': resolvedVoiceId,
                 'X-ElevenLabs-Requested': requestedVoiceId,
+                'X-ElevenLabs-Slot': successfulSlot.toString(),
             },
         });
     } catch (err) {

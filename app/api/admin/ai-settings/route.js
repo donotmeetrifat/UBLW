@@ -33,34 +33,104 @@ export async function GET(request) {
         const hasOpenRouter = Boolean(settings.openRouterKey && settings.openRouterKey.trim());
         const hasElevenLabs = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
         const hasElevenLabs2 = Boolean(settings.elevenLabsKey2 && settings.elevenLabsKey2.trim());
+        const hasElevenLabs3 = Boolean(settings.elevenLabsKey3 && settings.elevenLabsKey3.trim());
+        const hasElevenLabs4 = Boolean(settings.elevenLabsKey4 && settings.elevenLabsKey4.trim());
+        const hasElevenLabs5 = Boolean(settings.elevenLabsKey5 && settings.elevenLabsKey5.trim());
 
-        let elevenLabsSub = {
+        const elevenLabsAccountConfigs = [
+            { slot: 1, label: 'Account 1 (Primary)', provider: 'elevenlabs', key: settings.elevenLabsKey },
+            { slot: 2, label: 'Account 2', provider: 'elevenlabs2', key: settings.elevenLabsKey2 },
+            { slot: 3, label: 'Account 3', provider: 'elevenlabs3', key: settings.elevenLabsKey3 },
+            { slot: 4, label: 'Account 4', provider: 'elevenlabs4', key: settings.elevenLabsKey4 },
+            { slot: 5, label: 'Account 5', provider: 'elevenlabs5', key: settings.elevenLabsKey5 },
+        ];
+
+        const elevenLabsAccounts = await Promise.all(
+            elevenLabsAccountConfigs.map(async (acc) => {
+                const trimmedKey = (acc.key || '').trim();
+                if (!trimmedKey) {
+                    return {
+                        slot: acc.slot,
+                        label: acc.label,
+                        provider: acc.provider,
+                        isConnected: false,
+                        maskedKey: '',
+                        subscription: null,
+                    };
+                }
+
+                try {
+                    const subController = new AbortController();
+                    const timeoutId = setTimeout(() => subController.abort(), 2500);
+                    const subRes = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
+                        headers: { 'xi-api-key': trimmedKey },
+                        signal: subController.signal,
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (subRes.ok) {
+                        const subData = await subRes.json();
+                        return {
+                            slot: acc.slot,
+                            label: acc.label,
+                            provider: acc.provider,
+                            isConnected: true,
+                            maskedKey: maskKey(trimmedKey),
+                            subscription: {
+                                tier: subData.tier || 'free',
+                                characterCount: subData.character_count || 0,
+                                characterLimit: subData.character_limit || 10000,
+                                canUseLibraryVoices: subData.tier && subData.tier !== 'free',
+                                status: subData.status || 'active',
+                            },
+                        };
+                    } else {
+                        return {
+                            slot: acc.slot,
+                            label: acc.label,
+                            provider: acc.provider,
+                            isConnected: false,
+                            maskedKey: maskKey(trimmedKey),
+                            subscription: {
+                                tier: 'error',
+                                characterCount: 0,
+                                characterLimit: 0,
+                                error: 'Subscription check failed',
+                            },
+                        };
+                    }
+                } catch {
+                    return {
+                        slot: acc.slot,
+                        label: acc.label,
+                        provider: acc.provider,
+                        isConnected: true,
+                        maskedKey: maskKey(trimmedKey),
+                        subscription: {
+                            tier: 'free',
+                            characterCount: 0,
+                            characterLimit: 10000,
+                        },
+                    };
+                }
+            })
+        );
+
+        const pooledUsage = elevenLabsAccounts.reduce((acc, curr) => {
+            if (curr.isConnected && curr.subscription) {
+                acc.totalConnected += 1;
+                acc.totalCharactersUsed += (curr.subscription.characterCount || 0);
+                acc.totalCharacterLimit += (curr.subscription.characterLimit || 10000);
+            }
+            return acc;
+        }, { totalConnected: 0, totalCharactersUsed: 0, totalCharacterLimit: 0 });
+
+        const elevenLabsSub = elevenLabsAccounts[0]?.subscription || {
             tier: 'free',
             characterCount: 0,
             characterLimit: 10000,
             canUseLibraryVoices: false,
         };
-
-        if (hasElevenLabs) {
-            try {
-                const subController = new AbortController();
-                const timeoutId = setTimeout(() => subController.abort(), 2000);
-                const subRes = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
-                    headers: { 'xi-api-key': settings.elevenLabsKey.trim() },
-                    signal: subController.signal,
-                });
-                clearTimeout(timeoutId);
-                if (subRes.ok) {
-                    const subData = await subRes.json();
-                    elevenLabsSub = {
-                        tier: subData.tier || 'free',
-                        characterCount: subData.character_count || 0,
-                        characterLimit: subData.character_limit || 10000,
-                        canUseLibraryVoices: subData.tier && subData.tier !== 'free',
-                    };
-                }
-            } catch (e) {}
-        }
 
         return NextResponse.json({
             success: true,
@@ -79,6 +149,12 @@ export async function GET(request) {
                 maskedElevenLabsKey: maskKey(settings.elevenLabsKey),
                 hasElevenLabsKey2: hasElevenLabs2,
                 maskedElevenLabsKey2: maskKey(settings.elevenLabsKey2),
+                hasElevenLabsKey3: hasElevenLabs3,
+                maskedElevenLabsKey3: maskKey(settings.elevenLabsKey3),
+                hasElevenLabsKey4: hasElevenLabs4,
+                maskedElevenLabsKey4: maskKey(settings.elevenLabsKey4),
+                hasElevenLabsKey5: hasElevenLabs5,
+                maskedElevenLabsKey5: maskKey(settings.elevenLabsKey5),
 
                 // Explicit connection status objects
                 gemini: {
@@ -100,14 +176,37 @@ export async function GET(request) {
                 elevenlabs: {
                     isConnected: hasElevenLabs,
                     maskedKey: maskKey(settings.elevenLabsKey),
-                    selectedVoiceId: settings.elevenLabsVoiceId || '8e81Dm4CldjBZSlArGoT',
-                    selectedVoiceName: settings.elevenLabsVoiceName || 'Rimjhim - Natural, Relatable Friend (Bengali / English female)',
+                    selectedVoiceId: settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL',
+                    selectedVoiceName: settings.elevenLabsVoiceName || 'Sarah (Soft & Warm)',
                     voiceCallEnabled: settings.voiceCallEnabled !== false,
                     subscription: elevenLabsSub,
                 },
                 elevenlabs2: {
                     isConnected: hasElevenLabs2,
                     maskedKey: maskKey(settings.elevenLabsKey2),
+                    subscription: elevenLabsAccounts[1]?.subscription || null,
+                },
+                elevenlabs3: {
+                    isConnected: hasElevenLabs3,
+                    maskedKey: maskKey(settings.elevenLabsKey3),
+                    subscription: elevenLabsAccounts[2]?.subscription || null,
+                },
+                elevenlabs4: {
+                    isConnected: hasElevenLabs4,
+                    maskedKey: maskKey(settings.elevenLabsKey4),
+                    subscription: elevenLabsAccounts[3]?.subscription || null,
+                },
+                elevenlabs5: {
+                    isConnected: hasElevenLabs5,
+                    maskedKey: maskKey(settings.elevenLabsKey5),
+                    subscription: elevenLabsAccounts[4]?.subscription || null,
+                },
+                elevenlabsAccounts,
+                elevenlabsPooled: {
+                    totalConnected: pooledUsage.totalConnected,
+                    totalCharactersUsed: pooledUsage.totalCharactersUsed,
+                    totalCharacterLimit: pooledUsage.totalCharacterLimit,
+                    totalCharactersRemaining: Math.max(0, pooledUsage.totalCharacterLimit - pooledUsage.totalCharactersUsed),
                 },
 
                 preferredProvider: settings.preferredProvider || 'gemini',
@@ -208,7 +307,7 @@ export async function POST(request) {
                     success: true,
                     isConnected: false,
                     provider: 'elevenlabs',
-                    message: 'ElevenLabs Voice API disconnected successfully.',
+                    message: 'ElevenLabs Account 1 disconnected.',
                 });
             } else if (target === 'elevenlabs2') {
                 await saveAiSettings({ elevenLabsKey2: '' });
@@ -216,7 +315,31 @@ export async function POST(request) {
                     success: true,
                     isConnected: false,
                     provider: 'elevenlabs2',
-                    message: 'ElevenLabs Backup Voice API disconnected successfully.',
+                    message: 'ElevenLabs Account 2 disconnected.',
+                });
+            } else if (target === 'elevenlabs3') {
+                await saveAiSettings({ elevenLabsKey3: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'elevenlabs3',
+                    message: 'ElevenLabs Account 3 disconnected.',
+                });
+            } else if (target === 'elevenlabs4') {
+                await saveAiSettings({ elevenLabsKey4: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'elevenlabs4',
+                    message: 'ElevenLabs Account 4 disconnected.',
+                });
+            } else if (target === 'elevenlabs5') {
+                await saveAiSettings({ elevenLabsKey5: '' });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'elevenlabs5',
+                    message: 'ElevenLabs Account 5 disconnected.',
                 });
             }
 
@@ -226,9 +349,15 @@ export async function POST(request) {
         // Action: Get ElevenLabs Voices List
         if (action === 'get_voices') {
             const currentSettings = await getAiSettings();
-            const key = (testKey && testKey.trim())
-                ? testKey.trim()
-                : (currentSettings.elevenLabsKey || currentSettings.elevenLabsKey2);
+            const keys = [
+                testKey?.trim(),
+                currentSettings.elevenLabsKey,
+                currentSettings.elevenLabsKey2,
+                currentSettings.elevenLabsKey3,
+                currentSettings.elevenLabsKey4,
+                currentSettings.elevenLabsKey5,
+            ].filter(Boolean);
+            const key = keys[0];
             if (!key) {
                 return NextResponse.json({ success: false, message: 'No ElevenLabs API key found' }, { status: 400 });
             }
@@ -315,6 +444,12 @@ export async function POST(request) {
                     ? currentSettings.elevenLabsKey
                     : provider === 'elevenlabs2'
                     ? currentSettings.elevenLabsKey2
+                    : provider === 'elevenlabs3'
+                    ? currentSettings.elevenLabsKey3
+                    : provider === 'elevenlabs4'
+                    ? currentSettings.elevenLabsKey4
+                    : provider === 'elevenlabs5'
+                    ? currentSettings.elevenLabsKey5
                     : currentSettings.openRouterKey;
             }
 
@@ -581,8 +716,8 @@ export async function POST(request) {
                 }
             }
 
-            // 4. ElevenLabs Voice Verification & Discovery
-            else if (provider === 'elevenlabs' || provider === 'elevenlabs2') {
+            // 4. ElevenLabs Voice Verification & Discovery (Supports 5 Accounts)
+            else if (['elevenlabs', 'elevenlabs2', 'elevenlabs3', 'elevenlabs4', 'elevenlabs5'].includes(provider)) {
                 try {
                     // Test ElevenLabs Key via /v1/user
                     const userRes = await fetch('https://api.elevenlabs.io/v1/user', {
@@ -608,19 +743,26 @@ export async function POST(request) {
                     const voicesData = voicesRes.ok ? await voicesRes.json() : { voices: [] };
                     const voices = voicesData.voices || [];
 
-                    // Automatically persist verified key into database!
-                    if (provider === 'elevenlabs2') {
-                        await saveAiSettings({ elevenLabsKey2: keyToTest });
-                    } else {
-                        await saveAiSettings({ elevenLabsKey: keyToTest });
-                    }
+                    // Automatically persist verified key into database under its slot!
+                    const slotFieldMap = {
+                        elevenlabs: 'elevenLabsKey',
+                        elevenlabs2: 'elevenLabsKey2',
+                        elevenlabs3: 'elevenLabsKey3',
+                        elevenlabs4: 'elevenLabsKey4',
+                        elevenlabs5: 'elevenLabsKey5',
+                    };
+                    const fieldName = slotFieldMap[provider] || 'elevenLabsKey';
+                    await saveAiSettings({ [fieldName]: keyToTest });
+
+                    const slotNumber = provider.replace('elevenlabs', '') || '1';
 
                     return NextResponse.json({
                         success: true,
                         isConnected: true,
                         maskedKey: maskKey(keyToTest),
                         provider,
-                        message: `ElevenLabs${provider === 'elevenlabs2' ? ' (Backup)' : ''} connected successfully! Found ${voices.length} available voices.`,
+                        slot: parseInt(slotNumber, 10),
+                        message: `ElevenLabs Account ${slotNumber} connected successfully! Found ${voices.length} available voices.`,
                         tier: userData?.subscription?.tier || 'free',
                         characterCount: userData?.subscription?.character_count || 0,
                         characterLimit: userData?.subscription?.character_limit || 10000,
@@ -641,6 +783,9 @@ export async function POST(request) {
         const {
             elevenLabsKey,
             elevenLabsKey2,
+            elevenLabsKey3,
+            elevenLabsKey4,
+            elevenLabsKey5,
             elevenLabsVoiceId,
             elevenLabsVoiceName,
             voiceCallEnabled,
@@ -670,6 +815,15 @@ export async function POST(request) {
         }
         if (elevenLabsKey2 !== undefined && !elevenLabsKey2.includes('••••')) {
             updatePayload.elevenLabsKey2 = elevenLabsKey2;
+        }
+        if (elevenLabsKey3 !== undefined && !elevenLabsKey3.includes('••••')) {
+            updatePayload.elevenLabsKey3 = elevenLabsKey3;
+        }
+        if (elevenLabsKey4 !== undefined && !elevenLabsKey4.includes('••••')) {
+            updatePayload.elevenLabsKey4 = elevenLabsKey4;
+        }
+        if (elevenLabsKey5 !== undefined && !elevenLabsKey5.includes('••••')) {
+            updatePayload.elevenLabsKey5 = elevenLabsKey5;
         }
         if (elevenLabsVoiceId !== undefined) {
             updatePayload.elevenLabsVoiceId = elevenLabsVoiceId;
