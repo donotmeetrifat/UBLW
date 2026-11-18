@@ -386,9 +386,18 @@ export async function POST(request) {
                         canUseLibraryVoices: subData.tier && subData.tier !== 'free',
                     };
                 }
+
+                // Strictly filter for 100% Free Premade Female Voices (Saleswoman)
+                const allVoices = data.voices || [];
+                const freeFemaleVoices = allVoices.filter(v => {
+                    const isPremade = v.category === 'premade';
+                    const gender = (v.labels?.gender || v.gender || '').toLowerCase();
+                    return isPremade && gender === 'female';
+                });
+
                 return NextResponse.json({
                     success: true,
-                    voices: data.voices || [],
+                    voices: freeFemaleVoices.length > 0 ? freeFemaleVoices : allVoices,
                     subscription,
                 });
             } catch (err) {
@@ -741,7 +750,13 @@ export async function POST(request) {
                         headers: { 'xi-api-key': keyToTest },
                     });
                     const voicesData = voicesRes.ok ? await voicesRes.json() : { voices: [] };
-                    const voices = voicesData.voices || [];
+                    const allVoices = voicesData.voices || [];
+                    const freeFemaleVoices = allVoices.filter(v => {
+                        const isPremade = v.category === 'premade';
+                        const gender = (v.labels?.gender || v.gender || '').toLowerCase();
+                        return isPremade && gender === 'female';
+                    });
+                    const voices = freeFemaleVoices.length > 0 ? freeFemaleVoices : allVoices;
 
                     // Automatically persist verified key into database under its slot!
                     const slotFieldMap = {

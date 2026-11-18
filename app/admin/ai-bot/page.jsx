@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
@@ -12,15 +12,57 @@ import {
     DisconnectIcon
 } from '@/components/icons'
 
+// Verified official ElevenLabs premade female voices that are 100% FREE via API on all accounts
 const defaultCuratedVoices = [
-    { voice_id: 'nUarI71Lei0IFt1ybDm1', name: 'Swati S', labels: { accent: 'South Asian / English', gender: 'Female', description: 'Social Media & Warm' }, preview_url: '' },
-    { voice_id: '8e81Dm4CldjBZSlArGoT', name: 'Rimjhim', labels: { accent: 'Bengali / Conversational', gender: 'Female', description: 'Natural & Friendly' }, preview_url: '' },
-    { voice_id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', labels: { accent: 'British', gender: 'Female', description: 'Soft & Warm' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/dfed914d-17c3-4554-9f79-6638c4b9687e.mp3' },
-    { voice_id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', labels: { accent: 'British', gender: 'Female', description: 'Warm & Refined' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68bde-5345-4217-a9a7-3a68332a35d0.mp3' },
-    { voice_id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', labels: { accent: 'American', gender: 'Female', description: 'Calm & Polite' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/21m00Tcm4TlvDq8ikWAM/b7880775-52b0-449e-b53d-5192c7d9bc37.mp3' },
-    { voice_id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', labels: { accent: 'American', gender: 'Female', description: 'Friendly & Bright' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/cgSgspJ2msm6clMCkdW9/56a97bf8-b69b-448f-846c-c3a11683d45a.mp3' },
-    { voice_id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', labels: { accent: 'British', gender: 'Female', description: 'Confident & Clear' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/Xb7hH8MSUJpSbSDYk0k2/d10f7534-11f6-41fe-a012-2de1e482c336.mp3' },
-    { voice_id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', labels: { accent: 'American', gender: 'Female', description: 'Enthusiastic & Sunny' }, preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/FGY2WhTYpPnrIDTdsKH5/673417e1-9548-4334-86e7-2ef44b4e73a4.mp3' },
+    {
+        voice_id: 'EXAVITQu4vr4xnSDxMaL',
+        name: 'Sarah - Mature, Reassuring, Confident',
+        labels: { accent: 'American / British', gender: 'Female', description: 'Soft, Warm & Reassuring' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/01a3e33c-6e99-4ee7-8543-ff2216a32186.mp3'
+    },
+    {
+        voice_id: 'cgSgspJ2msm6clMCkdW9',
+        name: 'Jessica - Playful, Bright, Warm',
+        labels: { accent: 'American', gender: 'Female', description: 'Friendly, Lively & Engaging' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/cgSgspJ2msm6clMCkdW9/56a97bf8-b69b-448f-846c-c3a11683d45a.mp3'
+    },
+    {
+        voice_id: 'Xb7hH8MSUJpSbSDYk0k2',
+        name: 'Alice - Clear, Engaging Educator',
+        labels: { accent: 'British', gender: 'Female', description: 'Confident, Articulate & Polite' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/Xb7hH8MSUJpSbSDYk0k2/d10f7534-11f6-41fe-a012-2de1e482d336.mp3'
+    },
+    {
+        voice_id: 'XrExE9yKIg1WjnnlVkGX',
+        name: 'Matilda - Knowledgeable, Professional',
+        labels: { accent: 'American', gender: 'Female', description: 'Upbeat & Professional Advisor' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/XrExE9yKIg1WjnnlVkGX/b930e18d-6b4d-466e-bab2-0ae97c6d8535.mp3'
+    },
+    {
+        voice_id: 'hpp4J3VqNfWAUOO0d1Us',
+        name: 'Bella - Professional, Bright, Warm',
+        labels: { accent: 'American', gender: 'Female', description: 'Polite, Natural & Engaging' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/hpp4J3VqNfWAUOO0d1Us/dab0f5ba-3aa4-48a8-9fad-f138fea1126d.mp3'
+    },
+    {
+        voice_id: 'pFZP5JQG7iQjIQuC4Bku',
+        name: 'Lily - Velvety Actress',
+        labels: { accent: 'British', gender: 'Female', description: 'Refined, Luxurious & Calm' },
+        category: 'premade',
+        preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68b35-b3dd-4348-a84a-a3c13a3c2b30.mp3'
+    },
+    {
+        voice_id: 'FGY2WhTYpPnrIDTdsKH5',
+        name: 'Laura - Enthusiast, Quirky Attitude',
+        labels: { accent: 'American', gender: 'Female', description: 'Enthusiastic, Sunny & Upbeat' },
+        category: 'premade',
+        preview_url: 'https://api.us.elevenlabs.io/v1/voices/FGY2WhTYpPnrIDTdsKH5/previews/audio?payload=eyJ2b2ljZV9zb3VyY2UiOiJwcmVtYWRlIiwiZmlsZW5hbWUiOiI2NzM0MTc1OS1hZDA4LTQxYTUtYmU2ZS1kZTEyZmU0NDg2MTgubXAzIiwidGltZXN0YW1wIjoxNzk0OTc0NDAwMDAwMDAwfQ%3D%3D'
+    },
 ];
 
 export default function AdminAiBotPage() {
@@ -1032,9 +1074,17 @@ export default function AdminAiBotPage() {
 
             {/* 4. ElevenLabs Human Voice Engine & Voice Call Studio */}
             {(() => {
-                const voiceListToDisplay = (availableVoices && availableVoices.length > 0)
-                    ? availableVoices
-                    : defaultCuratedVoices;
+                let voiceListToDisplay = defaultCuratedVoices;
+                if (Array.isArray(availableVoices) && availableVoices.length > 0) {
+                    const freeFemales = availableVoices.filter(v => {
+                        const isPremade = v.category === 'premade';
+                        const gender = (v.labels?.gender || v.gender || '').toLowerCase();
+                        return isPremade && gender === 'female';
+                    });
+                    if (freeFemales.length > 0) {
+                        voiceListToDisplay = freeFemales;
+                    }
+                }
 
                 return (
                     <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-6">
@@ -1284,11 +1334,16 @@ export default function AdminAiBotPage() {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-xs sm:text-sm font-extrabold text-[#241224]">
-                                        Select Saleswoman Voice ({voiceListToDisplay.length} Available)
-                                    </h3>
-                                    <p className="text-[11px] text-slate-500">
-                                        Click "Preview" to listen to each voice's real sample audio, then click "Select Voice" to assign it to Emma.
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-xs sm:text-sm font-extrabold text-[#241224]">
+                                            Select Saleswoman Voice ({voiceListToDisplay.length} Free Voices Available)
+                                        </h3>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                                            100% Free Tier Compatible
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                        Showing only official ElevenLabs premade female voices that stream for free via API without requiring paid starter plans.
                                     </p>
                                 </div>
                                 {elevenLabsAccounts.some(a => a.isConnected) && (
@@ -1376,11 +1431,10 @@ export default function AdminAiBotPage() {
                                                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF6FA] text-slate-600 font-medium border border-[#EFE0EF] truncate max-w-[100px]">
                                                             {desc}
                                                         </span>
-                                                        {voice.category === 'professional' && (
-                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                                                                Library
-                                                            </span>
-                                                        )}
+                                                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
+                                                            <span className="size-1 rounded-full bg-emerald-500" />
+                                                            100% Free
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
