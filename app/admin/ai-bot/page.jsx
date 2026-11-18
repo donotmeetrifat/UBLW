@@ -1377,14 +1377,11 @@ export default function AdminAiBotPage() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h3 className="text-xs sm:text-sm font-extrabold text-[#241224]">
-                                            Select Saleswoman Voice ({voiceListToDisplay.length} Free Voices Available)
+                                            Select Saleswoman Voice ({voiceListToDisplay.length} Available)
                                         </h3>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                                            100% Free Tier Compatible
-                                        </span>
                                     </div>
                                     <p className="text-[11px] text-slate-500 mt-0.5">
-                                        Showing only official ElevenLabs premade female voices that stream for free via API without requiring paid starter plans.
+                                        Official ElevenLabs premade female voices available for instant consultation streaming.
                                     </p>
                                 </div>
                                 {elevenLabsAccounts.some(a => a.isConnected) && (
@@ -1469,12 +1466,8 @@ export default function AdminAiBotPage() {
                                                         <p className="text-[10px] text-slate-500 capitalize">{accent} • {gender}</p>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
-                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF6FA] text-slate-600 font-medium border border-[#EFE0EF] truncate max-w-[100px]">
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF6FA] text-slate-600 font-medium border border-[#EFE0EF] truncate max-w-[120px]">
                                                             {desc}
-                                                        </span>
-                                                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
-                                                            <span className="size-1 rounded-full bg-emerald-500" />
-                                                            100% Free
                                                         </span>
                                                     </div>
                                                 </div>
