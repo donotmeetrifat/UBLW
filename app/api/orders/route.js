@@ -206,6 +206,28 @@ export async function POST(request) {
                     userValid = coupon.allowedUserEmails.some(e => String(e).toLowerCase().trim() === customerEmail);
                 }
 
+                if (userValid && Array.isArray(coupon.allowedUserIds) && coupon.allowedUserIds.length > 0) {
+                    userValid = customerUserId ? coupon.allowedUserIds.includes(String(customerUserId)) : false;
+                }
+
+                // Check Product Lock
+                let eligibleProductSubtotal = subtotal;
+                if (userValid && Array.isArray(coupon.applicableProductIds) && coupon.applicableProductIds.length > 0) {
+                    const matchingItems = (items || []).filter(item => {
+                        const pid = item.productId || item.id;
+                        return coupon.applicableProductIds.includes(pid);
+                    });
+                    if (matchingItems.length === 0) {
+                        userValid = false;
+                    } else {
+                        eligibleProductSubtotal = matchingItems.reduce((sum, item) => {
+                            const pPrice = parseFloat(item.price) || 0;
+                            const pQty = parseInt(item.quantity, 10) || 1;
+                            return sum + (pPrice * pQty);
+                        }, 0);
+                    }
+                }
+
                 if (userValid && coupon.forNewUserOnly && isDatabaseConfigured()) {
                     try {
                         const priorCount = await prisma.order.count({
@@ -241,10 +263,14 @@ export async function POST(request) {
                 const minOrderValid = !coupon.minOrderAmount || subtotal >= coupon.minOrderAmount;
 
                 if (startsValid && expiryValid && usageValid && userValid && minOrderValid) {
+                    const baseToDiscount = (Array.isArray(coupon.applicableProductIds) && coupon.applicableProductIds.length > 0)
+                        ? eligibleProductSubtotal
+                        : subtotal;
+
                     if (coupon.discountType === 'FIXED') {
-                        discount = Math.min(coupon.discount, subtotal);
+                        discount = Math.min(coupon.discount, baseToDiscount);
                     } else {
-                        discount = Math.round((subtotal * coupon.discount) / 100);
+                        discount = Math.round((baseToDiscount * coupon.discount) / 100);
                         if (coupon.maxDiscount && discount > coupon.maxDiscount) {
                             discount = coupon.maxDiscount;
                         }
@@ -411,6 +437,27 @@ export async function POST(request) {
                     });
                 } catch (cartErr) {
                     console.error('Failed to update remaining user cart in DB:', cartErr);
+                }
+
+                // Instantly cancel any active WhatsApp abandoned cart reminder sequences for this user!
+                try {
+                    await prisma.abandonedCartRecovery.updateMany({
+                        where: {
+                            userId: user.id,
+                            status: 'ACTIVE'
+                        },
+                        data: {
+                            status: 'CONVERTED'
+                        }
+                    });
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            abandonedCartNotifiedAt: null
+                        }
+                    });
+                } catch (recErr) {
+                    console.warn('Abandoned cart recovery status update note:', recErr.message);
                 }
 
                 return NextResponse.json({ success: true, order }, { status: 201 });

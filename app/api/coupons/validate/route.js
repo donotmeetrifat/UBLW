@@ -11,6 +11,8 @@ export async function POST(request) {
         const {
             code,
             subtotal = 0,
+            items = [],
+            cartItems = null,
             userEmail = null,
             userId = null,
             currentlyAppliedCode = null
@@ -146,6 +148,81 @@ export async function POST(request) {
                 }
             }
 
+            // 6b. Backend Verification: Strict User Account Lock by ID
+            if (Array.isArray(coupon.allowedUserIds) && coupon.allowedUserIds.length > 0) {
+                if (!userId) {
+                    return NextResponse.json({
+                        success: false,
+                        isReal: true,
+                        isOn: true,
+                        requiresAuth: true,
+                        message: `Coupon "${coupon.code}" is exclusively reserved for the customer account that received this offer. Please sign in to verify eligibility.`
+                    }, { status: 401 });
+                }
+
+                if (!coupon.allowedUserIds.includes(String(userId))) {
+                    return NextResponse.json({
+                        success: false,
+                        isReal: true,
+                        isOn: true,
+                        message: `Coupon "${coupon.code}" is strictly reserved for the account that received this recovery offer.`
+                    }, { status: 403 });
+                }
+            }
+
+            // 6c. Backend Verification: Strict Product Lock (Applies only to specific abandoned product)
+            let eligibleProductSubtotal = parsedSubtotal;
+            if (Array.isArray(coupon.applicableProductIds) && coupon.applicableProductIds.length > 0) {
+                let effectiveItems = Array.isArray(items) && items.length > 0 ? items : [];
+
+                if (effectiveItems.length === 0 && userId) {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { cart: true }
+                    });
+                    const userCart = (dbUser?.cart && typeof dbUser.cart === 'object') ? dbUser.cart : {};
+                    const productIdsInCart = Object.keys(userCart).filter(pId => Number(userCart[pId]) > 0);
+
+                    if (productIdsInCart.length > 0) {
+                        const dbProducts = await prisma.product.findMany({
+                            where: { id: { in: productIdsInCart } },
+                            select: { id: true, price: true }
+                        });
+                        effectiveItems = dbProducts.map(p => ({
+                            id: p.id,
+                            productId: p.id,
+                            price: p.price,
+                            quantity: Number(userCart[p.id]) || 1
+                        }));
+                    }
+                }
+
+                const matchingItems = effectiveItems.filter(item => {
+                    const pId = item.productId || item.id;
+                    return coupon.applicableProductIds.includes(pId);
+                });
+
+                if (matchingItems.length === 0) {
+                    const targetProduct = await prisma.product.findFirst({
+                        where: { id: { in: coupon.applicableProductIds } },
+                        select: { name: true }
+                    });
+                    const targetName = targetProduct?.name || 'the designated product';
+                    return NextResponse.json({
+                        success: false,
+                        isReal: true,
+                        isOn: true,
+                        message: `Coupon "${coupon.code}" is exclusively valid for "${targetName}". Please ensure this product is in your shopping bag to claim this voucher.`
+                    }, { status: 400 });
+                }
+
+                eligibleProductSubtotal = matchingItems.reduce((sum, item) => {
+                    const price = parseFloat(item.price) || 0;
+                    const qty = parseInt(item.quantity, 10) || 1;
+                    return sum + (price * qty);
+                }, 0);
+            }
+
             // 7. Backend Verification: New Customer Only Restriction
             if (coupon.forNewUserOnly) {
                 if (!userId && !userEmail) {
@@ -226,11 +303,15 @@ export async function POST(request) {
             let discountAmount = 0;
             let discountPercentage = null;
 
+            const baseAmountToDiscount = (Array.isArray(coupon.applicableProductIds) && coupon.applicableProductIds.length > 0)
+                ? eligibleProductSubtotal
+                : parsedSubtotal;
+
             if (coupon.discountType === 'FIXED') {
-                discountAmount = Math.min(coupon.discount, parsedSubtotal);
+                discountAmount = Math.min(coupon.discount, baseAmountToDiscount);
             } else {
                 discountPercentage = coupon.discount;
-                discountAmount = Math.round((parsedSubtotal * coupon.discount) / 100);
+                discountAmount = Math.round((baseAmountToDiscount * coupon.discount) / 100);
                 if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
                     discountAmount = coupon.maxDiscount;
                 }
@@ -259,6 +340,7 @@ export async function POST(request) {
                     discountAmount,
                     formattedDiscount,
                     summary,
+                    applicableProductIds: coupon.applicableProductIds || [],
                     minOrderAmount: coupon.minOrderAmount || 0,
                     maxDiscount: coupon.maxDiscount || null,
                     isLifetime: Boolean(coupon.isLifetime),

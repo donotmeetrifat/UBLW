@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAiSettings, saveAiSettings, getLiveCatalogContext } from '@/lib/aiBot';
 import { requireStaff } from '@/lib/auth';
+import { verifyWhatsAppConnection, sendWhatsAppMessage } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -222,6 +223,21 @@ export async function GET(request) {
                 customInstructions: settings.customInstructions || '',
                 botName: settings.botName || 'Emma - UK Beauty Specialist',
                 enabled: settings.enabled !== false,
+
+                // WhatsApp Cloud API & Recovery Automation
+                whatsapp: {
+                    isConnected: Boolean(settings.whatsappPhoneNumberId && settings.whatsappAccessToken),
+                    phoneNumberId: settings.whatsappPhoneNumberId || '',
+                    maskedAccessToken: maskKey(settings.whatsappAccessToken),
+                    hasAccessToken: Boolean(settings.whatsappAccessToken),
+                    businessAccountId: settings.whatsappBusinessAccountId || '',
+                    hotline: settings.whatsappHotline || '+880 1959-524393',
+                    recoveryEnabled: Boolean(settings.whatsappRecoveryEnabled),
+                    recoveryDelayHours: settings.whatsappRecoveryDelayHours || 1,
+                    templateStage1: settings.whatsappTemplateStage1,
+                    templateStage2: settings.whatsappTemplateStage2,
+                    templateStage3: settings.whatsappTemplateStage3,
+                },
             },
             catalogStats: {
                 totalActiveProducts: catalog.length,
@@ -350,9 +366,90 @@ export async function POST(request) {
                     provider: 'elevenlabs5',
                     message: 'ElevenLabs Account 5 disconnected.',
                 });
+            } else if (target === 'whatsapp') {
+                await saveAiSettings({
+                    whatsappPhoneNumberId: '',
+                    whatsappAccessToken: '',
+                    whatsappBusinessAccountId: '',
+                    whatsappRecoveryEnabled: false,
+                });
+                return NextResponse.json({
+                    success: true,
+                    isConnected: false,
+                    provider: 'whatsapp',
+                    message: 'WhatsApp Cloud API disconnected successfully.',
+                });
             }
 
             return NextResponse.json({ success: false, message: 'Invalid provider to disconnect' }, { status: 400 });
+        }
+
+        // Action: Verify WhatsApp API Connection
+        if (action === 'verify_whatsapp') {
+            const { whatsappPhoneNumberId, whatsappAccessToken } = body;
+            const currentSettings = await getAiSettings();
+            const pId = whatsappPhoneNumberId || currentSettings.whatsappPhoneNumberId;
+            const token = (whatsappAccessToken && !whatsappAccessToken.includes('••••'))
+                ? whatsappAccessToken
+                : currentSettings.whatsappAccessToken;
+
+            const verification = await verifyWhatsAppConnection(pId, token);
+            if (verification.success) {
+                // If provided explicitly, save it
+                if (whatsappPhoneNumberId || (whatsappAccessToken && !whatsappAccessToken.includes('••••'))) {
+                    await saveAiSettings({
+                        whatsappPhoneNumberId: pId,
+                        whatsappAccessToken: token,
+                    });
+                }
+                return NextResponse.json({
+                    success: true,
+                    isConnected: true,
+                    provider: 'whatsapp',
+                    message: verification.message,
+                    details: verification,
+                });
+            } else {
+                return NextResponse.json({
+                    success: false,
+                    isConnected: false,
+                    provider: 'whatsapp',
+                    message: verification.message,
+                }, { status: 400 });
+            }
+        }
+
+        // Action: Send WhatsApp Test Message
+        if (action === 'test_whatsapp') {
+            const { recipientPhone, testMessage } = body;
+            const currentSettings = await getAiSettings();
+
+            if (!recipientPhone) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Please provide a valid recipient WhatsApp number (e.g. 01959524393).',
+                }, { status: 400 });
+            }
+
+            const sendResult = await sendWhatsAppMessage({
+                to: recipientPhone,
+                text: testMessage || `🇬🇧 *UK Brand Lover* - WhatsApp Automation Test Successful!\n\nThis confirms your official WhatsApp Cloud API is properly connected and ready for Automated Cart Recovery.`,
+                phoneNumberId: currentSettings.whatsappPhoneNumberId,
+                accessToken: currentSettings.whatsappAccessToken,
+            });
+
+            if (sendResult.success) {
+                return NextResponse.json({
+                    success: true,
+                    message: `Test message sent successfully to ${sendResult.recipient}! Message ID: ${sendResult.messageId}`,
+                    data: sendResult,
+                });
+            } else {
+                return NextResponse.json({
+                    success: false,
+                    message: sendResult.message || 'Failed to send test WhatsApp message.',
+                }, { status: 400 });
+            }
         }
 
         // Action: Get ElevenLabs Voices List
@@ -825,6 +922,15 @@ export async function POST(request) {
             elevenLabsVoiceId,
             elevenLabsVoiceName,
             voiceCallEnabled,
+            whatsappPhoneNumberId,
+            whatsappAccessToken,
+            whatsappBusinessAccountId,
+            whatsappHotline,
+            whatsappRecoveryEnabled,
+            whatsappRecoveryDelayHours,
+            whatsappTemplateStage1,
+            whatsappTemplateStage2,
+            whatsappTemplateStage3,
         } = body;
 
         const updatePayload = {
@@ -833,6 +939,34 @@ export async function POST(request) {
             botName,
             enabled,
         };
+
+        if (whatsappPhoneNumberId !== undefined) {
+            updatePayload.whatsappPhoneNumberId = whatsappPhoneNumberId;
+        }
+        if (whatsappAccessToken !== undefined && !whatsappAccessToken.includes('••••')) {
+            updatePayload.whatsappAccessToken = whatsappAccessToken;
+        }
+        if (whatsappBusinessAccountId !== undefined) {
+            updatePayload.whatsappBusinessAccountId = whatsappBusinessAccountId;
+        }
+        if (whatsappHotline !== undefined) {
+            updatePayload.whatsappHotline = whatsappHotline;
+        }
+        if (whatsappRecoveryEnabled !== undefined) {
+            updatePayload.whatsappRecoveryEnabled = whatsappRecoveryEnabled;
+        }
+        if (whatsappRecoveryDelayHours !== undefined) {
+            updatePayload.whatsappRecoveryDelayHours = whatsappRecoveryDelayHours;
+        }
+        if (whatsappTemplateStage1 !== undefined) {
+            updatePayload.whatsappTemplateStage1 = whatsappTemplateStage1;
+        }
+        if (whatsappTemplateStage2 !== undefined) {
+            updatePayload.whatsappTemplateStage2 = whatsappTemplateStage2;
+        }
+        if (whatsappTemplateStage3 !== undefined) {
+            updatePayload.whatsappTemplateStage3 = whatsappTemplateStage3;
+        }
 
         if (geminiKey !== undefined && !geminiKey.includes('••••')) {
             updatePayload.geminiKey = geminiKey;

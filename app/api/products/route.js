@@ -211,7 +211,11 @@ export async function POST(request) {
             category,
             brand,
             inStock,
-            stockCount
+            stockCount,
+            abandonedCartOfferEnabled,
+            abandonedCartDiscountType,
+            abandonedCartDiscountValue,
+            abandonedCartValidityDays
         } = body;
 
         if (!name || !price || !category) {
@@ -240,6 +244,10 @@ export async function POST(request) {
             brand: brand ? brand.trim() : 'UK Import',
             inStock: inStock !== undefined ? Boolean(inStock) : true,
             stockCount: Number(stockCount) || 50,
+            abandonedCartOfferEnabled: Boolean(abandonedCartOfferEnabled),
+            abandonedCartDiscountType: abandonedCartDiscountType === 'FLAT' ? 'FLAT' : 'PERCENTAGE',
+            abandonedCartDiscountValue: abandonedCartDiscountValue !== undefined && abandonedCartDiscountValue !== null && abandonedCartDiscountValue !== '' ? Number(abandonedCartDiscountValue) : null,
+            abandonedCartValidityDays: Number(abandonedCartValidityDays) || 1,
         };
 
         if (isDatabaseConfigured()) {

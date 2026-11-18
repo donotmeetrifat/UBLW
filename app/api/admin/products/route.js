@@ -210,7 +210,11 @@ export async function POST(request) {
             brand,
             stockCount,
             inStock,
-            images
+            images,
+            abandonedCartOfferEnabled,
+            abandonedCartDiscountType,
+            abandonedCartDiscountValue,
+            abandonedCartValidityDays
         } = body;
 
         if (!name || !price || !category) {
@@ -224,6 +228,14 @@ export async function POST(request) {
             ? images.filter(Boolean)
             : [];
         const cleanBenefits = Array.isArray(benefits) ? benefits.map(b => String(b).trim()).filter(Boolean) : [];
+        const parsedAbandonedOfferEnabled = Boolean(abandonedCartOfferEnabled);
+        const parsedAbandonedDiscountType = (abandonedCartDiscountType === 'FIXED') ? 'FIXED' : 'PERCENTAGE';
+        const parsedAbandonedDiscountValue = (abandonedCartDiscountValue !== undefined && abandonedCartDiscountValue !== null && abandonedCartDiscountValue !== '')
+            ? parseFloat(abandonedCartDiscountValue)
+            : null;
+        const parsedAbandonedValidityDays = [1, 2, 3].includes(parseInt(abandonedCartValidityDays, 10))
+            ? parseInt(abandonedCartValidityDays, 10)
+            : 1;
 
         if (isDatabaseConfigured()) {
             let storeId = cachedStoreId;
@@ -276,6 +288,10 @@ export async function POST(request) {
                         brand: brand ? brand.trim() : 'UK Import',
                         stockCount: isNaN(parsedStock) ? 50 : parsedStock,
                         inStock: inStock !== undefined ? Boolean(inStock) : true,
+                        abandonedCartOfferEnabled: parsedAbandonedOfferEnabled,
+                        abandonedCartDiscountType: parsedAbandonedDiscountType,
+                        abandonedCartDiscountValue: parsedAbandonedDiscountValue,
+                        abandonedCartValidityDays: parsedAbandonedValidityDays,
                         images: imageList,
                         storeId: storeId,
                         isActive: true

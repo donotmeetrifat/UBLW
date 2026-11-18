@@ -253,7 +253,8 @@ export async function PATCH(request, context) {
                     'name', 'description', 'formulaProfile', 'benefits', 'whyYouWillLoveIt',
                     'mrp', 'price', 'costPrice', 'images', 'category', 'categoryId',
                     'brand', 'inStock', 'stockCount', 'isFeatured', 'isBestSeller',
-                    'views', 'isActive'
+                    'views', 'isActive',
+                    'abandonedCartOfferEnabled', 'abandonedCartDiscountType', 'abandonedCartDiscountValue', 'abandonedCartValidityDays'
                 ];
 
                 for (const col of allowedColumns) {

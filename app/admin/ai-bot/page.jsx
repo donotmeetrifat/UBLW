@@ -65,6 +65,39 @@ const defaultCuratedVoices = [
     },
 ];
 
+const DEFAULT_STAGE_1 = `Assalamu Alaikum {customer_name}! ✨
+
+We noticed you left the authentic UK imported *{product_name}* in your shopping bag.
+
+Because our fresh London Heathrow shipment is in high demand, we have reserved your item. As an exclusive welcome perk, use your private voucher code: *{coupon_code}* to get *{discount_text}* (Drops price from ৳{product_price} to *৳{discounted_price}*)! 🎁
+
+⏰ Note: Your personal coupon is valid for *{validity_text}* from now.
+
+👉 Tap here to complete your order with Free Delivery:
+{cart_url}
+
+— UK Brand Lover`;
+
+const DEFAULT_STAGE_2 = `Hello {customer_name}! ⏳
+
+Quick reminder regarding your reserved *{product_name}*.
+
+Your exclusive voucher *{coupon_code}* ({discount_text}) will expire in *{hours_remaining} hours*. After that, this code will be permanently deleted and your reserved item returned to public inventory.
+
+👉 Claim your discount before it expires:
+{cart_url}
+
+— UK Brand Lover`;
+
+const DEFAULT_STAGE_3 = `Final Notice for {customer_name}! 🚨
+
+Only *{hours_remaining} hours left* before your personal discount voucher *{coupon_code}* expires.
+
+Complete your order now to lock in your *{discount_text}* savings and receive 100% genuine UK imported stock:
+{cart_url}
+
+— UK Brand Lover`;
+
 export default function AdminAiBotPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -118,6 +151,23 @@ export default function AdminAiBotPage() {
     const [customInstructions, setCustomInstructions] = useState('')
     const [botName, setBotName] = useState('Emma - UK Beauty Specialist')
     const [enabled, setEnabled] = useState(true)
+
+    // WhatsApp Cloud API & Recovery States
+    const [isWhatsAppConnected, setIsWhatsAppConnected] = useState(false)
+    const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState('')
+    const [whatsappAccessToken, setWhatsappAccessToken] = useState('')
+    const [showWhatsAppToken, setShowWhatsAppToken] = useState(false)
+    const [whatsappBusinessAccountId, setWhatsappBusinessAccountId] = useState('')
+    const [whatsappHotline, setWhatsappHotline] = useState('+880 1959-524393')
+    const [whatsappRecoveryEnabled, setWhatsappRecoveryEnabled] = useState(true)
+    const [whatsappRecoveryDelayHours, setWhatsappRecoveryDelayHours] = useState('1')
+    const [activeTemplateStageTab, setActiveTemplateStageTab] = useState(1)
+    const [whatsappTemplateStage1, setWhatsappTemplateStage1] = useState(DEFAULT_STAGE_1)
+    const [whatsappTemplateStage2, setWhatsappTemplateStage2] = useState(DEFAULT_STAGE_2)
+    const [whatsappTemplateStage3, setWhatsappTemplateStage3] = useState(DEFAULT_STAGE_3)
+    const [testRecipientPhone, setTestRecipientPhone] = useState('')
+    const [isSendingTestWhatsApp, setIsSendingTestWhatsApp] = useState(false)
+    const [isVerifyingWhatsApp, setIsVerifyingWhatsApp] = useState(false)
 
     // Catalog stats
     const [catalogStats, setCatalogStats] = useState({
@@ -204,6 +254,19 @@ export default function AdminAiBotPage() {
                 setCustomInstructions(s.customInstructions || '')
                 setBotName(s.botName || 'Emma - UK Beauty Specialist')
                 setEnabled(s.enabled !== false)
+
+                // WhatsApp Cloud API & Recovery Settings
+                const wa = s.whatsapp || {}
+                setIsWhatsAppConnected(Boolean(wa.isConnected))
+                setWhatsappPhoneNumberId(wa.phoneNumberId || '')
+                setWhatsappAccessToken(wa.maskedAccessToken || '')
+                setWhatsappBusinessAccountId(wa.businessAccountId || '')
+                setWhatsappHotline(wa.hotline || '+880 1959-524393')
+                setWhatsappRecoveryEnabled(wa.recoveryEnabled !== false)
+                setWhatsappRecoveryDelayHours(String(wa.recoveryDelayHours || 1))
+                if (wa.templateStage1) setWhatsappTemplateStage1(wa.templateStage1)
+                if (wa.templateStage2) setWhatsappTemplateStage2(wa.templateStage2)
+                if (wa.templateStage3) setWhatsappTemplateStage3(wa.templateStage3)
 
                 if (data.catalogStats) {
                     setCatalogStats(data.catalogStats)
@@ -604,6 +667,19 @@ export default function AdminAiBotPage() {
                 }
             })
 
+            // WhatsApp Settings
+            payload.whatsappPhoneNumberId = whatsappPhoneNumberId
+            if (whatsappAccessToken && !whatsappAccessToken.includes('••••')) {
+                payload.whatsappAccessToken = whatsappAccessToken
+            }
+            payload.whatsappBusinessAccountId = whatsappBusinessAccountId
+            payload.whatsappHotline = whatsappHotline
+            payload.whatsappRecoveryEnabled = whatsappRecoveryEnabled
+            payload.whatsappRecoveryDelayHours = parseFloat(whatsappRecoveryDelayHours) || 1
+            payload.whatsappTemplateStage1 = whatsappTemplateStage1
+            payload.whatsappTemplateStage2 = whatsappTemplateStage2
+            payload.whatsappTemplateStage3 = whatsappTemplateStage3
+
             const res = await fetch('/api/admin/ai-settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -625,6 +701,156 @@ export default function AdminAiBotPage() {
             setSaving(false)
         }
     }
+
+    const handleConnectWhatsApp = async () => {
+        if (!whatsappPhoneNumberId.trim()) {
+            toast.error('Please enter your WhatsApp Phone Number ID')
+            return
+        }
+        if (!whatsappAccessToken.trim()) {
+            toast.error('Please enter your WhatsApp System User Access Token')
+            return
+        }
+
+        setIsVerifyingWhatsApp(true)
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'verify_whatsapp',
+                    whatsappPhoneNumberId: whatsappPhoneNumberId.trim(),
+                    whatsappAccessToken: whatsappAccessToken.trim(),
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                setIsWhatsAppConnected(true)
+                toast.success(data.message || 'WhatsApp Cloud API connected successfully!')
+                fetchSettings()
+            } else {
+                toast.error(data.message || 'Verification failed. Please check your credentials.')
+            }
+        } catch (err) {
+            toast.error(`WhatsApp connection error: ${err.message}`)
+        } finally {
+            setIsVerifyingWhatsApp(false)
+        }
+    }
+
+    const handleDisconnectWhatsApp = async () => {
+        const confirm = window.confirm('Are you sure you want to disconnect WhatsApp Cloud API?')
+        if (!confirm) return
+
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'disconnect',
+                    provider: 'whatsapp',
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                setIsWhatsAppConnected(false)
+                setWhatsappPhoneNumberId('')
+                setWhatsappAccessToken('')
+                setWhatsappBusinessAccountId('')
+                toast.success('WhatsApp API disconnected successfully.')
+            }
+        } catch (err) {
+            toast.error('Failed to disconnect WhatsApp')
+        }
+    }
+
+    const handleSendTestWhatsApp = async () => {
+        if (!testRecipientPhone.trim()) {
+            toast.error('Please enter a test recipient WhatsApp number (e.g. 01959524393)')
+            return
+        }
+
+        setIsSendingTestWhatsApp(true)
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'test_whatsapp',
+                    recipientPhone: testRecipientPhone.trim(),
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(data.message || 'Test message sent successfully!')
+            } else {
+                toast.error(data.message || 'Failed to dispatch test WhatsApp message')
+            }
+        } catch (err) {
+            toast.error(`Error sending test message: ${err.message}`)
+        } finally {
+            setIsSendingTestWhatsApp(false)
+        }
+    }
+
+    const handleInsertVariable = (variableTag) => {
+        if (activeTemplateStageTab === 1) {
+            setWhatsappTemplateStage1(prev => (prev ? prev + ' ' + variableTag : variableTag))
+        } else if (activeTemplateStageTab === 2) {
+            setWhatsappTemplateStage2(prev => (prev ? prev + ' ' + variableTag : variableTag))
+        } else {
+            setWhatsappTemplateStage3(prev => (prev ? prev + ' ' + variableTag : variableTag))
+        }
+        toast.success(`Inserted ${variableTag}`)
+    }
+
+    const handleResetTemplates = () => {
+        if (activeTemplateStageTab === 1) {
+            setWhatsappTemplateStage1(DEFAULT_STAGE_1)
+        } else if (activeTemplateStageTab === 2) {
+            setWhatsappTemplateStage2(DEFAULT_STAGE_2)
+        } else {
+            setWhatsappTemplateStage3(DEFAULT_STAGE_3)
+        }
+        toast.success(`Reset Stage ${activeTemplateStageTab} to default high-converting copy!`)
+    }
+
+    const [isRunningCron, setIsRunningCron] = useState(false)
+    const handleTriggerCronNow = async () => {
+        setIsRunningCron(true)
+        try {
+            const res = await fetch('/api/marketing/abandoned-carts/cron', { method: 'POST' })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(
+                    `Scan complete! ${data.stats?.newSessionsInitiated || 0} new offers sent, ${data.stats?.remindersDispatched || 0} reminders sent.`
+                )
+            } else {
+                toast.error(data.message || 'Cron scan encountered an issue.')
+            }
+        } catch (err) {
+            toast.error(`Error: ${err.message}`)
+        } finally {
+            setIsRunningCron(false)
+        }
+    }
+
+    const previewMessageText = useMemo(() => {
+        const raw = activeTemplateStageTab === 1 
+            ? whatsappTemplateStage1 
+            : (activeTemplateStageTab === 2 ? whatsappTemplateStage2 : whatsappTemplateStage3)
+        
+        return (raw || '')
+            .replace(/\{customer_name\}/g, 'Nusrat Jahan')
+            .replace(/\{product_name\}/g, 'CeraVe Hydrating Cleanser 473ml (UK Version)')
+            .replace(/\{product_price\}/g, '2,250')
+            .replace(/\{discount_text\}/g, '15% OFF (Save ৳338)')
+            .replace(/\{discounted_price\}/g, '1,912')
+            .replace(/\{coupon_code\}/g, 'UKBL-AC-98F2')
+            .replace(/\{hours_remaining\}/g, activeTemplateStageTab === 2 ? '12' : '3')
+            .replace(/\{validity_text\}/g, '24 Hours')
+            .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout?code=UKBL-AC-98F2');
+    }, [activeTemplateStageTab, whatsappTemplateStage1, whatsappTemplateStage2, whatsappTemplateStage3]);
 
     if (loading) {
         return (
@@ -1518,7 +1744,381 @@ export default function AdminAiBotPage() {
                 );
             })()}
 
-            {/* 5. Custom Saleswoman Directives & Knowledge Box */}
+            {/* 5. WhatsApp Abandoned Cart Automated Recovery Engine & Smart Expiry Engine */}
+            <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-7 shadow-2xs space-y-6">
+                {/* Header & Master Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFE0EF]">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <div className="size-8 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-xs">
+                                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
+                                        WhatsApp Abandoned Cart Automated Recovery
+                                    </h2>
+                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                        isWhatsAppConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                                    }`}>
+                                        {isWhatsAppConnected ? '🟢 Connected' : '⚪ Disconnected'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    Send high-converting personalized WhatsApp messages with 1-time locked product coupons and smart countdown reminders.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-[#241224]">
+                            {whatsappRecoveryEnabled ? 'Engine Active' : 'Engine Paused'}
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={whatsappRecoveryEnabled}
+                                onChange={(e) => setWhatsappRecoveryEnabled(e.target.checked)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#25D366]"></div>
+                        </label>
+                    </div>
+                </div>
+
+                {/* API Credentials Card */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF6FA]/60 border border-[#EFE0EF] space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-xs font-black text-[#241224] uppercase tracking-wider">
+                                Meta WhatsApp Cloud API Configuration
+                            </h3>
+                            <span className="text-[10px] text-[#6C306E] bg-white px-2 py-0.5 rounded-full border border-[#EFE0EF] font-semibold">
+                                Free Tier Supported
+                            </span>
+                        </div>
+                        {isWhatsAppConnected && (
+                            <button
+                                type="button"
+                                onClick={handleDisconnectWhatsApp}
+                                className="text-[11px] font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
+                            >
+                                <DisconnectIcon size={13} color="#E11D48" />
+                                <span>Disconnect API</span>
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {/* Phone Number ID */}
+                        <div>
+                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
+                                Phone Number ID <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={whatsappPhoneNumberId}
+                                onChange={(e) => setWhatsappPhoneNumberId(e.target.value)}
+                                placeholder="e.g. 104829104820194"
+                                className="w-full text-xs p-2.5 bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none font-mono text-slate-800"
+                            />
+                        </div>
+
+                        {/* WhatsApp Business Account ID */}
+                        <div>
+                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
+                                Business Account ID (WABA ID)
+                            </label>
+                            <input
+                                type="text"
+                                value={whatsappBusinessAccountId}
+                                onChange={(e) => setWhatsappBusinessAccountId(e.target.value)}
+                                placeholder="e.g. 109283719283719"
+                                className="w-full text-xs p-2.5 bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none font-mono text-slate-800"
+                            />
+                        </div>
+
+                        {/* System User Access Token */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
+                                Permanent Access Token <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type={showWhatsAppToken ? 'text' : 'password'}
+                                    value={whatsappAccessToken}
+                                    onChange={(e) => setWhatsappAccessToken(e.target.value)}
+                                    placeholder="EAAG..."
+                                    className="w-full text-xs p-2.5 pr-10 bg-white border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none font-mono text-slate-800"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowWhatsAppToken(!showWhatsAppToken)}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                                >
+                                    <EyeIcon size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bottom Row: Official Hotline + Verify Button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#EFE0EF]/80">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-500">Official Store Hotline:</span>
+                            <input
+                                type="text"
+                                value={whatsappHotline}
+                                onChange={(e) => setWhatsappHotline(e.target.value)}
+                                className="text-xs font-black text-[#241224] bg-white border border-[#EFE0EF] rounded-lg px-2.5 py-1 w-44"
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleConnectWhatsApp}
+                            disabled={isVerifyingWhatsApp}
+                            className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] disabled:opacity-50 text-white text-xs font-black shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            {isVerifyingWhatsApp ? (
+                                <>
+                                    <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Verifying with Meta...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckIcon size={14} color="white" />
+                                    <span>{isWhatsAppConnected ? 'Verify Connection' : 'Connect WhatsApp API'}</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Timing Delay & Live Message Test Strip */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Cart Trigger Delay */}
+                    <div className="p-4 rounded-2xl bg-white border border-[#EFE0EF] space-y-2">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-black text-[#241224] uppercase tracking-wider">
+                                Cart Abandonment Trigger Delay
+                            </label>
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                Recommended: 1 Hour
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                            How long after a customer adds items to cart should Message 1 (Recovery Offer) be sent?
+                        </p>
+                        <select
+                            value={whatsappRecoveryDelayHours}
+                            onChange={(e) => setWhatsappRecoveryDelayHours(e.target.value)}
+                            className="w-full text-xs font-bold p-2.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none cursor-pointer"
+                        >
+                            <option value="0.5">30 Minutes (Fast recovery)</option>
+                            <option value="1">1 Hour (Industry best standard)</option>
+                            <option value="2">2 Hours</option>
+                            <option value="6">6 Hours</option>
+                            <option value="12">12 Hours</option>
+                            <option value="24">24 Hours</option>
+                        </select>
+                        <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-slate-400 font-medium">Automatic cron runs in background.</span>
+                            <button
+                                type="button"
+                                onClick={handleTriggerCronNow}
+                                disabled={isRunningCron}
+                                className="px-3 py-1 rounded-lg bg-[#FAF6FA] hover:bg-[#F3E5F3] border border-[#EFE0EF] text-[#6C306E] text-[11px] font-black transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                                {isRunningCron ? 'Scanning...' : '⚡ Scan Carts Now'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Test Message Dispatcher */}
+                    <div className="p-4 rounded-2xl bg-white border border-[#EFE0EF] space-y-2">
+                        <label className="text-xs font-black text-[#241224] uppercase tracking-wider block">
+                            Send Live Test WhatsApp Message
+                        </label>
+                        <p className="text-[11px] text-slate-500">
+                            Enter a recipient phone number to test sending a live message through your connected WhatsApp API.
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={testRecipientPhone}
+                                onChange={(e) => setTestRecipientPhone(e.target.value)}
+                                placeholder="01959524393"
+                                className="flex-1 text-xs font-bold p-2.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleSendTestWhatsApp}
+                                disabled={isSendingTestWhatsApp || !isWhatsAppConnected}
+                                className="px-4 py-2.5 rounded-xl bg-[#241224] hover:bg-[#3A0C38] disabled:bg-slate-300 text-white text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0"
+                            >
+                                {isSendingTestWhatsApp ? 'Sending...' : 'Send Test Msg'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Multi-Stage Message Template Editor & Live Phone Simulator */}
+                <div className="space-y-4 pt-2 border-t border-[#EFE0EF]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 className="text-sm font-black text-[#241224]">
+                                Multi-Stage Personalized Message Sequence
+                            </h3>
+                            <p className="text-[11px] text-slate-500">
+                                Direct-name standard (no Apu/Bhaiya). Each message is personalized to the customer and their specific cart item.
+                            </p>
+                        </div>
+
+                        {/* Stage Tabs */}
+                        <div className="flex items-center gap-1 bg-[#FAF6FA] p-1 rounded-xl border border-[#EFE0EF]">
+                            <button
+                                type="button"
+                                onClick={() => setActiveTemplateStageTab(1)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                    activeTemplateStageTab === 1
+                                        ? 'bg-[#6C306E] text-white shadow-2xs'
+                                        : 'text-slate-600 hover:text-[#241224]'
+                                }`}
+                            >
+                                Stage 1: Initial Offer
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTemplateStageTab(2)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                    activeTemplateStageTab === 2
+                                        ? 'bg-[#6C306E] text-white shadow-2xs'
+                                        : 'text-slate-600 hover:text-[#241224]'
+                                }`}
+                            >
+                                Stage 2: Expiry Warning
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTemplateStageTab(3)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                    activeTemplateStageTab === 3
+                                        ? 'bg-[#6C306E] text-white shadow-2xs'
+                                        : 'text-slate-600 hover:text-[#241224]'
+                                }`}
+                            >
+                                Stage 3: Final Call
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Variable Injection Chips */}
+                    <div className="space-y-1.5">
+                        <span className="text-[11px] font-bold text-slate-500">
+                            Click to insert dynamic variables into the message:
+                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {[
+                                { tag: '{customer_name}', label: 'Customer Name' },
+                                { tag: '{product_name}', label: 'Product Name' },
+                                { tag: '{product_price}', label: 'Original Price' },
+                                { tag: '{discount_text}', label: 'Discount Text' },
+                                { tag: '{discounted_price}', label: 'Discounted Price' },
+                                { tag: '{coupon_code}', label: 'Unique Coupon Code' },
+                                { tag: '{hours_remaining}', label: 'Hours Remaining' },
+                                { tag: '{validity_text}', label: 'Validity Period' },
+                                { tag: '{cart_url}', label: '1-Click Checkout Link' },
+                            ].map((v) => (
+                                <button
+                                    key={v.tag}
+                                    type="button"
+                                    onClick={() => handleInsertVariable(v.tag)}
+                                    className="px-2 py-1 rounded-lg bg-[#FAF6FA] hover:bg-[#F3E5F3] border border-[#EFE0EF] hover:border-[#6C306E]/40 text-[11px] font-mono font-bold text-[#6C306E] transition cursor-pointer"
+                                >
+                                    + {v.tag}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Editor & Live Simulator Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                        {/* Left: Textarea Editor */}
+                        <div className="lg:col-span-7 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-700">
+                                    Stage {activeTemplateStageTab} Message Template
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleResetTemplates}
+                                    className="text-[11px] font-bold text-[#6C306E] hover:underline cursor-pointer"
+                                >
+                                    ↺ Reset to Default
+                                </button>
+                            </div>
+
+                            <textarea
+                                rows={11}
+                                value={
+                                    activeTemplateStageTab === 1
+                                        ? whatsappTemplateStage1
+                                        : activeTemplateStageTab === 2
+                                        ? whatsappTemplateStage2
+                                        : whatsappTemplateStage3
+                                }
+                                onChange={(e) => {
+                                    if (activeTemplateStageTab === 1) setWhatsappTemplateStage1(e.target.value)
+                                    else if (activeTemplateStageTab === 2) setWhatsappTemplateStage2(e.target.value)
+                                    else setWhatsappTemplateStage3(e.target.value)
+                                }}
+                                className="w-full p-3.5 text-xs bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl focus:bg-white focus:border-[#6C306E] focus:outline-none transition font-sans leading-relaxed text-[#241224]"
+                            />
+                        </div>
+
+                        {/* Right: Live WhatsApp Phone Simulator */}
+                        <div className="lg:col-span-5 bg-[#EFEAE2] rounded-3xl p-3.5 border border-slate-300/80 shadow-md">
+                            {/* WhatsApp Top Bar */}
+                            <div className="bg-[#075E54] text-white px-3 py-2 rounded-2xl flex items-center justify-between mb-3 shadow-2xs">
+                                <div className="flex items-center gap-2">
+                                    <div className="size-7 rounded-full bg-white text-[#075E54] flex items-center justify-center font-black text-xs">
+                                        🇬🇧
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-1">
+                                            <h4 className="text-xs font-black leading-tight">UK Brand Lover</h4>
+                                            <span className="text-[10px] text-emerald-300">✓</span>
+                                        </div>
+                                        <p className="text-[9px] text-emerald-100/90 leading-tight">Official Flagship Store</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-mono text-emerald-200">Stage {activeTemplateStageTab}</span>
+                            </div>
+
+                            {/* Message Bubble Simulator */}
+                            <div className="bg-[#E7FFDB] rounded-2xl rounded-tr-xs p-3.5 shadow-2xs border border-emerald-200/50 space-y-2">
+                                <p className="text-xs text-slate-800 font-sans leading-relaxed whitespace-pre-wrap">
+                                    {previewMessageText}
+                                </p>
+                                <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400 font-medium">
+                                    <span>Just now</span>
+                                    <span className="text-sky-500 font-bold">✓✓</span>
+                                </div>
+                            </div>
+
+                            <p className="text-[10px] text-slate-500 text-center mt-3 font-medium">
+                                📱 Real-time simulation with sample customer Nusrat Jahan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 6. Custom Saleswoman Directives & Knowledge Box */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                     <div>
