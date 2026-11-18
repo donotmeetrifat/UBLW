@@ -1229,42 +1229,53 @@ export default function AdminAiBotPage() {
                             </div>
 
                             {/* Active Voice Pill Banner */}
-                            <div className="p-3 px-4 rounded-xl bg-purple-50 border border-purple-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                                <div className="flex items-center gap-2">
+                            <div className="p-3 px-4 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-between gap-3 text-xs">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <span className="size-2 rounded-full bg-[#6C306E]" />
-                                    <span className="text-slate-600">Currently Active Voice:</span>
-                                    <strong className="text-[#6C306E] font-black">{selectedVoiceName || 'Rimjhim - Natural, Relatable Friend'}</strong>
-                                    <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-purple-200">
+                                    <span className="text-slate-500 font-medium">Currently Active Voice:</span>
+                                    <strong className="text-[#6C306E] font-bold">{selectedVoiceName || 'Sarah - Mature, Reassuring, Confident'}</strong>
+                                    <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-[#EFE0EF]">
                                         ID: {selectedVoiceId}
                                     </span>
                                 </div>
-                                <span className="text-[11px] font-bold text-purple-700 bg-white px-2.5 py-1 rounded-full border border-purple-200">
-                                    Multilingual v2 Active (Bengali & English)
-                                </span>
                             </div>
 
-                            {/* Plan Notice Banner */}
-                            {elevenLabsSubscription?.tier === 'free' && (
-                                <div className="p-3 px-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900">
-                                    <div className="flex items-start gap-2.5">
-                                        <span className="text-amber-600 font-bold text-sm leading-none mt-0.5 shrink-0">ℹ️</span>
-                                        <div>
-                                            <p className="font-bold text-amber-950">
-                                                ElevenLabs Free Tier Connected ({elevenLabsSubscription.characterCount?.toLocaleString() || 0} / {elevenLabsSubscription.characterLimit?.toLocaleString() || '10,000'} chars used)
-                                            </p>
-                                            <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                                                ElevenLabs policy requires a Starter plan ($5/mo) to stream community library voices (Rimjhim, Swati S) via API. If on ElevenLabs Free, Emma automatically streams ElevenLabs Sarah so you always enjoy human ElevenLabs AI voice without dropping to robotic browser audio. Upgrading your ElevenLabs account immediately activates Rimjhim live.
-                                            </p>
+                            {/* Clean ElevenLabs Voice Credits Display */}
+                            {elevenLabsSubscription && (
+                                <div className="p-3.5 px-4 rounded-xl bg-white border border-[#EFE0EF] shadow-2xs">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50" />
+                                            <span className="text-xs font-bold text-[#241224]">ElevenLabs Voice Credits</span>
+                                            <span className="text-[10px] font-semibold text-slate-500 bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full capitalize">
+                                                {elevenLabsSubscription.tier || 'Free'} Tier
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                                            <span className="font-semibold text-slate-600">
+                                                <strong className="text-[#241224] font-bold">{(elevenLabsSubscription.characterCount || 0).toLocaleString()}</strong> / {(elevenLabsSubscription.characterLimit || 10000).toLocaleString()} characters used
+                                            </span>
+                                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md">
+                                                {Math.max(0, (elevenLabsSubscription.characterLimit || 10000) - (elevenLabsSubscription.characterCount || 0)).toLocaleString()} remaining
+                                            </span>
                                         </div>
                                     </div>
-                                    <a
-                                        href="https://elevenlabs.io/pricing"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition shrink-0 whitespace-nowrap shadow-2xs"
-                                    >
-                                        Upgrade Plan ($5/mo) ↗
-                                    </a>
+
+                                    {/* Minimalist Progress Bar */}
+                                    <div className="w-full bg-[#FAF6FA] border border-[#EFE0EF] h-1.5 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-500 rounded-full ${
+                                                Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100) > 90
+                                                    ? 'bg-rose-500'
+                                                    : Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100) > 75
+                                                    ? 'bg-amber-500'
+                                                    : 'bg-gradient-to-r from-[#6C306E] to-[#8E448F]'
+                                            }`}
+                                            style={{
+                                                width: `${Math.min(100, Math.round(((elevenLabsSubscription.characterCount || 0) / Math.max(1, elevenLabsSubscription.characterLimit || 10000)) * 100))}%`
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             )}
 
