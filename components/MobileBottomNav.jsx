@@ -50,19 +50,27 @@ export default function MobileBottomNav() {
 
         const verifyFreshSession = () => {
             if (typeof window !== 'undefined') {
-                fetch('/api/auth/me', { cache: 'no-store' })
+                const token = localStorage.getItem('ukbl_auth_token')
+                const headers = { 'Cache-Control': 'no-cache' }
+                if (token) headers['Authorization'] = `Bearer ${token}`
+
+                fetch('/api/auth/me', { cache: 'no-store', headers })
                     .then(res => res.json())
                     .then(data => {
                         if (data.success && data.user) {
                             const prev = localStorage.getItem('ukbl_current_user')
                             const nextStr = JSON.stringify(data.user)
+                            localStorage.setItem('ukbl_current_user', nextStr)
+                            if (data.token) {
+                                localStorage.setItem('ukbl_auth_token', data.token)
+                            }
+                            setCurrentUser(data.user)
                             if (prev !== nextStr) {
-                                localStorage.setItem('ukbl_current_user', nextStr)
-                                setCurrentUser(data.user)
                                 window.dispatchEvent(new Event('auth-change'))
                             }
                         } else if (!data.success && localStorage.getItem('ukbl_current_user')) {
                             localStorage.removeItem('ukbl_current_user')
+                            localStorage.removeItem('ukbl_auth_token')
                             setCurrentUser(null)
                             window.dispatchEvent(new Event('auth-change'))
                         }
@@ -202,11 +210,11 @@ export default function MobileBottomNav() {
                                             <p className="font-bold text-xs text-[#241224] truncate">
                                                 {currentUser.name}
                                             </p>
-                                            {currentUser.role === 'ADMIN' ? (
+                                            {String(currentUser?.role || '').toUpperCase() === 'ADMIN' ? (
                                                 <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-[#6C306E] text-white shrink-0">
                                                     Admin
                                                 </span>
-                                            ) : currentUser.role === 'EMPLOYEE' ? (
+                                            ) : String(currentUser?.role || '').toUpperCase() === 'EMPLOYEE' ? (
                                                 <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white shrink-0">
                                                     Employee
                                                 </span>
@@ -230,7 +238,7 @@ export default function MobileBottomNav() {
                             {/* Clean Navigation Options */}
                             <div className="space-y-1.5 overflow-y-auto">
                                 {/* Admin Panel Quick Link (Strictly visible ONLY for ADMIN & EMPLOYEE) */}
-                                {(currentUser.role === 'ADMIN' || currentUser.role === 'EMPLOYEE') && (
+                                {['ADMIN', 'EMPLOYEE'].includes(String(currentUser?.role || '').toUpperCase()) && (
                                     <Link
                                         href="/admin"
                                         onClick={() => setIsAccountMenuOpen(false)}
@@ -363,15 +371,22 @@ export default function MobileBottomNav() {
                                                     const nextState = !prev
                                                     if (nextState) {
                                                         // Instant check on open: guarantees newly granted roles/permissions appear immediately
-                                                        fetch('/api/auth/me', { cache: 'no-store' })
+                                                        const token = localStorage.getItem('ukbl_auth_token')
+                                                        const headers = { 'Cache-Control': 'no-cache' }
+                                                        if (token) headers['Authorization'] = `Bearer ${token}`
+
+                                                        fetch('/api/auth/me', { cache: 'no-store', headers })
                                                             .then(res => res.json())
                                                             .then(data => {
                                                                 if (data.success && data.user) {
                                                                     const prevStr = localStorage.getItem('ukbl_current_user')
                                                                     const nextStr = JSON.stringify(data.user)
+                                                                    localStorage.setItem('ukbl_current_user', nextStr)
+                                                                    if (data.token) {
+                                                                        localStorage.setItem('ukbl_auth_token', data.token)
+                                                                    }
+                                                                    setCurrentUser(data.user)
                                                                     if (prevStr !== nextStr) {
-                                                                        localStorage.setItem('ukbl_current_user', nextStr)
-                                                                        setCurrentUser(data.user)
                                                                         window.dispatchEvent(new Event('auth-change'))
                                                                     }
                                                                 }

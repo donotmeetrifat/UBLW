@@ -88,7 +88,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, u
     const userPermissions = rawPermissions.filter(p => DEFAULT_EMPLOYEE_PERMISSIONS.includes(p));
 
     const isItemAllowed = (item) => {
-        if (userRole === 'ADMIN') return true;
+        if (String(userRole || '').toUpperCase() === 'ADMIN') return true;
         if (item.adminOnly) return false;
         if (!item.permission) return true; // General dashboard item
         return userPermissions.includes(item.permission) || userPermissions.includes('*');

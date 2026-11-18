@@ -112,15 +112,22 @@ const Navbar = () => {
         // Authoritatively verify session with server to keep role, staff access & active status 100% real-time
         const verifyFreshSession = () => {
             if (typeof window !== 'undefined') {
-                fetch('/api/auth/me', { cache: 'no-store' })
+                const token = localStorage.getItem('ukbl_auth_token');
+                const headers = { 'Cache-Control': 'no-cache' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                fetch('/api/auth/me', { cache: 'no-store', headers })
                     .then(res => res.json())
                     .then(data => {
                         if (data.success && data.user) {
                             const prev = localStorage.getItem('ukbl_current_user');
                             const nextStr = JSON.stringify(data.user);
+                            localStorage.setItem('ukbl_current_user', nextStr);
+                            if (data.token) {
+                                localStorage.setItem('ukbl_auth_token', data.token);
+                            }
+                            setCurrentUser(data.user);
                             if (prev !== nextStr) {
-                                localStorage.setItem('ukbl_current_user', nextStr);
-                                setCurrentUser(data.user);
                                 window.dispatchEvent(new Event('auth-change'));
                             }
                             if (window.location.search.includes('verified=1')) {
@@ -329,15 +336,22 @@ const Navbar = () => {
                                             setIsProfileOpen(nextState);
                                             if (nextState) {
                                                 // Instant check on open: guarantees newly granted roles/permissions appear immediately
-                                                fetch('/api/auth/me', { cache: 'no-store' })
+                                                const token = localStorage.getItem('ukbl_auth_token');
+                                                const headers = { 'Cache-Control': 'no-cache' };
+                                                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                                                fetch('/api/auth/me', { cache: 'no-store', headers })
                                                     .then(res => res.json())
                                                     .then(data => {
                                                         if (data.success && data.user) {
                                                             const prevStr = localStorage.getItem('ukbl_current_user');
                                                             const nextStr = JSON.stringify(data.user);
+                                                            localStorage.setItem('ukbl_current_user', nextStr);
+                                                            if (data.token) {
+                                                                localStorage.setItem('ukbl_auth_token', data.token);
+                                                            }
+                                                            setCurrentUser(data.user);
                                                             if (prevStr !== nextStr) {
-                                                                localStorage.setItem('ukbl_current_user', nextStr);
-                                                                setCurrentUser(data.user);
                                                                 window.dispatchEvent(new Event('auth-change'));
                                                             }
                                                         }
@@ -370,11 +384,11 @@ const Navbar = () => {
                                                 <div className="p-3 bg-[#FAF6FA] rounded-xl mb-2">
                                                     <div className="flex items-center justify-between gap-1.5">
                                                         <p className="font-bold text-[#241224] truncate text-sm">{currentUser.name}</p>
-                                                        {currentUser.role === 'ADMIN' ? (
+                                                        {String(currentUser?.role || '').toUpperCase() === 'ADMIN' ? (
                                                             <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#6C306E] text-white shrink-0">
                                                                 Admin
                                                             </span>
-                                                        ) : currentUser.role === 'EMPLOYEE' ? (
+                                                        ) : String(currentUser?.role || '').toUpperCase() === 'EMPLOYEE' ? (
                                                             <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white shrink-0">
                                                                 Employee
                                                             </span>
@@ -385,7 +399,7 @@ const Navbar = () => {
 
                                                 <div className="space-y-1">
                                                     {/* Admin Panel Quick Link (Strictly visible ONLY for ADMIN & EMPLOYEE) */}
-                                                    {(currentUser.role === 'ADMIN' || currentUser.role === 'EMPLOYEE') && (
+                                                    {['ADMIN', 'EMPLOYEE'].includes(String(currentUser?.role || '').toUpperCase()) && (
                                                         <Link
                                                             href="/admin"
                                                             onClick={() => setIsProfileOpen(false)}

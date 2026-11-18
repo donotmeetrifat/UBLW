@@ -663,8 +663,12 @@ export default function DataSyncProvider({ children }) {
         // 3. SYNCHRONIZE USER ACCOUNT, DATABASE CART & ADDRESSES
         const syncUserData = async () => {
             try {
-                // Check if user is authenticated with fresh server verification
-                const authRes = await fetch('/api/auth/me', { cache: 'no-store' })
+                // Check if user is authenticated with fresh server verification (supporting both cookie & Bearer token)
+                const token = typeof window !== 'undefined' ? localStorage.getItem('ukbl_auth_token') : null
+                const headers = { 'Cache-Control': 'no-cache' }
+                if (token) headers['Authorization'] = `Bearer ${token}`
+
+                const authRes = await fetch('/api/auth/me', { cache: 'no-store', headers })
                 const authData = await authRes.json()
 
                 if (authData.success && authData.user) {
@@ -675,6 +679,9 @@ export default function DataSyncProvider({ children }) {
                         const prevUserStr = localStorage.getItem('ukbl_current_user')
                         const nextUserStr = JSON.stringify(user)
                         localStorage.setItem('ukbl_current_user', nextUserStr)
+                        if (authData.token) {
+                            localStorage.setItem('ukbl_auth_token', authData.token)
+                        }
                         if (prevUserStr !== nextUserStr) {
                             window.dispatchEvent(new Event('auth-change'))
                         }

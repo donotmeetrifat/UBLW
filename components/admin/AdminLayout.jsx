@@ -47,9 +47,13 @@ export default function AdminLayout({ children }) {
     // Authoritative Server Session Verification: checks /api/auth/me directly
     const verifyServerSession = async () => {
         try {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('ukbl_auth_token') : null
+            const headers = { 'Cache-Control': 'no-cache' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
             const res = await fetch('/api/auth/me', {
                 cache: 'no-store',
-                headers: { 'Cache-Control': 'no-cache' }
+                headers
             })
             const data = await res.json()
             if (data.success && (data.user?.role === 'ADMIN' || data.user?.role === 'EMPLOYEE')) {
@@ -57,12 +61,16 @@ export default function AdminLayout({ children }) {
                 setCurrentUser(data.user)
                 try {
                     localStorage.setItem('ukbl_current_user', JSON.stringify(data.user))
+                    if (data.token) {
+                        localStorage.setItem('ukbl_auth_token', data.token)
+                    }
                 } catch {}
             } else {
                 setUserRole(null)
                 setCurrentUser(null)
                 try {
                     localStorage.removeItem('ukbl_current_user')
+                    localStorage.removeItem('ukbl_auth_token')
                 } catch {}
             }
         } catch {
