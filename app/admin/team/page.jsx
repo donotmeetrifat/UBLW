@@ -5,6 +5,7 @@ import Link from "next/link"
 import Loading from "@/components/Loading"
 import toast from "react-hot-toast"
 import AdminDropdown from "@/components/admin/AdminDropdown"
+import { broadcastStoreChange } from "@/lib/realtimeSync"
 import {
     SearchIcon,
     CloseIcon,
@@ -272,6 +273,14 @@ export default function AdminTeamPage() {
             }
 
             toast.success(`Role updated to ${newRole === 'ADMIN' ? 'Admin' : newRole === 'EMPLOYEE' ? 'Employee' : 'Customer'}`)
+
+            // Instantly broadcast role update across mesh and tabs so user sees changes immediately
+            broadcastStoreChange('team', { targetUserId: user.id, newRole, timestamp: Date.now() });
+            try {
+                const bc = new BroadcastChannel('ukbl_catalog_channel');
+                bc.postMessage({ type: 'team-updated', targetUserId: user.id, newRole });
+                bc.close();
+            } catch {}
         } catch (error) {
             console.error('Error changing role:', error)
             setTeamMembers(prev => {
@@ -454,6 +463,14 @@ export default function AdminTeamPage() {
             }
 
             toast.success(`Updated permissions for ${user.name}`)
+
+            // Instantly broadcast permission update across mesh and tabs
+            broadcastStoreChange('team', { targetUserId: user.id, permissions: updatedPermissions, timestamp: Date.now() });
+            try {
+                const bc = new BroadcastChannel('ukbl_catalog_channel');
+                bc.postMessage({ type: 'team-updated', targetUserId: user.id, permissions: updatedPermissions });
+                bc.close();
+            } catch {}
             setPermModal({ isOpen: false, user: null, permissions: [], loading: false })
         } catch (error) {
             console.error('Error saving permissions:', error)

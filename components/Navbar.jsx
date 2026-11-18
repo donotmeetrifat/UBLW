@@ -90,7 +90,7 @@ const Navbar = () => {
         }
     }, [isProductsLoaded, products, currentUser, cart, dispatch]);
 
-    // Load user from localStorage & verify session
+    // Load user from localStorage & verify session with authoritative server check
     useEffect(() => {
         const syncUser = () => {
             if (typeof window !== 'undefined') {
@@ -109,28 +109,44 @@ const Navbar = () => {
 
         syncUser();
 
-        // Restore session from cookie if localStorage was cleared or after email verification
-        if (typeof window !== 'undefined' && (!localStorage.getItem('ukbl_current_user') || window.location.search.includes('verified=1'))) {
-            fetch('/api/auth/me')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.user) {
-                        localStorage.setItem('ukbl_current_user', JSON.stringify(data.user));
-                        setCurrentUser(data.user);
-                        if (window.location.search.includes('verified=1')) {
-                            toast.success('Email verified successfully! Welcome to UK Brand Lover.');
-                            const url = new URL(window.location.href);
-                            url.searchParams.delete('verified');
-                            window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+        // Authoritatively verify session with server to keep role, staff access & active status 100% real-time
+        const verifyFreshSession = () => {
+            if (typeof window !== 'undefined') {
+                fetch('/api/auth/me', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.user) {
+                            const prev = localStorage.getItem('ukbl_current_user');
+                            const nextStr = JSON.stringify(data.user);
+                            if (prev !== nextStr) {
+                                localStorage.setItem('ukbl_current_user', nextStr);
+                                setCurrentUser(data.user);
+                                window.dispatchEvent(new Event('auth-change'));
+                            }
+                            if (window.location.search.includes('verified=1')) {
+                                toast.success('Email verified successfully! Welcome to UK Brand Lover.');
+                                const url = new URL(window.location.href);
+                                url.searchParams.delete('verified');
+                                window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+                            }
+                        } else if (!data.success && localStorage.getItem('ukbl_current_user')) {
+                            // User session was terminated or deactivated on backend
+                            localStorage.removeItem('ukbl_current_user');
+                            setCurrentUser(null);
+                            window.dispatchEvent(new Event('auth-change'));
                         }
-                    }
-                })
-                .catch(() => {});
-        }
+                    })
+                    .catch(() => {});
+            }
+        };
 
+        verifyFreshSession();
+
+        window.addEventListener('focus', verifyFreshSession);
         window.addEventListener('auth-change', syncUser);
         window.addEventListener('storage', syncUser);
         return () => {
+            window.removeEventListener('focus', verifyFreshSession);
             window.removeEventListener('auth-change', syncUser);
             window.removeEventListener('storage', syncUser);
         };
@@ -308,7 +324,27 @@ const Navbar = () => {
                             {currentUser ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
-                                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                        onClick={() => {
+                                            const nextState = !isProfileOpen;
+                                            setIsProfileOpen(nextState);
+                                            if (nextState) {
+                                                // Instant check on open: guarantees newly granted roles/permissions appear immediately
+                                                fetch('/api/auth/me', { cache: 'no-store' })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.user) {
+                                                            const prevStr = localStorage.getItem('ukbl_current_user');
+                                                            const nextStr = JSON.stringify(data.user);
+                                                            if (prevStr !== nextStr) {
+                                                                localStorage.setItem('ukbl_current_user', nextStr);
+                                                                setCurrentUser(data.user);
+                                                                window.dispatchEvent(new Event('auth-change'));
+                                                            }
+                                                        }
+                                                    })
+                                                    .catch(() => {});
+                                            }
+                                        }}
                                         className="flex items-center justify-center gap-2 px-3.5 h-10 rounded-full bg-white/60 hover:bg-white/90 backdrop-blur-md border border-[#EFE0EF]/80 transition-all cursor-pointer shadow-2xs select-none"
                                     >
                                         <div className="size-6.5 rounded-full bg-gradient-to-br from-[#6C306E] to-[#401242] text-white flex items-center justify-center text-xs font-bold shadow-2xs shrink-0">
@@ -330,32 +366,36 @@ const Navbar = () => {
                                                 transition={{ duration: 0.15 }}
                                                 className="absolute right-0 mt-2 w-60 bg-white/95 backdrop-blur-xl border border-[#EFE0EF]/90 rounded-2xl shadow-[0_12px_36px_rgba(58,12,56,0.12)] p-2.5 z-50 text-xs"
                                             >
-                                                {/* Customer Header */}
+                                                {/* Customer / Staff Header */}
                                                 <div className="p-3 bg-[#FAF6FA] rounded-xl mb-2">
-                                                    <div className="flex items-center justify-between">
+                                                    <div className="flex items-center justify-between gap-1.5">
                                                         <p className="font-bold text-[#241224] truncate text-sm">{currentUser.name}</p>
-                                                        {currentUser.role === 'ADMIN' && (
-                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[#6C306E] text-white shrink-0">
+                                                        {currentUser.role === 'ADMIN' ? (
+                                                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#6C306E] text-white shrink-0">
                                                                 Admin
                                                             </span>
-                                                        )}
+                                                        ) : currentUser.role === 'EMPLOYEE' ? (
+                                                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white shrink-0">
+                                                                Employee
+                                                            </span>
+                                                        ) : null}
                                                     </div>
                                                     <p className="text-[11px] text-slate-500 truncate mt-0.5">{currentUser.email || currentUser.phone}</p>
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    {/* Admin Portal Quick Link for Admins */}
-                                                    {currentUser.role === 'ADMIN' && (
+                                                    {/* Admin Panel Quick Link (Strictly visible ONLY for ADMIN & EMPLOYEE) */}
+                                                    {(currentUser.role === 'ADMIN' || currentUser.role === 'EMPLOYEE') && (
                                                         <Link
                                                             href="/admin"
                                                             onClick={() => setIsProfileOpen(false)}
-                                                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6FA] text-[#6C306E] hover:bg-[#EFE0EF] transition font-bold cursor-pointer border border-[#EFE0EF] mb-2"
+                                                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6FA] text-[#6C306E] hover:bg-[#EFE0EF] transition font-bold cursor-pointer border border-[#EFE0EF] mb-2 group"
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <ShieldCheckIcon size={15} color="#6C306E" />
-                                                                <span>Admin Portal</span>
+                                                                <span>Admin Panel</span>
                                                             </div>
-                                                            <span className="text-xs">↗</span>
+                                                            <span className="text-xs group-hover:translate-x-0.5 transition-transform">↗</span>
                                                         </Link>
                                                     )}
 

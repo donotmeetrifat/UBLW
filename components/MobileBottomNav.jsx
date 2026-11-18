@@ -30,7 +30,7 @@ export default function MobileBottomNav() {
     const products = useSelector(state => state.product.list)
     const isProductsLoaded = useSelector(state => state.product.isLoaded)
 
-    // Load active user session
+    // Load active user session and authoritatively verify with server
     useEffect(() => {
         const syncUser = () => {
             if (typeof window !== 'undefined') {
@@ -47,9 +47,36 @@ export default function MobileBottomNav() {
             }
         }
         syncUser()
+
+        const verifyFreshSession = () => {
+            if (typeof window !== 'undefined') {
+                fetch('/api/auth/me', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.user) {
+                            const prev = localStorage.getItem('ukbl_current_user')
+                            const nextStr = JSON.stringify(data.user)
+                            if (prev !== nextStr) {
+                                localStorage.setItem('ukbl_current_user', nextStr)
+                                setCurrentUser(data.user)
+                                window.dispatchEvent(new Event('auth-change'))
+                            }
+                        } else if (!data.success && localStorage.getItem('ukbl_current_user')) {
+                            localStorage.removeItem('ukbl_current_user')
+                            setCurrentUser(null)
+                            window.dispatchEvent(new Event('auth-change'))
+                        }
+                    })
+                    .catch(() => {})
+            }
+        }
+        verifyFreshSession()
+
+        window.addEventListener('focus', verifyFreshSession)
         window.addEventListener('auth-change', syncUser)
         window.addEventListener('storage', syncUser)
         return () => {
+            window.removeEventListener('focus', verifyFreshSession)
             window.removeEventListener('auth-change', syncUser)
             window.removeEventListener('storage', syncUser)
         }
@@ -175,11 +202,15 @@ export default function MobileBottomNav() {
                                             <p className="font-bold text-xs text-[#241224] truncate">
                                                 {currentUser.name}
                                             </p>
-                                            {currentUser.role === 'ADMIN' && (
+                                            {currentUser.role === 'ADMIN' ? (
                                                 <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-[#6C306E] text-white shrink-0">
                                                     Admin
                                                 </span>
-                                            )}
+                                            ) : currentUser.role === 'EMPLOYEE' ? (
+                                                <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white shrink-0">
+                                                    Employee
+                                                </span>
+                                            ) : null}
                                         </div>
                                         <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
                                             {currentUser.email || currentUser.phone}
@@ -198,18 +229,18 @@ export default function MobileBottomNav() {
 
                             {/* Clean Navigation Options */}
                             <div className="space-y-1.5 overflow-y-auto">
-                                {/* Admin Portal Quick Link */}
-                                {currentUser.role === 'ADMIN' && (
+                                {/* Admin Panel Quick Link (Strictly visible ONLY for ADMIN & EMPLOYEE) */}
+                                {(currentUser.role === 'ADMIN' || currentUser.role === 'EMPLOYEE') && (
                                     <Link
                                         href="/admin"
                                         onClick={() => setIsAccountMenuOpen(false)}
-                                        className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] hover:bg-[#EFE0EF] transition font-bold text-xs"
+                                        className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E] hover:bg-[#EFE0EF] transition font-bold text-xs group"
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <ShieldCheckIcon size={16} color="#6C306E" />
-                                            <span>Admin Portal</span>
+                                            <span>Admin Panel</span>
                                         </div>
-                                        <span className="text-xs">↗</span>
+                                        <span className="text-xs group-hover:translate-x-0.5 transition-transform">↗</span>
                                     </Link>
                                 )}
 
@@ -328,7 +359,27 @@ export default function MobileBottomNav() {
                                         onClick={(e) => {
                                             if (item.isAccountTrigger && currentUser) {
                                                 e.preventDefault()
-                                                setIsAccountMenuOpen(prev => !prev)
+                                                setIsAccountMenuOpen(prev => {
+                                                    const nextState = !prev
+                                                    if (nextState) {
+                                                        // Instant check on open: guarantees newly granted roles/permissions appear immediately
+                                                        fetch('/api/auth/me', { cache: 'no-store' })
+                                                            .then(res => res.json())
+                                                            .then(data => {
+                                                                if (data.success && data.user) {
+                                                                    const prevStr = localStorage.getItem('ukbl_current_user')
+                                                                    const nextStr = JSON.stringify(data.user)
+                                                                    if (prevStr !== nextStr) {
+                                                                        localStorage.setItem('ukbl_current_user', nextStr)
+                                                                        setCurrentUser(data.user)
+                                                                        window.dispatchEvent(new Event('auth-change'))
+                                                                    }
+                                                                }
+                                                            })
+                                                            .catch(() => {})
+                                                    }
+                                                    return nextState
+                                                })
                                             }
                                         }}
                                         className="flex flex-col items-center justify-center py-1 px-1 rounded-2xl relative w-full min-w-[56px] max-w-[70px] min-h-[50px] cursor-pointer"

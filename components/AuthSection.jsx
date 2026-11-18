@@ -247,7 +247,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
                 setSuccessMsg('Signed in successfully! Redirecting...')
 
                 setTimeout(() => {
-                    if (data.user?.role === 'ADMIN' && redirectUrl === '/') {
+                    const isStaff = data.user?.role === 'ADMIN' || data.user?.role === 'EMPLOYEE';
+                    if (isStaff && redirectUrl === '/') {
                         router.push('/admin')
                     } else {
                         router.push(redirectUrl)
@@ -303,7 +304,8 @@ export default function AuthSection({ initialMode = 'signin' }) {
             setSuccessMsg('Email verified successfully! Redirecting...')
 
             setTimeout(() => {
-                if (data.user?.role === 'ADMIN' && redirectUrl === '/') {
+                const isStaff = data.user?.role === 'ADMIN' || data.user?.role === 'EMPLOYEE';
+                if (isStaff && redirectUrl === '/') {
                     router.push('/admin')
                 } else {
                     router.push(redirectUrl)

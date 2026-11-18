@@ -462,6 +462,9 @@ export default function DataSyncProvider({ children }) {
                     window.dispatchEvent(new CustomEvent('orders-updated', { detail: data }))
                 } else if (rawType === 'inquiries') {
                     window.dispatchEvent(new CustomEvent('inquiries-updated', { detail: data }))
+                } else if (rawType === 'team' || rawType === 'auth' || rawType === 'user-role') {
+                    syncUserData()
+                    window.dispatchEvent(new CustomEvent('team-updated', { detail: data }))
                 }
             })
 
@@ -646,6 +649,9 @@ export default function DataSyncProvider({ children }) {
                             localStorage.setItem('ukbl_cached_products', JSON.stringify(list));
                         } catch {}
                     }
+                    if (msg.data?.type === 'team-updated' || msg.data?.type === 'user-role-updated') {
+                        syncUserData()
+                    }
                     if (msg.data?.type === 'category-updated') {
                         syncCategoryCatalog()
                     }
@@ -657,16 +663,21 @@ export default function DataSyncProvider({ children }) {
         // 3. SYNCHRONIZE USER ACCOUNT, DATABASE CART & ADDRESSES
         const syncUserData = async () => {
             try {
-                // Check if user is authenticated
-                const authRes = await fetch('/api/auth/me')
+                // Check if user is authenticated with fresh server verification
+                const authRes = await fetch('/api/auth/me', { cache: 'no-store' })
                 const authData = await authRes.json()
 
                 if (authData.success && authData.user) {
                     const user = authData.user
 
-                    // Save verified user to localStorage
+                    // Save verified user to localStorage & notify UI if credentials changed
                     if (typeof window !== 'undefined') {
-                        localStorage.setItem('ukbl_current_user', JSON.stringify(user))
+                        const prevUserStr = localStorage.getItem('ukbl_current_user')
+                        const nextUserStr = JSON.stringify(user)
+                        localStorage.setItem('ukbl_current_user', nextUserStr)
+                        if (prevUserStr !== nextUserStr) {
+                            window.dispatchEvent(new Event('auth-change'))
+                        }
                     }
 
                     // A. Fetch and Merge Database Cart

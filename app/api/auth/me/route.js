@@ -20,7 +20,7 @@ export async function GET(request) {
                 },
             });
 
-            if (!user || user.isActive === false || (user.role !== 'ADMIN' && !user.isVerified && !user.emailVerified)) {
+            if (!user || user.isActive === false || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE' && !user.isVerified && !user.emailVerified)) {
                 return NextResponse.json({ success: false, user: null, message: user?.isActive === false ? 'Account is inactive' : 'Unauthorized' }, { status: 401 });
             }
 
@@ -29,10 +29,32 @@ export async function GET(request) {
                 safe.defaultAddress = user.addresses[0];
             }
 
-            return NextResponse.json({
+            const response = NextResponse.json({
                 success: true,
                 user: safe,
+            }, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                }
             });
+
+            // If the user's role or permissions in DB have been modified since their session cookie was issued
+            // (e.g. promoted from CUSTOMER to EMPLOYEE/ADMIN, or permissions updated),
+            // instantly refresh the ukbl_token cookie so Edge Middleware and all APIs have live credentials!
+            if (payload.role !== safe.role || JSON.stringify(payload.permissions || []) !== JSON.stringify(safe.permissions || [])) {
+                const refreshedToken = createSessionToken(safe);
+                response.cookies.set('ukbl_token', refreshedToken, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: '/',
+                });
+            }
+
+            return response;
         }
 
         return NextResponse.json({

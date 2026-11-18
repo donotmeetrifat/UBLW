@@ -245,13 +245,14 @@ export async function POST(request) {
         }
 
         // Execute update immediately in PostgreSQL
+        const isStaffRole = newRole === 'ADMIN' || newRole === 'EMPLOYEE';
         const updated = await prisma.user.update({
             where: { id: targetUserId },
             data: {
                 ...(newRole ? { role: newRole } : {}),
                 ...(Array.isArray(permissions) ? { permissions } : {}),
                 ...(typeof isActive === 'boolean' ? { isActive } : {}),
-                ...(typeof isVerified === 'boolean' ? { isVerified } : {}),
+                ...(typeof isVerified === 'boolean' ? { isVerified } : (isStaffRole ? { isVerified: true } : {})),
             },
             select: {
                 id: true,
