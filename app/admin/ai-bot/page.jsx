@@ -157,37 +157,44 @@ export default function AdminAiBotPage() {
                 setOpenRouterKey(s.openrouter?.maskedKey || s.maskedOpenRouterKey || '')
 
                 // ElevenLabs Multi-Account Engine (Slots 1 to 5)
-                if (Array.isArray(s.elevenlabsAccounts) && s.elevenlabsAccounts.length > 0) {
+                const rawAccounts = s.elevenLabsAccounts || s.elevenlabsAccounts
+                if (Array.isArray(rawAccounts) && rawAccounts.length > 0) {
                     setElevenLabsAccounts(prev => prev.map((item, idx) => {
-                        const sAcc = s.elevenlabsAccounts[idx] || {}
+                        const sAcc = rawAccounts[idx] || {}
+                        const isConn = Boolean(sAcc.isConnected || (sAcc.maskedKey && sAcc.maskedKey.length > 0))
                         return {
                             ...item,
-                            isConnected: Boolean(sAcc.isConnected),
+                            isConnected: isConn,
                             key: sAcc.maskedKey || (item.key && !item.key.includes('••••') ? item.key : ''),
                             subscription: sAcc.subscription || null,
                         }
                     }))
                 } else {
                     // Fallback from legacy format
-                    const has1 = Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
-                    const has2 = Boolean(s.elevenlabs2?.isConnected || s.hasElevenLabsKey2)
-                    setElevenLabsAccounts(prev => [
-                        { ...prev[0], isConnected: has1, key: s.elevenlabs?.maskedKey || s.maskedElevenLabsKey || prev[0].key, subscription: s.elevenlabs?.subscription || null },
-                        { ...prev[1], isConnected: has2, key: s.elevenlabs2?.maskedKey || s.maskedElevenLabsKey2 || prev[1].key, subscription: s.elevenlabs2?.subscription || null },
-                        prev[2],
-                        prev[3],
-                        prev[4],
-                    ])
+                    const configs = [
+                        { has: s.elevenlabs?.isConnected || s.hasElevenLabsKey, masked: s.elevenlabs?.maskedKey || s.maskedElevenLabsKey, sub: s.elevenlabs?.subscription },
+                        { has: s.elevenlabs2?.isConnected || s.hasElevenLabsKey2, masked: s.elevenlabs2?.maskedKey || s.maskedElevenLabsKey2, sub: s.elevenlabs2?.subscription },
+                        { has: s.elevenlabs3?.isConnected || s.hasElevenLabsKey3, masked: s.elevenlabs3?.maskedKey || s.maskedElevenLabsKey3, sub: s.elevenlabs3?.subscription },
+                        { has: s.elevenlabs4?.isConnected || s.hasElevenLabsKey4, masked: s.elevenlabs4?.maskedKey || s.maskedElevenLabsKey4, sub: s.elevenlabs4?.subscription },
+                        { has: s.elevenlabs5?.isConnected || s.hasElevenLabsKey5, masked: s.elevenlabs5?.maskedKey || s.maskedElevenLabsKey5, sub: s.elevenlabs5?.subscription },
+                    ]
+                    setElevenLabsAccounts(prev => prev.map((item, idx) => ({
+                        ...item,
+                        isConnected: Boolean(configs[idx]?.has || (configs[idx]?.masked && configs[idx]?.masked.length > 0)),
+                        key: configs[idx]?.masked || item.key,
+                        subscription: configs[idx]?.sub || null,
+                    })))
                 }
 
-                if (s.elevenlabsPooled) {
-                    setElevenLabsPooled(s.elevenlabsPooled)
+                const pooled = s.elevenLabsPooled || s.elevenlabsPooled
+                if (pooled) {
+                    setElevenLabsPooled(pooled)
                 }
                 if (s.elevenlabs?.selectedVoiceId) setSelectedVoiceId(s.elevenlabs.selectedVoiceId)
                 if (s.elevenlabs?.selectedVoiceName) setSelectedVoiceName(s.elevenlabs.selectedVoiceName)
                 if (s.elevenlabs?.voiceCallEnabled !== undefined) setVoiceCallEnabled(s.elevenlabs.voiceCallEnabled)
 
-                const hasAnyConnected = (s.elevenlabsAccounts || []).some(a => a.isConnected) || Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
+                const hasAnyConnected = (rawAccounts || []).some(a => a.isConnected || (a.maskedKey && a.maskedKey.length > 0)) || Boolean(s.elevenlabs?.isConnected || s.hasElevenLabsKey)
                 if (hasAnyConnected) {
                     fetchVoices()
                 }
@@ -339,10 +346,28 @@ export default function AdminAiBotPage() {
                     setIsOpenRouterConnected(true)
                     setOpenRouterKey(data.maskedKey || key)
                 } else if (provider.startsWith('elevenlabs')) {
-                    await fetchSettings()
+                    const slotIdx = provider === 'elevenlabs' ? 0 : (parseInt(provider.replace('elevenlabs', ''), 10) - 1 || 0)
+                    const fallbackMasked = key.length > 8 ? `${key.slice(0, 4)}••••••••${key.slice(-4)}` : '••••••••'
+                    setElevenLabsAccounts(prev => prev.map((item, idx) => {
+                        if (idx === slotIdx) {
+                            return {
+                                ...item,
+                                isConnected: true,
+                                key: data.maskedKey || fallbackMasked,
+                                subscription: data.subscription || {
+                                    tier: data.tier || 'free',
+                                    characterCount: data.characterCount || 0,
+                                    characterLimit: data.characterLimit || 10000,
+                                    status: 'active',
+                                },
+                            }
+                        }
+                        return item
+                    }))
                     if (Array.isArray(data.voices) && data.voices.length > 0) {
                         setAvailableVoices(data.voices)
                     }
+                    await fetchSettings()
                 }
             } else {
                 toast.error(data.message || 'Connection failed')
@@ -399,6 +424,18 @@ export default function AdminAiBotPage() {
                     setIsOpenRouterConnected(false)
                     setOpenRouterKey('')
                 } else if (provider.startsWith('elevenlabs')) {
+                    const slotIdx = provider === 'elevenlabs' ? 0 : (parseInt(provider.replace('elevenlabs', ''), 10) - 1 || 0)
+                    setElevenLabsAccounts(prev => prev.map((item, idx) => {
+                        if (idx === slotIdx) {
+                            return {
+                                ...item,
+                                isConnected: false,
+                                key: '',
+                                subscription: null,
+                            }
+                        }
+                        return item
+                    }))
                     await fetchSettings()
                 }
             } else {
@@ -1177,7 +1214,7 @@ export default function AdminAiBotPage() {
                                                 acc.isConnected
                                                     ? isDepleted
                                                         ? 'bg-amber-50/50 border-amber-200/80 shadow-2xs'
-                                                        : 'bg-white border-[#EFE0EF] shadow-2xs'
+                                                        : 'bg-gradient-to-b from-emerald-50/30 to-white border-emerald-300/80 shadow-2xs'
                                                     : 'bg-[#FAF6FA]/50 border-[#EFE0EF]'
                                             }`}
                                         >
@@ -1201,20 +1238,20 @@ export default function AdminAiBotPage() {
                                                                 Credits Depleted (Auto-switched)
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                                                                <span className="size-1.5 rounded-full bg-emerald-500" />
-                                                                Connected & Ready
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap shadow-2xs">
+                                                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                Connected
                                                             </span>
                                                         )
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                                             <span className="size-1.5 rounded-full bg-slate-400" />
                                                             Not Connected
                                                         </span>
                                                     )}
 
                                                     {acc.isConnected && sub?.tier && (
-                                                        <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60">
+                                                        <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60 shadow-2xs">
                                                             {sub.tier}
                                                         </span>
                                                     )}
@@ -1229,7 +1266,11 @@ export default function AdminAiBotPage() {
                                                         value={acc.key}
                                                         onChange={(e) => handleAccountKeyChange(idx, e.target.value)}
                                                         placeholder={`Paste ElevenLabs key for Account ${acc.slot} (xi-api-key)...`}
-                                                        className="w-full h-10 px-3.5 pr-10 text-xs bg-white border border-[#EFE0EF] rounded-xl focus:outline-none focus:border-[#6C306E] font-mono text-[#241224]"
+                                                        className={`w-full h-10 px-3.5 pr-10 text-xs rounded-xl focus:outline-none transition font-mono ${
+                                                            acc.isConnected
+                                                                ? 'bg-emerald-50/20 border border-emerald-200 text-[#241224] font-medium'
+                                                                : 'bg-white border border-[#EFE0EF] focus:border-[#6C306E] text-[#241224]'
+                                                        }`}
                                                     />
                                                     <button
                                                         type="button"
@@ -1260,10 +1301,10 @@ export default function AdminAiBotPage() {
                                                         {testingProvider === acc.provider ? (
                                                             <>
                                                                 <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                                <span>Verifying...</span>
+                                                                <span>Connecting...</span>
                                                             </>
                                                         ) : (
-                                                            <span>Connect & Test</span>
+                                                            <span>Connect</span>
                                                         )}
                                                     </button>
                                                 )}

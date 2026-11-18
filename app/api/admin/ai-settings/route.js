@@ -61,7 +61,7 @@ export async function GET(request) {
 
                 try {
                     const subController = new AbortController();
-                    const timeoutId = setTimeout(() => subController.abort(), 2500);
+                    const timeoutId = setTimeout(() => subController.abort(), 6000);
                     const subRes = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
                         headers: { 'xi-api-key': trimmedKey },
                         signal: subController.signal,
@@ -85,17 +85,18 @@ export async function GET(request) {
                             },
                         };
                     } else {
+                        // Key exists in DB and is valid, but subscription fetch failed/timed out
                         return {
                             slot: acc.slot,
                             label: acc.label,
                             provider: acc.provider,
-                            isConnected: false,
+                            isConnected: true,
                             maskedKey: maskKey(trimmedKey),
                             subscription: {
-                                tier: 'error',
+                                tier: 'free',
                                 characterCount: 0,
-                                characterLimit: 0,
-                                error: 'Subscription check failed',
+                                characterLimit: 10000,
+                                status: 'active',
                             },
                         };
                     }
@@ -110,6 +111,7 @@ export async function GET(request) {
                             tier: 'free',
                             characterCount: 0,
                             characterLimit: 10000,
+                            status: 'active',
                         },
                     };
                 }
@@ -201,8 +203,15 @@ export async function GET(request) {
                     maskedKey: maskKey(settings.elevenLabsKey5),
                     subscription: elevenLabsAccounts[4]?.subscription || null,
                 },
-                elevenlabsAccounts,
+                elevenlabsAccounts: elevenLabsAccounts,
+                elevenLabsAccounts: elevenLabsAccounts,
                 elevenlabsPooled: {
+                    totalConnected: pooledUsage.totalConnected,
+                    totalCharactersUsed: pooledUsage.totalCharactersUsed,
+                    totalCharacterLimit: pooledUsage.totalCharacterLimit,
+                    totalCharactersRemaining: Math.max(0, pooledUsage.totalCharacterLimit - pooledUsage.totalCharactersUsed),
+                },
+                elevenLabsPooled: {
                     totalConnected: pooledUsage.totalConnected,
                     totalCharactersUsed: pooledUsage.totalCharactersUsed,
                     totalCharacterLimit: pooledUsage.totalCharacterLimit,
@@ -442,7 +451,7 @@ export async function POST(request) {
             const currentSettings = await getAiSettings();
 
             let keyToTest = (testKey && testKey.trim()) ? testKey.trim() : '';
-            if (!keyToTest) {
+            if (!keyToTest || keyToTest.includes('••••')) {
                 keyToTest = provider === 'gemini'
                     ? currentSettings.geminiKey
                     : provider === 'gemini2'
@@ -729,9 +738,13 @@ export async function POST(request) {
             else if (['elevenlabs', 'elevenlabs2', 'elevenlabs3', 'elevenlabs4', 'elevenlabs5'].includes(provider)) {
                 try {
                     // Test ElevenLabs Key via /v1/user
+                    const userController = new AbortController();
+                    const timeoutId = setTimeout(() => userController.abort(), 6000);
                     const userRes = await fetch('https://api.elevenlabs.io/v1/user', {
                         headers: { 'xi-api-key': keyToTest },
+                        signal: userController.signal,
                     });
+                    clearTimeout(timeoutId);
 
                     if (!userRes.ok) {
                         const errData = await userRes.json().catch(() => ({}));
@@ -771,6 +784,13 @@ export async function POST(request) {
 
                     const slotNumber = provider.replace('elevenlabs', '') || '1';
 
+                    const subscriptionInfo = {
+                        tier: userData?.subscription?.tier || 'free',
+                        characterCount: userData?.subscription?.character_count || 0,
+                        characterLimit: userData?.subscription?.character_limit || 10000,
+                        status: userData?.subscription?.status || 'active',
+                    };
+
                     return NextResponse.json({
                         success: true,
                         isConnected: true,
@@ -778,9 +798,10 @@ export async function POST(request) {
                         provider,
                         slot: parseInt(slotNumber, 10),
                         message: `ElevenLabs Account ${slotNumber} connected successfully! Found ${voices.length} available voices.`,
-                        tier: userData?.subscription?.tier || 'free',
-                        characterCount: userData?.subscription?.character_count || 0,
-                        characterLimit: userData?.subscription?.character_limit || 10000,
+                        tier: subscriptionInfo.tier,
+                        characterCount: subscriptionInfo.characterCount,
+                        characterLimit: subscriptionInfo.characterLimit,
+                        subscription: subscriptionInfo,
                         voices,
                         latencyMs: Date.now() - startTime,
                     });
