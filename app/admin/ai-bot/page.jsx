@@ -64,6 +64,7 @@ export default function AdminAiBotPage() {
     const [audioPlayer, setAudioPlayer] = useState(null)
     const [voiceCallEnabled, setVoiceCallEnabled] = useState(true)
     const [loadingVoices, setLoadingVoices] = useState(false)
+    const [elevenLabsSubscription, setElevenLabsSubscription] = useState(null)
 
     const [preferredProvider, setPreferredProvider] = useState('gemini')
     const [customInstructions, setCustomInstructions] = useState('')
@@ -114,6 +115,7 @@ export default function AdminAiBotPage() {
                 if (s.elevenlabs?.selectedVoiceId) setSelectedVoiceId(s.elevenlabs.selectedVoiceId)
                 if (s.elevenlabs?.selectedVoiceName) setSelectedVoiceName(s.elevenlabs.selectedVoiceName)
                 if (s.elevenlabs?.voiceCallEnabled !== undefined) setVoiceCallEnabled(s.elevenlabs.voiceCallEnabled)
+                if (s.elevenlabs?.subscription) setElevenLabsSubscription(s.elevenlabs.subscription)
 
                 // ElevenLabs Voice Engine Status (Backup #2)
                 const eleven2Conn = Boolean(s.elevenlabs2?.isConnected || s.hasElevenLabsKey2)
@@ -154,6 +156,7 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success && Array.isArray(data.voices)) {
                 setAvailableVoices(data.voices)
+                if (data.subscription) setElevenLabsSubscription(data.subscription)
             }
         } catch (err) {
             console.warn('Could not load ElevenLabs voices:', err)
@@ -1230,7 +1233,7 @@ export default function AdminAiBotPage() {
                                 <div className="flex items-center gap-2">
                                     <span className="size-2 rounded-full bg-[#6C306E]" />
                                     <span className="text-slate-600">Currently Active Voice:</span>
-                                    <strong className="text-[#6C306E] font-black">{selectedVoiceName || 'Sarah (Soft & Warm)'}</strong>
+                                    <strong className="text-[#6C306E] font-black">{selectedVoiceName || 'Rimjhim - Natural, Relatable Friend'}</strong>
                                     <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-purple-200">
                                         ID: {selectedVoiceId}
                                     </span>
@@ -1239,6 +1242,31 @@ export default function AdminAiBotPage() {
                                     Multilingual v2 Active (Bengali & English)
                                 </span>
                             </div>
+
+                            {/* Plan Notice Banner */}
+                            {elevenLabsSubscription?.tier === 'free' && (
+                                <div className="p-3 px-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900">
+                                    <div className="flex items-start gap-2.5">
+                                        <span className="text-amber-600 font-bold text-sm leading-none mt-0.5 shrink-0">ℹ️</span>
+                                        <div>
+                                            <p className="font-bold text-amber-950">
+                                                ElevenLabs Free Tier Connected ({elevenLabsSubscription.characterCount?.toLocaleString() || 0} / {elevenLabsSubscription.characterLimit?.toLocaleString() || '10,000'} chars used)
+                                            </p>
+                                            <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                                                ElevenLabs policy requires a Starter plan ($5/mo) to stream community library voices (Rimjhim, Swati S) via API. If on ElevenLabs Free, Emma automatically streams ElevenLabs Sarah so you always enjoy human ElevenLabs AI voice without dropping to robotic browser audio. Upgrading your ElevenLabs account immediately activates Rimjhim live.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href="https://elevenlabs.io/pricing"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition shrink-0 whitespace-nowrap shadow-2xs"
+                                    >
+                                        Upgrade Plan ($5/mo) ↗
+                                    </a>
+                                </div>
+                            )}
 
                             {/* Direct Voice ID / Custom Voice URL Input */}
                             <div className="p-3 bg-[#FAF6FA]/80 rounded-xl border border-[#EFE0EF] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
@@ -1296,9 +1324,16 @@ export default function AdminAiBotPage() {
                                                         </div>
                                                         <p className="text-[10px] text-slate-500 capitalize">{accent} • {gender}</p>
                                                     </div>
-                                                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF6FA] text-slate-600 font-medium border border-[#EFE0EF] truncate max-w-[100px]">
-                                                        {desc}
-                                                    </span>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF6FA] text-slate-600 font-medium border border-[#EFE0EF] truncate max-w-[100px]">
+                                                            {desc}
+                                                        </span>
+                                                        {voice.category === 'professional' && (
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                                                                Library
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 

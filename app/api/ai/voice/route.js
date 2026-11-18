@@ -104,18 +104,26 @@ export async function POST(request) {
         if (!shortText || shortText.length < 10) shortText = clean;
         const speechText = shortText.length > 260 ? shortText.slice(0, 257) + '...' : shortText;
 
-        const voiceId = customVoiceId || settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL'; // Default: Sarah
+        const requestedVoiceId = customVoiceId || settings.elevenLabsVoiceId || '8e81Dm4CldjBZSlArGoT'; // Default: Rimjhim
 
         // Detect if speech contains Bengali script or Banglish keywords
         const hasBengaliScript = /[\u0980-\u09FF]/.test(speechText);
         const hasBanglishWords = /\b(apnar|amader|kase|ache|koto|taka|dam|brono|daag|skin|chul|kori|bhalo|shukno|tel|khoshkhoshe|deben|pabo|parbo|ki|amake|karon|korbo|ekhon|aro|oita|eta|keno)\b/i.test(speechText);
         const isBengaliOrBanglish = hasBengaliScript || hasBanglishWords;
 
-        // Model selection: For Bengali/Banglish, ALWAYS prioritize eleven_multilingual_v2
-        // for authentic, clear Bengali phonetic articulation and natural accent.
+        // Model selection: Always prioritize eleven_multilingual_v2 for authentic, natural human articulation
         const candidateModels = isBengaliOrBanglish
             ? ['eleven_multilingual_v2', 'eleven_turbo_v2_5', 'eleven_flash_v2_5']
-            : ['eleven_flash_v2_5', 'eleven_turbo_v2_5', 'eleven_multilingual_v2'];
+            : ['eleven_multilingual_v2', 'eleven_flash_v2_5', 'eleven_turbo_v2_5'];
+
+        // Candidate voices in strict priority order:
+        // 1. User's active selected voice from Admin Panel (e.g. Rimjhim `8e81Dm4CldjBZSlArGoT` or Swati S `nUarI71Lei0IFt1ybDm1`)
+        // 2. High-fidelity premade ElevenLabs female voices (Sarah `EXAVITQu4vr4xnSDxMaL` -> Jessica `cgSgspJ2msm6clMCkdW9`)
+        //    which are guaranteed to stream on both Free and Paid ElevenLabs accounts.
+        //    This ensures Emma ALWAYS speaks with a real ElevenLabs AI voice and NEVER falls back to the robotic Google browser synthesizer!
+        const candidateVoices = [requestedVoiceId];
+        if (!candidateVoices.includes('EXAVITQu4vr4xnSDxMaL')) candidateVoices.push('EXAVITQu4vr4xnSDxMaL');
+        if (!candidateVoices.includes('cgSgspJ2msm6clMCkdW9')) candidateVoices.push('cgSgspJ2msm6clMCkdW9');
 
         // ElevenLabs key fallback chain: Primary key -> Backup key (key2)
         const elevenLabsKeys = [
@@ -125,44 +133,50 @@ export async function POST(request) {
 
         let ttsRes = null;
         let lastErrorMsg = '';
+        let resolvedVoiceId = requestedVoiceId;
 
-        outerLoop: for (const apiKey of elevenLabsKeys) {
-            for (const modelId of candidateModels) {
-                try {
-                    const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=3`;
-                    const response = await fetch(ttsUrl, {
-                        method: 'POST',
-                        headers: {
-                            'xi-api-key': apiKey,
-                            'Content-Type': 'application/json',
-                            'Accept': 'audio/mpeg',
-                        },
-                        body: JSON.stringify({
-                            text: speechText,
-                            model_id: modelId,
-                            voice_settings: {
-                                stability: 0.5,
-                                similarity_boost: 0.75,
-                                style: 0.0,
-                                use_speaker_boost: true,
+        voiceLoop: for (const curVoice of candidateVoices) {
+            for (const apiKey of elevenLabsKeys) {
+                for (const modelId of candidateModels) {
+                    try {
+                        const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${curVoice}?optimize_streaming_latency=3`;
+                        const response = await fetch(ttsUrl, {
+                            method: 'POST',
+                            headers: {
+                                'xi-api-key': apiKey,
+                                'Content-Type': 'application/json',
+                                'Accept': 'audio/mpeg',
                             },
-                        }),
-                    });
+                            body: JSON.stringify({
+                                text: speechText,
+                                model_id: modelId,
+                                voice_settings: {
+                                    stability: 0.5,
+                                    similarity_boost: 0.75,
+                                    style: 0.0,
+                                    use_speaker_boost: true,
+                                },
+                            }),
+                        });
 
-                    if (response.ok) {
-                        ttsRes = response;
-                        break outerLoop;
-                    }
+                        if (response.ok) {
+                            ttsRes = response;
+                            resolvedVoiceId = curVoice;
+                            break voiceLoop;
+                        }
 
-                    const errData = await response.json().catch(() => ({}));
-                    lastErrorMsg = errData?.detail?.message || `Model ${modelId} failed (${response.status})`;
-                    console.warn(`[ElevenLabs TTS] Key ending ...${apiKey.slice(-4)}, Model ${modelId} with voice ${voiceId} returned ${response.status}:`, lastErrorMsg);
-                    // If key is unauthorized (401), payment/quota exhausted (402), or rate-limited (429), immediately fail over to the backup key
-                    if (response.status === 401 || response.status === 402 || response.status === 429) {
-                        break;
+                        const errData = await response.json().catch(() => ({}));
+                        lastErrorMsg = errData?.detail?.message || `Voice ${curVoice} / Model ${modelId} failed (${response.status})`;
+                        console.warn(`[ElevenLabs TTS] Voice ${curVoice}, Model ${modelId} returned ${response.status}:`, lastErrorMsg);
+
+                        // If 402: Free users cannot use library voices via the API (paid_plan_required).
+                        // Immediately break out to try the next voice in candidateVoices!
+                        if (response.status === 402 || response.status === 400 || response.status === 404) {
+                            break;
+                        }
+                    } catch (netErr) {
+                        lastErrorMsg = netErr.message;
                     }
-                } catch (netErr) {
-                    lastErrorMsg = netErr.message;
                 }
             }
         }
@@ -187,6 +201,8 @@ export async function POST(request) {
                 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
                 'Pragma': 'no-cache',
                 'Expires': '0',
+                'X-ElevenLabs-Voice': resolvedVoiceId,
+                'X-ElevenLabs-Requested': requestedVoiceId,
             },
         });
     } catch (err) {

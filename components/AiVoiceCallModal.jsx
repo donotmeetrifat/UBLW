@@ -415,9 +415,7 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                 audio.onerror = () => {
                     URL.revokeObjectURL(audioUrl);
                     currentAudioRef.current = null;
-                    if (isCallActiveRef.current) {
-                        fallbackBrowserSpeak(speechText, onPlaybackFinished);
-                    }
+                    onPlaybackFinished();
                 };
 
                 if (!isCallActiveRef.current) {
@@ -425,18 +423,22 @@ export default function AiVoiceCallModal({ isOpen, onClose }) {
                     return;
                 }
 
-                await audio.play();
+                try {
+                    await audio.play();
+                } catch (playErr) {
+                    console.warn('Audio play interrupted or prevented:', playErr);
+                    onPlaybackFinished();
+                }
             } else {
-                fallbackBrowserSpeak(speechText, onPlaybackFinished);
+                console.warn('Voice API returned non-OK status:', res.status);
+                onPlaybackFinished();
             }
         } catch (err) {
             if (err.name === 'AbortError') return;
-            console.warn('Voice API issue, falling back to browser speech:', err.message);
-            if (isCallActiveRef.current) {
-                fallbackBrowserSpeak(speechText, onPlaybackFinished);
-            }
+            console.warn('Voice API request failed:', err.message);
+            onPlaybackFinished();
         }
-    }, [stopActiveAudio, fallbackBrowserSpeak, scheduleRecognitionRestart]);
+    }, [stopActiveAudio, scheduleRecognitionRestart]);
 
     // Handle user query (voice transcript or typed input)
     const handleUserQuery = useCallback(async (queryText, channel = 'voice') => {

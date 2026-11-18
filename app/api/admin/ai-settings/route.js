@@ -34,6 +34,34 @@ export async function GET(request) {
         const hasElevenLabs = Boolean(settings.elevenLabsKey && settings.elevenLabsKey.trim());
         const hasElevenLabs2 = Boolean(settings.elevenLabsKey2 && settings.elevenLabsKey2.trim());
 
+        let elevenLabsSub = {
+            tier: 'free',
+            characterCount: 0,
+            characterLimit: 10000,
+            canUseLibraryVoices: false,
+        };
+
+        if (hasElevenLabs) {
+            try {
+                const subController = new AbortController();
+                const timeoutId = setTimeout(() => subController.abort(), 2000);
+                const subRes = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
+                    headers: { 'xi-api-key': settings.elevenLabsKey.trim() },
+                    signal: subController.signal,
+                });
+                clearTimeout(timeoutId);
+                if (subRes.ok) {
+                    const subData = await subRes.json();
+                    elevenLabsSub = {
+                        tier: subData.tier || 'free',
+                        characterCount: subData.character_count || 0,
+                        characterLimit: subData.character_limit || 10000,
+                        canUseLibraryVoices: subData.tier && subData.tier !== 'free',
+                    };
+                }
+            } catch (e) {}
+        }
+
         return NextResponse.json({
             success: true,
             settings: {
@@ -72,9 +100,10 @@ export async function GET(request) {
                 elevenlabs: {
                     isConnected: hasElevenLabs,
                     maskedKey: maskKey(settings.elevenLabsKey),
-                    selectedVoiceId: settings.elevenLabsVoiceId || 'EXAVITQu4vr4xnSDxMaL',
-                    selectedVoiceName: settings.elevenLabsVoiceName || 'Sarah (Soft & Warm)',
+                    selectedVoiceId: settings.elevenLabsVoiceId || '8e81Dm4CldjBZSlArGoT',
+                    selectedVoiceName: settings.elevenLabsVoiceName || 'Rimjhim - Natural, Relatable Friend (Bengali / English female)',
                     voiceCallEnabled: settings.voiceCallEnabled !== false,
+                    subscription: elevenLabsSub,
                 },
                 elevenlabs2: {
                     isConnected: hasElevenLabs2,
@@ -204,15 +233,35 @@ export async function POST(request) {
                 return NextResponse.json({ success: false, message: 'No ElevenLabs API key found' }, { status: 400 });
             }
             try {
-                const res = await fetch('https://api.elevenlabs.io/v1/voices', {
-                    headers: { 'xi-api-key': key },
-                });
+                const [res, subRes] = await Promise.all([
+                    fetch('https://api.elevenlabs.io/v1/voices', {
+                        headers: { 'xi-api-key': key },
+                    }),
+                    fetch('https://api.elevenlabs.io/v1/user/subscription', {
+                        headers: { 'xi-api-key': key },
+                    }).catch(() => null),
+                ]);
+
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     return NextResponse.json({ success: false, message: err?.detail?.message || 'Failed to fetch voices' }, { status: 400 });
                 }
                 const data = await res.json();
-                return NextResponse.json({ success: true, voices: data.voices || [] });
+                let subscription = { tier: 'free', canUseLibraryVoices: false };
+                if (subRes && subRes.ok) {
+                    const subData = await subRes.json().catch(() => ({}));
+                    subscription = {
+                        tier: subData.tier || 'free',
+                        characterCount: subData.character_count || 0,
+                        characterLimit: subData.character_limit || 10000,
+                        canUseLibraryVoices: subData.tier && subData.tier !== 'free',
+                    };
+                }
+                return NextResponse.json({
+                    success: true,
+                    voices: data.voices || [],
+                    subscription,
+                });
             } catch (err) {
                 return NextResponse.json({ success: false, message: err.message }, { status: 500 });
             }
