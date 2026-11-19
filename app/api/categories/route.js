@@ -29,7 +29,7 @@ export async function GET(request) {
             if (Array.isArray(cachedList)) {
                 return NextResponse.json(
                     { success: true, categories: cachedList },
-                    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+                    { headers: { 'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300' } }
                 );
             }
         }
@@ -95,7 +95,7 @@ export async function GET(request) {
                 { success: true, categories: formatted },
                 {
                     headers: {
-                        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                        'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'
                     }
                 }
             );
@@ -113,7 +113,7 @@ export async function GET(request) {
             { success: true, categories: formatted },
             {
                 headers: {
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+                    'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'
                 }
             }
         );

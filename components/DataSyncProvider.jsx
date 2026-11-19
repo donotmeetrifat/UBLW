@@ -49,15 +49,18 @@ export default function DataSyncProvider({ children }) {
         }
     }, [productsList, isProductsLoaded, dispatch])
 
-    // Prefetch all public store pages for instant 0ms offline navigation
+    // Prefetch all public store pages on idle to keep initial load lightweight
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const routes = ['/shop', '/cart', '/checkout', '/orders', '/contact', '/reviews', '/account'];
-            routes.forEach(route => {
-                try {
-                    router.prefetch(route);
-                } catch (e) {}
-            });
+            const timer = setTimeout(() => {
+                const routes = ['/shop', '/cart', '/checkout', '/orders', '/contact', '/reviews', '/account'];
+                routes.forEach(route => {
+                    try {
+                        router.prefetch(route);
+                    } catch (e) {}
+                });
+            }, 3000);
+            return () => clearTimeout(timer);
         }
     }, [router])
 
@@ -89,7 +92,7 @@ export default function DataSyncProvider({ children }) {
                     registration.update().catch(() => {});
 
                     // Self-healing: if device holds stale sw cache from previous versions, purge immediately
-                    const currentSwVer = 'ukbl-v13';
+                    const currentSwVer = 'ukbl-v14';
                     if (localStorage.getItem('ukbl_sw_installed_version') !== currentSwVer) {
                         if (registration.active) {
                             registration.active.postMessage({ type: 'CLEAR_ALL_CACHES' });
@@ -97,7 +100,7 @@ export default function DataSyncProvider({ children }) {
                         if ('caches' in window) {
                             caches.keys().then((keys) => {
                                 keys.forEach(key => {
-                                    if (!key.includes('v12')) {
+                                    if (!key.includes('v14')) {
                                         caches.delete(key);
                                     }
                                 });
@@ -240,16 +243,10 @@ export default function DataSyncProvider({ children }) {
         }
 
         // 2. FETCH LIVE PRODUCT CATALOG & PRE-WARM CACHES FOR OFFLINE USE
-        const syncProductCatalog = async () => {
+        const syncProductCatalog = async (forceFresh = false) => {
             try {
-                const res = await fetch(`/api/products?_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Expires': '0'
-                    }
-                })
+                const url = forceFresh ? `/api/products?fresh=1` : `/api/products`
+                const res = await fetch(url)
                 const data = await res.json()
                 if (data.success && Array.isArray(data.products)) {
                     dispatch(setProduct(data.products))
@@ -267,13 +264,7 @@ export default function DataSyncProvider({ children }) {
         // 2b. FETCH LIVE CATEGORY CATALOG SITE-WIDE
         const syncCategoryCatalog = async () => {
             try {
-                const res = await fetch(`/api/categories?all=true&_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                })
+                const res = await fetch(`/api/categories?all=true`)
                 const data = await res.json()
                 if (data.success && Array.isArray(data.categories)) {
                     const activeNames = data.categories
@@ -294,13 +285,7 @@ export default function DataSyncProvider({ children }) {
         // 2c. FETCH LIVE HOMEPAGE CURATED SECTIONS
         const syncHomepageSections = async () => {
             try {
-                const res = await fetch(`/api/homepage-sections?_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                })
+                const res = await fetch(`/api/homepage-sections`)
                 const data = await res.json()
                 if (data.success && data.sections) {
                     dispatch(setHomepageSections(data.sections))
@@ -317,13 +302,7 @@ export default function DataSyncProvider({ children }) {
         // 2d. FETCH LIVE HERO BANNERS & SETTINGS
         const syncHeroBanners = async () => {
             try {
-                const res = await fetch(`/api/banners?_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                })
+                const res = await fetch(`/api/banners`)
                 const data = await res.json()
                 if (data.success) {
                     if (Array.isArray(data.banners)) {
@@ -353,13 +332,7 @@ export default function DataSyncProvider({ children }) {
         // 2e. FETCH LIVE HERO PROMOTIONAL BOXES
         const syncHeroPromotions = async () => {
             try {
-                const res = await fetch(`/api/promotions?_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                })
+                const res = await fetch(`/api/promotions`)
                 const data = await res.json()
                 if (data.success && data.promotions) {
                     dispatch(setPromotions(data.promotions))

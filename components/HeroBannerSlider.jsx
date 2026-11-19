@@ -48,13 +48,7 @@ const HeroBannerSlider = () => {
         // 2. Fetch fresh live banners from database
         const fetchFreshBanners = async () => {
             try {
-                const res = await fetch(`/api/banners?_t=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Pragma': 'no-cache',
-                        'Cache-Control': 'no-cache'
-                    }
-                })
+                const res = await fetch('/api/banners')
                 const data = await res.json()
                 if (data.success && Array.isArray(data.banners)) {
                     setLocalBanners(data.banners)
@@ -65,7 +59,9 @@ const HeroBannerSlider = () => {
             } catch (err) {}
         }
 
-        fetchFreshBanners()
+        if (!localBanners && (!reduxBanners || reduxBanners.length === 0)) {
+            fetchFreshBanners()
+        }
 
         // 3. Multi-channel real-time synchronization when admin updates banners or toggles autoplay
         const handleAutoplayChange = (e) => {
@@ -120,7 +116,9 @@ const HeroBannerSlider = () => {
                     if (Array.isArray(msg.data?.banners)) {
                         setLocalBanners(msg.data.banners)
                     } else {
-                        fetchFreshBanners()
+                        if (!localBanners && (!reduxBanners || reduxBanners.length === 0)) {
+            fetchFreshBanners()
+        }
                     }
                 }
             }

@@ -23,14 +23,14 @@ export async function GET(request) {
                               request.headers.get('pragma')?.includes('no-cache') ||
                               request.headers.get('cache-control')?.includes('no-cache');
 
-        // Short-lived server memory cache (3s TTL) for unparameterized repeated hits
+        // Short-lived server memory cache (30s TTL) for unparameterized repeated hits
         const cache = getProductsCache();
-        if (!isBypassCache && !hasFilters && cache.fetchedAt && Date.now() - cache.fetchedAt < 3000 && Array.isArray(cache.data)) {
+        if (!isBypassCache && !hasFilters && cache.fetchedAt && Date.now() - cache.fetchedAt < 30000 && Array.isArray(cache.data)) {
             return NextResponse.json(
                 { success: true, products: cache.data },
                 {
                     headers: {
-                        'Cache-Control': 'no-store, no-cache, must-revalidate',
+                        'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
                         'X-Cache': 'HIT'
                     }
                 }
@@ -150,15 +150,18 @@ export async function GET(request) {
                 setProductsCache(normalized);
             }
 
-            return NextResponse.json({ success: true, products: normalized }, {
-                headers: {
+            const cacheHeaders = isBypassCache
+                ? {
                     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
                     'Pragma': 'no-cache',
-                    'Expires': '0',
-                    'Surrogate-Control': 'no-store',
-                    'CDN-Cache-Control': 'no-store',
-                    'Vercel-CDN-Cache-Control': 'no-store'
+                    'Expires': '0'
                 }
+                : {
+                    'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'
+                };
+
+            return NextResponse.json({ success: true, products: normalized }, {
+                headers: cacheHeaders
             });
         }
 
