@@ -4,7 +4,9 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export const DoubleCheckIcon = ({ className = "w-3.5 h-3.5" }) => (
+export const DoubleCheckIcon = ({
+  className = "w-3.5 h-3.5",
+}) => (
   <svg
     className={className}
     viewBox="0 0 16 11"
@@ -59,7 +61,9 @@ export const ArrowLeftIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-export const MoreVerticalIcon = ({ className = "w-4 h-4" }) => (
+export const MoreVerticalIcon = ({
+  className = "w-4 h-4",
+}) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <circle cx="12" cy="5" r="2" />
     <circle cx="12" cy="12" r="2" />
@@ -130,47 +134,47 @@ export const EmojiIcon = ({ className = "w-4.5 h-4.5" }) => (
   </svg>
 );
 
-const DEFAULT_MESSAGES = [
+export const DEFAULT_MESSAGES = [
   {
     id: 1,
-    sender: "Taylor",
-    avatarInitial: "T",
-    text: "Hey! 👋",
+    sender: "UK Brand Lover",
+    avatarInitial: "UK",
+    text: "Assalamu Alaikum Nusrat Jahan! 👋",
     isCurrentUser: false,
     timestamp: "10:11 AM",
   },
   {
     id: 2,
-    sender: "Taylor",
-    avatarInitial: "T",
-    text: "Wanted to catch up with you - are you in the office this week?",
+    sender: "UK Brand Lover",
+    avatarInitial: "UK",
+    text: "We noticed you left an authentic UK item in your bag. Reserved with code: UKBL-AC-98F2 (15% OFF) 🎁",
     isCurrentUser: false,
     timestamp: "10:11 AM",
   },
   {
     id: 3,
-    sender: "You",
-    avatarInitial: "Y",
-    text: "Hi! I'm working remotely this week 🏖️",
+    sender: "Nusrat",
+    avatarInitial: "N",
+    text: "Is this genuine London Heathrow air-shipment? 🇬🇧",
     isCurrentUser: true,
     timestamp: "10:12 AM",
   },
   {
     id: 4,
-    sender: "You",
-    avatarInitial: "Y",
+    sender: "UK Brand Lover",
+    avatarInitial: "UK",
     isImage: true,
     imageUrl:
-      "https://cdn.21st.dev/assets/mirror/cc/cc2577fd1f665e5ae113dd127572d18996518a37d7020888d275a88c244feff2.jpg",
-    imageCaption: "Catch you next Monday over coffee! ☕",
-    isCurrentUser: true,
+      "https://ibhmqlfgbezszyurajof.supabase.co/storage/v1/object/public/products/catalog/1794663871983-product_1739877636_4595.jpg",
+    imageCaption: "100% Authentic UK Stock with Batch Verification ✨",
+    isCurrentUser: false,
     timestamp: "10:12 AM",
   },
   {
     id: 5,
-    sender: "Taylor",
-    avatarInitial: "T",
-    text: "Sounds good. Enjoy the rest of your week! 😊",
+    sender: "UK Brand Lover",
+    avatarInitial: "UK",
+    text: "Tap here to complete order with Express Delivery: ukbrandlover.com/cart?c=UKBL-AC-98F2 🛍️",
     isCurrentUser: false,
     timestamp: "10:13 AM",
   },
@@ -179,12 +183,12 @@ const DEFAULT_MESSAGES = [
 export function MobileMockup({
   headerTitle = "UK Brand Lover",
   headerSubtitle = "online",
-  avatarUrl = "",
+  avatarUrl = "/images/web-logo-optimized.png",
   avatarFallback = "🇬🇧",
   messages = DEFAULT_MESSAGES,
-  autoPlay = false,
-  className = "",
-  children = null,
+  autoPlay = true,
+  className,
+  children,
 }) {
   const [visibleMessages, setVisibleMessages] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
@@ -205,14 +209,14 @@ export function MobileMockup({
 
       t1 = setTimeout(() => {
         if (!isMounted) return;
-        setVisibleMessages([messages[0], messages[1]].filter(Boolean));
+        setVisibleMessages([messages[0], messages[1]]);
         setShowTyping(true);
       }, 800);
 
       t2 = setTimeout(() => {
         if (!isMounted) return;
         setShowTyping(false);
-        setVisibleMessages([messages[0], messages[1], messages[2]].filter(Boolean));
+        setVisibleMessages([messages[0], messages[1], messages[2]]);
       }, 2500);
 
       t3 = setTimeout(() => {
@@ -222,7 +226,7 @@ export function MobileMockup({
           messages[1],
           messages[2],
           messages[3],
-        ].filter(Boolean));
+        ]);
         setTimeout(() => {
           if (isMounted) setShowTyping(true);
         }, 600);
@@ -258,29 +262,26 @@ export function MobileMockup({
   return (
     <div
       className={cn(
-        "relative mx-auto flex w-full max-w-[320px] sm:max-w-[340px] items-center justify-center py-1 select-none",
-        className
+        "xs:max-w-[265px] relative mx-auto flex w-full max-w-[245px] items-center justify-center py-2 select-none sm:max-w-[285px]",
+        className,
       )}
     >
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 24 }}
-        className="relative flex h-[520px] w-full transform-gpu flex-col overflow-hidden rounded-[38px] bg-neutral-900 p-2.5 shadow-2xl transition-colors"
+        initial={{ opacity: 0, y: 35, scale: 0.94, rotate: -1.5 }}
+        animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+        whileHover={{ y: -6, rotate: 0.5, transition: { duration: 0.25 } }}
+        transition={{ type: "spring", stiffness: 220, damping: 20 }}
+        className="xs:h-[530px] relative flex h-[490px] w-full transform-gpu flex-col overflow-hidden rounded-[40px] bg-neutral-900 p-2.5 transition-colors sm:h-[560px] dark:bg-neutral-950"
       >
-        {/* Hardware side buttons */}
-        <div className="absolute top-24 -left-[5px] h-8 w-[2.5px] rounded-l-xs bg-neutral-700" />
-        <div className="absolute top-36 -left-[5px] h-10 w-[2.5px] rounded-l-xs bg-neutral-700" />
-        <div className="absolute top-48 -left-[5px] h-10 w-[2.5px] rounded-l-xs bg-neutral-700" />
-        <div className="absolute top-32 -right-[5px] h-14 w-[2.5px] rounded-r-xs bg-neutral-700" />
+        <div className="absolute top-24 -left-[5px] h-8 w-[2.5px] rounded-l-xs bg-neutral-700 dark:bg-neutral-800" />
+        <div className="absolute top-36 -left-[5px] h-10 w-[2.5px] rounded-l-xs bg-neutral-700 dark:bg-neutral-800" />
+        <div className="absolute top-48 -left-[5px] h-10 w-[2.5px] rounded-l-xs bg-neutral-700 dark:bg-neutral-800" />
+        <div className="absolute top-32 -right-[5px] h-14 w-[2.5px] rounded-r-xs bg-neutral-700 dark:bg-neutral-800" />
 
-        {/* Screen Bezel */}
-        <div className="relative isolate flex h-full w-full transform-gpu flex-col overflow-hidden rounded-[28px] bg-[#efeae2] text-neutral-900">
-          
-          {/* Top Status Bar */}
-          <div className="z-30 flex shrink-0 items-center justify-between bg-[#008069] px-4 pt-2 pb-1 text-[11px] font-semibold text-white">
-            <span className="w-10 text-left font-bold tracking-tight text-[11px]">
-              12:45
+        <div className="relative isolate flex h-full w-full transform-gpu flex-col overflow-hidden rounded-[30px] bg-[#efeae2] text-neutral-900 dark:bg-[#0b141a] dark:text-neutral-100">
+          <div className="z-30 flex shrink-0 items-center justify-between bg-[#008069] px-4 pt-2 pb-1 text-[11px] font-semibold text-white transition-colors dark:bg-[#111b21]">
+            <span className="w-10 text-left font-bold tracking-tight">
+              10:13
             </span>
 
             <div className="flex items-center justify-end gap-1.5 text-white">
@@ -324,9 +325,8 @@ export function MobileMockup({
             </div>
           </div>
 
-          {/* WhatsApp Header */}
-          <div className="z-20 flex shrink-0 items-center justify-between bg-[#008069] px-3 py-1.5 text-white shadow-xs">
-            <div className="flex items-center gap-1.5 min-w-0">
+          <div className="z-20 flex shrink-0 items-center justify-between bg-[#008069] px-3 py-1.5 text-white transition-colors dark:bg-[#111b21]">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 className="text-white/90 transition-colors hover:text-white"
@@ -334,7 +334,7 @@ export function MobileMockup({
                 <ArrowLeftIcon />
               </button>
 
-              <div className="relative flex h-7.5 w-7.5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-[#008069] text-xs font-black shadow-xs">
+              <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-700 text-[11px] font-bold text-white dark:bg-emerald-900">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -347,15 +347,10 @@ export function MobileMockup({
               </div>
 
               <div className="flex min-w-0 flex-col">
-                <div className="flex items-center gap-1">
-                  <span className="max-w-[130px] truncate text-[11.5px] leading-tight font-bold text-white">
-                    {headerTitle}
-                  </span>
-                  <svg className="size-3 text-emerald-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="m9 16.17 9.83-9.83 1.41 1.41L9 19 3.59 13.59l1.41-1.41L9 16.17z"/>
-                  </svg>
-                </div>
-                <span className="text-[9.5px] leading-none font-medium text-emerald-100">
+                <span className="xs:max-w-[120px] max-w-[100px] truncate text-[11.5px] leading-tight font-semibold text-white">
+                  {headerTitle}
+                </span>
+                <span className="mt-0.5 text-[9.5px] leading-none font-medium text-emerald-200 dark:text-emerald-400">
                   {headerSubtitle}
                 </span>
               </div>
@@ -383,19 +378,18 @@ export function MobileMockup({
             </div>
           </div>
 
-          {/* Chat Background & Message Area */}
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#efeae2] p-2.5">
+          <div className="relative flex min-h-0 flex-1 flex-col justify-end overflow-hidden bg-[#efeae2] p-2.5 transition-colors dark:bg-[#0b141a]">
             {children ? (
               <div className="relative z-10 h-full w-full [scrollbar-width:none] overflow-y-auto [&::-webkit-scrollbar]:hidden">
                 {children}
               </div>
             ) : (
               <>
-                <div className="relative z-10 mx-auto mb-1.5 rounded-full bg-white/90 px-2.5 py-0.5 text-[9px] font-medium text-neutral-600 shadow-2xs">
+                <div className="relative z-10 mx-auto mb-1.5 rounded-full bg-white/90 px-2.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:bg-[#182229]/90 dark:text-neutral-400">
                   Today
                 </div>
 
-                <div className="relative z-10 flex flex-1 [scrollbar-width:none] flex-col justify-start space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden pt-1">
+                <div className="relative z-10 flex flex-1 [scrollbar-width:none] flex-col justify-end space-y-1.5 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                   <AnimatePresence mode="sync">
                     {displayMessages.map((msg) => (
                       <motion.div
@@ -412,10 +406,10 @@ export function MobileMockup({
                       >
                         <div
                           className={cn(
-                            "relative flex max-w-[92%] flex-col rounded-xl px-3 py-2 text-[11px] shadow-xs leading-relaxed transition-colors",
+                            "relative flex max-w-[85%] flex-col rounded-xl px-2.5 py-1 text-[11px] transition-colors",
                             msg.isCurrentUser
-                              ? "rounded-tr-none bg-[#dcf8c6] text-neutral-900 border border-emerald-200/50"
-                              : "rounded-tl-none bg-white text-neutral-900 border border-slate-200/60",
+                              ? "rounded-tr-none bg-[#dcf8c6] text-neutral-900 dark:bg-[#005c4b] dark:text-neutral-100"
+                              : "rounded-tl-none bg-white text-neutral-900 dark:bg-[#202c33] dark:text-neutral-100",
                           )}
                         >
                           {msg.isImage ? (
@@ -434,21 +428,21 @@ export function MobileMockup({
                               )}
                             </div>
                           ) : (
-                            <p className="text-[11px] leading-relaxed whitespace-pre-wrap font-sans text-slate-800">
+                            <p className="text-[11px] leading-tight whitespace-pre-wrap">
                               {msg.text}
                             </p>
                           )}
 
-                          <div className="mt-1 flex items-center justify-end gap-1 self-end">
+                          <div className="mt-0.5 flex items-center justify-end gap-1 self-end">
                             <span
                               className={cn(
-                                "text-[9px] font-medium",
+                                "text-[8.5px]",
                                 msg.isCurrentUser
-                                  ? "text-emerald-800/70"
-                                  : "text-neutral-400",
+                                  ? "text-emerald-800/70 dark:text-emerald-200/60"
+                                  : "text-neutral-400 dark:text-neutral-400",
                               )}
                             >
-                              {msg.timestamp || "Just now"}
+                              {msg.timestamp}
                             </span>
                             {msg.isCurrentUser && (
                               <DoubleCheckIcon className="h-3 w-3 text-[#34b7f1]" />
@@ -464,15 +458,15 @@ export function MobileMockup({
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-center justify-start"
                       >
-                        <div className="flex items-center gap-1.5 rounded-xl rounded-tl-none bg-white px-3 py-2 shadow-xs">
-                          <span className="text-[10px] font-semibold text-emerald-600">
+                        <div className="flex items-center gap-1.5 rounded-xl rounded-tl-none bg-white px-3 py-2 dark:bg-[#202c33]">
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                             typing
                           </span>
                           <div className="flex items-center gap-1">
                             {[0, 1, 2].map((dotIndex) => (
                               <motion.span
                                 key={dotIndex}
-                                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                                className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"
                                 animate={{
                                   y: [0, -3, 0],
                                   opacity: [0.4, 1, 0.4],
@@ -494,26 +488,25 @@ export function MobileMockup({
             )}
           </div>
 
-          {/* Bottom WhatsApp Input Bar */}
-          <div className="z-20 flex shrink-0 items-center gap-1.5 bg-[#f0f2f5] p-2">
+          <div className="z-20 flex shrink-0 items-center gap-1.5 bg-[#f0f2f5] p-2 transition-colors dark:bg-[#111b21]">
             <button
               type="button"
-              className="p-1 text-neutral-600 transition-colors hover:text-emerald-600"
+              className="p-1 text-neutral-600 transition-colors hover:text-emerald-600 dark:text-neutral-400 dark:hover:text-emerald-400"
             >
               <EmojiIcon />
             </button>
-            <div className="flex flex-1 items-center justify-between rounded-full bg-white px-3 py-1.5 text-xs text-neutral-400 shadow-2xs">
-              <span className="truncate text-[11px]">Message</span>
+            <div className="flex flex-1 items-center justify-between rounded-full bg-white px-3 py-1.5 text-xs text-neutral-400 dark:bg-[#2a3942] dark:text-neutral-400">
+              <span className="truncate">Message</span>
               <div className="flex items-center gap-2 text-neutral-400">
                 <button
                   type="button"
-                  className="hover:text-neutral-600"
+                  className="hover:text-neutral-600 dark:hover:text-neutral-200"
                 >
                   <PaperclipIcon />
                 </button>
                 <button
                   type="button"
-                  className="hover:text-neutral-600"
+                  className="hover:text-neutral-600 dark:hover:text-neutral-200"
                 >
                   <CameraIcon />
                 </button>
@@ -521,15 +514,14 @@ export function MobileMockup({
             </div>
             <button
               type="button"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white shadow-xs transition-colors hover:bg-emerald-600"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white transition-colors hover:bg-emerald-600"
             >
               <MicrophoneIcon />
             </button>
           </div>
 
-          {/* Bottom gesture line */}
-          <div className="flex shrink-0 justify-center bg-[#f0f2f5] pt-0.5 pb-1">
-            <div className="h-1 w-20 rounded-full bg-neutral-400" />
+          <div className="flex shrink-0 justify-center bg-[#f0f2f5] pt-0.5 pb-1.5 dark:bg-[#111b21]">
+            <div className="h-1 w-24 rounded-full bg-neutral-400 dark:bg-neutral-700/80" />
           </div>
         </div>
       </motion.div>
