@@ -4,15 +4,23 @@ import React, { useState, useEffect, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
+import MobileMockup from '@/components/ui/great-ui-mobile-mockup'
 import {
     SparklesIcon,
     CheckIcon,
     RefreshIcon,
     EyeIcon,
-    DisconnectIcon
+    EyeOffIcon,
+    DisconnectIcon,
+    OfficialWhatsAppIcon,
+    PhoneIcon,
+    LockIcon,
+    ClockIcon,
+    SendIcon,
+    StoreIcon
 } from '@/components/icons'
 
-// Verified official ElevenLabs premade female voices that are 100% FREE via API on all accounts
+// Verified official ElevenLabs premade female voices supported via API on standard accounts
 const defaultCuratedVoices = [
     {
         voice_id: 'EXAVITQu4vr4xnSDxMaL',
@@ -73,7 +81,7 @@ Because our fresh London Heathrow shipment is in high demand, we have reserved y
 
 ⏰ Note: Your personal coupon is valid for *{validity_text}* from now.
 
-👉 Tap here to complete your order with Free Delivery:
+👉 Tap here to complete your order with Nationwide Express Delivery:
 {cart_url}
 
 — UK Brand Lover`;
@@ -141,7 +149,6 @@ export default function AdminAiBotPage() {
     const [availableVoices, setAvailableVoices] = useState([])
     const [selectedVoiceId, setSelectedVoiceId] = useState('EXAVITQu4vr4xnSDxMaL')
     const [selectedVoiceName, setSelectedVoiceName] = useState('Sarah (Soft & Warm)')
-    const [customVoiceInput, setCustomVoiceInput] = useState('')
     const [playingVoiceId, setPlayingVoiceId] = useState(null)
     const [audioPlayer, setAudioPlayer] = useState(null)
     const [voiceCallEnabled, setVoiceCallEnabled] = useState(true)
@@ -418,7 +425,7 @@ export default function AdminAiBotPage() {
                                 isConnected: true,
                                 key: data.maskedKey || fallbackMasked,
                                 subscription: data.subscription || {
-                                    tier: data.tier || 'free',
+                                    tier: data.tier || 'standard',
                                     characterCount: data.characterCount || 0,
                                     characterLimit: data.characterLimit || 10000,
                                     status: 'active',
@@ -545,50 +552,6 @@ export default function AdminAiBotPage() {
         } catch (err) {
             console.error('Error auto-saving voice:', err)
             toast.error('Network error saving voice')
-        }
-    }
-
-    // Apply custom voice ID or ElevenLabs voice link directly
-    const handleApplyCustomVoice = async () => {
-        const raw = customVoiceInput.trim()
-        if (!raw) {
-            toast.error('Please enter an ElevenLabs Voice ID or URL')
-            return
-        }
-
-        // Support full URLs like https://elevenlabs.io/voices/nUarI71Lei0IFt1ybDm1
-        let extractedId = raw
-        if (raw.includes('elevenlabs.io/voices/')) {
-            extractedId = raw.split('elevenlabs.io/voices/')[1]?.split(/[?#/]/)[0]?.trim() || raw
-        }
-
-        let voiceName = `Custom Voice (${extractedId.slice(0, 8)}...)`
-        if (extractedId === 'nUarI71Lei0IFt1ybDm1') voiceName = 'Swati S (South Asian / English)'
-        if (extractedId === '8e81Dm4CldjBZSlArGoT') voiceName = 'Rimjhim (Bengali / Conversational)'
-
-        setSelectedVoiceId(extractedId)
-        setSelectedVoiceName(voiceName)
-
-        try {
-            const res = await fetch('/api/admin/ai-settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'save_voice',
-                    elevenLabsVoiceId: extractedId,
-                    elevenLabsVoiceName: voiceName,
-                }),
-            })
-            const data = await res.json()
-            if (data.success) {
-                toast.success(`Active voice changed to ${voiceName}! Live immediately.`)
-                setCustomVoiceInput('')
-            } else {
-                toast.error(data.message || 'Failed to save voice')
-            }
-        } catch (err) {
-            console.error('Error auto-saving custom voice:', err)
-            toast.error('Network error saving custom voice')
         }
     }
 
@@ -1264,7 +1227,7 @@ export default function AdminAiBotPage() {
                                 </div>
                                 {isOpenRouterConnected && (
                                     <p className="text-[10px] text-emerald-700 font-semibold px-1 truncate">
-                                        Free Tier Active
+                                        Operational & Verified
                                     </p>
                                 )}
                             </div>
@@ -1339,13 +1302,13 @@ export default function AdminAiBotPage() {
             {(() => {
                 let voiceListToDisplay = defaultCuratedVoices;
                 if (Array.isArray(availableVoices) && availableVoices.length > 0) {
-                    const freeFemales = availableVoices.filter(v => {
+                    const verifiedFemales = availableVoices.filter(v => {
                         const isPremade = v.category === 'premade';
                         const gender = (v.labels?.gender || v.gender || '').toLowerCase();
                         return isPremade && gender === 'female';
                     });
-                    if (freeFemales.length > 0) {
-                        voiceListToDisplay = freeFemales;
+                    if (verifiedFemales.length > 0) {
+                        voiceListToDisplay = verifiedFemales;
                     }
                 }
 
@@ -1418,7 +1381,7 @@ export default function AdminAiBotPage() {
 
                                     <p className="text-[10.5px] text-slate-500 flex items-center gap-1.5">
                                         <span className="text-emerald-600 font-bold">✓</span>
-                                        <span>Auto-Switch Active: If any account finishes its free credits or encounters an issue, Emma instantly switches to the next API key.</span>
+                                        <span>Auto-Switch Active: If any account finishes its quota or encounters an issue, Emma instantly switches to the next API key.</span>
                                     </p>
                                 </div>
                             )}
@@ -1473,12 +1436,6 @@ export default function AdminAiBotPage() {
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 whitespace-nowrap shadow-2xs">
                                                             <span className="size-1.5 rounded-full bg-slate-400" />
                                                             Not Connected
-                                                        </span>
-                                                    )}
-
-                                                    {acc.isConnected && sub?.tier && (
-                                                        <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60 shadow-2xs">
-                                                            {sub.tier}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1635,30 +1592,6 @@ export default function AdminAiBotPage() {
                                 </div>
                             </div>
 
-                            {/* Direct Voice ID / Custom Voice URL Input */}
-                            <div className="p-3 bg-[#FAF6FA]/80 rounded-xl border border-[#EFE0EF] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                                        Paste Custom ElevenLabs Voice ID or URL
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customVoiceInput}
-                                        onChange={(e) => setCustomVoiceInput(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyCustomVoice() }}
-                                        placeholder="e.g. nUarI71Lei0IFt1ybDm1 or 8e81Dm4CldjBZSlArGoT"
-                                        className="w-full px-3 py-2 bg-white border border-[#EFE0EF] rounded-lg focus:outline-none focus:border-[#6C306E] font-mono text-xs text-[#241224]"
-                                    />
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleApplyCustomVoice}
-                                    className="self-end sm:self-auto sm:mt-5 px-4 py-2 bg-[#6C306E] hover:bg-[#521c54] text-white text-xs font-bold rounded-lg transition shrink-0 cursor-pointer shadow-2xs"
-                                >
-                                    Apply Voice
-                                </button>
-                            </div>
-
                             {/* Voices Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 max-h-[360px] overflow-y-auto pr-1">
                                 {voiceListToDisplay.map((voice) => {
@@ -1749,12 +1682,8 @@ export default function AdminAiBotPage() {
                 {/* Header & Master Toggle */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFE0EF]">
                     <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                            <div className="size-8 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-xs">
-                                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                                </svg>
-                            </div>
+                        <div className="flex items-center gap-3 mb-1.5">
+                            <OfficialWhatsAppIcon size={34} className="shrink-0 drop-shadow-xs" />
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
@@ -1796,15 +1725,12 @@ export default function AdminAiBotPage() {
                             <h3 className="text-xs font-black text-[#241224] uppercase tracking-wider">
                                 Meta WhatsApp Cloud API Configuration
                             </h3>
-                            <span className="text-[10px] text-[#6C306E] bg-white px-2 py-0.5 rounded-full border border-[#EFE0EF] font-semibold">
-                                Free Tier Supported
-                            </span>
                         </div>
                         {isWhatsAppConnected && (
                             <button
                                 type="button"
                                 onClick={handleDisconnectWhatsApp}
-                                className="text-[11px] font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
+                                className="text-[11px] font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1.5 cursor-pointer"
                             >
                                 <DisconnectIcon size={13} color="#E11D48" />
                                 <span>Disconnect API</span>
@@ -1815,9 +1741,12 @@ export default function AdminAiBotPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {/* Phone Number ID */}
                         <div>
-                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
-                                Phone Number ID <span className="text-red-500">*</span>
-                            </label>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <PhoneIcon size={12} color="#6C306E" strokeWidth={2} />
+                                <label className="text-[11px] font-bold text-[#241224]">
+                                    Phone Number ID <span className="text-red-500">*</span>
+                                </label>
+                            </div>
                             <input
                                 type="text"
                                 value={whatsappPhoneNumberId}
@@ -1829,9 +1758,12 @@ export default function AdminAiBotPage() {
 
                         {/* WhatsApp Business Account ID */}
                         <div>
-                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
-                                Business Account ID (WABA ID)
-                            </label>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <StoreIcon size={12} color="#6C306E" />
+                                <label className="text-[11px] font-bold text-[#241224]">
+                                    Business Account ID (WABA ID)
+                                </label>
+                            </div>
                             <input
                                 type="text"
                                 value={whatsappBusinessAccountId}
@@ -1843,9 +1775,12 @@ export default function AdminAiBotPage() {
 
                         {/* System User Access Token */}
                         <div className="sm:col-span-2">
-                            <label className="block text-[11px] font-bold text-[#241224] mb-1">
-                                Permanent Access Token <span className="text-red-500">*</span>
-                            </label>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <LockIcon size={12} color="#6C306E" />
+                                <label className="text-[11px] font-bold text-[#241224]">
+                                    Permanent Access Token <span className="text-red-500">*</span>
+                                </label>
+                            </div>
                             <div className="relative">
                                 <input
                                     type={showWhatsAppToken ? 'text' : 'password'}
@@ -1859,7 +1794,7 @@ export default function AdminAiBotPage() {
                                     onClick={() => setShowWhatsAppToken(!showWhatsAppToken)}
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                                 >
-                                    <EyeIcon size={14} />
+                                    {showWhatsAppToken ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                 </button>
                             </div>
                         </div>
@@ -1868,7 +1803,10 @@ export default function AdminAiBotPage() {
                     {/* Bottom Row: Official Hotline + Verify Button */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#EFE0EF]/80">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500">Official Store Hotline:</span>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                                <PhoneIcon size={13} color="#6C306E" strokeWidth={2} />
+                                <span>Official Store Hotline:</span>
+                            </div>
                             <input
                                 type="text"
                                 value={whatsappHotline}
@@ -1903,9 +1841,12 @@ export default function AdminAiBotPage() {
                     {/* Cart Trigger Delay */}
                     <div className="p-4 rounded-2xl bg-white border border-[#EFE0EF] space-y-2">
                         <div className="flex items-center justify-between">
-                            <label className="text-xs font-black text-[#241224] uppercase tracking-wider">
-                                Cart Abandonment Trigger Delay
-                            </label>
+                            <div className="flex items-center gap-1.5">
+                                <ClockIcon size={14} color="#6C306E" />
+                                <label className="text-xs font-black text-[#241224] uppercase tracking-wider">
+                                    Cart Abandonment Trigger Delay
+                                </label>
+                            </div>
                             <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                 Recommended: 1 Hour
                             </span>
@@ -1931,18 +1872,26 @@ export default function AdminAiBotPage() {
                                 type="button"
                                 onClick={handleTriggerCronNow}
                                 disabled={isRunningCron}
-                                className="px-3 py-1 rounded-lg bg-[#FAF6FA] hover:bg-[#F3E5F3] border border-[#EFE0EF] text-[#6C306E] text-[11px] font-black transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                className="px-3 py-1 rounded-lg bg-[#FAF6FA] hover:bg-[#F3E5F3] border border-[#EFE0EF] text-[#6C306E] text-[11px] font-black transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                             >
-                                {isRunningCron ? 'Scanning...' : '⚡ Scan Carts Now'}
+                                {isRunningCron ? 'Scanning...' : (
+                                    <>
+                                        <SparklesIcon size={12} color="#6C306E" />
+                                        <span>Scan Carts Now</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
 
                     {/* Test Message Dispatcher */}
                     <div className="p-4 rounded-2xl bg-white border border-[#EFE0EF] space-y-2">
-                        <label className="text-xs font-black text-[#241224] uppercase tracking-wider block">
-                            Send Live Test WhatsApp Message
-                        </label>
+                        <div className="flex items-center gap-1.5">
+                            <SendIcon size={13} color="#6C306E" />
+                            <label className="text-xs font-black text-[#241224] uppercase tracking-wider block">
+                                Send Live Test WhatsApp Message
+                            </label>
+                        </div>
                         <p className="text-[11px] text-slate-500">
                             Enter a recipient phone number to test sending a live message through your connected WhatsApp API.
                         </p>
@@ -1958,9 +1907,16 @@ export default function AdminAiBotPage() {
                                 type="button"
                                 onClick={handleSendTestWhatsApp}
                                 disabled={isSendingTestWhatsApp || !isWhatsAppConnected}
-                                className="px-4 py-2.5 rounded-xl bg-[#241224] hover:bg-[#3A0C38] disabled:bg-slate-300 text-white text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0"
+                                className="px-4 py-2.5 rounded-xl bg-[#241224] hover:bg-[#3A0C38] disabled:bg-slate-300 text-white text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5"
                             >
-                                {isSendingTestWhatsApp ? 'Sending...' : 'Send Test Msg'}
+                                {isSendingTestWhatsApp ? (
+                                    'Sending...'
+                                ) : (
+                                    <>
+                                        <SendIcon size={13} color="white" />
+                                        <span>Send Test Msg</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -2080,37 +2036,31 @@ export default function AdminAiBotPage() {
                             />
                         </div>
 
-                        {/* Right: Live WhatsApp Phone Simulator */}
-                        <div className="lg:col-span-5 bg-[#EFEAE2] rounded-3xl p-3.5 border border-slate-300/80 shadow-md">
-                            {/* WhatsApp Top Bar */}
-                            <div className="bg-[#075E54] text-white px-3 py-2 rounded-2xl flex items-center justify-between mb-3 shadow-2xs">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-full bg-white text-[#075E54] flex items-center justify-center font-black text-xs">
-                                        🇬🇧
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-1">
-                                            <h4 className="text-xs font-black leading-tight">UK Brand Lover</h4>
-                                            <span className="text-[10px] text-emerald-300">✓</span>
-                                        </div>
-                                        <p className="text-[9px] text-emerald-100/90 leading-tight">Official Flagship Store</p>
-                                    </div>
-                                </div>
-                                <span className="text-[10px] font-mono text-emerald-200">Stage {activeTemplateStageTab}</span>
+                        {/* Right: Live WhatsApp Phone Simulator (Great UI MobileMockup) */}
+                        <div className="lg:col-span-5 flex flex-col items-center justify-start">
+                            <div className="w-full flex items-center justify-between px-2 pb-2">
+                                <span className="text-xs font-bold text-slate-700">Live Device Simulation</span>
+                                <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full">
+                                    Stage {activeTemplateStageTab} Active
+                                </span>
                             </div>
-
-                            {/* Message Bubble Simulator */}
-                            <div className="bg-[#E7FFDB] rounded-2xl rounded-tr-xs p-3.5 shadow-2xs border border-emerald-200/50 space-y-2">
-                                <p className="text-xs text-slate-800 font-sans leading-relaxed whitespace-pre-wrap">
-                                    {previewMessageText}
-                                </p>
-                                <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400 font-medium">
-                                    <span>Just now</span>
-                                    <span className="text-sky-500 font-bold">✓✓</span>
-                                </div>
-                            </div>
-
-                            <p className="text-[10px] text-slate-500 text-center mt-3 font-medium">
+                            <MobileMockup
+                                headerTitle="UK Brand Lover"
+                                headerSubtitle="online"
+                                avatarFallback="🇬🇧"
+                                messages={[
+                                    {
+                                        id: 1,
+                                        sender: "UK Brand Lover",
+                                        avatarInitial: "UK",
+                                        text: previewMessageText,
+                                        isCurrentUser: true,
+                                        timestamp: "12:45 PM",
+                                    }
+                                ]}
+                                autoPlay={false}
+                            />
+                            <p className="text-[10px] text-slate-500 text-center mt-2.5 font-medium">
                                 📱 Real-time simulation with sample customer Nusrat Jahan.
                             </p>
                         </div>
@@ -2126,7 +2076,7 @@ export default function AdminAiBotPage() {
                             Custom Store Directives & Instructions
                         </h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Add specific instructions for Emma to follow during consultations (discounts, authentic UK sourcing, free shipping rules).
+                            Add specific instructions for Emma to follow during consultations (discounts, authentic UK sourcing, shipping rules).
                         </p>
                     </div>
                     <span className="text-[11px] font-mono text-slate-400">
@@ -2139,7 +2089,7 @@ export default function AdminAiBotPage() {
                         rows={4}
                         value={customInstructions}
                         onChange={(e) => setCustomInstructions(e.target.value)}
-                        placeholder="e.g. Always remind customers that orders over ৳3,000 receive free shipping inside Dhaka. Highlight that all CeraVe and The Ordinary stocks are fresh air-shipments from London with verified batch numbers."
+                        placeholder="e.g. Always remind customers that orders over ৳3,000 receive express delivery inside Dhaka. Highlight that all CeraVe and The Ordinary stocks are fresh air-shipments from London with verified batch numbers."
                         className="w-full p-3.5 text-xs bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl focus:bg-white focus:border-[#6C306E] focus:outline-none transition text-[#241224] placeholder:text-slate-400 font-normal leading-relaxed"
                     />
                 </div>
