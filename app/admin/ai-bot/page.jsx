@@ -815,51 +815,6 @@ export default function AdminAiBotPage() {
             .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout?code=UKBL-AC-98F2');
     }, [activeTemplateStageTab, whatsappTemplateStage1, whatsappTemplateStage2, whatsappTemplateStage3]);
 
-    const mockupMessages = useMemo(() => [
-        {
-            id: 1,
-            sender: "UK Brand Lover",
-            avatarInitial: "UK",
-            text: "Assalamu Alaikum Nusrat Jahan! 👋",
-            isCurrentUser: false,
-            timestamp: "10:11 AM",
-        },
-        {
-            id: 2,
-            sender: "UK Brand Lover",
-            avatarInitial: "UK",
-            text: previewMessageText,
-            isCurrentUser: false,
-            timestamp: "10:11 AM",
-        },
-        {
-            id: 3,
-            sender: "Nusrat",
-            avatarInitial: "N",
-            text: "Thank you! Is this genuine London Heathrow stock? 🇬🇧",
-            isCurrentUser: true,
-            timestamp: "10:12 AM",
-        },
-        {
-            id: 4,
-            sender: "UK Brand Lover",
-            avatarInitial: "UK",
-            isImage: true,
-            imageUrl: "https://ibhmqlfgbezszyurajof.supabase.co/storage/v1/object/public/products/catalog/1794663871983-product_1739877636_4595.jpg",
-            imageCaption: "100% Authentic London Heathrow Stock with Batch Verification ✨",
-            isCurrentUser: false,
-            timestamp: "10:12 AM",
-        },
-        {
-            id: 5,
-            sender: "UK Brand Lover",
-            avatarInitial: "UK",
-            text: "Yes 100%! Tap here to complete your order with Express Delivery 🛍️",
-            isCurrentUser: false,
-            timestamp: "10:13 AM",
-        },
-    ], [previewMessageText]);
-
     if (loading) {
         return (
             <div className="p-8">
@@ -2094,11 +2049,11 @@ export default function AdminAiBotPage() {
                                 headerSubtitle="online"
                                 avatarUrl="/images/web-logo-optimized.png"
                                 avatarFallback="🇬🇧"
-                                messages={mockupMessages}
-                                autoPlay={true}
+                                messageText={previewMessageText}
+                                timestamp="12:45 PM"
                             />
-                            <p className="text-[10px] text-slate-500 text-center mt-2.5 font-medium">
-                                📱 Interactive live preview with customer Nusrat Jahan.
+                            <p className="text-[10px] text-slate-500 text-center mt-2 font-medium">
+                                📱 Real-time Android WhatsApp view (Customer: Nusrat Jahan)
                             </p>
                         </div>
                     </div>
