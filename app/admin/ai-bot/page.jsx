@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
 import MobileMockup from '@/components/ui/great-ui-mobile-mockup'
+import AdminDropdown from '@/components/admin/AdminDropdown'
 import {
     SparklesIcon,
     CheckIcon,
@@ -19,6 +20,15 @@ import {
     SendIcon,
     StoreIcon
 } from '@/components/icons'
+
+const CART_RECOVERY_DELAY_OPTIONS = [
+    { value: '0.5', label: '30 Minutes (Fast recovery)' },
+    { value: '1', label: '1 Hour (Industry standard)' },
+    { value: '2', label: '2 Hours' },
+    { value: '6', label: '6 Hours' },
+    { value: '12', label: '12 Hours' },
+    { value: '24', label: '24 Hours' },
+]
 
 // Verified official ElevenLabs premade female voices supported via API on standard accounts
 const defaultCuratedVoices = [
@@ -1840,32 +1850,22 @@ export default function AdminAiBotPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Cart Trigger Delay */}
                     <div className="p-4 rounded-2xl bg-white border border-[#EFE0EF] space-y-2">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                                <ClockIcon size={14} color="#6C306E" />
-                                <label className="text-xs font-black text-[#241224] uppercase tracking-wider">
-                                    Cart Abandonment Trigger Delay
-                                </label>
-                            </div>
-                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                Recommended: 1 Hour
-                            </span>
+                        <div className="flex items-center gap-1.5">
+                            <ClockIcon size={14} color="#6C306E" />
+                            <label className="text-xs font-black text-[#241224] uppercase tracking-wider">
+                                Cart Abandonment Trigger Delay
+                            </label>
                         </div>
                         <p className="text-[11px] text-slate-500">
                             How long after a customer adds items to cart should Message 1 (Recovery Offer) be sent?
                         </p>
-                        <select
-                            value={whatsappRecoveryDelayHours}
-                            onChange={(e) => setWhatsappRecoveryDelayHours(e.target.value)}
-                            className="w-full text-xs font-bold p-2.5 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:border-[#6C306E] outline-none cursor-pointer"
-                        >
-                            <option value="0.5">30 Minutes (Fast recovery)</option>
-                            <option value="1">1 Hour (Industry best standard)</option>
-                            <option value="2">2 Hours</option>
-                            <option value="6">6 Hours</option>
-                            <option value="12">12 Hours</option>
-                            <option value="24">24 Hours</option>
-                        </select>
+                        <AdminDropdown
+                            value={String(whatsappRecoveryDelayHours)}
+                            onChange={(val) => setWhatsappRecoveryDelayHours(val)}
+                            options={CART_RECOVERY_DELAY_OPTIONS}
+                            fullWidth={true}
+                            buttonClassName="py-2.5 px-3.5 bg-[#FAF6FA] hover:bg-white text-xs font-bold text-[#241224] rounded-xl border-[#EFE0EF]"
+                        />
                         <div className="flex items-center justify-between pt-1">
                             <span className="text-[10px] text-slate-400 font-medium">Automatic cron runs in background.</span>
                             <button
