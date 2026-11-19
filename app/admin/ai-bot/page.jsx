@@ -2019,7 +2019,7 @@ export default function AdminAiBotPage() {
                             </div>
 
                             <textarea
-                                rows={11}
+                                rows={16}
                                 value={
                                     activeTemplateStageTab === 1
                                         ? whatsappTemplateStage1
@@ -2036,10 +2036,10 @@ export default function AdminAiBotPage() {
                             />
                         </div>
 
-                        {/* Right: Live WhatsApp Phone Simulator (Great UI MobileMockup) */}
+                        {/* Right: Live WhatsApp Phone Simulator (Samsung Galaxy Mockup) */}
                         <div className="lg:col-span-5 flex flex-col items-center justify-start">
                             <div className="w-full flex items-center justify-between px-2 pb-2">
-                                <span className="text-xs font-bold text-slate-700">Live Device Simulation</span>
+                                <span className="text-xs font-bold text-slate-700">Samsung Live Preview</span>
                                 <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full">
                                     Stage {activeTemplateStageTab} Active
                                 </span>
@@ -2053,7 +2053,7 @@ export default function AdminAiBotPage() {
                                 timestamp="12:45 PM"
                             />
                             <p className="text-[10px] text-slate-500 text-center mt-2 font-medium">
-                                📱 Real-time Android WhatsApp view (Customer: Nusrat Jahan)
+                                📱 Real-time Samsung Galaxy WhatsApp view (Customer: Nusrat Jahan)
                             </p>
                         </div>
                     </div>
