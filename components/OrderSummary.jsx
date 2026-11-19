@@ -109,9 +109,9 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
         return () => window.removeEventListener('coupon-catalog-updated', handleCouponSync);
     }, [coupon, totalPrice]);
 
-    const handleCouponCode = async (event) => {
-        event.preventDefault();
-        const code = couponCodeInput.trim().toUpperCase();
+    const handleCouponCode = async (event, overrideCode = null) => {
+        if (event && event.preventDefault) event.preventDefault();
+        const code = (overrideCode || couponCodeInput).trim().toUpperCase();
         if (!code) {
             toast.error('Please enter a coupon code.');
             return;
@@ -165,6 +165,17 @@ const OrderSummary = ({ totalPrice = 0, items = [], allCartItems = [], selectedC
             setIsApplyingCoupon(false);
         }
     };
+
+    // Auto-apply recovery voucher code from URL query parameter (e.g. ?code=UKBL-AC-XXXX or ?coupon=...)
+    useEffect(() => {
+        if (typeof window !== 'undefined' && items.length > 0 && totalPrice > 0 && !coupon) {
+            const params = new URLSearchParams(window.location.search);
+            const urlCode = params.get('code') || params.get('coupon');
+            if (urlCode && urlCode.trim()) {
+                handleCouponCode(null, urlCode.trim());
+            }
+        }
+    }, [items, totalPrice, coupon]);
 
     const discountAmount = coupon && items.length > 0 && (!coupon.minOrderAmount || totalPrice >= coupon.minOrderAmount)
         ? (coupon.discountType === 'FIXED'

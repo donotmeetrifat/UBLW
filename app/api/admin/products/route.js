@@ -306,11 +306,15 @@ export async function POST(request) {
                     `INSERT INTO "Product" (
                         "id", "name", "description", "formulaProfile", "benefits", "whyYouWillLoveIt",
                         "mrp", "price", "category", "brand", "inStock", "stockCount",
-                        "images", "storeId", "views", "isActive", "createdAt", "updatedAt"
+                        "images", "storeId", "views", "isActive",
+                        "abandonedCartOfferEnabled", "abandonedCartDiscountType", "abandonedCartDiscountValue", "abandonedCartValidityDays",
+                        "createdAt", "updatedAt"
                     ) VALUES (
                         $1, $2, $3, $4, $5, $6,
                         $7, $8, $9, $10, $11, $12,
-                        $13, $14, $15, $16, NOW(), NOW()
+                        $13, $14, $15, $16,
+                        $17, $18, $19, $20,
+                        NOW(), NOW()
                     ) RETURNING *`,
                     productId,
                     name.trim(),
@@ -327,7 +331,11 @@ export async function POST(request) {
                     imageList,
                     storeId,
                     0,
-                    true
+                    true,
+                    parsedAbandonedOfferEnabled,
+                    parsedAbandonedDiscountType,
+                    parsedAbandonedDiscountValue,
+                    parsedAbandonedValidityDays
                 );
 
                 if (Array.isArray(rows) && rows.length > 0) {
@@ -349,7 +357,11 @@ export async function POST(request) {
                         images: imageList,
                         storeId: storeId,
                         views: 0,
-                        isActive: true
+                        isActive: true,
+                        abandonedCartOfferEnabled: parsedAbandonedOfferEnabled,
+                        abandonedCartDiscountType: parsedAbandonedDiscountType,
+                        abandonedCartDiscountValue: parsedAbandonedDiscountValue,
+                        abandonedCartValidityDays: parsedAbandonedValidityDays
                     };
                 }
             }

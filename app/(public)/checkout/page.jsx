@@ -223,9 +223,9 @@ export default function CheckoutPage() {
         verifyCoupon();
     }, [coupon?.code, subtotal]);
 
-    const handleApplyCoupon = async (e) => {
+    const handleApplyCoupon = async (e, overrideCode = null) => {
         if (e && e.preventDefault) e.preventDefault();
-        const code = couponInput.trim().toUpperCase();
+        const code = (overrideCode || couponInput).trim().toUpperCase();
         if (!code) {
             toast.error('Please enter a coupon code.');
             return;
@@ -286,6 +286,17 @@ export default function CheckoutPage() {
             setIsApplyingCoupon(false);
         }
     };
+
+    // Auto-apply recovery voucher code from URL query parameter (e.g. ?code=UKBL-AC-XXXX)
+    useEffect(() => {
+        if (typeof window !== 'undefined' && items.length > 0 && subtotal > 0 && !coupon) {
+            const params = new URLSearchParams(window.location.search);
+            const urlCode = params.get('code') || params.get('coupon');
+            if (urlCode && urlCode.trim()) {
+                handleApplyCoupon(null, urlCode.trim());
+            }
+        }
+    }, [items, subtotal, coupon]);
 
     // 4. Calculations with 100% precision
     const isDhaka = selectedAddress ? isInsideDhaka(selectedAddress) : true

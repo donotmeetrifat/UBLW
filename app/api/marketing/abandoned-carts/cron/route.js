@@ -307,7 +307,7 @@ async function handleCron(request) {
                     code: couponCode,
                     description: `1-Time WhatsApp Cart Recovery Offer for ${user.name}`,
                     discountType,
-                    discountValue,
+                    discount: parseFloat(discountValue) || 10,
                     usageLimit: 1,
                     applicableProductIds: [targetProduct.id],
                     allowedUserIds: [user.id],
