@@ -76,25 +76,22 @@ export function MobileMockup({
         <div className="relative isolate flex h-full w-full flex-col overflow-hidden rounded-[31px] bg-[#EFEAE2] text-[#111B21] shadow-inner">
           
           {/* Samsung One UI Status Bar (Deep WhatsApp Teal #008069) */}
-          <div className="z-30 flex shrink-0 items-center justify-between bg-[#008069] px-4 pt-2.5 pb-1 text-white">
-            {/* Time & Mini WhatsApp Icon */}
-            <div className="flex items-center gap-1.5 w-16">
+          <div className="relative z-30 flex shrink-0 items-center justify-between bg-[#008069] px-4 pt-2.5 pb-1 text-white">
+            {/* Left: Time & Mini WhatsApp Icon */}
+            <div className="flex items-center gap-1.5">
               <span className="font-semibold text-[11.5px] tracking-tight">12:45</span>
               <svg className="size-3 text-white shrink-0" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12.004 2C6.479 2 2 6.48 2 12c0 1.96.568 3.79 1.55 5.34L2.05 22l4.82-1.47A9.95 9.95 0 0 0 12.004 22c5.524 0 10-4.48 10-10s-4.476-10-10-10z" />
               </svg>
             </div>
 
-            {/* Samsung Infinity-O Centered Punch-Hole Camera */}
-            <div className="size-2.5 rounded-full bg-black ring-1 ring-black/60 shadow-inner flex items-center justify-center">
+            {/* Samsung Infinity-O EXACT Dead-Center Punch-Hole Camera */}
+            <div className="absolute left-1/2 top-2.5 -translate-x-1/2 size-2.5 rounded-full bg-black ring-1 ring-black/70 shadow-inner flex items-center justify-center pointer-events-none z-40">
               <span className="size-0.5 rounded-full bg-[#1A1F2B]" />
             </div>
 
-            {/* Samsung One UI Status Icons (5G, Wi-Fi, Signal, Battery) */}
+            {/* Right: Samsung One UI Status Icons (Wi-Fi, Signal, Battery - No 5G) */}
             <div className="flex items-center justify-end gap-1.5 text-white">
-              <span className="text-[8.5px] font-black border border-white/60 px-0.5 rounded-xs leading-none">
-                5G
-              </span>
               {/* Wi-Fi */}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />

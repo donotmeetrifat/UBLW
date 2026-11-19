@@ -2052,9 +2052,6 @@ export default function AdminAiBotPage() {
                                 messageText={previewMessageText}
                                 timestamp="12:45 PM"
                             />
-                            <p className="text-[10px] text-slate-500 text-center mt-2 font-medium">
-                                📱 Real-time Samsung Galaxy WhatsApp view (Customer: Nusrat Jahan)
-                            </p>
                         </div>
                     </div>
                 </div>
