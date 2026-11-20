@@ -9,6 +9,7 @@ import {
     WhatsAppIcon
 } from "@/components/icons";
 import { SOCIAL_LINKS } from "@/lib/constants/social";
+import { useStoreWhatsApp } from "@/lib/useStoreWhatsApp";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
@@ -53,10 +54,12 @@ const Footer = () => {
         }
     ];
 
+    const whatsapp = useStoreWhatsApp();
+
     const socialLinks = [
         { icon: FacebookIcon, link: SOCIAL_LINKS.facebook.url, label: "Facebook" },
         { icon: InstagramIcon, link: SOCIAL_LINKS.instagram.url, label: "Instagram" },
-        { icon: WhatsAppIcon, link: SOCIAL_LINKS.whatsapp.url, label: "WhatsApp" },
+        { icon: WhatsAppIcon, link: whatsapp.url, label: "WhatsApp" },
     ];
 
     return (

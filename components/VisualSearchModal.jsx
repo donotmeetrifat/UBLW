@@ -18,11 +18,13 @@ import {
 } from '@/components/icons'
 import { addToCart } from '@/lib/features/cart/cartSlice'
 import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
+import { useStoreWhatsApp } from '@/lib/useStoreWhatsApp'
 import toast from 'react-hot-toast'
 
 export default function VisualSearchModal({ isOpen, onClose }) {
     const router = useRouter()
     const dispatch = useDispatch()
+    const liveWhatsApp = useStoreWhatsApp()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '৳'
 
     // Steps: 'select', 'camera', 'analyzing', 'results'
@@ -275,7 +277,7 @@ export default function VisualSearchModal({ isOpen, onClose }) {
     // Pre-filled WhatsApp concierge inquiry for unavailable products
     const getWhatsAppUrl = () => {
         const detectedName = searchResult?.analysis?.productName || searchResult?.analysis?.brand || 'UK cosmetic product'
-        const phone = '8801959524393'
+        const phone = liveWhatsApp.raw || '8801959524393'
         const message = `Hi UK Brand Lover! I searched for this authentic product using Visual Search on your website: "${detectedName}". Can you please import and source this for me?`
         return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
     }

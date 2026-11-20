@@ -21,6 +21,7 @@ export async function GET(request) {
             success: true,
             delivery: settings.delivery,
             payments: settings.payments,
+            whatsapp: settings.whatsapp,
         }, {
             headers: {
                 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -46,9 +47,9 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { delivery, payments } = body;
+        const { delivery, payments, whatsapp } = body;
 
-        const updatedSettings = await saveStoreSettings({ delivery, payments });
+        const updatedSettings = await saveStoreSettings({ delivery, payments, whatsapp });
 
         return NextResponse.json({
             success: true,

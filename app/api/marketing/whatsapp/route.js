@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireStaff } from '@/lib/auth';
+import { getAiSettings } from '@/lib/aiBot';
 
 // Official WhatsApp Cloud API & Webhook Dispatch Handler
 // Official Hotline: +880 1959-524393
@@ -48,12 +49,14 @@ export async function POST(request) {
                 ? `88${cleanPhone}` 
                 : `880${cleanPhone}`;
 
-        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const settings = await getAiSettings();
+        const phoneNumberId = settings.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+        const accessToken = settings.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN;
+        const hotline = settings.whatsappHotline || '+880 1959-524393';
 
-        // If Meta Cloud API credentials are provided in .env.local:
+        // If Meta Cloud API credentials are provided:
         if (phoneNumberId && accessToken) {
-            const metaUrl = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+            const metaUrl = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
             const payload = templateName ? {
                 messaging_product: "whatsapp",
@@ -90,9 +93,10 @@ export async function POST(request) {
         return NextResponse.json({
             success: true,
             mode: 'FREE_GATEWAY',
-            message: 'Message queued for dispatch from official hotline +880 1959-524393',
+            message: `Message queued for dispatch from official hotline ${hotline}`,
             recipient: formattedPhone,
             dispatchUrl: waLink,
+            hotline,
             timestamp: new Date().toISOString()
         });
     } catch (error) {

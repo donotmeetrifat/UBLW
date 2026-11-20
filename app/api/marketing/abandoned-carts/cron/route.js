@@ -199,6 +199,7 @@ async function handleCron(request) {
                     couponCode: recovery.couponCode,
                     hoursRemaining,
                     cartUrl,
+                    storePhone: settings.whatsappHotline || '+880 1959-524393',
                 });
 
                 const sendResult = await sendWhatsAppMessage({
@@ -345,6 +346,7 @@ async function handleCron(request) {
                 couponCode: coupon.code,
                 validityText,
                 cartUrl,
+                storePhone: settings.whatsappHotline || '+880 1959-524393',
             });
 
             // Dispatch message via WhatsApp Cloud API

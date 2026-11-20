@@ -11,6 +11,7 @@ export async function GET() {
             success: true,
             delivery: settings.delivery,
             payments: settings.payments,
+            whatsapp: settings.whatsapp,
         }, {
             headers: {
                 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

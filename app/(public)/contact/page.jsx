@@ -21,42 +21,45 @@ import toast from 'react-hot-toast'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
 import { isClientSignedIn, requireSignIn } from '@/lib/clientAuth'
 import { broadcastStoreChange } from '@/lib/realtimeSync'
-
-const contactChannels = [
-    {
-        title: 'WhatsApp',
-        description: 'Direct chat for order assistance and shade advice.',
-        buttonText: 'Chat on WhatsApp',
-        href: SOCIAL_LINKS.whatsapp.url,
-        icon: OfficialWhatsAppIcon,
-        ariaLabel: 'Chat with UK Brand Lover on WhatsApp',
-    },
-    {
-        title: 'Facebook',
-        description: 'Latest UK beauty arrivals, community, and offers.',
-        buttonText: 'Visit Facebook',
-        href: SOCIAL_LINKS.facebook.url,
-        icon: OfficialFacebookIcon,
-        ariaLabel: 'Message UK Brand Lover on Facebook',
-    },
-    {
-        title: 'Instagram',
-        description: 'Product swatches, London hauls, and tutorials.',
-        buttonText: 'Follow on Instagram',
-        href: SOCIAL_LINKS.instagram.url,
-        icon: OfficialInstagramIcon,
-        ariaLabel: 'Follow UK Brand Lover on Instagram',
-    },
-]
-
-const businessDetails = [
-    ['LOCATION', SOCIAL_LINKS.contact.location],
-    ['HOTLINE', SOCIAL_LINKS.contact.phone],
-    ['EMAIL', SOCIAL_LINKS.contact.email],
-    ['HOURS', SOCIAL_LINKS.contact.hours],
-]
+import { useStoreWhatsApp } from '@/lib/useStoreWhatsApp'
 
 export default function ContactPage() {
+    const liveWhatsApp = useStoreWhatsApp()
+
+    const contactChannels = [
+        {
+            title: 'WhatsApp',
+            description: 'Direct chat for order assistance and shade advice.',
+            buttonText: 'Chat on WhatsApp',
+            href: liveWhatsApp.url,
+            icon: OfficialWhatsAppIcon,
+            ariaLabel: 'Chat with UK Brand Lover on WhatsApp',
+        },
+        {
+            title: 'Facebook',
+            description: 'Latest UK beauty arrivals, community, and offers.',
+            buttonText: 'Visit Facebook',
+            href: SOCIAL_LINKS.facebook.url,
+            icon: OfficialFacebookIcon,
+            ariaLabel: 'Message UK Brand Lover on Facebook',
+        },
+        {
+            title: 'Instagram',
+            description: 'Product swatches, London hauls, and tutorials.',
+            buttonText: 'Follow on Instagram',
+            href: SOCIAL_LINKS.instagram.url,
+            icon: OfficialInstagramIcon,
+            ariaLabel: 'Follow UK Brand Lover on Instagram',
+        },
+    ]
+
+    const businessDetails = [
+        ['LOCATION', SOCIAL_LINKS.contact.location],
+        ['HOTLINE', liveWhatsApp.phone || SOCIAL_LINKS.contact.phone],
+        ['EMAIL', SOCIAL_LINKS.contact.email],
+        ['HOURS', SOCIAL_LINKS.contact.hours],
+    ]
+
     const [isSignedIn, setIsSignedIn] = useState(false)
     const [currentUser, setCurrentUser] = useState(null)
     const [name, setName] = useState('')

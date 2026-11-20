@@ -12,9 +12,11 @@ import {
     ArrowRightIcon
 } from "@/components/icons"
 import { SOCIAL_LINKS } from "@/lib/constants/social"
+import { useStoreWhatsApp } from "@/lib/useStoreWhatsApp"
 
 export default function PricingPage() {
-    const officialWhatsApp = SOCIAL_LINKS.whatsapp.raw
+    const liveWhatsApp = useStoreWhatsApp()
+    const officialWhatsApp = liveWhatsApp.raw || SOCIAL_LINKS.whatsapp.raw
 
     const plans = [
         {
@@ -205,7 +207,7 @@ export default function PricingPage() {
                             <SparklesIcon size={24} color="#6C306E" />
                         </div>
                         <h4 className="font-extrabold text-[#241224] text-sm">Official VIP Concierge</h4>
-                        <p className="text-xs text-slate-500 mt-1 max-w-xs">Hotline: +880 1959-524393 for direct assistance & custom sourcing.</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-xs">Hotline: {liveWhatsApp.phone || '+880 1959-524393'} for direct assistance & custom sourcing.</p>
                     </div>
                 </div>
             </div>

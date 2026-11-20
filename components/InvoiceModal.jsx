@@ -5,6 +5,7 @@ import { CloseIcon, DownloadIcon, PrinterIcon } from '@/components/icons'
 import ThankYouSignature, { THANK_YOU_PATH } from '@/components/ThankYouSignature'
 import { webLogoBase64 } from '@/assets/webLogoBase64'
 import { isInsideDhaka } from '@/lib/settings'
+import { useStoreWhatsApp } from '@/lib/useStoreWhatsApp'
 import toast from 'react-hot-toast'
 
 // Helper to guarantee that spaces between words in dynamic text are never collapsed by html2canvas
@@ -23,7 +24,7 @@ const safeWrapText = (text) => {
 }
 
 // Helper to construct a clean, self-contained, isolated HTML invoice document
-const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
+const buildInvoiceHtml = (order, accountUser, currency = '৳', storePhone = '+880 1959-524393') => {
     const orderNo = order.orderNumber || order.id || 'UKBL-2026-1001'
 
     const custName = order.user?.name ||
@@ -230,7 +231,7 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
                         </div>
                         <div>
                             <span style="color: #6B7280;">Hotline&nbsp;:&nbsp;</span>
-                            <strong style="color: #111827;">+880&nbsp;1959-524393</strong>
+                            <strong style="color: #111827;">${safeWrapText(storePhone)}</strong>
                         </div>
                         <div>
                             <span style="color: #6B7280;">Email&nbsp;:&nbsp;</span>
@@ -298,6 +299,8 @@ const buildInvoiceHtml = (order, accountUser, currency = '৳') => {
 const InvoiceModal = ({ order, isOpen, onClose }) => {
     const [isDownloading, setIsDownloading] = useState(false)
     const [accountUser, setAccountUser] = useState(null)
+    const liveWhatsApp = useStoreWhatsApp()
+    const storeHotline = liveWhatsApp.phone || '+880 1959-524393'
 
     // Load actual registered account user from localStorage
     useEffect(() => {
@@ -380,7 +383,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
             const printDoc = iframe.contentWindow.document
             printDoc.open()
-            printDoc.write(buildInvoiceHtml(order, accountUser, currency))
+            printDoc.write(buildInvoiceHtml(order, accountUser, currency, storeHotline))
             printDoc.close()
 
             setTimeout(async () => {
@@ -432,7 +435,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
 
             const sandboxDoc = iframe.contentWindow.document
             sandboxDoc.open()
-            sandboxDoc.write(buildInvoiceHtml(order, accountUser, currency))
+            sandboxDoc.write(buildInvoiceHtml(order, accountUser, currency, storeHotline))
             sandboxDoc.close()
 
             // Ensure all web fonts are loaded in the iframe
@@ -738,7 +741,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                                 </h4>
                                 <p className="truncate">
                                     <span className="text-neutral-500">Hotline : </span>
-                                    <span className="font-medium text-neutral-900">+880 1959-524393</span>
+                                    <span className="font-medium text-neutral-900">{storeHotline}</span>
                                 </p>
                                 <p className="truncate">
                                     <span className="text-neutral-500">Email : </span>

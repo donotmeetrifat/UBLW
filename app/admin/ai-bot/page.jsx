@@ -185,6 +185,7 @@ export default function AdminAiBotPage() {
     const [testRecipientPhone, setTestRecipientPhone] = useState('')
     const [isSendingTestWhatsApp, setIsSendingTestWhatsApp] = useState(false)
     const [isVerifyingWhatsApp, setIsVerifyingWhatsApp] = useState(false)
+    const [isUpdatingPhone, setIsUpdatingPhone] = useState(false)
 
     // Catalog stats
     const [catalogStats, setCatalogStats] = useState({
@@ -662,7 +663,23 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success) {
                 toast.success('AI settings saved successfully!')
-                broadcastStoreChange('ai_settings', { voiceCallEnabled })
+                const cleanPhone = (whatsappHotline || '').trim()
+                const cleanDigits = cleanPhone.replace(/[^\d]/g, '')
+                const raw = cleanDigits.startsWith('880')
+                    ? cleanDigits
+                    : cleanDigits.startsWith('0')
+                        ? `88${cleanDigits}`
+                        : `880${cleanDigits}`
+                const syncPayload = {
+                    phone: cleanPhone,
+                    raw,
+                    url: `https://wa.me/${raw}`,
+                }
+                broadcastStoreChange('ai_settings', { voiceCallEnabled, whatsappHotline: cleanPhone, whatsapp: syncPayload })
+                broadcastStoreChange('settings', { whatsappHotline: cleanPhone, whatsapp: syncPayload })
+                try {
+                    localStorage.setItem('ukbl_whatsapp_info', JSON.stringify(syncPayload))
+                } catch {}
                 fetchSettings()
             } else {
                 toast.error(data.message || 'Failed to save settings')
@@ -672,6 +689,55 @@ export default function AdminAiBotPage() {
             toast.error('Network error saving settings')
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handleSavePhoneInstantly = async () => {
+        if (!whatsappHotline.trim()) {
+            toast.error('Please enter a valid phone number')
+            return
+        }
+
+        setIsUpdatingPhone(true)
+        try {
+            const cleanPhone = whatsappHotline.trim()
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update_phone',
+                    whatsappHotline: cleanPhone,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                const cleanDigits = cleanPhone.replace(/[^\d]/g, '')
+                const raw = cleanDigits.startsWith('880')
+                    ? cleanDigits
+                    : cleanDigits.startsWith('0')
+                        ? `88${cleanDigits}`
+                        : `880${cleanDigits}`
+                const syncPayload = {
+                    phone: cleanPhone,
+                    raw,
+                    url: `https://wa.me/${raw}`,
+                }
+
+                broadcastStoreChange('ai_settings', { whatsappHotline: cleanPhone, whatsapp: syncPayload })
+                broadcastStoreChange('settings', { whatsappHotline: cleanPhone, whatsapp: syncPayload })
+
+                try {
+                    localStorage.setItem('ukbl_whatsapp_info', JSON.stringify(syncPayload))
+                } catch {}
+
+                toast.success('WhatsApp phone number updated instantly across entire website!')
+            } else {
+                toast.error(data.message || 'Failed to update phone number')
+            }
+        } catch (err) {
+            toast.error(`Error updating phone: ${err.message}`)
+        } finally {
+            setIsUpdatingPhone(false)
         }
     }
 
@@ -699,6 +765,25 @@ export default function AdminAiBotPage() {
             const data = await res.json()
             if (data.success) {
                 setIsWhatsAppConnected(true)
+                if (data.details?.displayPhoneNumber) {
+                    setWhatsappHotline(data.details.displayPhoneNumber)
+                    const cleanDigits = data.details.displayPhoneNumber.replace(/[^\d]/g, '')
+                    const raw = cleanDigits.startsWith('880')
+                        ? cleanDigits
+                        : cleanDigits.startsWith('0')
+                            ? `88${cleanDigits}`
+                            : `880${cleanDigits}`
+                    const syncPayload = {
+                        phone: data.details.displayPhoneNumber,
+                        raw,
+                        url: `https://wa.me/${raw}`,
+                    }
+                    broadcastStoreChange('ai_settings', { whatsappHotline: data.details.displayPhoneNumber, whatsapp: syncPayload })
+                    broadcastStoreChange('settings', { whatsappHotline: data.details.displayPhoneNumber, whatsapp: syncPayload })
+                    try {
+                        localStorage.setItem('ukbl_whatsapp_info', JSON.stringify(syncPayload))
+                    } catch {}
+                }
                 toast.success(data.message || 'WhatsApp Cloud API connected successfully!')
                 fetchSettings()
             } else {
@@ -822,8 +907,11 @@ export default function AdminAiBotPage() {
             .replace(/\{coupon_code\}/g, 'UKBL-AC-98F2')
             .replace(/\{hours_remaining\}/g, activeTemplateStageTab === 2 ? '12' : '3')
             .replace(/\{validity_text\}/g, '24 Hours')
-            .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout?code=UKBL-AC-98F2');
-    }, [activeTemplateStageTab, whatsappTemplateStage1, whatsappTemplateStage2, whatsappTemplateStage3]);
+            .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout?code=UKBL-AC-98F2')
+            .replace(/\{store_phone\}/g, whatsappHotline || '+880 1959-524393')
+            .replace(/\{hotline\}/g, whatsappHotline || '+880 1959-524393')
+            .replace(/\{whatsapp_number\}/g, whatsappHotline || '+880 1959-524393');
+    }, [activeTemplateStageTab, whatsappTemplateStage1, whatsappTemplateStage2, whatsappTemplateStage3, whatsappHotline]);
 
     if (loading) {
         return (
@@ -1810,19 +1898,39 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    {/* Bottom Row: Official Hotline + Verify Button */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#EFE0EF]/80">
-                        <div className="flex items-center gap-2">
+                    {/* Bottom Row: Official Hotline + Sync Everywhere + Verify Button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-[#EFE0EF]/80">
+                        <div className="flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
                                 <PhoneIcon size={13} color="#6C306E" strokeWidth={2} />
-                                <span>Official Store Hotline:</span>
+                                <span>WhatsApp Automation & Hotline:</span>
                             </div>
                             <input
                                 type="text"
                                 value={whatsappHotline}
                                 onChange={(e) => setWhatsappHotline(e.target.value)}
-                                className="text-xs font-black text-[#241224] bg-white border border-[#EFE0EF] rounded-lg px-2.5 py-1 w-44"
+                                placeholder="+880 1959-524393"
+                                className="text-xs font-black text-[#241224] bg-white border border-[#EFE0EF] rounded-xl px-3 py-1.5 w-44 focus:border-[#6C306E] outline-none font-mono"
                             />
+                            <button
+                                type="button"
+                                onClick={handleSavePhoneInstantly}
+                                disabled={isUpdatingPhone}
+                                className="px-3 py-1.5 rounded-xl bg-[#6C306E] hover:bg-[#522454] disabled:opacity-50 text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                title="Instantly save and sync this phone number across frontend, backend, and server"
+                            >
+                                {isUpdatingPhone ? (
+                                    <>
+                                        <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Syncing...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckIcon size={12} color="white" />
+                                        <span>Update Everywhere</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
 
                         <button
@@ -1988,6 +2096,7 @@ export default function AdminAiBotPage() {
                                 { tag: '{hours_remaining}', label: 'Hours Remaining' },
                                 { tag: '{validity_text}', label: 'Validity Period' },
                                 { tag: '{cart_url}', label: '1-Click Checkout Link' },
+                                { tag: '{hotline}', label: 'Store Hotline' },
                             ].map((v) => (
                                 <button
                                     key={v.tag}

@@ -11,9 +11,11 @@ import {
     RoyalCrownIcon
 } from '@/components/icons'
 import { SOCIAL_LINKS } from '@/lib/constants/social'
+import { useStoreWhatsApp } from '@/lib/useStoreWhatsApp'
 
 const FloatingConcierge = () => {
     const [isOpen, setIsOpen] = useState(false)
+    const whatsapp = useStoreWhatsApp()
 
     return (
         <div className="fixed bottom-6 right-5 sm:right-6 z-40 select-none">
@@ -54,7 +56,7 @@ const FloatingConcierge = () => {
 
                         <div className="space-y-2">
                             <a
-                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20have%20an%20inquiry%20about%20UK%20beauty%20products`}
+                                href={`${whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20have%20an%20inquiry%20about%20UK%20beauty%20products`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
@@ -67,7 +69,7 @@ const FloatingConcierge = () => {
                             </a>
 
                             <a
-                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi,%20can%20you%20help%20me%20track%20my%20parcel%20delivery?`}
+                                href={`${whatsapp.url}?text=Hi,%20can%20you%20help%20me%20track%20my%20parcel%20delivery?`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"
@@ -80,7 +82,7 @@ const FloatingConcierge = () => {
                             </a>
 
                             <a
-                                href={`${SOCIAL_LINKS.whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20would%20like%20a%20free%20skincare%20consultation`}
+                                href={`${whatsapp.url}?text=Hi%20UK%20Brand%20Lover,%20I%20would%20like%20a%20free%20skincare%20consultation`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-between p-2.5 rounded-2xl bg-[#FAF6FA] hover:bg-[#EFE0EF] border border-[#EFE0EF] text-[#241224] font-bold transition group"

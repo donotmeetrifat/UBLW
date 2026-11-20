@@ -419,6 +419,24 @@ export async function POST(request) {
             }
         }
 
+        // Action: Update WhatsApp Phone Number Instantly Everywhere
+        if (action === 'update_phone' || action === 'update_whatsapp_phone') {
+            const { whatsappHotline } = body;
+            if (!whatsappHotline || !whatsappHotline.trim()) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Please provide a valid phone number (e.g. +880 1959-524393).',
+                }, { status: 400 });
+            }
+            const cleanPhone = whatsappHotline.trim();
+            await saveAiSettings({ whatsappHotline: cleanPhone });
+            return NextResponse.json({
+                success: true,
+                message: 'WhatsApp phone number updated instantly across frontend, backend, and server!',
+                hotline: cleanPhone,
+            });
+        }
+
         // Action: Send WhatsApp Test Message
         if (action === 'test_whatsapp') {
             const { recipientPhone, testMessage } = body;
