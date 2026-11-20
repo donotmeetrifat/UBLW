@@ -445,21 +445,37 @@ export async function POST(request) {
             if (!recipientPhone) {
                 return NextResponse.json({
                     success: false,
-                    message: 'Please provide a valid recipient WhatsApp number (e.g. 01959524393).',
+                    message: 'Please provide a valid recipient WhatsApp number (e.g. 01326596251).',
                 }, { status: 400 });
             }
 
-            const sendResult = await sendWhatsAppMessage({
+            let sendResult = await sendWhatsAppMessage({
                 to: recipientPhone,
                 text: testMessage || `🇬🇧 *UK Brand Lover* - WhatsApp Automation Test Successful!\n\nThis confirms your official WhatsApp Cloud API is properly connected and ready for Automated Cart Recovery.`,
                 phoneNumberId: currentSettings.whatsappPhoneNumberId,
                 accessToken: currentSettings.whatsappAccessToken,
             });
 
+            // If text message failed due to 24-hour customer window or sandbox template requirement, fallback to hello_world template
+            if (!sendResult.success && sendResult.error?.code !== 131030) {
+                const templateResult = await sendWhatsAppMessage({
+                    to: recipientPhone,
+                    templateName: 'hello_world',
+                    phoneNumberId: currentSettings.whatsappPhoneNumberId,
+                    accessToken: currentSettings.whatsappAccessToken,
+                });
+                if (templateResult.success) {
+                    sendResult = {
+                        ...templateResult,
+                        note: 'Delivered via Meta official hello_world template because 24-hr chat window was closed.',
+                    };
+                }
+            }
+
             if (sendResult.success) {
                 return NextResponse.json({
                     success: true,
-                    message: `Test message sent successfully to ${sendResult.recipient}! Message ID: ${sendResult.messageId}`,
+                    message: `Test message sent successfully to ${sendResult.recipient}! Message ID: ${sendResult.messageId}${sendResult.note ? ` (${sendResult.note})` : ''}`,
                     data: sendResult,
                 });
             } else {
