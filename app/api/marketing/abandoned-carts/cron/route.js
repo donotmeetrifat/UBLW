@@ -267,7 +267,7 @@ async function handleCron(request) {
             }
 
             // Find eligible products that have abandonedCartOfferEnabled = true
-            const eligibleProducts = await prisma.product.findMany({
+            let eligibleProducts = await prisma.product.findMany({
                 where: {
                     id: { in: productIds },
                     abandonedCartOfferEnabled: true,
@@ -277,6 +277,19 @@ async function handleCron(request) {
                 orderBy: { price: 'desc' },
                 take: 1,
             });
+
+            // Fallback: If no product in cart has custom abandonedCartOfferEnabled, automatically recover the highest-value active in-stock cart item
+            if (eligibleProducts.length === 0) {
+                eligibleProducts = await prisma.product.findMany({
+                    where: {
+                        id: { in: productIds },
+                        inStock: true,
+                        isActive: true,
+                    },
+                    orderBy: { price: 'desc' },
+                    take: 1,
+                });
+            }
 
             if (eligibleProducts.length === 0) {
                 continue;
