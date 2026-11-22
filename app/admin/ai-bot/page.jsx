@@ -877,7 +877,7 @@ export default function AdminAiBotPage() {
     const handleTriggerCronNow = async () => {
         setIsRunningCron(true)
         try {
-            const res = await fetch('/api/marketing/abandoned-carts/cron', { method: 'POST' })
+            const res = await fetch('/api/marketing/abandoned-carts/cron?force=true', { method: 'POST' })
             const data = await res.json()
             if (data.success) {
                 toast.success(

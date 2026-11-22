@@ -55,8 +55,14 @@ async function handleCron(request) {
             }, { status: 400 });
         }
 
+        let isForce = false;
+        try {
+            const url = new URL(request.url);
+            isForce = url.searchParams.get('force') === 'true' || url.searchParams.get('test') === 'true';
+        } catch {}
+
         const delayHours = parseFloat(settings.whatsappRecoveryDelayHours) || 1;
-        const delayMs = delayHours * 60 * 60 * 1000;
+        const delayMs = isForce ? 0 : (delayHours * 60 * 60 * 1000);
         const cutoffTime = new Date(Date.now() - delayMs);
         const baseUrl = process.env.NEXTAUTH_URL || 'https://ukbrandlover.com';
 
