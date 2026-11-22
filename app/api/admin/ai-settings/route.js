@@ -449,39 +449,34 @@ export async function POST(request) {
                 }, { status: 400 });
             }
 
-            let sendResult = await sendWhatsAppMessage({
+            // In Meta Cloud API, outbound business messages to numbers outside the 24-hr window
+            // MUST be sent via an approved template. We dispatch the pre-approved hello_world template
+            // first to guarantee immediate delivery on WhatsApp.
+            const templateResult = await sendWhatsAppMessage({
+                to: recipientPhone,
+                templateName: 'hello_world',
+                phoneNumberId: currentSettings.whatsappPhoneNumberId,
+                accessToken: currentSettings.whatsappAccessToken,
+            });
+
+            // Also attempt custom text message in case 24-hr conversation window is active
+            await sendWhatsAppMessage({
                 to: recipientPhone,
                 text: testMessage || `🇬🇧 *UK Brand Lover* - WhatsApp Automation Test Successful!\n\nThis confirms your official WhatsApp Cloud API is properly connected and ready for Automated Cart Recovery.`,
                 phoneNumberId: currentSettings.whatsappPhoneNumberId,
                 accessToken: currentSettings.whatsappAccessToken,
             });
 
-            // If text message failed due to 24-hour customer window or sandbox template requirement, fallback to hello_world template
-            if (!sendResult.success && sendResult.error?.code !== 131030) {
-                const templateResult = await sendWhatsAppMessage({
-                    to: recipientPhone,
-                    templateName: 'hello_world',
-                    phoneNumberId: currentSettings.whatsappPhoneNumberId,
-                    accessToken: currentSettings.whatsappAccessToken,
-                });
-                if (templateResult.success) {
-                    sendResult = {
-                        ...templateResult,
-                        note: 'Delivered via Meta official hello_world template because 24-hr chat window was closed.',
-                    };
-                }
-            }
-
-            if (sendResult.success) {
+            if (templateResult.success) {
                 return NextResponse.json({
                     success: true,
-                    message: `Test message sent successfully to ${sendResult.recipient}! Message ID: ${sendResult.messageId}${sendResult.note ? ` (${sendResult.note})` : ''}`,
-                    data: sendResult,
+                    message: `Official Meta test message delivered to ${templateResult.recipient}! Check WhatsApp on your phone.`,
+                    data: templateResult,
                 });
             } else {
                 return NextResponse.json({
                     success: false,
-                    message: sendResult.message || 'Failed to send test WhatsApp message.',
+                    message: templateResult.message || 'Failed to send test WhatsApp message.',
                 }, { status: 400 });
             }
         }
