@@ -85,11 +85,9 @@ const defaultCuratedVoices = [
 
 const DEFAULT_STAGE_1 = `Assalamu Alaikum {customer_name}! ✨
 
-We noticed you left the authentic UK imported *{product_name}* in your shopping bag.
+We noticed you left the authentic UK imported *{product_name}* (৳{product_price}) in your shopping bag.
 
-Because our fresh London Heathrow shipment is in high demand, we have reserved your item. As an exclusive welcome perk, use your private voucher code: *{coupon_code}* to get *{discount_text}* (Drops price from ৳{product_price} to *৳{discounted_price}*)! 🎁
-
-⏰ Note: Your personal coupon is valid for *{validity_text}* from now.
+Because our fresh London Heathrow shipment is in high demand, we have reserved your item. Complete your order before authentic UK stock runs out! 🛍️
 
 👉 Tap here to complete your order with Nationwide Express Delivery:
 {cart_url}
@@ -98,20 +96,20 @@ Because our fresh London Heathrow shipment is in high demand, we have reserved y
 
 const DEFAULT_STAGE_2 = `Hello {customer_name}! ⏳
 
-Quick reminder regarding your reserved *{product_name}*.
+Quick reminder regarding your reserved *{product_name}* in your shopping bag.
 
-Your exclusive voucher *{coupon_code}* ({discount_text}) will expire in *{hours_remaining} hours*. After that, this code will be permanently deleted and your reserved item returned to public inventory.
+Our authentic UK imported stock is strictly limited. Please complete your checkout soon so your reserved item is not released to other shoppers.
 
-👉 Claim your discount before it expires:
+👉 Tap here to complete your order:
 {cart_url}
 
 — UK Brand Lover`;
 
 const DEFAULT_STAGE_3 = `Final Notice for {customer_name}! 🚨
 
-Only *{hours_remaining} hours left* before your personal discount voucher *{coupon_code}* expires.
+Your reserved item *{product_name}* in your shopping bag will soon be released back to public inventory.
 
-Complete your order now to lock in your *{discount_text}* savings and receive 100% genuine UK imported stock:
+Complete your order now to secure 100% genuine UK imported stock with Nationwide Express Delivery:
 {cart_url}
 
 — UK Brand Lover`;
@@ -902,12 +900,12 @@ export default function AdminAiBotPage() {
             .replace(/\{customer_name\}/g, 'Nusrat Jahan')
             .replace(/\{product_name\}/g, 'CeraVe Hydrating Cleanser 473ml (UK Version)')
             .replace(/\{product_price\}/g, '2,250')
-            .replace(/\{discount_text\}/g, '15% OFF (Save ৳338)')
-            .replace(/\{discounted_price\}/g, '1,912')
-            .replace(/\{coupon_code\}/g, 'UKBL-AC-98F2')
+            .replace(/\{discount_text\}/g, '')
+            .replace(/\{discounted_price\}/g, '2,250')
+            .replace(/\{coupon_code\}/g, '')
             .replace(/\{hours_remaining\}/g, activeTemplateStageTab === 2 ? '12' : '3')
             .replace(/\{validity_text\}/g, '24 Hours')
-            .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout?code=UKBL-AC-98F2')
+            .replace(/\{cart_url\}/g, 'https://ukbrandlover.com/checkout')
             .replace(/\{store_phone\}/g, whatsappHotline || '+880 1959-524393')
             .replace(/\{hotline\}/g, whatsappHotline || '+880 1959-524393')
             .replace(/\{whatsapp_number\}/g, whatsappHotline || '+880 1959-524393');
@@ -1794,7 +1792,7 @@ export default function AdminAiBotPage() {
                                     </span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Send high-converting personalized WhatsApp messages with 1-time locked product coupons and smart countdown reminders.
+                                    Send high-converting personalized WhatsApp messages with smart reminders for reserved items in their shopping bag.
                                 </p>
                             </div>
                         </div>
@@ -2089,13 +2087,8 @@ export default function AdminAiBotPage() {
                             {[
                                 { tag: '{customer_name}', label: 'Customer Name' },
                                 { tag: '{product_name}', label: 'Product Name' },
-                                { tag: '{product_price}', label: 'Original Price' },
-                                { tag: '{discount_text}', label: 'Discount Text' },
-                                { tag: '{discounted_price}', label: 'Discounted Price' },
-                                { tag: '{coupon_code}', label: 'Unique Coupon Code' },
-                                { tag: '{hours_remaining}', label: 'Hours Remaining' },
-                                { tag: '{validity_text}', label: 'Validity Period' },
-                                { tag: '{cart_url}', label: '1-Click Checkout Link' },
+                                { tag: '{product_price}', label: 'Product Price' },
+                                { tag: '{cart_url}', label: 'Direct Checkout Link' },
                                 { tag: '{hotline}', label: 'Store Hotline' },
                             ].map((v) => (
                                 <button

@@ -304,16 +304,12 @@ export default function CheckoutPage() {
         ? calculateDeliveryCharge(selectedAddress, subtotal, settings.delivery)
         : (settings.delivery.insideDhaka || 80)
 
-    const eligibleSubtotal = coupon && Array.isArray(coupon.applicableProductIds) && coupon.applicableProductIds.length > 0
-        ? items.filter(i => coupon.applicableProductIds.includes(i.id)).reduce((sum, i) => sum + (i.price * i.quantity), 0)
-        : subtotal
-
     const discountAmount = coupon && items.length > 0 && (!coupon.minOrderAmount || subtotal >= coupon.minOrderAmount)
         ? (coupon.discountType === 'FIXED'
-            ? Math.min(coupon.discount, eligibleSubtotal)
+            ? Math.min(coupon.discount, subtotal)
             : (coupon.maxDiscount
-                ? Math.min(Math.round((coupon.discount / 100) * eligibleSubtotal), coupon.maxDiscount)
-                : Math.round((coupon.discount / 100) * eligibleSubtotal)))
+                ? Math.min(Math.round((coupon.discount / 100) * subtotal), coupon.maxDiscount)
+                : Math.round((coupon.discount / 100) * subtotal)))
         : 0
     const finalTotal = Math.max(0, subtotal - discountAmount + deliveryCharge)
 

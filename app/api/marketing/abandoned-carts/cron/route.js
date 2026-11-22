@@ -6,15 +6,6 @@ import { sendWhatsAppMessage, formatRecoveryMessage, normalizeWhatsAppNumber } f
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-function generateUniqueCouponCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = 'UKBL-AC-';
-    for (let i = 0; i < 4; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
 export async function GET(request) {
     return handleCron(request);
 }
@@ -96,7 +87,7 @@ async function handleCron(request) {
         const now = new Date();
 
         for (const recovery of activeRecoveries) {
-            // Check if coupon or session expired
+            // Check if recovery session expired
             if (now >= new Date(recovery.expiresAt)) {
                 await prisma.abandonedCartRecovery.update({
                     where: { id: recovery.id },
@@ -127,86 +118,35 @@ async function handleCron(request) {
             // Calculate timing for next reminder stage
             const totalValidityHours = recovery.validityHours || 24;
             const expiresAtMs = new Date(recovery.expiresAt).getTime();
-            const createdAtMs = new Date(recovery.createdAt).getTime();
             const lastSentMs = new Date(recovery.lastSentAt).getTime();
 
             const hoursRemaining = Math.max(1, Math.round((expiresAtMs - Date.now()) / (1000 * 60 * 60)));
-            const elapsedHours = (Date.now() - createdAtMs) / (1000 * 60 * 60);
             const hoursSinceLastSent = (Date.now() - lastSentMs) / (1000 * 60 * 60);
 
             let shouldSendNextStage = false;
             let nextStage = recovery.stage + 1;
             let stageTemplate = settings.whatsappTemplateStage2;
 
-            if (totalValidityHours <= 24) {
-                // 1 Day (24 Hours): Max 3 Messages
-                // Stage 2: Warning reminder at ~12h remaining (at least 6h after stage 1)
-                if (recovery.stage === 1 && hoursRemaining <= 14 && hoursSinceLastSent >= 5) {
-                    shouldSendNextStage = true;
-                    nextStage = 2;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                }
-                // Stage 3: Final call at <= 3h remaining (at least 4h after stage 2)
-                else if (recovery.stage === 2 && hoursRemaining <= 3 && hoursSinceLastSent >= 3) {
-                    shouldSendNextStage = true;
-                    nextStage = 3;
-                    stageTemplate = settings.whatsappTemplateStage3;
-                }
-            } else if (totalValidityHours <= 48) {
-                // 2 Days (48 Hours): 2 messages on Day 1, 3 messages on Day 2 (Max 5 Messages)
-                // Day 1:
-                if (recovery.stage === 1 && elapsedHours >= 10 && hoursSinceLastSent >= 8) {
-                    shouldSendNextStage = true;
-                    nextStage = 2;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                }
-                // Day 2 (Countdown reminders):
-                else if (recovery.stage === 2 && elapsedHours >= 24 && hoursSinceLastSent >= 8) {
-                    shouldSendNextStage = true;
-                    nextStage = 3;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                } else if (recovery.stage === 3 && hoursRemaining <= 12 && hoursSinceLastSent >= 6) {
-                    shouldSendNextStage = true;
-                    nextStage = 4;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                } else if (recovery.stage === 4 && hoursRemaining <= 4 && hoursSinceLastSent >= 3) {
-                    shouldSendNextStage = true;
-                    nextStage = 5;
-                    stageTemplate = settings.whatsappTemplateStage3;
-                }
-            } else {
-                // 3 Days (72 Hours): Spread across 3 days
-                if (recovery.stage === 1 && elapsedHours >= 16 && hoursSinceLastSent >= 10) {
-                    shouldSendNextStage = true;
-                    nextStage = 2;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                } else if (recovery.stage === 2 && elapsedHours >= 36 && hoursSinceLastSent >= 12) {
-                    shouldSendNextStage = true;
-                    nextStage = 3;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                } else if (recovery.stage === 3 && hoursRemaining <= 24 && hoursSinceLastSent >= 10) {
-                    shouldSendNextStage = true;
-                    nextStage = 4;
-                    stageTemplate = settings.whatsappTemplateStage2;
-                } else if (recovery.stage === 4 && hoursRemaining <= 4 && hoursSinceLastSent >= 4) {
-                    shouldSendNextStage = true;
-                    nextStage = 5;
-                    stageTemplate = settings.whatsappTemplateStage3;
-                }
+            // 1 Day (24 Hours): Max 3 Messages
+            // Stage 2: Warning reminder at ~12h remaining (at least 5h after stage 1)
+            if (recovery.stage === 1 && hoursRemaining <= 14 && hoursSinceLastSent >= 5) {
+                shouldSendNextStage = true;
+                nextStage = 2;
+                stageTemplate = settings.whatsappTemplateStage2;
+            }
+            // Stage 3: Final call at <= 4h remaining (at least 3h after stage 2)
+            else if (recovery.stage === 2 && hoursRemaining <= 4 && hoursSinceLastSent >= 3) {
+                shouldSendNextStage = true;
+                nextStage = 3;
+                stageTemplate = settings.whatsappTemplateStage3;
             }
 
             if (shouldSendNextStage) {
-                const discountText = recovery.discountType === 'PERCENTAGE'
-                    ? `${recovery.discountValue}% OFF`
-                    : `৳${recovery.discountValue} OFF`;
-
-                const cartUrl = `${baseUrl}/checkout?code=${encodeURIComponent(recovery.couponCode)}`;
+                const cartUrl = `${baseUrl}/checkout`;
 
                 const messageBody = formatRecoveryMessage(stageTemplate, {
                     customerName: recovery.userName,
                     productName: recovery.productName,
-                    discountText,
-                    couponCode: recovery.couponCode,
                     hoursRemaining,
                     cartUrl,
                     storePhone: settings.whatsappHotline || '+880 1959-524393',
@@ -234,11 +174,11 @@ async function handleCron(request) {
         }
 
         // =========================================================================
-        // PART 2: Find New Cart Abandoners for Stage 1 (Initial Offer)
+        // PART 2: Find New Cart Abandoners for Stage 1 (Initial Reserved Reminder)
         // =========================================================================
         const candidateUsers = await prisma.user.findMany({
             where: {
-                abandonedCartAt: { lte: cutoffTime },
+                ...(isForce ? {} : { abandonedCartAt: { lte: cutoffTime } }),
                 isActive: true,
             },
             include: {
@@ -250,31 +190,15 @@ async function handleCron(request) {
                 abandonedCartRecoveries: {
                     where: { status: 'ACTIVE' },
                     orderBy: { createdAt: 'desc' },
-                    take: 1,
                 }
             },
             take: 30, // Batch limit per cron execution
         });
 
         for (const user of candidateUsers) {
-            // Skip if already notified for this specific cart abandonment
-            if (user.abandonedCartNotifiedAt && new Date(user.abandonedCartNotifiedAt) >= new Date(user.abandonedCartAt)) {
+            // Skip if already notified for this specific cart abandonment (unless forced test)
+            if (!isForce && user.abandonedCartNotifiedAt && new Date(user.abandonedCartNotifiedAt) >= new Date(user.abandonedCartAt)) {
                 continue;
-            }
-
-            // If user has an existing active recovery session
-            if (user.abandonedCartRecoveries && user.abandonedCartRecoveries.length > 0) {
-                const activeRecovery = user.abandonedCartRecoveries[0];
-                // If the active recovery was created before the latest cart change, supersede it
-                if (user.abandonedCartAt && new Date(user.abandonedCartAt) > new Date(activeRecovery.createdAt)) {
-                    await prisma.abandonedCartRecovery.update({
-                        where: { id: activeRecovery.id },
-                        data: { status: 'SUPERSEDED' }
-                    });
-                } else {
-                    // Otherwise it is currently progressing through its multi-stage reminder flow
-                    continue;
-                }
             }
 
             // Verify customer has a valid phone number
@@ -286,147 +210,108 @@ async function handleCron(request) {
 
             // Inspect cart items
             const cartObj = (user.cart && typeof user.cart === 'object') ? user.cart : {};
-            const productIds = Object.keys(cartObj);
+            const productIds = Object.keys(cartObj).filter(pId => Number(cartObj[pId]) > 0);
             if (productIds.length === 0) {
                 continue;
             }
 
-            // Find eligible products that have abandonedCartOfferEnabled = true
-            let eligibleProducts = await prisma.product.findMany({
+            // Find all active in-stock products in customer's cart
+            const eligibleProducts = await prisma.product.findMany({
                 where: {
                     id: { in: productIds },
-                    abandonedCartOfferEnabled: true,
                     inStock: true,
                     isActive: true,
                 },
                 orderBy: { price: 'desc' },
-                take: 1,
             });
-
-            // Fallback: If no product in cart has custom abandonedCartOfferEnabled, automatically recover the highest-value active in-stock cart item
-            if (eligibleProducts.length === 0) {
-                eligibleProducts = await prisma.product.findMany({
-                    where: {
-                        id: { in: productIds },
-                        inStock: true,
-                        isActive: true,
-                    },
-                    orderBy: { price: 'desc' },
-                    take: 1,
-                });
-            }
 
             if (eligibleProducts.length === 0) {
                 continue;
             }
 
-            const targetProduct = eligibleProducts[0];
-            const discountType = targetProduct.abandonedCartDiscountType === 'FLAT' ? 'FLAT' : 'PERCENTAGE';
-            const discountValue = targetProduct.abandonedCartDiscountValue || 10;
-            const validityDays = targetProduct.abandonedCartValidityDays || 1;
-            const validityHours = validityDays * 24;
+            const userEmailClean = (user.email || '').toLowerCase().trim();
+            const validityHours = 24;
             const expiresAt = new Date(Date.now() + validityHours * 60 * 60 * 1000);
+            const cartUrl = `${baseUrl}/checkout`;
+            const validityText = '24 Hours';
 
-            // Generate unique, strictly locked coupon code
-            let couponCode = generateUniqueCouponCode();
-            // Ensure unique
-            let attempts = 0;
-            while (attempts < 5) {
-                const existing = await prisma.coupon.findUnique({ where: { code: couponCode } });
-                if (!existing) break;
-                couponCode = generateUniqueCouponCode();
-                attempts++;
-            }
+            let userNotifiedCount = 0;
 
-            const userEmailClean = user.email.toLowerCase().trim();
+            // Iterate over ALL products in the customer's cart so every product gets its notification
+            for (const targetProduct of eligibleProducts) {
+                // Check if user already has an active recovery session for this product
+                const existingForProduct = user.abandonedCartRecoveries?.find(
+                    r => r.productId === targetProduct.id && r.status === 'ACTIVE'
+                );
 
-            // Create Double-Locked Coupon
-            const coupon = await prisma.coupon.create({
-                data: {
-                    code: couponCode,
-                    description: `1-Time WhatsApp Cart Recovery Offer for ${user.name}`,
-                    discountType,
-                    discount: parseFloat(discountValue) || 10,
-                    usageLimit: 1,
-                    applicableProductIds: [targetProduct.id],
-                    allowedUserIds: [user.id],
-                    allowedUserEmails: [userEmailClean],
-                    expiresAt,
-                    isLifetime: false,
-                    isActive: true,
-                    forNewUserOnly: false,
-                }
-            });
-
-            // Calculate prices & discount text
-            const originalPrice = Math.round(targetProduct.price);
-            let discountedPrice = originalPrice;
-            let discountText = '';
-
-            if (discountType === 'PERCENTAGE') {
-                discountedPrice = Math.max(0, Math.round(originalPrice - (originalPrice * (discountValue / 100))));
-                discountText = `${discountValue}% OFF (Save ৳${originalPrice - discountedPrice})`;
-            } else {
-                discountedPrice = Math.max(0, Math.round(originalPrice - discountValue));
-                discountText = `৳${discountValue} OFF (Save ৳${discountValue})`;
-            }
-
-            const cartUrl = `${baseUrl}/checkout?code=${encodeURIComponent(coupon.code)}`;
-            const validityText = `${validityDays} Day${validityDays > 1 ? 's' : ''} (${validityHours} Hours)`;
-
-            // Format Stage 1 Message
-            const messageBody = formatRecoveryMessage(settings.whatsappTemplateStage1, {
-                customerName: user.name,
-                productName: targetProduct.name,
-                productPrice: originalPrice,
-                discountText,
-                discountedPrice,
-                couponCode: coupon.code,
-                validityText,
-                cartUrl,
-                storePhone: settings.whatsappHotline || '+880 1959-524393',
-            });
-
-            // Dispatch message via WhatsApp Cloud API
-            const dispatchResult = await sendWhatsAppMessage({
-                to: normalizedPhone,
-                text: messageBody,
-                phoneNumberId: pId,
-                accessToken: token,
-            });
-
-            if (dispatchResult.success) {
-                // Record Recovery Session
-                await prisma.abandonedCartRecovery.create({
-                    data: {
-                        userId: user.id,
-                        userPhone: normalizedPhone,
-                        userName: user.name,
-                        userEmail: userEmailClean,
-                        productId: targetProduct.id,
-                        productName: targetProduct.name,
-                        couponId: coupon.id,
-                        couponCode: coupon.code,
-                        discountType,
-                        discountValue,
-                        validityHours,
-                        expiresAt,
-                        stage: 1,
-                        maxStages: validityDays === 1 ? 3 : (validityDays === 2 ? 5 : 7),
-                        status: 'ACTIVE',
-                        lastSentAt: new Date(),
+                if (existingForProduct) {
+                    // If cart was updated after that session was created, supersede it
+                    if (isForce || (user.abandonedCartAt && new Date(user.abandonedCartAt) > new Date(existingForProduct.createdAt))) {
+                        await prisma.abandonedCartRecovery.update({
+                            where: { id: existingForProduct.id },
+                            data: { status: 'SUPERSEDED' }
+                        });
+                    } else {
+                        // Already actively notified for this item
+                        continue;
                     }
+                }
+
+                const originalPrice = Math.round(targetProduct.price);
+
+                // Format Stage 1 Message (Personalized to this product, NO automatic coupon)
+                const messageBody = formatRecoveryMessage(settings.whatsappTemplateStage1, {
+                    customerName: user.name,
+                    productName: targetProduct.name,
+                    productPrice: originalPrice,
+                    cartUrl,
+                    validityText,
+                    storePhone: settings.whatsappHotline || '+880 1959-524393',
                 });
 
-                // Mark user as notified so we don't spam Stage 1
+                // Dispatch message via WhatsApp Cloud API
+                const dispatchResult = await sendWhatsAppMessage({
+                    to: normalizedPhone,
+                    text: messageBody,
+                    phoneNumberId: pId,
+                    accessToken: token,
+                });
+
+                if (dispatchResult.success) {
+                    // Record Recovery Session without coupon
+                    await prisma.abandonedCartRecovery.create({
+                        data: {
+                            userId: user.id,
+                            userPhone: normalizedPhone,
+                            userName: user.name,
+                            userEmail: userEmailClean,
+                            productId: targetProduct.id,
+                            productName: targetProduct.name,
+                            couponId: null,
+                            couponCode: null,
+                            discountType: null,
+                            discountValue: null,
+                            validityHours,
+                            expiresAt,
+                            stage: 1,
+                            maxStages: 3,
+                            status: 'ACTIVE',
+                            lastSentAt: new Date(),
+                        }
+                    });
+
+                    newSessionsInitiated++;
+                    userNotifiedCount++;
+                } else {
+                    console.warn(`WhatsApp dispatch failed for user ${user.id} (${normalizedPhone}) for product ${targetProduct.name}:`, dispatchResult.message);
+                }
+            }
+
+            if (userNotifiedCount > 0) {
                 await prisma.user.update({
                     where: { id: user.id },
                     data: { abandonedCartNotifiedAt: new Date() }
                 });
-
-                newSessionsInitiated++;
-            } else {
-                console.warn(`WhatsApp dispatch failed for user ${user.id} (${normalizedPhone}):`, dispatchResult.message);
             }
         }
 
