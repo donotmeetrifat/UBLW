@@ -47,6 +47,7 @@ export function MobileMockup({
   headerSubtitle = "online",
   avatarUrl = "/images/web-logo-optimized.png",
   avatarFallback = "🇬🇧",
+  productImageUrl = null,
   messageText = "",
   messages,
   timestamp = "12:45 PM",
@@ -203,7 +204,7 @@ export function MobileMockup({
             </div>
 
             {/* Official WhatsApp Outgoing Message Bubble (Light Theme #DCF8C6) */}
-            <div className="relative ml-auto max-w-[92%] sm:max-w-[88%] bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-none px-3.5 py-3 shadow-xs border border-[#CDE8B5]/60">
+            <div className="relative ml-auto max-w-[92%] sm:max-w-[88%] bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-none p-1.5 shadow-xs border border-[#CDE8B5]/60 overflow-hidden">
               {/* WhatsApp Message Tail (pointing to the right) */}
               <svg
                 className="absolute -top-[1px] -right-[7px] w-2 h-3 text-[#DCF8C6]"
@@ -213,13 +214,24 @@ export function MobileMockup({
                 <path d="M0 0 L8 0 C5 3 2 8 0 12 Z" />
               </svg>
 
+              {/* Product Cover Photo (WhatsApp Media Message Style) */}
+              {productImageUrl && (
+                <div className="w-full mb-1.5 overflow-hidden rounded-xl bg-white border border-[#CDE8B5]/80 flex items-center justify-center">
+                  <img
+                    src={productImageUrl}
+                    alt="Reserved Product"
+                    className="w-full h-44 object-contain p-1"
+                  />
+                </div>
+              )}
+
               {/* Message Body with WhatsApp Bold & Link Formatting */}
-              <div className="text-[12.5px] leading-[18.5px] text-[#111B21] font-sans whitespace-pre-wrap select-text">
+              <div className="px-2 pt-1 text-[12.5px] leading-[18.5px] text-[#111B21] font-sans whitespace-pre-wrap select-text">
                 {formatWhatsAppMessage(resolvedText)}
               </div>
 
               {/* Bubble Bottom: Timestamp & Blue Double Checkmarks */}
-              <div className="mt-2 flex items-center justify-end gap-1">
+              <div className="mt-1.5 px-2 pb-0.5 flex items-center justify-end gap-1">
                 <span className="text-[10px] text-slate-500 font-medium">
                   {timestamp}
                 </span>

@@ -80,6 +80,11 @@ async function handleCron(request) {
                         phone: true,
                         whatsapp: true,
                     }
+                },
+                product: {
+                    select: {
+                        images: true,
+                    }
                 }
             }
         });
@@ -143,6 +148,9 @@ async function handleCron(request) {
 
             if (shouldSendNextStage) {
                 const cartUrl = `${baseUrl}/checkout`;
+                const productImage = (Array.isArray(recovery.product?.images) && recovery.product.images.length > 0)
+                    ? recovery.product.images[0]
+                    : null;
 
                 const messageBody = formatRecoveryMessage(stageTemplate, {
                     customerName: recovery.userName,
@@ -155,6 +163,7 @@ async function handleCron(request) {
                 const sendResult = await sendWhatsAppMessage({
                     to: recovery.userPhone,
                     text: messageBody,
+                    imageUrl: productImage,
                     phoneNumberId: pId,
                     accessToken: token,
                 });
@@ -258,6 +267,9 @@ async function handleCron(request) {
                 }
 
                 const originalPrice = Math.round(targetProduct.price);
+                const productImage = (Array.isArray(targetProduct.images) && targetProduct.images.length > 0)
+                    ? targetProduct.images[0]
+                    : null;
 
                 // Format Stage 1 Message (Personalized to this product, NO automatic coupon)
                 const messageBody = formatRecoveryMessage(settings.whatsappTemplateStage1, {
@@ -269,10 +281,11 @@ async function handleCron(request) {
                     storePhone: settings.whatsappHotline || '+880 1959-524393',
                 });
 
-                // Dispatch message via WhatsApp Cloud API
+                // Dispatch message via WhatsApp Cloud API with product cover photo
                 const dispatchResult = await sendWhatsAppMessage({
                     to: normalizedPhone,
                     text: messageBody,
+                    imageUrl: productImage,
                     phoneNumberId: pId,
                     accessToken: token,
                 });

@@ -2151,6 +2151,7 @@ export default function AdminAiBotPage() {
                                 headerSubtitle="online"
                                 avatarUrl="/images/web-logo-optimized.png"
                                 avatarFallback="🇬🇧"
+                                productImageUrl="https://ibhmqlfgbezszyurajof.supabase.co/storage/v1/object/public/products/catalog/1794663871983-product_1739877636_4595.jpg"
                                 messageText={previewMessageText}
                                 timestamp="12:45 PM"
                             />
