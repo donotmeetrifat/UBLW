@@ -57,8 +57,12 @@ async function handleCron(request) {
 
         let isForce = false;
         try {
-            const url = new URL(request.url);
-            isForce = url.searchParams.get('force') === 'true' || url.searchParams.get('test') === 'true';
+            if (request.nextUrl) {
+                isForce = request.nextUrl.searchParams.get('force') === 'true' || request.nextUrl.searchParams.get('test') === 'true';
+            } else if (request.url) {
+                const url = new URL(request.url, 'http://localhost');
+                isForce = url.searchParams.get('force') === 'true' || url.searchParams.get('test') === 'true';
+            }
         } catch {}
 
         const delayHours = parseFloat(settings.whatsappRecoveryDelayHours) || 1;
