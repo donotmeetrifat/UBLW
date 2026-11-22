@@ -145,6 +145,7 @@ export async function POST(request) {
                 data: {
                     cart: cleanCart,
                     abandonedCartAt: hasItems ? new Date() : null,
+                    abandonedCartNotifiedAt: null,
                     lastActiveAt: new Date(),
                 }
             });

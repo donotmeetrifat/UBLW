@@ -229,7 +229,6 @@ async function handleCron(request) {
         const candidateUsers = await prisma.user.findMany({
             where: {
                 abandonedCartAt: { lte: cutoffTime },
-                abandonedCartNotifiedAt: null,
                 isActive: true,
             },
             include: {
@@ -240,6 +239,7 @@ async function handleCron(request) {
                 },
                 abandonedCartRecoveries: {
                     where: { status: 'ACTIVE' },
+                    orderBy: { createdAt: 'desc' },
                     take: 1,
                 }
             },
@@ -247,9 +247,24 @@ async function handleCron(request) {
         });
 
         for (const user of candidateUsers) {
-            // Skip if already in an active recovery session
-            if (user.abandonedCartRecoveries && user.abandonedCartRecoveries.length > 0) {
+            // Skip if already notified for this specific cart abandonment
+            if (user.abandonedCartNotifiedAt && new Date(user.abandonedCartNotifiedAt) >= new Date(user.abandonedCartAt)) {
                 continue;
+            }
+
+            // If user has an existing active recovery session
+            if (user.abandonedCartRecoveries && user.abandonedCartRecoveries.length > 0) {
+                const activeRecovery = user.abandonedCartRecoveries[0];
+                // If the active recovery was created before the latest cart change, supersede it
+                if (user.abandonedCartAt && new Date(user.abandonedCartAt) > new Date(activeRecovery.createdAt)) {
+                    await prisma.abandonedCartRecovery.update({
+                        where: { id: activeRecovery.id },
+                        data: { status: 'SUPERSEDED' }
+                    });
+                } else {
+                    // Otherwise it is currently progressing through its multi-stage reminder flow
+                    continue;
+                }
             }
 
             // Verify customer has a valid phone number
