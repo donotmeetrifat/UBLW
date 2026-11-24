@@ -25,13 +25,26 @@ async function handleCron(request) {
     }
 
     try {
+        let isForce = false;
+        try {
+            if (request.nextUrl) {
+                isForce = request.nextUrl.searchParams.get('force') === 'true' || request.nextUrl.searchParams.get('test') === 'true';
+            } else if (request.url) {
+                const url = new URL(request.url, 'http://localhost');
+                isForce = url.searchParams.get('force') === 'true' || url.searchParams.get('test') === 'true';
+            }
+        } catch {}
+
         const settings = await getAiSettings();
 
         // Check if WhatsApp Recovery Engine is enabled
         if (!settings.whatsappRecoveryEnabled) {
             return NextResponse.json({
-                success: true,
-                message: 'WhatsApp Abandoned Cart Recovery Engine is currently paused in settings.',
+                success: !isForce,
+                isPaused: true,
+                message: isForce
+                    ? 'WhatsApp Abandoned Cart Recovery Engine is currently PAUSED. Turn on "Engine Active" to enable recovery.'
+                    : 'WhatsApp Abandoned Cart Recovery Engine is currently paused in settings.',
                 stats: { newSessionsInitiated: 0, remindersDispatched: 0 }
             });
         }
@@ -45,16 +58,6 @@ async function handleCron(request) {
                 message: 'WhatsApp Cloud API credentials (Phone Number ID / Access Token) are missing.',
             }, { status: 400 });
         }
-
-        let isForce = false;
-        try {
-            if (request.nextUrl) {
-                isForce = request.nextUrl.searchParams.get('force') === 'true' || request.nextUrl.searchParams.get('test') === 'true';
-            } else if (request.url) {
-                const url = new URL(request.url, 'http://localhost');
-                isForce = url.searchParams.get('force') === 'true' || url.searchParams.get('test') === 'true';
-            }
-        } catch {}
 
         const delayHours = parseFloat(settings.whatsappRecoveryDelayHours) || 1;
         const delayMs = isForce ? 0 : (delayHours * 60 * 60 * 1000);

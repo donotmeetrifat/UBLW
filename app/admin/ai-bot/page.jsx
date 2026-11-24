@@ -13,7 +13,6 @@ import {
     EyeIcon,
     EyeOffIcon,
     DisconnectIcon,
-    OfficialWhatsAppIcon,
     PhoneIcon,
     LockIcon,
     ClockIcon,
@@ -964,6 +963,10 @@ export default function AdminAiBotPage() {
         try {
             const res = await fetch('/api/marketing/abandoned-carts/cron?force=true', { method: 'POST' })
             const data = await res.json()
+            if (data.isPaused) {
+                toast.error(data.message || 'WhatsApp Recovery Engine is currently paused. Please turn on "Engine Active" first.')
+                return
+            }
             if (data.success) {
                 toast.success(
                     `Scan complete! ${data.stats?.newSessionsInitiated || 0} new offers sent, ${data.stats?.remindersDispatched || 0} reminders sent.`
@@ -1866,18 +1869,16 @@ export default function AdminAiBotPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFE0EF]">
                     <div>
                         <div className="flex items-center gap-3 mb-1.5">
-                            <OfficialWhatsAppIcon size={34} className="shrink-0 drop-shadow-xs" />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src="/images/whatsapp-app-icon.png"
+                                alt="WhatsApp"
+                                className="w-10 h-10 object-contain shrink-0 drop-shadow-xs"
+                            />
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
-                                        WhatsApp Abandoned Cart Automated Recovery
-                                    </h2>
-                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                                        isWhatsAppConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
-                                    }`}>
-                                        {isWhatsAppConnected ? '🟢 Connected' : '⚪ Disconnected'}
-                                    </span>
-                                </div>
+                                <h2 className="text-base font-extrabold text-[#241224] tracking-tight">
+                                    WhatsApp Abandoned Cart Automated Recovery
+                                </h2>
                                 <p className="text-xs text-slate-500 mt-0.5">
                                     Send high-converting personalized WhatsApp messages with smart reminders for reserved items in their shopping bag.
                                 </p>
@@ -1885,11 +1886,12 @@ export default function AdminAiBotPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-[#241224]">
+                    <div className="flex items-center gap-3 bg-[#FAF6FA] px-3.5 py-2 rounded-2xl border border-[#EFE0EF]">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#241224]">
+                            <span className={`w-2 h-2 rounded-full ${whatsappRecoveryEnabled ? 'bg-[#25D366]' : 'bg-slate-300'}`} />
                             {whatsappRecoveryEnabled ? 'Engine Active' : 'Engine Paused'}
                         </span>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
                             <input
                                 type="checkbox"
                                 checked={whatsappRecoveryEnabled}
