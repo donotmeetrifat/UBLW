@@ -13,7 +13,8 @@ import {
     CloseIcon,
     SparklesIcon,
     CameraIcon,
-    RoyalCrownIcon
+    RoyalCrownIcon,
+    OfficialWhatsAppIcon
 } from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
@@ -55,6 +56,7 @@ const navSections = [
         section: 'AI & Sales Automation',
         items: [
             { name: 'AI Saleswoman Bot', href: '/admin/ai-bot', icon: SparklesIcon, adminOnly: true },
+            { name: 'WhatsApp Broadcast', href: '/admin/whatsapp-broadcast', icon: OfficialWhatsAppIcon, adminOnly: true },
         ]
     },
     {
@@ -79,6 +81,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, u
         'orders',
         'customers',
         'inquiries',
+        'broadcast',
     ];
 
     const rawPermissions = Array.isArray(currentUser?.permissions) && currentUser.permissions.length > 0
