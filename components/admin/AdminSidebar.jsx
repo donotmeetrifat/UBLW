@@ -106,7 +106,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, u
 
     return (
         <aside
-            className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-[#EFE0EF] flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+            className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-[#EFE0EF] flex flex-col transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:self-start lg:translate-x-0 ${
                 mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
             }`}
         >
@@ -137,7 +137,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose = () => {}, u
             </div>
 
             {/* Navigation Groups */}
-            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 no-scrollbar overscroll-contain">
                 {visibleSections.map((sec, secIdx) => (
                     <div key={secIdx}>
                         <div className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">

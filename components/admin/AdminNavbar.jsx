@@ -5,7 +5,7 @@ import { MenuIcon, BagIcon, ArrowRightIcon } from "@/components/icons"
 
 export default function AdminNavbar({ onToggleSidebar = () => {} }) {
     return (
-        <header className="h-16 px-4 sm:px-6 lg:px-8 border-b border-[#EFE0EF] bg-white flex items-center justify-between shrink-0 shadow-2xs">
+        <header className="sticky top-0 z-30 h-16 px-4 sm:px-6 lg:px-8 border-b border-[#EFE0EF] bg-white/95 backdrop-blur-xs flex items-center justify-between shrink-0 shadow-2xs">
             {/* Left section */}
             <div className="flex items-center gap-3">
                 <button
