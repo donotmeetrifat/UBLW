@@ -596,6 +596,33 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Invalid stage number' }, { status: 400 });
         }
 
+        // Action: Immediate Update WhatsApp Cart Recovery Delay
+        if (action === 'update_whatsapp_delay') {
+            const { delayHours } = body;
+            const parsedDelay = parseFloat(delayHours);
+            if (isNaN(parsedDelay) || parsedDelay <= 0) {
+                return NextResponse.json({ success: false, message: 'Invalid delay value' }, { status: 400 });
+            }
+            await saveAiSettings({ whatsappRecoveryDelayHours: parsedDelay });
+            return NextResponse.json({
+                success: true,
+                message: `Cart abandonment trigger delay updated to ${parsedDelay} hour(s)`,
+                delayHours: parsedDelay,
+            });
+        }
+
+        // Action: Immediate Toggle WhatsApp Cart Recovery Engine
+        if (action === 'toggle_whatsapp_recovery') {
+            const { enabled: recoveryEnabled } = body;
+            const targetVal = Boolean(recoveryEnabled);
+            await saveAiSettings({ whatsappRecoveryEnabled: targetVal });
+            return NextResponse.json({
+                success: true,
+                message: targetVal ? 'WhatsApp Recovery Engine activated' : 'WhatsApp Recovery Engine paused',
+                enabled: targetVal,
+            });
+        }
+
         // Action: Connect & Verify Provider API Key
         if (action === 'test' || action === 'connect') {
             const rawProvider = (testProvider || 'gemini').toLowerCase();

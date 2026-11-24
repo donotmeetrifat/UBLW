@@ -281,7 +281,7 @@ export default function AdminAiBotPage() {
                 setWhatsappBusinessAccountId(wa.businessAccountId || '')
                 setWhatsappHotline(wa.hotline || '+880 1959-524393')
                 setWhatsappRecoveryEnabled(wa.recoveryEnabled !== false)
-                setWhatsappRecoveryDelayHours(String(wa.recoveryDelayHours || 1))
+                if (wa.recoveryDelayHours !== undefined) setWhatsappRecoveryDelayHours(String(wa.recoveryDelayHours))
                 if (wa.stage2Enabled !== undefined) setWhatsappStage2Enabled(wa.stage2Enabled !== false)
                 if (wa.stage3Enabled !== undefined) setWhatsappStage3Enabled(wa.stage3Enabled !== false)
                 if (wa.templateStage1) setWhatsappTemplateStage1(wa.templateStage1)
@@ -892,6 +892,58 @@ export default function AdminAiBotPage() {
             toast.error(`Error toggling Stage ${stageNum}: ${err.message}`)
             if (stageNum === 2) setWhatsappStage2Enabled(!newState)
             if (stageNum === 3) setWhatsappStage3Enabled(!newState)
+        }
+    }
+
+    const handleUpdateRecoveryDelay = async (val) => {
+        const oldVal = whatsappRecoveryDelayHours
+        setWhatsappRecoveryDelayHours(String(val))
+        const option = CART_RECOVERY_DELAY_OPTIONS.find((o) => o.value === String(val))
+        const label = option ? option.label : `${val} Hours`
+
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update_whatsapp_delay',
+                    delayHours: parseFloat(val),
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(`Trigger delay updated instantly to ${label}!`)
+            } else {
+                toast.error(data.message || 'Failed to update trigger delay')
+                setWhatsappRecoveryDelayHours(String(oldVal))
+            }
+        } catch (err) {
+            toast.error(`Error updating delay: ${err.message}`)
+            setWhatsappRecoveryDelayHours(String(oldVal))
+        }
+    }
+
+    const handleToggleRecoveryEngine = async (enabled) => {
+        setWhatsappRecoveryEnabled(enabled)
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggle_whatsapp_recovery',
+                    enabled,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(enabled ? 'WhatsApp Recovery Engine activated!' : 'WhatsApp Recovery Engine paused!')
+            } else {
+                toast.error(data.message || 'Failed to toggle engine')
+                setWhatsappRecoveryEnabled(!enabled)
+            }
+        } catch (err) {
+            toast.error(`Error toggling engine: ${err.message}`)
+            setWhatsappRecoveryEnabled(!enabled)
         }
     }
 
@@ -1841,7 +1893,7 @@ export default function AdminAiBotPage() {
                             <input
                                 type="checkbox"
                                 checked={whatsappRecoveryEnabled}
-                                onChange={(e) => setWhatsappRecoveryEnabled(e.target.checked)}
+                                onChange={(e) => handleToggleRecoveryEngine(e.target.checked)}
                                 className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -2002,7 +2054,7 @@ export default function AdminAiBotPage() {
                         </p>
                         <AdminDropdown
                             value={String(whatsappRecoveryDelayHours)}
-                            onChange={(val) => setWhatsappRecoveryDelayHours(val)}
+                            onChange={handleUpdateRecoveryDelay}
                             options={CART_RECOVERY_DELAY_OPTIONS}
                             fullWidth={true}
                             buttonClassName="py-2.5 px-3.5 bg-[#FAF6FA] hover:bg-white text-xs font-bold text-[#241224] rounded-xl border-[#EFE0EF]"
