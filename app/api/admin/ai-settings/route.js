@@ -234,6 +234,8 @@ export async function GET(request) {
                     hotline: settings.whatsappHotline || '+880 1959-524393',
                     recoveryEnabled: Boolean(settings.whatsappRecoveryEnabled),
                     recoveryDelayHours: settings.whatsappRecoveryDelayHours || 1,
+                    stage2Enabled: settings.whatsappStage2Enabled !== false,
+                    stage3Enabled: settings.whatsappStage3Enabled !== false,
                     templateStage1: settings.whatsappTemplateStage1,
                     templateStage2: settings.whatsappTemplateStage2,
                     templateStage3: settings.whatsappTemplateStage3,
@@ -568,6 +570,30 @@ export async function POST(request) {
                 message: targetVal ? 'Storefront Voice Call enabled' : 'Storefront Voice Call disabled',
                 voiceCallEnabled: targetVal,
             });
+        }
+
+        // Action: Immediate Toggle WhatsApp Stage 2 / Stage 3 Auto Messages
+        if (action === 'toggle_whatsapp_stage') {
+            const { stage, enabled: stageEnabled } = body;
+            const targetVal = Boolean(stageEnabled);
+            if (Number(stage) === 2) {
+                await saveAiSettings({ whatsappStage2Enabled: targetVal });
+                return NextResponse.json({
+                    success: true,
+                    message: targetVal ? 'Stage 2 (Expiry Warning) enabled' : 'Stage 2 (Expiry Warning) disabled',
+                    stage: 2,
+                    enabled: targetVal,
+                });
+            } else if (Number(stage) === 3) {
+                await saveAiSettings({ whatsappStage3Enabled: targetVal });
+                return NextResponse.json({
+                    success: true,
+                    message: targetVal ? 'Stage 3 (Final Call) enabled' : 'Stage 3 (Final Call) disabled',
+                    stage: 3,
+                    enabled: targetVal,
+                });
+            }
+            return NextResponse.json({ success: false, message: 'Invalid stage number' }, { status: 400 });
         }
 
         // Action: Connect & Verify Provider API Key
@@ -957,6 +983,8 @@ export async function POST(request) {
             whatsappHotline,
             whatsappRecoveryEnabled,
             whatsappRecoveryDelayHours,
+            whatsappStage2Enabled,
+            whatsappStage3Enabled,
             whatsappTemplateStage1,
             whatsappTemplateStage2,
             whatsappTemplateStage3,
@@ -986,6 +1014,12 @@ export async function POST(request) {
         }
         if (whatsappRecoveryDelayHours !== undefined) {
             updatePayload.whatsappRecoveryDelayHours = whatsappRecoveryDelayHours;
+        }
+        if (whatsappStage2Enabled !== undefined) {
+            updatePayload.whatsappStage2Enabled = whatsappStage2Enabled;
+        }
+        if (whatsappStage3Enabled !== undefined) {
+            updatePayload.whatsappStage3Enabled = whatsappStage3Enabled;
         }
         if (whatsappTemplateStage1 !== undefined) {
             updatePayload.whatsappTemplateStage1 = whatsappTemplateStage1;

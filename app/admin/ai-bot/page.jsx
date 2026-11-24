@@ -176,6 +176,8 @@ export default function AdminAiBotPage() {
     const [whatsappHotline, setWhatsappHotline] = useState('+880 1959-524393')
     const [whatsappRecoveryEnabled, setWhatsappRecoveryEnabled] = useState(true)
     const [whatsappRecoveryDelayHours, setWhatsappRecoveryDelayHours] = useState('1')
+    const [whatsappStage2Enabled, setWhatsappStage2Enabled] = useState(true)
+    const [whatsappStage3Enabled, setWhatsappStage3Enabled] = useState(true)
     const [activeTemplateStageTab, setActiveTemplateStageTab] = useState(1)
     const [whatsappTemplateStage1, setWhatsappTemplateStage1] = useState(DEFAULT_STAGE_1)
     const [whatsappTemplateStage2, setWhatsappTemplateStage2] = useState(DEFAULT_STAGE_2)
@@ -280,6 +282,8 @@ export default function AdminAiBotPage() {
                 setWhatsappHotline(wa.hotline || '+880 1959-524393')
                 setWhatsappRecoveryEnabled(wa.recoveryEnabled !== false)
                 setWhatsappRecoveryDelayHours(String(wa.recoveryDelayHours || 1))
+                if (wa.stage2Enabled !== undefined) setWhatsappStage2Enabled(wa.stage2Enabled !== false)
+                if (wa.stage3Enabled !== undefined) setWhatsappStage3Enabled(wa.stage3Enabled !== false)
                 if (wa.templateStage1) setWhatsappTemplateStage1(wa.templateStage1)
                 if (wa.templateStage2) setWhatsappTemplateStage2(wa.templateStage2)
                 if (wa.templateStage3) setWhatsappTemplateStage3(wa.templateStage3)
@@ -648,6 +652,8 @@ export default function AdminAiBotPage() {
             payload.whatsappHotline = whatsappHotline
             payload.whatsappRecoveryEnabled = whatsappRecoveryEnabled
             payload.whatsappRecoveryDelayHours = parseFloat(whatsappRecoveryDelayHours) || 1
+            payload.whatsappStage2Enabled = whatsappStage2Enabled
+            payload.whatsappStage3Enabled = whatsappStage3Enabled
             payload.whatsappTemplateStage1 = whatsappTemplateStage1
             payload.whatsappTemplateStage2 = whatsappTemplateStage2
             payload.whatsappTemplateStage3 = whatsappTemplateStage3
@@ -858,6 +864,35 @@ export default function AdminAiBotPage() {
             setWhatsappTemplateStage3(prev => (prev ? prev + ' ' + variableTag : variableTag))
         }
         toast.success(`Inserted ${variableTag}`)
+    }
+
+    const handleToggleStage = async (stageNum, newState) => {
+        if (stageNum === 2) setWhatsappStage2Enabled(newState)
+        if (stageNum === 3) setWhatsappStage3Enabled(newState)
+
+        try {
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggle_whatsapp_stage',
+                    stage: stageNum,
+                    enabled: newState,
+                }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                toast.success(data.message || `Stage ${stageNum} updated instantly!`)
+            } else {
+                toast.error(data.message || 'Failed to update stage')
+                if (stageNum === 2) setWhatsappStage2Enabled(!newState)
+                if (stageNum === 3) setWhatsappStage3Enabled(!newState)
+            }
+        } catch (err) {
+            toast.error(`Error toggling Stage ${stageNum}: ${err.message}`)
+            if (stageNum === 2) setWhatsappStage2Enabled(!newState)
+            if (stageNum === 3) setWhatsappStage3Enabled(!newState)
+        }
     }
 
     const handleResetTemplates = () => {
@@ -2041,39 +2076,60 @@ export default function AdminAiBotPage() {
                         </div>
 
                         {/* Stage Tabs */}
-                        <div className="flex items-center gap-1 bg-[#FAF6FA] p-1 rounded-xl border border-[#EFE0EF]">
+                        <div className="flex flex-wrap items-center gap-1.5 bg-[#FAF6FA] p-1.5 rounded-2xl border border-[#EFE0EF]">
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(1)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                                     activeTemplateStageTab === 1
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
+                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                                 Stage 1: Initial Offer
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(2)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                                     activeTemplateStageTab === 2
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
+                                <span className={`w-2 h-2 rounded-full transition-colors ${
+                                    whatsappStage2Enabled ? 'bg-emerald-400' : 'bg-slate-300'
+                                }`}></span>
                                 Stage 2: Expiry Warning
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                                    activeTemplateStageTab === 2
+                                        ? whatsappStage2Enabled ? 'bg-emerald-500/30 text-white' : 'bg-white/20 text-white/80'
+                                        : whatsappStage2Enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'
+                                }`}>
+                                    {whatsappStage2Enabled ? 'ON' : 'OFF'}
+                                </span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(3)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                                     activeTemplateStageTab === 3
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
+                                <span className={`w-2 h-2 rounded-full transition-colors ${
+                                    whatsappStage3Enabled ? 'bg-emerald-400' : 'bg-slate-300'
+                                }`}></span>
                                 Stage 3: Final Call
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                                    activeTemplateStageTab === 3
+                                        ? whatsappStage3Enabled ? 'bg-emerald-500/30 text-white' : 'bg-white/20 text-white/80'
+                                        : whatsappStage3Enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'
+                                }`}>
+                                    {whatsappStage3Enabled ? 'ON' : 'OFF'}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -2107,10 +2163,42 @@ export default function AdminAiBotPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                         {/* Left: Textarea Editor */}
                         <div className="lg:col-span-7 space-y-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-700">
-                                    Stage {activeTemplateStageTab} Message Template
-                                </span>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xs font-bold text-slate-700">
+                                        Stage {activeTemplateStageTab} Message Template
+                                    </span>
+
+                                    {/* Clean, Premium Instant ON / OFF Switch for Stage 2 & Stage 3 */}
+                                    {activeTemplateStageTab === 1 ? (
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2.5 py-1 rounded-full">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Primary Trigger (Always Active)
+                                        </span>
+                                    ) : (
+                                        <div className="inline-flex items-center gap-2 bg-[#FAF6FA] hover:bg-white border border-[#EFE0EF] px-2.5 py-1 rounded-full shadow-2xs transition">
+                                            <span className={`text-[11px] font-bold ${
+                                                (activeTemplateStageTab === 2 ? whatsappStage2Enabled : whatsappStage3Enabled)
+                                                    ? 'text-emerald-700'
+                                                    : 'text-slate-500'
+                                            }`}>
+                                                {(activeTemplateStageTab === 2 ? whatsappStage2Enabled : whatsappStage3Enabled)
+                                                    ? 'Auto Message: Active'
+                                                    : 'Auto Message: Disabled'}
+                                            </span>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={activeTemplateStageTab === 2 ? whatsappStage2Enabled : whatsappStage3Enabled}
+                                                    onChange={(e) => handleToggleStage(activeTemplateStageTab, e.target.checked)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1.5px] after:left-[1.5px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#25D366]"></div>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={handleResetTemplates}
@@ -2142,8 +2230,18 @@ export default function AdminAiBotPage() {
                         <div className="lg:col-span-5 flex flex-col items-center justify-start">
                             <div className="w-full flex items-center justify-between px-2 pb-2">
                                 <span className="text-xs font-bold text-slate-700">Samsung Live Preview</span>
-                                <span className="text-[10px] font-bold text-[#6C306E] bg-[#FAF6FA] border border-[#EFE0EF] px-2 py-0.5 rounded-full">
-                                    Stage {activeTemplateStageTab} Active
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                    activeTemplateStageTab === 1
+                                        ? 'text-[#6C306E] bg-[#FAF6FA] border-[#EFE0EF]'
+                                        : (activeTemplateStageTab === 2 ? whatsappStage2Enabled : whatsappStage3Enabled)
+                                        ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                                        : 'text-slate-500 bg-slate-100 border-slate-200'
+                                }`}>
+                                    {activeTemplateStageTab === 1
+                                        ? 'Stage 1 Active'
+                                        : (activeTemplateStageTab === 2 ? whatsappStage2Enabled : whatsappStage3Enabled)
+                                        ? `Stage ${activeTemplateStageTab} Active`
+                                        : `Stage ${activeTemplateStageTab} Disabled (Off)`}
                                 </span>
                             </div>
                             <MobileMockup

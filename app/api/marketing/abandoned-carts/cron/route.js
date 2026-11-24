@@ -132,18 +132,23 @@ async function handleCron(request) {
             let nextStage = recovery.stage + 1;
             let stageTemplate = settings.whatsappTemplateStage2;
 
+            const isStage2Enabled = settings.whatsappStage2Enabled !== false;
+            const isStage3Enabled = settings.whatsappStage3Enabled !== false;
+
             // 1 Day (24 Hours): Max 3 Messages
             // Stage 2: Warning reminder at ~12h remaining (at least 5h after stage 1)
-            if (recovery.stage === 1 && hoursRemaining <= 14 && hoursSinceLastSent >= 5) {
+            if (isStage2Enabled && recovery.stage === 1 && hoursRemaining <= 14 && hoursSinceLastSent >= 5) {
                 shouldSendNextStage = true;
                 nextStage = 2;
                 stageTemplate = settings.whatsappTemplateStage2;
             }
-            // Stage 3: Final call at <= 4h remaining (at least 3h after stage 2)
-            else if (recovery.stage === 2 && hoursRemaining <= 4 && hoursSinceLastSent >= 3) {
-                shouldSendNextStage = true;
-                nextStage = 3;
-                stageTemplate = settings.whatsappTemplateStage3;
+            // Stage 3: Final call at <= 4h remaining (at least 3h after stage 2, or stage 1 if stage 2 is disabled)
+            else if (isStage3Enabled && hoursRemaining <= 4 && hoursSinceLastSent >= 3) {
+                if (recovery.stage === 2 || (!isStage2Enabled && recovery.stage === 1)) {
+                    shouldSendNextStage = true;
+                    nextStage = 3;
+                    stageTemplate = settings.whatsappTemplateStage3;
+                }
             }
 
             if (shouldSendNextStage) {
