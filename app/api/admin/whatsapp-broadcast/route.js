@@ -75,14 +75,10 @@ export async function GET(request) {
             },
             select: {
                 id: true,
-                title: true,
+                name: true,
                 price: true,
                 images: true,
-                category: {
-                    select: {
-                        name: true,
-                    }
-                }
+                category: true,
             },
             orderBy: { createdAt: 'desc' },
             take: 60,
@@ -114,10 +110,11 @@ export async function GET(request) {
             users: formattedUsers,
             products: products.map((p) => ({
                 id: p.id,
-                title: p.title,
+                name: p.name,
+                title: p.name,
                 price: p.price,
                 coverImage: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null,
-                categoryName: p.category?.name || '',
+                categoryName: p.category || '',
             })),
             settings: {
                 isConnected,
@@ -214,7 +211,7 @@ export async function POST(request) {
                 where: { id: selectedProductId },
                 select: {
                     id: true,
-                    title: true,
+                    name: true,
                     price: true,
                     images: true,
                 }
@@ -232,7 +229,7 @@ export async function POST(request) {
             mediaImageUrl = targetProduct.images[0];
         }
 
-        const productTitle = targetProduct?.title || '';
+        const productTitle = targetProduct?.name || '';
         const productPriceFormatted = targetProduct ? `৳${targetProduct.price.toLocaleString('en-US')}` : '';
         const cartUrl = `${baseUrl}/checkout`;
         const storeUrl = targetProduct ? `${baseUrl}/product/${targetProduct.id}` : baseUrl;

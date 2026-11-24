@@ -171,7 +171,7 @@ export default function WhatsAppBroadcastPage() {
 
     // Live preview formatted message string
     const previewFormattedMessage = useMemo(() => {
-        const pTitle = selectedProduct?.title || 'CeraVe Hydrating Cleanser 473ml (UK)';
+        const pTitle = selectedProduct?.name || selectedProduct?.title || 'CeraVe Hydrating Cleanser 473ml (UK)';
         const pPrice = selectedProduct ? `৳${selectedProduct.price.toLocaleString('en-US')}` : '৳2,250';
         const hotline = settings.hotline || '+880 1959-524393';
         const storeUrl = selectedProduct ? `https://ukbrandlover.com/product/${selectedProduct.id}` : 'https://ukbrandlover.com';
@@ -537,7 +537,7 @@ export default function WhatsAppBroadcastPage() {
                                     <option value="">-- No specific product (General Announcement) --</option>
                                     {products.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.title} (৳{p.price.toLocaleString('en-US')})
+                                            {p.name || p.title} (৳{p.price.toLocaleString('en-US')})
                                         </option>
                                     ))}
                                 </select>
@@ -561,7 +561,7 @@ export default function WhatsAppBroadcastPage() {
                                     )}
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-bold text-[#241224] truncate">
-                                            {selectedProduct.title}
+                                            {selectedProduct.name || selectedProduct.title}
                                         </div>
                                         <div className="text-[11px] font-black text-[#6C306E]">
                                             ৳{selectedProduct.price.toLocaleString('en-US')}
