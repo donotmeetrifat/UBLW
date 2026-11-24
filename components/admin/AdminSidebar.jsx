@@ -14,7 +14,7 @@ import {
     SparklesIcon,
     CameraIcon,
     RoyalCrownIcon,
-    OfficialWhatsAppIcon
+    WhatsAppIcon
 } from "@/components/icons"
 import Image from "next/image"
 import Link from "next/link"
@@ -56,7 +56,7 @@ const navSections = [
         section: 'AI & Sales Automation',
         items: [
             { name: 'AI Saleswoman Bot', href: '/admin/ai-bot', icon: SparklesIcon, adminOnly: true },
-            { name: 'WhatsApp Broadcast', href: '/admin/whatsapp-broadcast', icon: OfficialWhatsAppIcon, adminOnly: true },
+            { name: 'WhatsApp Broadcast', href: '/admin/whatsapp-broadcast', icon: WhatsAppIcon, adminOnly: true },
         ]
     },
     {

@@ -5,24 +5,22 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import Loading from '@/components/Loading';
+import AdminDropdown from '@/components/admin/AdminDropdown';
 import { MobileMockup } from '@/components/ui/great-ui-mobile-mockup';
 import {
-    OfficialWhatsAppIcon,
+    WhatsAppIcon,
     SearchIcon,
-    SparklesIcon,
     SendIcon,
     CheckIcon,
     RefreshIcon,
     CloseIcon,
     UserIcon,
     BagIcon,
-    AlertCircleIcon,
-    AlertTriangleIcon,
 } from '@/components/icons';
 
 const PRESET_TEMPLATES = [
     {
-        name: 'Fresh London Arrival Announcement',
+        name: 'Fresh London Shipment Arrival',
         text: `Assalamu Alaikum {customer_name}! ✨
 
 We are thrilled to share an exclusive update from UK Brand Lover! 🇬🇧
@@ -39,7 +37,7 @@ Need expert shade matching or routine advice? Contact our hotline: {hotline}.
 — UK Brand Lover Official`,
     },
     {
-        name: 'VIP Customer Exclusive Privilege',
+        name: 'VIP Early Access & Exclusive Privilege',
         text: `Assalamu Alaikum {customer_name}! 🌸
 
 As a valued member of UK Brand Lover, you have VIP early access to our newest curated UK skincare & cosmetics collection!
@@ -55,7 +53,7 @@ Questions? We are here to assist you anytime on WhatsApp: {hotline}.
 — UK Brand Lover`,
     },
     {
-        name: 'Weekend Flash Sale Alert',
+        name: 'Weekend Flash Sale & Limited Discount',
         text: `⚡ FLASH SALE ALERT: {customer_name}! ⚡
 
 Get your hands on genuine UK imported beauty favorites at special weekend prices!
@@ -69,6 +67,86 @@ Current Price: {product_price}
 Hotline & Help: {hotline}
 
 — UK Brand Lover Team`,
+    },
+    {
+        name: 'Eid & Festive Luxury Glow Collection',
+        text: `Eid Mubarak in advance, {customer_name}! ✨🌙
+
+Get your festive glow ready with our luxury UK imported skincare and cosmetics lineup. 
+
+Featured Beauty Pick: {product_name}
+Special Festive Price: {product_price}
+
+👉 Order now to guarantee delivery before the holidays:
+{store_url}
+
+Hotline for express assistance: {hotline}.
+
+— UK Brand Lover`,
+    },
+    {
+        name: 'Authentic Skincare Routine Recommendation',
+        text: `Assalamu Alaikum {customer_name}! 🌿
+
+Looking to elevate your daily skincare routine with dermatologist-recommended UK authentic formulas?
+
+We highly recommend: {product_name}
+Authentic UK Batch: {product_price}
+
+👉 Read customer reviews & checkout here:
+{store_url}
+
+Have questions about your skin type? Message our beauty advisor at {hotline}.
+
+— UK Brand Lover Skincare Desk`,
+    },
+    {
+        name: 'Stock Clearance & Limited Quantity Alert',
+        text: `Dear {customer_name}, ⏳
+
+Quick heads up: our current London batch of {product_name} is nearly sold out due to high demand! Only a few sealed authentic units remain in our warehouse.
+
+Price: {product_price}
+
+👉 Secure your authentic bottle before it goes out of stock:
+{store_url}
+
+Need quick assistance? WhatsApp us: {hotline}.
+
+— UK Brand Lover`,
+    },
+    {
+        name: 'Welcome & Loyalty Gratitude Note',
+        text: `Assalamu Alaikum {customer_name}! 💖
+
+Thank you for being a part of the UK Brand Lover family. We truly appreciate your trust in our authentic London-sourced beauty collections.
+
+Today's Curated Pick for You: {product_name}
+Exclusive Member Price: {product_price}
+
+👉 Explore our full authentic catalogue:
+{store_url}
+
+Direct WhatsApp Hotline: {hotline}
+
+Warm regards,
+— UK Brand Lover`,
+    },
+    {
+        name: 'Restocked UK Bestsellers Alert',
+        text: `Good news {customer_name}! 🛍️
+
+Our most requested UK bestseller is officially back in stock! 
+
+Restocked: {product_name}
+Direct Heathrow Import Price: {product_price}
+
+👉 Order immediately with Cash on Delivery & nationwide express delivery:
+{store_url}
+
+Hotline: {hotline}
+
+— UK Brand Lover`,
     },
 ];
 
@@ -84,6 +162,7 @@ export default function WhatsAppBroadcastPage() {
     const [filterTab, setFilterTab] = useState('all'); // 'all' | 'has_whatsapp' | 'selected'
 
     // Message composition states
+    const [activeTemplateName, setActiveTemplateName] = useState(PRESET_TEMPLATES[0].name);
     const [messageTemplate, setMessageTemplate] = useState(PRESET_TEMPLATES[0].text);
     const [selectedProductId, setSelectedProductId] = useState('');
     const [includeProductImage, setIncludeProductImage] = useState(true);
@@ -136,8 +215,7 @@ export default function WhatsAppBroadcastPage() {
                 !query ||
                 (u.name && u.name.toLowerCase().includes(query)) ||
                 (u.email && u.email.toLowerCase().includes(query)) ||
-                (u.resolvedWhatsApp && u.resolvedWhatsApp.includes(query)) ||
-                (u.id && u.id.toLowerCase().includes(query));
+                (u.resolvedWhatsApp && u.resolvedWhatsApp.includes(query));
 
             if (!matchesSearch) return false;
 
@@ -146,6 +224,25 @@ export default function WhatsAppBroadcastPage() {
             return true;
         });
     }, [users, searchQuery, filterTab, selectedUserIds]);
+
+    // Product options for AdminDropdown
+    const productDropdownOptions = useMemo(() => {
+        return [
+            { value: '', label: '-- No specific product (General Announcement) --' },
+            ...products.map((p) => ({
+                value: p.id,
+                label: `${p.name || p.title} (৳${p.price.toLocaleString('en-US')})`,
+            })),
+        ];
+    }, [products]);
+
+    // Template options for AdminDropdown
+    const templateDropdownOptions = useMemo(() => {
+        return PRESET_TEMPLATES.map((p) => ({
+            value: p.name,
+            label: p.name,
+        }));
+    }, []);
 
     // Currently selected product object
     const selectedProduct = useMemo(() => {
@@ -166,7 +263,7 @@ export default function WhatsAppBroadcastPage() {
             const found = users.find((u) => u.id === selectedUserIds[0]);
             if (found) return found;
         }
-        return users[0] || { name: 'Nusrat Jahan', id: 'usr_sample', resolvedWhatsApp: '01819283746' };
+        return users[0] || { name: 'Nusrat Jahan', resolvedWhatsApp: '01819283746' };
     }, [users, selectedUserIds]);
 
     // Live preview formatted message string
@@ -273,25 +370,26 @@ export default function WhatsAppBroadcastPage() {
             {/* 1. Header Banner */}
             <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <span className="p-2 rounded-2xl bg-[#FAF6FA] border border-[#EFE0EF] text-[#6C306E]">
-                                <OfficialWhatsAppIcon size={24} />
-                            </span>
+                    <div className="flex items-center gap-3.5">
+                        {/* Logo in Full Box */}
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md shrink-0">
+                            <WhatsAppIcon size={26} color="#ffffff" />
+                        </div>
+                        <div className="space-y-0.5">
                             <h1 className="text-xl sm:text-2xl font-black text-[#241224] tracking-tight">
                                 WhatsApp Broadcast Marketing
                             </h1>
+                            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
+                                Broadcast personalized promotional messages, new UK arrivals, and VIP announcements directly to your customers' account WhatsApp numbers.
+                            </p>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
-                            Broadcast personalized promotional messages, new UK arrivals, and VIP announcements directly to your customers' account WhatsApp numbers.
-                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         {settings.isConnected ? (
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>WhatsApp API Connected</span>
+                                <span>WhatsApp Connected</span>
                                 <span className="text-[10px] bg-emerald-200/60 px-2 py-0.5 rounded-full font-mono">
                                     {settings.hotline}
                                 </span>
@@ -302,7 +400,7 @@ export default function WhatsAppBroadcastPage() {
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition shadow-2xs"
                             >
                                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                <span>WhatsApp API Not Connected &rarr; Connect in AI Bot</span>
+                                <span>WhatsApp Not Connected &rarr; Connect in AI Bot</span>
                             </Link>
                         )}
 
@@ -351,7 +449,7 @@ export default function WhatsAppBroadcastPage() {
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search by customer name, WhatsApp, email, or User ID..."
+                                    placeholder="Search by customer name, WhatsApp, or email..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-9 pr-4 py-2 text-xs bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:bg-white focus:border-[#6C306E] focus:outline-none transition"
@@ -444,35 +542,35 @@ export default function WhatsAppBroadcastPage() {
                                         <div
                                             key={user.id}
                                             onClick={() => handleToggleUser(user.id)}
-                                            className={`flex items-center justify-between p-2.5 rounded-xl border transition cursor-pointer ${
+                                            className={`group flex items-center justify-between p-2.5 rounded-xl border transition cursor-pointer select-none ${
                                                 isSelected
-                                                    ? 'bg-white border-[#6C306E] shadow-2xs'
-                                                    : 'bg-white/70 border-slate-200/80 hover:bg-white hover:border-[#6C306E]/40'
+                                                    ? 'bg-[#FAF6FA] border-[#6C306E] shadow-2xs ring-1 ring-[#6C306E]/20'
+                                                    : 'bg-white border-slate-200/80 hover:bg-[#FAF6FA]/40 hover:border-[#6C306E]/40'
                                             }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => {}} // Controlled by container click
-                                                    className="w-4 h-4 text-[#6C306E] rounded-md border-slate-300 focus:ring-[#6C306E] cursor-pointer"
-                                                />
+                                                {/* Premium Custom Checkbox */}
+                                                <div
+                                                    className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all shrink-0 ${
+                                                        isSelected
+                                                            ? 'bg-[#6C306E] border-2 border-[#6C306E] text-white shadow-2xs'
+                                                            : 'border-2 border-slate-300 bg-white group-hover:border-[#6C306E]/60'
+                                                    }`}
+                                                >
+                                                    {isSelected && <CheckIcon size={12} strokeWidth={3} />}
+                                                </div>
+
                                                 <div className="w-8 h-8 rounded-full bg-[#FAF6FA] border border-[#EFE0EF] flex items-center justify-center font-bold text-xs text-[#6C306E] shrink-0">
                                                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                                 </div>
+
                                                 <div className="min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-bold text-[#241224] truncate">
-                                                            {user.name}
-                                                        </span>
-                                                        <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded">
-                                                            ID: {user.id}
-                                                        </span>
+                                                    <div className="text-xs font-bold text-[#241224] truncate">
+                                                        {user.name}
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] text-slate-500 truncate">
                                                         {user.resolvedWhatsApp ? (
-                                                            <span className="flex items-center gap-1 font-mono font-medium text-emerald-700">
-                                                                <OfficialWhatsAppIcon size={12} />
+                                                            <span className="font-mono font-medium text-emerald-700">
                                                                 {user.resolvedWhatsApp}
                                                             </span>
                                                         ) : (
@@ -506,7 +604,7 @@ export default function WhatsAppBroadcastPage() {
                     </div>
 
                     {/* Featured Product Card (Optional) */}
-                    <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs space-y-3">
+                    <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs space-y-4">
                         <div className="flex items-center justify-between pb-2 border-b border-[#EFE0EF]">
                             <h2 className="text-sm font-black text-[#241224] flex items-center gap-2">
                                 <BagIcon size={16} className="text-[#6C306E]" />
@@ -527,71 +625,72 @@ export default function WhatsAppBroadcastPage() {
                             Select a product to automatically insert `{'{product_name}'}`, `{'{product_price}'}`, and its cover photo into the broadcast message.
                         </p>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                            <div>
-                                <select
-                                    value={selectedProductId}
-                                    onChange={(e) => setSelectedProductId(e.target.value)}
-                                    className="w-full p-2.5 text-xs bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl focus:bg-white focus:border-[#6C306E] focus:outline-none transition"
-                                >
-                                    <option value="">-- No specific product (General Announcement) --</option>
-                                    {products.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name || p.title} (৳{p.price.toLocaleString('en-US')})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        <div className="space-y-3">
+                            {/* Premium AdminDropdown for Product Picker */}
+                            <AdminDropdown
+                                value={selectedProductId}
+                                onChange={(val) => setSelectedProductId(val)}
+                                options={productDropdownOptions}
+                                fullWidth={true}
+                                placeholder="Select a product to feature..."
+                                buttonClassName="py-2.5 px-3.5 bg-[#FAF6FA] hover:bg-white text-xs font-bold text-[#241224] rounded-xl border-[#EFE0EF]"
+                            />
 
                             {selectedProduct && (
-                                <div className="flex items-center gap-3 p-2 bg-[#FAF6FA] border border-[#EFE0EF] rounded-xl">
+                                <div className="flex items-center gap-3 p-3 bg-[#FAF6FA] border border-[#EFE0EF] rounded-2xl">
                                     {selectedProduct.coverImage ? (
-                                        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200">
+                                        <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200">
                                             <Image
                                                 src={selectedProduct.coverImage}
-                                                alt={selectedProduct.title}
+                                                alt={selectedProduct.name || selectedProduct.title}
                                                 fill
                                                 className="object-cover"
                                             />
                                         </div>
                                     ) : (
-                                        <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 text-slate-400">
-                                            <BagIcon size={16} />
+                                        <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center shrink-0 text-slate-400">
+                                            <BagIcon size={20} />
                                         </div>
                                     )}
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-bold text-[#241224] truncate">
                                             {selectedProduct.name || selectedProduct.title}
                                         </div>
-                                        <div className="text-[11px] font-black text-[#6C306E]">
+                                        <div className="text-xs font-black text-[#6C306E]">
                                             ৳{selectedProduct.price.toLocaleString('en-US')}
                                         </div>
                                     </div>
                                 </div>
                             )}
-                        </div>
 
-                        {selectedProduct && (
-                            <div className="flex items-center gap-2 pt-1">
-                                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                                    <input
-                                        type="checkbox"
-                                        checked={includeProductImage}
-                                        onChange={(e) => setIncludeProductImage(e.target.checked)}
-                                        className="w-4 h-4 text-[#6C306E] rounded border-slate-300 focus:ring-[#6C306E]"
-                                    />
-                                    <span>Send with Product Cover Photo as WhatsApp Media Message</span>
-                                </label>
-                            </div>
-                        )}
+                            {selectedProduct && (
+                                <div
+                                    onClick={() => setIncludeProductImage(!includeProductImage)}
+                                    className="flex items-center gap-3 p-3 bg-[#FAF6FA] hover:bg-[#F5EDF5] border border-[#EFE0EF] rounded-2xl cursor-pointer transition select-none"
+                                >
+                                    {/* Premium Custom Checkbox */}
+                                    <div
+                                        className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all shrink-0 ${
+                                            includeProductImage
+                                                ? 'bg-[#6C306E] border-2 border-[#6C306E] text-white shadow-2xs'
+                                                : 'border-2 border-slate-300 bg-white'
+                                        }`}
+                                    >
+                                        {includeProductImage && <CheckIcon size={12} strokeWidth={3} />}
+                                    </div>
+                                    <span className="text-xs font-bold text-[#241224]">
+                                        Send with Product Cover Photo as WhatsApp Media Message
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Message Template Editor Card */}
                     <div className="bg-white rounded-3xl border border-[#EFE0EF] p-5 sm:p-6 shadow-2xs space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EFE0EF]">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EFE0EF]">
                             <div>
-                                <h2 className="text-sm font-black text-[#241224] flex items-center gap-2">
-                                    <SparklesIcon size={16} className="text-[#6C306E]" />
+                                <h2 className="text-sm font-black text-[#241224]">
                                     3. Personalized Broadcast Message Template
                                 </h2>
                                 <p className="text-[11px] text-slate-500">
@@ -599,21 +698,24 @@ export default function WhatsAppBroadcastPage() {
                                 </p>
                             </div>
 
-                            {/* Preset Switcher */}
-                            <select
-                                onChange={(e) => {
-                                    const preset = PRESET_TEMPLATES.find((p) => p.name === e.target.value);
-                                    if (preset) setMessageTemplate(preset.text);
-                                }}
-                                className="text-xs font-bold bg-[#FAF6FA] border border-[#EFE0EF] px-3 py-1.5 rounded-xl focus:border-[#6C306E] focus:outline-none"
-                            >
-                                <option value="">Load Preset Template...</option>
-                                {PRESET_TEMPLATES.map((p) => (
-                                    <option key={p.name} value={p.name}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                            </select>
+                            {/* Premium AdminDropdown for Preset Templates */}
+                            <div className="w-full sm:w-72">
+                                <AdminDropdown
+                                    value={activeTemplateName}
+                                    onChange={(val) => {
+                                        const preset = PRESET_TEMPLATES.find((p) => p.name === val);
+                                        if (preset) {
+                                            setActiveTemplateName(val);
+                                            setMessageTemplate(preset.text);
+                                            toast.success(`Loaded "${preset.name}" template`);
+                                        }
+                                    }}
+                                    options={templateDropdownOptions}
+                                    placeholder="Load Preset Template..."
+                                    fullWidth={true}
+                                    buttonClassName="py-2 px-3 bg-[#FAF6FA] hover:bg-white text-xs font-bold text-[#241224] rounded-xl border-[#EFE0EF]"
+                                />
+                            </div>
                         </div>
 
                         {/* Variable Injection Chips */}
@@ -669,7 +771,7 @@ export default function WhatsAppBroadcastPage() {
                                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                 }`}
                             >
-                                <OfficialWhatsAppIcon size={20} />
+                                <WhatsAppIcon size={20} color="#ffffff" />
                                 <span>
                                     {isBroadcasting
                                         ? 'Broadcasting Messages...'
@@ -680,39 +782,18 @@ export default function WhatsAppBroadcastPage() {
                     </div>
                 </div>
 
-                {/* Right Column: Sticky Samsung Galaxy Live Preview (5 cols) */}
-                <div className="lg:col-span-5 sticky top-6 space-y-4">
-                    <div className="bg-white rounded-3xl border border-[#EFE0EF] p-4 sm:p-5 shadow-2xs space-y-3">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#EFE0EF]">
-                            <span className="text-xs font-black text-[#241224] flex items-center gap-1.5">
-                                <span>📱</span> Samsung Live WhatsApp Preview
-                            </span>
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                Previewing for: {previewUser.name}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-center py-1">
-                            <MobileMockup
-                                headerTitle="UK Brand Lover"
-                                headerSubtitle="online"
-                                avatarUrl="/images/web-logo-optimized.png"
-                                avatarFallback="🇬🇧"
-                                productImageUrl={resolvedCoverImage}
-                                messageText={previewFormattedMessage}
-                                timestamp="Just now"
-                            />
-                        </div>
-
-                        <div className="p-3 bg-[#FAF6FA] rounded-2xl border border-[#EFE0EF] space-y-1 text-[11px] text-slate-600">
-                            <div className="font-bold text-[#6C306E] flex items-center gap-1">
-                                <SparklesIcon size={12} />
-                                High-Conversion Tip
-                            </div>
-                            <p>
-                                WhatsApp messages sent with the customer's actual first name and product photo have over <strong>87% open rates</strong> and generate rapid conversions.
-                            </p>
-                        </div>
+                {/* Right Column: Clean Floating Mobile Preview (5 cols) */}
+                <div className="lg:col-span-5 sticky top-6">
+                    <div className="flex justify-center py-1">
+                        <MobileMockup
+                            headerTitle="UK Brand Lover"
+                            headerSubtitle="online"
+                            avatarUrl="/images/web-logo-optimized.png"
+                            avatarFallback="🇬🇧"
+                            productImageUrl={resolvedCoverImage}
+                            messageText={previewFormattedMessage}
+                            timestamp="Just now"
+                        />
                     </div>
                 </div>
             </div>
@@ -722,10 +803,10 @@ export default function WhatsAppBroadcastPage() {
                 <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border border-[#EFE0EF] shadow-2xl animate-in fade-in zoom-in duration-150">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                            <div className="flex items-center gap-2">
-                                <span className="p-2 bg-emerald-100 rounded-xl text-emerald-700">
-                                    <OfficialWhatsAppIcon size={20} />
-                                </span>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shrink-0">
+                                    <WhatsAppIcon size={20} color="#ffffff" />
+                                </div>
                                 <h3 className="text-base font-black text-[#241224]">
                                     Confirm WhatsApp Broadcast
                                 </h3>
@@ -733,7 +814,7 @@ export default function WhatsAppBroadcastPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmModal(false)}
-                                className="text-slate-400 hover:text-slate-600"
+                                className="text-slate-400 hover:text-slate-600 cursor-pointer"
                             >
                                 <CloseIcon size={18} />
                             </button>
@@ -763,14 +844,14 @@ export default function WhatsAppBroadcastPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmModal(false)}
-                                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
                                 onClick={handleConfirmBroadcast}
-                                className="px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-black flex items-center gap-2 shadow-sm transition"
+                                className="px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-black flex items-center gap-2 shadow-sm transition cursor-pointer"
                             >
                                 <SendIcon size={14} />
                                 Confirm & Start Broadcast
@@ -794,7 +875,7 @@ export default function WhatsAppBroadcastPage() {
                             <button
                                 type="button"
                                 onClick={() => setBroadcastReport(null)}
-                                className="text-slate-400 hover:text-slate-600"
+                                className="text-slate-400 hover:text-slate-600 cursor-pointer"
                             >
                                 <CloseIcon size={18} />
                             </button>
