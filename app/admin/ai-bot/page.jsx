@@ -2075,61 +2075,47 @@ export default function AdminAiBotPage() {
                             </p>
                         </div>
 
-                        {/* Stage Tabs */}
-                        <div className="flex flex-wrap items-center gap-1.5 bg-[#FAF6FA] p-1.5 rounded-2xl border border-[#EFE0EF]">
+                        {/* Stage Tabs (Single Clean Line, No ON/OFF Text) */}
+                        <div className="flex items-center gap-1 bg-[#FAF6FA] p-1 rounded-xl border border-[#EFE0EF] shrink-0 whitespace-nowrap overflow-x-auto no-scrollbar">
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(1)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
                                     activeTemplateStageTab === 1
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
-                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                 Stage 1: Initial Offer
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(2)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
                                     activeTemplateStageTab === 2
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
-                                <span className={`w-2 h-2 rounded-full transition-colors ${
+                                <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     whatsappStage2Enabled ? 'bg-emerald-400' : 'bg-slate-300'
                                 }`}></span>
                                 Stage 2: Expiry Warning
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                                    activeTemplateStageTab === 2
-                                        ? whatsappStage2Enabled ? 'bg-emerald-500/30 text-white' : 'bg-white/20 text-white/80'
-                                        : whatsappStage2Enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'
-                                }`}>
-                                    {whatsappStage2Enabled ? 'ON' : 'OFF'}
-                                </span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setActiveTemplateStageTab(3)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
                                     activeTemplateStageTab === 3
                                         ? 'bg-[#6C306E] text-white shadow-2xs'
                                         : 'text-slate-600 hover:text-[#241224]'
                                 }`}
                             >
-                                <span className={`w-2 h-2 rounded-full transition-colors ${
+                                <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     whatsappStage3Enabled ? 'bg-emerald-400' : 'bg-slate-300'
                                 }`}></span>
                                 Stage 3: Final Call
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                                    activeTemplateStageTab === 3
-                                        ? whatsappStage3Enabled ? 'bg-emerald-500/30 text-white' : 'bg-white/20 text-white/80'
-                                        : whatsappStage3Enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'
-                                }`}>
-                                    {whatsappStage3Enabled ? 'ON' : 'OFF'}
-                                </span>
                             </button>
                         </div>
                     </div>
